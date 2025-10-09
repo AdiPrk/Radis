@@ -194,14 +194,14 @@ namespace Dog
         VkRect2D scissor{ {0, 0}, rr->swapChain->GetSwapChainExtent() };
         vkCmdSetScissor(cmd, 0, 1, &scissor);
 
-        // loop over entties with model and transform component
         std::vector<InstanceUniforms> instanceData{};
 
         auto& registry = ecs->GetRegistry();
         auto entityView = registry.view<ModelComponent, TransformComponent>();
 
         AnimationLibrary* al = rr->animationLibrary.get();
-        
+        ModelLibrary* ml = rr->modelLibrary.get();
+
         UnifiedMeshes* unifiedMesh = rr->modelLibrary->GetUnifiedMesh();
         Mesh& uMesh = unifiedMesh->GetUnifiedMesh();
 
@@ -209,6 +209,29 @@ namespace Dog
         vmaMapMemory(rr->allocator->GetAllocator(), mIndirectBufferAllocations[rr->currentFrameIndex], (void**)&solidPtr);
 
         int drawIndex = 0, instanceBaseIndex = 0, solidDrawCount = 0;
+
+        const auto& debugData = DebugDrawResource::GetInstanceData();
+        if (instanceData.size() + debugData.size() >= InstanceUniforms::MAX_INSTANCES)
+        {
+            DOG_WARN("Too many instances for debug draw render!");
+        }
+        else
+        {
+            instanceData.insert(instanceData.end(), debugData.begin(), debugData.end());
+
+            auto cubeModel = ml->GetModel("Assets/models/cube.obj");
+            const MeshInfo& meshInfo = unifiedMesh->GetMeshInfo(cubeModel->mMeshes[0].mMeshID);
+
+            VkDrawIndexedIndirectCommand drawCommand = {};
+            drawCommand.indexCount = meshInfo.indexCount;
+            drawCommand.instanceCount = debugData.size();
+            drawCommand.firstIndex = meshInfo.firstIndex;
+            drawCommand.vertexOffset = meshInfo.vertexOffset;
+            drawCommand.firstInstance = instanceBaseIndex;
+            solidPtr[solidDrawCount++] = drawCommand;
+
+            instanceBaseIndex += debugData.size();
+        }
 
         for (auto& entityHandle : entityView)
         {
@@ -255,8 +278,6 @@ namespace Dog
 
         vmaUnmapMemory(rr->allocator->GetAllocator(), mIndirectBufferAllocations[rr->currentFrameIndex]);
 
-        //const auto& debugData = DebugDrawResource::GetInstanceData();
-        //instanceData.insert(instanceData.begin(), debugData.begin(), debugData.end());
 
         rr->instanceUniform->SetUniformData(instanceData, 1, rr->currentFrameIndex);
         
@@ -268,12 +289,11 @@ namespace Dog
         vkCmdBindVertexBuffers(cmd, 0, 2, buffers, offsets);
         vkCmdBindIndexBuffer(cmd, uMeshIndexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
-        //vkCmdDrawIndexed(cmd, uMesh.mIndexCount, instanceData.size(), 0, 0, 0);
         vkCmdDrawIndexedIndirect(
             cmd,
             mIndirectBuffers[rr->currentFrameIndex],
             0,
-            static_cast<uint32_t>(instanceData.size()),
+            static_cast<uint32_t>(solidDrawCount),
             sizeof(VkDrawIndexedIndirectCommand)
         );
     }
