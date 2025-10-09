@@ -7,6 +7,7 @@ namespace Dog {
     class FrameRateController {
     public:
         explicit FrameRateController(unsigned int targetFrameRate);
+        ~FrameRateController();
 
         // Returns the time in seconds since the last frame (dt)
         float WaitForNextFrame();
@@ -16,7 +17,7 @@ namespace Dog {
 
     private:
         unsigned int mTargetFPS;
-        std::chrono::time_point<std::chrono::high_resolution_clock> m_lastFrameTime = std::chrono::high_resolution_clock::now();
+        std::chrono::time_point<std::chrono::high_resolution_clock> mLastFrameTime;
         std::chrono::duration<double> mTargetFrameDuration;
     };
 

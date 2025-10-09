@@ -9,7 +9,7 @@ namespace Dog
         glm::mat4 view;
     };
 
-    struct alignas(16) InstanceUniforms {
+    struct InstanceUniforms {
         glm::mat4 model;
         glm::vec4 tint;
         uint32_t textureIndex;

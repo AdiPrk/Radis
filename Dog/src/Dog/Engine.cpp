@@ -17,6 +17,7 @@
 #include "ECS/Resources/DebugDrawResource.h"
 
 #include "Graphics/Window/FrameRate.h"
+#include "Graphics/Vulkan/Core/Device.h"
 
 namespace Dog 
 {
@@ -78,6 +79,8 @@ namespace Dog
     int Engine::Exit()
     {
         mRunning = false;
+
+        vkDeviceWaitIdle(mEcs.GetResource<RenderingResource>()->device->GetDevice());
         mEcs.Exit();
 
         return EXIT_SUCCESS;

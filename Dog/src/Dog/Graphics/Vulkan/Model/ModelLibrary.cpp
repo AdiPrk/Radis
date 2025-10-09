@@ -1,6 +1,15 @@
+/*****************************************************************//**
+ * \file   ModelLibrary.cpp
+ * \author Adi (adityaprk04@gmail.com)
+ * \date   October 8 2025
+ 
+ * \brief  Library of Models
+ *  *********************************************************************/
+
 #include <PCH/pch.h>
 #include "ModelLibrary.h"
 #include "Model.h"
+#include "UnifiedMesh.h"
 
 #include "../Texture/TextureLibrary.h"
 
@@ -12,6 +21,7 @@ namespace Dog
         : mDevice{ device }
         , mTextureLibrary{ textureLibrary }
     {
+        mUnifiedMesh = std::make_unique<UnifiedMeshes>();
     }
 
     ModelLibrary::~ModelLibrary()
@@ -31,12 +41,33 @@ namespace Dog
         
         uint32_t modelID = static_cast<uint32_t>(mModels.size());
         mModels.push_back(std::move(model));
+        AddToUnifiedMesh(modelID);
 
         // std::string mModelName = std::filesystem::path(filePath).stem().string();
         mModelMap[filePath] = modelID;
         mLastModelLoaded = modelID;
         
         return modelID;
+    }
+
+    void ModelLibrary::AddToUnifiedMesh(uint32_t modelIndex)
+    {
+        if (modelIndex == INVALID_MODEL_INDEX)
+        {
+            return;
+        }
+        if (modelIndex >= mModels.size())
+        {
+            return;
+        }
+
+        Model* model = mModels[modelIndex].get();
+        if (!model) return;
+
+        for (auto& mesh : model->mMeshes)
+        {
+            mUnifiedMesh->AddMesh(mDevice, mesh);
+        }
     }
 
     Model* ModelLibrary::GetModel(uint32_t index)
@@ -56,10 +87,20 @@ namespace Dog
 
     Model* ModelLibrary::GetModel(const std::string& modelPath)
     {
+        if (modelPath.empty()) return nullptr;
+
+        auto it = mModelMap.find(modelPath);
+        if (it == mModelMap.end()) return nullptr;
+        return GetModel(it->second);
+    }
+
+    Model* ModelLibrary::TryAddGetModel(const std::string& modelPath)
+    {
+        if (modelPath.empty()) return nullptr;
+
         auto it = mModelMap.find(modelPath);
         if (it == mModelMap.end())
         {
-            // Try adding the model first
             uint32_t newModelIndex = AddModel(modelPath);
             return GetModel(newModelIndex);
         }

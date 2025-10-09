@@ -27,7 +27,7 @@ namespace Dog
     {
     public:
         UnifiedMeshes();
-        ~UnifiedMeshes();
+        ~UnifiedMeshes() {}
 
         void AddMesh(
             Device& device,
