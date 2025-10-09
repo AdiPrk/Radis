@@ -4,7 +4,7 @@ namespace Dog
 {
 	class Window {
 	public:
-		Window(int w, int h, std::string name);
+		Window(int w, int h, std::wstring_view name);
 		~Window();
 
 		Window(const Window&) = delete;
@@ -30,7 +30,7 @@ namespace Dog
 		int mHeight;
 		bool mFramebufferResized = false;
 
-		std::string mWindowName;
+		std::wstring mWindowName;
 		GLFWwindow* mWindow;
 	};
 

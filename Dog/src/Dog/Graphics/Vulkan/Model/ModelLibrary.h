@@ -15,6 +15,7 @@ namespace Dog
 	class Model;
 	class Uniform;
 	class TextureLibrary;
+    class UnifiedMeshes;
 
 	class ModelLibrary
 	{
@@ -23,10 +24,13 @@ namespace Dog
 		~ModelLibrary();
 
 		uint32_t AddModel(const std::string& modelPath);
+        void AddToUnifiedMesh(uint32_t modelIndex);
 
         Model* GetModel(uint32_t index);
         Model* GetModel(const std::string& modelPath);
+		Model* TryAddGetModel(const std::string& modelPath);
 		uint32_t GetModelIndex(const std::string& modelPath);
+        UnifiedMeshes* GetUnifiedMesh() { return mUnifiedMesh.get(); }
 
         uint32_t GetModelCount() const { return static_cast<uint32_t>(mModels.size()); }
 		
@@ -40,10 +44,12 @@ namespace Dog
 		std::vector<std::unique_ptr<Model>> mModels;
 		std::unordered_map<std::string, uint32_t> mModelMap;
 
+        std::unique_ptr<UnifiedMeshes> mUnifiedMesh;
+
 		Device& mDevice;
         TextureLibrary& mTextureLibrary;
 
         uint32_t mLastModelLoaded = INVALID_MODEL_INDEX;
 	};
 
-} // namespace Rendering
+} // namespace Dog

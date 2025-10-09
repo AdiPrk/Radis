@@ -4,11 +4,12 @@
 #define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING
 #define _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS
 #define NOMINMAX
-#define WIN32_LEAN_AND_MEAN 
 
 // spdlog (include first to avoid APIENTRY conflicts)
 #include "spdlog/spdlog.h"
 #include "spdlog/fmt/ostr.h"
+
+#include "mmsystem.h" // For timeBeginPeriod, timeEndPeriod
 
 // glfw
 #define GLFW_INCLUDE_VULKAN

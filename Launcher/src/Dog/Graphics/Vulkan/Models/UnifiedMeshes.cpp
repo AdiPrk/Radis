@@ -12,10 +12,6 @@ namespace Dog
     {
     }
 
-    UnifiedMeshes::~UnifiedMeshes()
-    {
-    }
-
     void UnifiedMeshes::AddMesh(Device& device, Mesh& mesh)
     {
         unifiedMesh.vertexBuffer.reset();
