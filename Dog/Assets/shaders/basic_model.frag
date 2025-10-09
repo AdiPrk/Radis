@@ -11,18 +11,7 @@ layout(location = 5) flat in uint instanceIndex;
 
 layout(location = 0) out vec4 outColor;
 
-layout(set = 1, binding = 0) uniform sampler2D uTextures[]; 
-
-struct Instance {
-  mat4 model;
-  vec4 tint;
-  uint textureIndex;
-  uint boneOffset;
-};
-
-layout(std430, set = 1, binding = 1) buffer readonly InstanceDataBuffer {
-  Instance instances[10000];
-} instanceData;
+layout(set = 1, binding = 0) uniform sampler2D uTextures[];
 
 void main()
 {
@@ -32,8 +21,7 @@ void main()
 	}
 	else
 	{
-		outColor = texture(uTextures[textureIndex], fragTexCoord);
-		outColor *= fragTint;
+		outColor = texture(uTextures[textureIndex], fragTexCoord) * fragTint;
 
 		if (outColor.a < 0.1)
 		{

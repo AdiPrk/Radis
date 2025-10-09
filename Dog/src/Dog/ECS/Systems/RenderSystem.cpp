@@ -224,13 +224,13 @@ namespace Dog
 
             VkDrawIndexedIndirectCommand drawCommand = {};
             drawCommand.indexCount = meshInfo.indexCount;
-            drawCommand.instanceCount = debugData.size();
+            drawCommand.instanceCount = (uint32_t)debugData.size();
             drawCommand.firstIndex = meshInfo.firstIndex;
             drawCommand.vertexOffset = meshInfo.vertexOffset;
             drawCommand.firstInstance = instanceBaseIndex;
             solidPtr[solidDrawCount++] = drawCommand;
 
-            instanceBaseIndex += debugData.size();
+            instanceBaseIndex += (int)debugData.size();
         }
 
         for (auto& entityHandle : entityView)
