@@ -1,33 +1,31 @@
 #version 450
 
+// Per Vertex Inputs
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 color;
 layout(location = 2) in vec3 normal;
 layout(location = 3) in vec2 texCoord;
 layout(location = 4) in ivec4 boneIds;
 layout(location = 5) in vec4 weights;
+// Per Instance Inputs
+layout(location = 6) in mat4 iModel;
+layout(location = 10) in vec4 iTint;
+layout(location = 11) in uint iTextureIndex;
+layout(location = 12) in uint iBoneOffset;
 
+// Outputs
 layout(location = 0) out vec3 fragColor;
-layout(location = 1) out vec3 fragNormal;
-layout(location = 2) out vec2 fragTexCoord;
-layout(location = 3) flat out uint instanceIndex;
+layout(location = 1) out vec4 fragTint;
+layout(location = 2) out vec3 fragNormal;
+layout(location = 3) out vec2 fragTexCoord;
+layout(location = 4) flat out uint textureIndex;
+layout(location = 5) flat out uint instanceIndex;
 
 layout(set = 0, binding = 0) uniform Uniforms {
     mat4 projectionView;
     mat4 projection;
     mat4 view;
 } uniforms;
-
-struct Instance {
-  mat4 model;
-  vec4 tint;
-  uint textureIndex;
-  uint boneOffset;
-};
-
-layout(std430, set = 1, binding = 1) buffer readonly InstanceDataBuffer {
-  Instance instances[10000];
-} instanceData;
 
 struct VQS {
     vec4 rotation;    // Quat
@@ -51,15 +49,14 @@ void main()
     vec4 totalPosition = vec4(0.0f);
     vec3 totalNormal = vec3(0.0f);
     
-    uint offset = instanceData.instances[gl_InstanceIndex].boneOffset;
     bool validBoneFound = false;
-    if (offset != 10001)
+    if (iBoneOffset != 10001)
     {
         for (uint i = 0; i < 4 ; i++)
         {
             if(boneIds[i] == -1) continue;
 
-            VQS transform = animationData.finalBoneVQS[offset + boneIds[i]];
+            VQS transform = animationData.finalBoneVQS[iBoneOffset + boneIds[i]];
 
             // --- Position Transformation ---
             vec3 localPosition = rotate(transform.rotation, position * transform.scale) + transform.translation;
@@ -83,10 +80,12 @@ void main()
         totalNormal = normal;
 	}
 
-    gl_Position = uniforms.projectionView * instanceData.instances[gl_InstanceIndex].model * vec4(totalPosition.xyz, 1.0);
+    gl_Position = uniforms.projectionView * iModel * vec4(totalPosition.xyz, 1.0);
 
     fragColor = color;
+    fragTint = iTint;
     fragNormal = normalize(totalNormal);
     fragTexCoord = texCoord;
+    textureIndex = iTextureIndex;
     instanceIndex = gl_InstanceIndex;
 }

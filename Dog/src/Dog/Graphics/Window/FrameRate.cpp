@@ -7,23 +7,32 @@ namespace Dog {
 
     FrameRateController::FrameRateController(unsigned int targetFrameRate)
         : mTargetFPS(targetFrameRate) 
+        , mLastFrameTime(high_resolution_clock::now())
     {
+        timeBeginPeriod(1); // Request 1ms timer resolution
+
         if (targetFrameRate == 0)
         {
             mTargetFrameDuration = duration<double>(0);
-        } else
+        }
+        else
         {
             mTargetFrameDuration = duration<double>(1.0 / targetFrameRate);
         }
     }
 
+    FrameRateController::~FrameRateController()
+    {
+        timeEndPeriod(1); // End 1ms timer resolution
+    }
+
     float FrameRateController::WaitForNextFrame()
     {
         auto now = high_resolution_clock::now();
-        auto timeSinceLastFrame = now - m_lastFrameTime;
+        auto timeSinceLastFrame = now - mLastFrameTime;
 
         if (mTargetFPS == 0) {
-            m_lastFrameTime = now;
+            mLastFrameTime = now;
             return duration<float>(timeSinceLastFrame).count();
         }
 
@@ -35,10 +44,10 @@ namespace Dog {
         // Fine-tune with busy-waiting for the last small part
         while (timeSinceLastFrame < mTargetFrameDuration) {
             now = high_resolution_clock::now();
-            timeSinceLastFrame = now - m_lastFrameTime;
+            timeSinceLastFrame = now - mLastFrameTime;
         }
 
-        m_lastFrameTime = high_resolution_clock::now();
+        mLastFrameTime = high_resolution_clock::now();
         return duration<float>(timeSinceLastFrame).count();
     }
 

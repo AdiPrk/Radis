@@ -24,9 +24,11 @@ namespace Dog
         void RecursiveNodeDraw(const glm::mat4& parentTr, const aiNode* node);
 
     private:
-
         std::unique_ptr<Pipeline> mPipeline;
         std::unique_ptr<Pipeline> mWireframePipeline;
+
+        std::vector<VkBuffer> mIndirectBuffers;
+        std::vector<VmaAllocation> mIndirectBufferAllocations;
     };
 }
 

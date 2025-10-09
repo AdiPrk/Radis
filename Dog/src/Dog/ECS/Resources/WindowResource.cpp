@@ -4,7 +4,7 @@
 
 namespace Dog
 {
-    WindowResource::WindowResource(int w, int h, std::string name)
+    WindowResource::WindowResource(int w, int h, std::wstring_view name)
         : window(std::make_unique<Window>(w, h, name))
     {
     }

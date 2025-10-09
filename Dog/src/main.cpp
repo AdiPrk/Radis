@@ -6,14 +6,14 @@ int main(int argc, char* argv[])
 {   
     Dog::ValidateStartingDirectory(argc, argv);
 
-    Dog::EngineSpec specs;
-    specs.name = "Woof";
-    specs.width = 1280;
-    specs.height = 720;
-    specs.fps = 120;
-    specs.serverAddress = "localhost";
-    specs.serverPort = 7777;
+    Dog::EngineSpec すぺくっす;
+    すぺくっす.name = L"ワンワン";
+    すぺくっす.width = 1280;
+    すぺくっす.height = 720;
+    すぺくっす.fps = 120;
+    すぺくっす.serverAddress = "localhost";
+    すぺくっす.serverPort = 7777;
 
-    Dog::Engine Engine(specs);
+    Dog::Engine Engine(すぺくっす);
     return Engine.Run("scene");
 }

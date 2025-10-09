@@ -1,12 +1,3 @@
-/*****************************************************************//**
- * \file   UnifiedMeshes.hpp
- * \author Adi (aditya.prakash@digipen.edu)
- * \date   November 20 2024
- * \Copyright @ 2024 Digipen (USA) Corporation *
-
- * \brief  Yah
- *  *********************************************************************/
-
 #pragma once
 
 #include "Mesh.h"
@@ -15,8 +6,7 @@ namespace Dog
 {
     // Forward reference
     class Device;
-    class Buffer;
-
+    
     struct MeshInfo {
         uint32_t indexCount;
         uint32_t firstIndex;
@@ -27,7 +17,7 @@ namespace Dog
     {
     public:
         UnifiedMeshes();
-        ~UnifiedMeshes() {}
+        ~UnifiedMeshes();
 
         void AddMesh(
             Device& device,
@@ -38,7 +28,6 @@ namespace Dog
 
     private:
         Mesh unifiedMesh;
-
         std::unordered_map<uint32_t, MeshInfo> mMeshInfos;
     };
 }

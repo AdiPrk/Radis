@@ -9,7 +9,7 @@ namespace Dog
 {
 	struct EngineSpec
 	{
-		std::string name = "Dog Engine";         // The name of the window.
+		std::wstring name = L"Dog Engine";         // The name of the window.
 		unsigned width = 1280;                   // The width of the window.
 		unsigned height = 720;                   // The height of the window.
 		unsigned fps = 60;			             // The target frames per second.

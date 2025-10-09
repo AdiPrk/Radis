@@ -32,7 +32,7 @@ namespace Dog
         void CreateVertexBuffers(Device& device);
         void CreateIndexBuffers(Device& device);
 
-        void Bind(VkCommandBuffer commandBuffer);
+        void Bind(VkCommandBuffer commandBuffer, VkBuffer instBuffer);
         void Draw(VkCommandBuffer commandBuffer, uint32_t baseIndex = 0);
 
         std::unique_ptr<Buffer> mVertexBuffer;

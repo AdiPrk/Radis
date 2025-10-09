@@ -159,6 +159,5 @@ namespace Dog
 
 	void PresentSystem::Exit()
 	{
-        vkDeviceWaitIdle(ecs->GetResource<RenderingResource>()->device->GetDevice());
 	}
 }

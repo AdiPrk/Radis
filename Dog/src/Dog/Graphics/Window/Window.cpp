@@ -1,9 +1,39 @@
 #include <PCH/pch.h>
 #include "Window.h"
 
+std::string WStringToUTF8(const std::wstring& wstr) {
+    if (wstr.empty()) return {};
+
+    // First, get the required buffer size
+    int size_needed = WideCharToMultiByte(
+        CP_UTF8,             // convert to UTF-8
+        0,                   // no special flags
+        wstr.data(),         // source string
+        static_cast<int>(wstr.size()), // length of source
+        nullptr,             // no output yet
+        0,                   // calculate required size
+        nullptr, nullptr     // default handling for invalid chars
+    );
+
+    std::string result(size_needed, 0);
+
+    // Do the actual conversion
+    WideCharToMultiByte(
+        CP_UTF8,
+        0,
+        wstr.data(),
+        static_cast<int>(wstr.size()),
+        result.data(),
+        size_needed,
+        nullptr, nullptr
+    );
+
+    return result;
+}
+
 namespace Dog {
 
-    Window::Window(int w, int h, std::string name) : mWidth{ w }, mHeight{ h }, mWindowName{ name } {
+    Window::Window(int w, int h, std::wstring_view name) : mWidth{ w }, mHeight{ h }, mWindowName{ name } {
         InitWindow();
     }
 
@@ -17,7 +47,8 @@ namespace Dog {
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-        mWindow = glfwCreateWindow(mWidth, mHeight, mWindowName.c_str(), nullptr, nullptr);
+        std::string title_utf8 = WStringToUTF8(mWindowName);
+        mWindow = glfwCreateWindow(mWidth, mHeight, title_utf8.c_str(), nullptr, nullptr);
         glfwSetWindowUserPointer(mWindow, this);
         glfwSetFramebufferSizeCallback(mWindow, FramebufferResizeCallback);
     }

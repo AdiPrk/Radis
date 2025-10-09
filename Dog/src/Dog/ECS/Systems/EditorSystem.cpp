@@ -419,11 +419,6 @@ namespace Dog
                     const bool isSelected = currPath == modelPath;
                     if (ImGui::Selectable(modelPath.c_str(), isSelected))
                     {
-                        if (!mc->GetModel(modelPath))
-                        {
-                            uint32_t modelIndex = mc->AddModel(modelPath);
-                        }
-                        
                         component.ModelPath = modelPath;
                     }
                     if (isSelected)

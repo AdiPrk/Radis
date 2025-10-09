@@ -3,6 +3,7 @@
 
 #include "../Core/Device.h"
 #include "../Core/Buffer.h"
+#include "../Uniform/ShaderTypes.h"
 
 namespace Dog
 {
@@ -78,7 +79,7 @@ namespace Dog
         stagingBuffer.CopyBuffer(stagingBuffer.GetBuffer(), mIndexBuffer->GetBuffer(), bufferSize);
     }
 
-    void Mesh::Bind(VkCommandBuffer commandBuffer)
+    void Mesh::Bind(VkCommandBuffer commandBuffer, VkBuffer instBuffer)
     {
         if (!mHasIndexBuffer)
         {
@@ -86,9 +87,9 @@ namespace Dog
             return;
         }
 
-        VkBuffer buffers[] = { mVertexBuffer->GetBuffer() };
-        VkDeviceSize offsets[] = { 0 };
-        vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
+        VkBuffer buffers[] = { mVertexBuffer->GetBuffer(), instBuffer };
+        VkDeviceSize offsets[] = { 0, 0 };
+        vkCmdBindVertexBuffers(commandBuffer, 0, 2, buffers, offsets);
         vkCmdBindIndexBuffer(commandBuffer, mIndexBuffer->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
     }
 
@@ -106,12 +107,16 @@ namespace Dog
     std::vector<VkVertexInputBindingDescription> Vertex::GetBindingDescriptions()
     {
         //Create a 1 long vector of binding descriptions
-        std::vector<VkVertexInputBindingDescription> bindingDescriptions(1);
+        std::vector<VkVertexInputBindingDescription> bindingDescriptions(2);
 
         //Set bind description data
-        bindingDescriptions[0].binding = 0;                             //Set binding location
-        bindingDescriptions[0].stride = sizeof(Vertex);                 //Size stride to the size of a vertex
-        bindingDescriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX; //Specifys whether vertex attribute addressing is a function of the vertex index or of the instance index (using vertex)
+        bindingDescriptions[0].binding = 0;                             
+        bindingDescriptions[0].stride = sizeof(Vertex);                 
+        bindingDescriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX; 
+
+        bindingDescriptions[1].binding = 1;
+        bindingDescriptions[1].stride = sizeof(InstanceUniforms);
+        bindingDescriptions[1].inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
 
         //Return description
         return bindingDescriptions;
@@ -122,25 +127,22 @@ namespace Dog
         //Create a vector of attribute descriptions
         std::vector<VkVertexInputAttributeDescription> attributeDescriptions{};
 
-        //Set attribute description data for the position
-        //Sets (location of this attribute (matches what is defined at top of shader, binding location, 
-        //      datatype to three 32bit signed floats (vec3), the offset into the Vector struct for the position varible)
+        // Per vertex
         attributeDescriptions.push_back({ 0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, position) });
-
-        //Set attribute description data for the color
         attributeDescriptions.push_back({ 1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, color) });
-
-        //Set attribute description data for normals
         attributeDescriptions.push_back({ 2, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, normal) });
-
-        //Set attribute description data for texture coords
         attributeDescriptions.push_back({ 3, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, uv) });
-
-        //Set attribute description data for bone IDs
         attributeDescriptions.push_back({ 4, 0, VK_FORMAT_R32G32B32A32_SINT, offsetof(Vertex, boneIDs) });
-
-        //Set attribute description data for bone weights
         attributeDescriptions.push_back({ 5, 0, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(Vertex, weights) });
+
+        // Per instance
+        attributeDescriptions.push_back({ 6,  1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, model)});                      
+        attributeDescriptions.push_back({ 7,  1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, model) + sizeof(float) * 4 }); 
+        attributeDescriptions.push_back({ 8,  1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, model) + sizeof(float) * 8 }); 
+        attributeDescriptions.push_back({ 9,  1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, model) + sizeof(float) * 12 });
+        attributeDescriptions.push_back({ 10, 1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, tint) });
+        attributeDescriptions.push_back({ 11, 1, VK_FORMAT_R32_UINT, offsetof(InstanceUniforms, textureIndex) });
+        attributeDescriptions.push_back({ 12, 1, VK_FORMAT_R32_UINT, offsetof(InstanceUniforms, boneOffset) });
 
         //Return description
         return attributeDescriptions;
