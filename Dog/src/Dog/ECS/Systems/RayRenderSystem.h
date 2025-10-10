@@ -6,11 +6,11 @@ namespace Dog
 {
     class Pipeline;
 
-    class RenderSystem : public ISystem
+    class RayRenderSystem : public ISystem
     {
     public:
-        RenderSystem();
-        ~RenderSystem();
+        RayRenderSystem();
+        ~RayRenderSystem();
 
         void Init();
         void FrameStart();

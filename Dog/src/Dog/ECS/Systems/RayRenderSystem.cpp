@@ -1,5 +1,5 @@
 #include <PCH/pch.h>
-#include "RenderSystem.h"
+#include "RayRenderSystem.h"
 
 #include "../Resources/renderingResource.h"
 #include "../Resources/EditorResource.h"
@@ -27,10 +27,10 @@
 
 namespace Dog
 {
-    RenderSystem::RenderSystem() : ISystem("RenderSystem") {}
-    RenderSystem::~RenderSystem() {}
+    RayRenderSystem::RayRenderSystem() : ISystem("RayRenderSystem") {}
+    RayRenderSystem::~RayRenderSystem() {}
 
-    void RenderSystem::Init()
+    void RayRenderSystem::Init()
     {
         auto rr = ecs->GetResource<RenderingResource>();
 
@@ -76,39 +76,15 @@ namespace Dog
         }
     }
     
-    void RenderSystem::FrameStart()
+    void RayRenderSystem::FrameStart()
     {
-        auto rr = ecs->GetResource<RenderingResource>();
-        auto& ml = rr->modelLibrary;
-        if (ml->NeedsTextureUpdate())
-        {
-            ml->LoadTextures();
-
-            auto& tl = rr->textureLibrary;
-
-            size_t textureCount = tl->GetTextureCount();
-            std::vector<VkDescriptorImageInfo> imageInfos(TextureLibrary::MAX_TEXTURE_COUNT);
-
-            VkSampler defaultSampler = tl->GetSampler();
-
-            bool hasTex = textureCount > 0;
-            for (size_t j = 0; j < TextureLibrary::MAX_TEXTURE_COUNT; ++j) {
-                imageInfos[j].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                imageInfos[j].sampler = defaultSampler;
-                imageInfos[j].imageView = hasTex ? tl->GetTextureByIndex(static_cast<uint32_t>(std::min(j, textureCount - 1))).GetImageView() : 0;
-            }
-
-            for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex) {
-                DescriptorWriter writer(*rr->instanceUniform->GetDescriptorLayout(), *rr->instanceUniform->GetDescriptorPool());
-                writer.WriteImage(0, imageInfos.data(), static_cast<uint32_t>(imageInfos.size()));
-                writer.Overwrite(rr->instanceUniform->GetDescriptorSets()[frameIndex]);
-            }
-        }
+        // Update textures!
+        ecs->GetResource<RenderingResource>()->UpdateTextureUniform();
 
         DebugDrawResource::Clear();
     }
     
-    void RenderSystem::Update(float dt)
+    void RayRenderSystem::Update(float dt)
     {
         auto renderingResource = ecs->GetResource<RenderingResource>();
         auto editorResource = ecs->GetResource<EditorResource>();
@@ -117,6 +93,7 @@ namespace Dog
         // Set camera uniform!
         {
             CameraUniforms camData{};
+            camData.view = glm::mat4(1.0f);
 
             // get camera entity
             Entity cameraEntity = ecs->GetEntity("Camera");
@@ -127,26 +104,19 @@ namespace Dog
                 
                 // Get the position directly
                 glm::vec3 cameraPos = tc.Translation;
-
-                // Calculate direction vectors from the rotation quaternion
                 glm::vec3 forwardDir = glm::normalize(cc.Forward);
                 glm::vec3 upDir = glm::normalize(cc.Up);
 
-                // Calculate the target and call lookAt
                 glm::vec3 cameraTarget = cameraPos + forwardDir;
                 camData.view = glm::lookAt(cameraPos, cameraTarget, upDir);
-            }
-            else
-            {
-                camData.view = glm::mat4(1.0f);
             }
 
             camData.projection = glm::perspective(glm::radians(45.0f), editorResource->sceneWindowWidth / editorResource->sceneWindowHeight, 0.1f, 100.0f);
             camData.projection[1][1] *= -1;
             camData.projectionView = camData.projection * camData.view;
             renderingResource->cameraUniform->SetUniformData(camData, 0, renderingResource->currentFrameIndex);
-
         }
+
         // Add the scene render pass
         rg->AddPass(
             "ScenePass",
@@ -154,15 +124,15 @@ namespace Dog
                 builder.writes("SceneColor");
                 builder.writes("SceneDepth");
             },
-            std::bind(&RenderSystem::RenderScene, this, std::placeholders::_1)
+            std::bind(&RayRenderSystem::RenderScene, this, std::placeholders::_1)
         );
     }
     
-    void RenderSystem::FrameEnd()
+    void RayRenderSystem::FrameEnd()
     {
     }
 
-    void RenderSystem::Exit()
+    void RayRenderSystem::Exit()
     {
         mPipeline.reset();
         mWireframePipeline.reset();
@@ -174,7 +144,7 @@ namespace Dog
         }
     }
 
-    void RenderSystem::RenderScene(VkCommandBuffer cmd)
+    void RayRenderSystem::RenderScene(VkCommandBuffer cmd)
     {
         auto rr = ecs->GetResource<RenderingResource>();
 

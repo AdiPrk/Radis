@@ -68,6 +68,13 @@ namespace Dog {
         createCommandPool();
 
         allocator = std::make_unique<Allocator>(*this);
+
+        
+
+        VkPhysicalDeviceProperties2 prop2{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 };
+        mRtProperties.pNext = &mAsProperties;
+        prop2.pNext = &mRtProperties;
+        vkGetPhysicalDeviceProperties2(physicalDevice, &prop2);
     }
 
     Device::~Device() 
@@ -176,60 +183,65 @@ namespace Dog {
             queueCreateInfos.push_back(queueCreateInfo);
         }
 
-        VkPhysicalDeviceRobustness2FeaturesKHR robustness2Features{};
-        robustness2Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_KHR;
-        robustness2Features.nullDescriptor = VK_TRUE;
-
         VkPhysicalDeviceFeatures deviceFeatures = {};
-        deviceFeatures.samplerAnisotropy = VK_TRUE;   //Set the feature samplerAnisotropy to true to sigify that we want for this device
-        deviceFeatures.multiDrawIndirect = VK_TRUE;   //Set the feature multiDrawIndirect to true to sigify that we want for this device
-        deviceFeatures.tessellationShader = VK_TRUE;  //Set the feature tessellationShader to true to sigify that we want for this device
+        deviceFeatures.samplerAnisotropy = VK_TRUE;
+        deviceFeatures.multiDrawIndirect = VK_TRUE;
+        deviceFeatures.tessellationShader = VK_TRUE;
         deviceFeatures.pipelineStatisticsQuery = VK_TRUE;
         deviceFeatures.logicOp = VK_TRUE;
         deviceFeatures.fillModeNonSolid = VK_TRUE;
         deviceFeatures.shaderInt16 = VK_TRUE;
 
-        VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeatures{};
-        dynamicRenderingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
-        dynamicRenderingFeatures.dynamicRendering = VK_TRUE;
+        VkPhysicalDeviceRobustness2FeaturesKHR robustness2Features
+        {
+            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_KHR,
+            .nullDescriptor = VK_TRUE,
+        };
 
-        VkPhysicalDevice16BitStorageFeatures storage16BitFeatures = {};
-        storage16BitFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_16BIT_STORAGE_FEATURES;
-        storage16BitFeatures.storageBuffer16BitAccess = VK_TRUE;  // Allow uint16_t in SSBOs
+        VkPhysicalDevice16BitStorageFeatures storage16BitFeatures = 
+        {
+            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_16BIT_STORAGE_FEATURES,
+            .storageBuffer16BitAccess = VK_TRUE
+        };
 
-        VkPhysicalDeviceVulkan13Features vulkan13Features = {};
-        vulkan13Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
-        vulkan13Features.shaderDemoteToHelperInvocation = VK_TRUE;
-        vulkan13Features.dynamicRendering = VK_TRUE;
+        VkPhysicalDeviceVulkan13Features vulkan13Features = 
+        {
+            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
+            .shaderDemoteToHelperInvocation = VK_TRUE,
+            .dynamicRendering = VK_TRUE
+        };
 
-        VkPhysicalDeviceVulkan12Features vulkan12Features = {};
-        vulkan12Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
-        vulkan12Features.drawIndirectCount = VK_TRUE;
-        vulkan12Features.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
-        vulkan12Features.runtimeDescriptorArray = VK_TRUE;
-        vulkan12Features.descriptorBindingPartiallyBound = VK_TRUE;
-        vulkan12Features.descriptorBindingVariableDescriptorCount = VK_TRUE;
-        vulkan12Features.shaderFloat16 = VK_TRUE;
-        vulkan12Features.shaderInt8 = VK_TRUE;
+        VkPhysicalDeviceVulkan12Features vulkan12Features = 
+        {
+            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
+            .drawIndirectCount = VK_TRUE,
+            .shaderFloat16 = VK_TRUE,
+            .shaderInt8 = VK_TRUE,
+            .shaderSampledImageArrayNonUniformIndexing = VK_TRUE,
+            .descriptorBindingPartiallyBound = VK_TRUE,
+            .descriptorBindingVariableDescriptorCount = VK_TRUE,
+            .runtimeDescriptorArray = VK_TRUE
+        };
 
-        VkPhysicalDeviceAccelerationStructureFeaturesKHR accelFeature{};
-        accelFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
-        accelFeature.accelerationStructure = VK_TRUE; // not in guide, is it needed?
+        VkPhysicalDeviceAccelerationStructureFeaturesKHR accelFeature
+        {
+            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR,
+            .accelerationStructure = VK_TRUE
+        };
 
-        VkPhysicalDeviceRayTracingPipelineFeaturesKHR rtPipelineFeature{};
-        rtPipelineFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
-        rtPipelineFeature.rayTracingPipeline = VK_TRUE;
+        VkPhysicalDeviceRayTracingPipelineFeaturesKHR rtPipelineFeature
+        {
+            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR,
+            .rayTracingPipeline = VK_TRUE,
+            .rayTracingPipelineTraceRaysIndirect = VK_TRUE, // Prob gonna be unused for a bit
+            .rayTraversalPrimitiveCulling = VK_TRUE         // Prob gonna be unused for a bit
+        };
 
-        // Make sure you pass these enabled features and extensions when creating your device
         VkDeviceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         
-        /*storage16BitFeatures.pNext = &dynamicRenderingFeatures;
-        vulkan12Features.pNext = &storage16BitFeatures;
-        accelFeature.pNext = &vulkan12Features;
-        rtPipelineFeature.pNext = &accelFeature;
-        createInfo.pNext = &rtPipelineFeature;*/
-        //storage16BitFeatures.pNext = &dynamicRenderingFeatures;
+        accelFeature.pNext = &rtPipelineFeature;
+        robustness2Features.pNext = &accelFeature;
         storage16BitFeatures.pNext = &robustness2Features;
         vulkan13Features.pNext = &storage16BitFeatures;
         vulkan12Features.pNext = &vulkan13Features;

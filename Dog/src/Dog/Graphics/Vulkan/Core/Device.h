@@ -77,6 +77,9 @@ namespace Dog {
         VkFormat GetSrgbFormat() const { return mSrgbFormat; }
         VkFormat GetLinearFormat() const { return mLinearFormat; }
 
+        const VkPhysicalDeviceRayTracingPipelinePropertiesKHR& GetRayTracingProperties() const { return mRtProperties; }
+        const VkPhysicalDeviceAccelerationStructurePropertiesKHR& GetAccelerationStructureProperties() const { return mAsProperties; }
+
     private:
         void createInstance();
         void setupDebugMessenger();
@@ -118,13 +121,16 @@ namespace Dog {
         const std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
         const std::vector<const char*> deviceExtensions = {
             VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-            VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
-            //VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
-            //VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
-            //VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
-            //VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME
+            VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
+            VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,
+            VK_EXT_SHADER_OBJECT_EXTENSION_NAME,
+            VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
+            VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
+            VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME
         };
 
+        VkPhysicalDeviceRayTracingPipelinePropertiesKHR mRtProperties{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR };
+        VkPhysicalDeviceAccelerationStructurePropertiesKHR mAsProperties{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_PROPERTIES_KHR };
     };
 
 } // namespace Dog
