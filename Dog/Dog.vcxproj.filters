@@ -50,6 +50,7 @@
     <ClCompile Include="src\PCH\pch.cpp" />
     <ClCompile Include="src\Dog\ECS\Resources\DebugDrawResource.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Model\UnifiedMesh.cpp" />
+    <ClCompile Include="src\Dog\ECS\Systems\RayRenderSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\nlohmann\json.hpp" />
@@ -122,8 +123,10 @@
     <ClInclude Include="src\Dog\Graphics\Vulkan\Model\Animation\Skeleton.h" />
     <ClInclude Include="src\Dog\ECS\Resources\DebugDrawResource.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Model\UnifiedMesh.h" />
+    <ClInclude Include="src\Dog\ECS\Systems\RayRenderSystem.h" />
   </ItemGroup>
   <ItemGroup>
+    <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />

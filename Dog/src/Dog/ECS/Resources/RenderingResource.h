@@ -56,6 +56,9 @@ namespace Dog
 
         bool renderWireframe = false;
 
+        // Texture update
+        void UpdateTextureUniform();
+
     private:
         Window& window;
 
@@ -79,7 +82,5 @@ namespace Dog
         
         VkFormat ToLinearFormat(VkFormat format);
 
-        // Temp Animation
-        void LoadAnimations();
     };
 }

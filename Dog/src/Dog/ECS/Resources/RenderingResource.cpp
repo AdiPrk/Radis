@@ -15,9 +15,11 @@
 
 #include "Graphics/Vulkan/Model/ModelLibrary.h"
 #include "Graphics/Vulkan/Texture/TextureLibrary.h"
+#include "Graphics/Vulkan/Texture/Texture.h"
 #include "Graphics/Vulkan/Model/Animation/AnimationLibrary.h"
 #include "Graphics/Vulkan/Model/Model.h"
 #include "Graphics/Vulkan/Model/Animation/Animator.h"
+#include "Graphics/Vulkan/Uniform/Descriptors.h"
 
 namespace Dog
 {
@@ -83,6 +85,35 @@ namespace Dog
             static_cast<uint32_t>(commandBuffers.size()),
             commandBuffers.data()
         );
+    }
+
+    void RenderingResource::UpdateTextureUniform()
+    {
+        auto& ml = modelLibrary;
+        if (ml->NeedsTextureUpdate())
+        {
+            ml->LoadTextures();
+
+            auto& tl = textureLibrary;
+
+            size_t textureCount = tl->GetTextureCount();
+            std::vector<VkDescriptorImageInfo> imageInfos(TextureLibrary::MAX_TEXTURE_COUNT);
+
+            VkSampler defaultSampler = tl->GetSampler();
+
+            bool hasTex = textureCount > 0;
+            for (size_t j = 0; j < TextureLibrary::MAX_TEXTURE_COUNT; ++j) {
+                imageInfos[j].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                imageInfos[j].sampler = defaultSampler;
+                imageInfos[j].imageView = hasTex ? tl->GetTextureByIndex(static_cast<uint32_t>(std::min(j, textureCount - 1))).GetImageView() : 0;
+            }
+
+            for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex) {
+                DescriptorWriter writer(*instanceUniform->GetDescriptorLayout(), *instanceUniform->GetDescriptorPool());
+                writer.WriteImage(0, imageInfos.data(), static_cast<uint32_t>(imageInfos.size()));
+                writer.Overwrite(instanceUniform->GetDescriptorSets()[frameIndex]);
+            }
+        }
     }
 
     void RenderingResource::RecreateSwapChain()
@@ -304,7 +335,4 @@ namespace Dog
         return format;
     }
 
-    void RenderingResource::LoadAnimations()
-    {
-    }
 }

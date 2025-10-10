@@ -30,6 +30,8 @@ namespace Dog
         const std::string& GetName() const { return mModelName; }
         const std::string& GetDir() const { return mDirectory; }
 
+        const glm::mat4& GetNormalizationMatrix() const { return mNormalizationMatrix; }
+
         Assimp::Importer importer;
         const aiScene* mScene = nullptr;
         Skeleton mSkeleton;
@@ -62,7 +64,6 @@ namespace Dog
         std::string mModelName;
         std::string mDirectory; // For texture loading
 
-        friend class RenderSystem;
         glm::mat4 mNormalizationMatrix;
 
         // Animation data

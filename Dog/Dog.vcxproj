@@ -221,6 +221,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Dog\ECS\Systems\InputSystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\ISystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\PresentSystem.cpp" />
+    <ClCompile Include="src\Dog\ECS\Systems\RayRenderSystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\RenderSystem.cpp" />
     <ClCompile Include="src\Dog\Engine.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Core\Allocator.cpp" />
@@ -300,6 +301,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Dog\ECS\Systems\InputSystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\ISystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\PresentSystem.h" />
+    <ClInclude Include="src\Dog\ECS\Systems\RayRenderSystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\RenderSystem.h" />
     <ClInclude Include="src\Dog\Engine.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Core\Allocator.h" />

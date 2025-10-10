@@ -7,6 +7,7 @@
 #include "ECS/Systems/EditorSystem.h"
 #include "ECS/Systems/PresentSystem.h"
 #include "ECS/Systems/CameraSystem.h"
+#include "ECS/Systems/RayRenderSystem.h"
 
 #include "ECS/Resources/InputResource.h"
 #include "ECS/Resources/WindowResource.h"
@@ -31,7 +32,8 @@ namespace Dog
         mEcs.AddSystem<InputSystem>();
         mEcs.AddSystem<PresentSystem>();
         mEcs.AddSystem<AnimationSystem>();
-        mEcs.AddSystem<RenderSystem>();
+        // mEcs.AddSystem<RenderSystem>();
+        mEcs.AddSystem<RayRenderSystem>();
         mEcs.AddSystem<EditorSystem>();
         mEcs.AddSystem<CameraSystem>();
         // ---------------------------------
