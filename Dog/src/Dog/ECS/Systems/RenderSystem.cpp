@@ -62,16 +62,16 @@ namespace Dog
         for (int i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i) {
             VkBufferCreateInfo indirectBufferInfo = {};
             indirectBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-            indirectBufferInfo.size = sizeof(VkDrawIndexedIndirectCommand) * 10000;
+            indirectBufferInfo.size = sizeof(VkDrawIndexedIndirectCommand) * InstanceUniforms::MAX_INSTANCES;
             indirectBufferInfo.usage = VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
 
             VmaAllocationCreateInfo indirectAllocInfo = {};
-            indirectAllocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU; // This usage allows the CPU to write commands
+            indirectAllocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
 
             // Create the buffers using VMA
             if (vmaCreateBuffer(allocator, &indirectBufferInfo, &indirectAllocInfo, &mIndirectBuffers[i], &mIndirectBufferAllocations[i], nullptr) != VK_SUCCESS) 
             {
-                throw std::runtime_error("Failed to create solid indirect command buffer!");
+                DOG_ERROR("VMA failed to create indirect command buffer");
             }
         }
     }
@@ -196,9 +196,6 @@ namespace Dog
 
         std::vector<InstanceUniforms> instanceData{};
 
-        auto& registry = ecs->GetRegistry();
-        auto entityView = registry.view<ModelComponent, TransformComponent>();
-
         AnimationLibrary* al = rr->animationLibrary.get();
         ModelLibrary* ml = rr->modelLibrary.get();
 
@@ -233,6 +230,8 @@ namespace Dog
             instanceBaseIndex += (int)debugData.size();
         }
 
+        auto& registry = ecs->GetRegistry();
+        auto entityView = registry.view<ModelComponent, TransformComponent>();
         for (auto& entityHandle : entityView)
         {
             Entity entity(&registry, entityHandle);

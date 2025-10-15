@@ -16,6 +16,8 @@ namespace Dog
         mBufferSize = mAlignmentSize * instanceCount;
 
         //Create the buffer based on passed data and calculated size
+        
+        // @TODO: COME BACK TO THIS FOR VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
         mDevice.GetAllocator()->CreateBuffer(mBufferSize, usageFlags, memoryUsage, mBuffer, mBufferAllocation);
     }
 
@@ -132,6 +134,32 @@ namespace Dog
     {
         //Invalidate data at index
         return Invalidate(mAlignmentSize, index * mAlignmentSize);
+    }
+
+    VkDeviceAddress Buffer::GetDeviceAddress()
+    {
+        if (mDeviceAddress != 0) return mDeviceAddress;
+
+        // @TODO: Re-add this check
+        //if ((mUsageFlags & VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT) == 0)
+        //{
+        //    DOG_CRITICAL("GetDeviceAddress called on a buffer not created with VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT.");
+        //    return 0;
+        //}
+
+        if (mBuffer == VK_NULL_HANDLE)
+        {
+            DOG_CRITICAL("GetDeviceAddress called before buffer creation.");
+            return 0;
+        }
+
+        VkBufferDeviceAddressInfo addressInfo{ VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO };
+        addressInfo.buffer = mBuffer;
+
+        VkDevice deviceHandle = mDevice.GetDevice();
+
+        mDeviceAddress = vkGetBufferDeviceAddress(deviceHandle, &addressInfo);
+        return mDeviceAddress;
     }
 
     VkDeviceSize Buffer::GetAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment)

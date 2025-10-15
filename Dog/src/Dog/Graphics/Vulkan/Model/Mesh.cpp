@@ -21,6 +21,7 @@ namespace Dog
     void Mesh::CreateVertexBuffers(Device& device)
     {
         mVertexCount = static_cast<uint32_t>(mVertices.size());
+        mTriangleCount = mVertexCount / 3;
         //assert(vertexCount >= 3 && "Vertex count must be at least 3");
         VkDeviceSize bufferSize = sizeof(mVertices[0]) * mVertexCount;
         uint32_t vertexSize = sizeof(mVertices[0]);

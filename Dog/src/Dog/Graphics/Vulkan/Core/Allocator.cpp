@@ -11,6 +11,7 @@ namespace Dog {
         allocatorInfo.physicalDevice = device.GetPhysicalDevice();
         allocatorInfo.device = device.GetDevice();
         allocatorInfo.instance = device.GetInstance();
+        allocatorInfo.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
         vmaCreateAllocator(&allocatorInfo, &mAllocator);
     }
 
@@ -25,12 +26,13 @@ namespace Dog {
         VkBufferCreateInfo bufferInfo{};
         bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         bufferInfo.size = size;
-        bufferInfo.usage = usage;
+        bufferInfo.usage = usage | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
         bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
         // Allocation info
         VmaAllocationCreateInfo allocInfo{};
         allocInfo.usage = memoryUsage;
+        allocInfo.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
 
         // Create the buffer and allocate memory using VMA
         if (vmaCreateBuffer(mAllocator, &bufferInfo, &allocInfo, &buffer, &bufferAllocation, nullptr) != VK_SUCCESS)
