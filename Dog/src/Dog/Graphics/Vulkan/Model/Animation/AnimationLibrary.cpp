@@ -26,6 +26,7 @@ namespace Dog
         }
 
         //std::string animName = std::filesystem::path(animPath).stem().string();
+
         std::string key = GetKey(model->GetName(), animPath);
         if (mAnimationMap.find(key) != mAnimationMap.end())
         {
@@ -145,8 +146,12 @@ namespace Dog
 
         mAnimators[index]->UpdateAnimation(dt);
     }
+
     std::string AnimationLibrary::GetKey(const std::string& modelPath, const std::string& animPath)
     {
-        return modelPath + "|" + animPath;
+        std::string key = modelPath + "|" + animPath;
+        std::transform(key.begin(), key.end(), key.begin(), ::tolower);
+
+        return key;
     }
 }

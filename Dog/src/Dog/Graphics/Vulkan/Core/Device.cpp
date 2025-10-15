@@ -212,14 +212,6 @@ namespace Dog {
         vulkan12Features.shaderFloat16 = VK_TRUE;
         vulkan12Features.shaderInt8 = VK_TRUE;
 
-        VkPhysicalDeviceAccelerationStructureFeaturesKHR accelFeature{};
-        accelFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
-        accelFeature.accelerationStructure = VK_TRUE; // not in guide, is it needed?
-
-        VkPhysicalDeviceRayTracingPipelineFeaturesKHR rtPipelineFeature{};
-        rtPipelineFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
-        rtPipelineFeature.rayTracingPipeline = VK_TRUE;
-
         // Make sure you pass these enabled features and extensions when creating your device
         VkDeviceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
