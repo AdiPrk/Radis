@@ -123,6 +123,8 @@ namespace Dog
          *********************************************************************/
         VkDeviceSize GetBufferSize() const { return mBufferSize; }
 
+        VkDeviceAddress GetDeviceAddress();
+
     private:
         /*********************************************************************
          * param:  instanceSize: The size of an instance
@@ -151,5 +153,6 @@ namespace Dog
         VkDeviceSize mAlignmentSize;                //Size of an instance when aligning to needed bit alignment (same as instance size if none was given)
         VkBufferUsageFlags mUsageFlags;             //Flags defining how this buffer can be used
         VmaMemoryUsage mMemoryUsage;                //Flags defining how this buffers memory can be accessed/stored
+        VkDeviceAddress mDeviceAddress{ 0 };
     };
 }

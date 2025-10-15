@@ -159,7 +159,8 @@ namespace Dog {
         }
 
         vkGetPhysicalDeviceProperties(physicalDevice, &properties);
-        std::cout << "physical device: " << properties.deviceName << std::endl;
+
+        DOG_INFO("Using GPU: {}", properties.deviceName);
     }
 
     void Device::createLogicalDevice() {
@@ -220,7 +221,8 @@ namespace Dog {
             .shaderSampledImageArrayNonUniformIndexing = VK_TRUE,
             .descriptorBindingPartiallyBound = VK_TRUE,
             .descriptorBindingVariableDescriptorCount = VK_TRUE,
-            .runtimeDescriptorArray = VK_TRUE
+            .runtimeDescriptorArray = VK_TRUE,
+            .bufferDeviceAddress = VK_TRUE
         };
 
         VkPhysicalDeviceAccelerationStructureFeaturesKHR accelFeature

@@ -5,12 +5,6 @@
 #define _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS
 #define NOMINMAX
 
-// spdlog (include first to avoid APIENTRY conflicts)
-#include "spdlog/spdlog.h"
-#include "spdlog/fmt/ostr.h"
-
-#include "mmsystem.h" // For timeBeginPeriod, timeEndPeriod
-
 // glfw
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>

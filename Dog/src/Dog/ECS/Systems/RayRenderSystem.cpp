@@ -62,7 +62,7 @@ namespace Dog
         for (int i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i) {
             VkBufferCreateInfo indirectBufferInfo = {};
             indirectBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-            indirectBufferInfo.size = sizeof(VkDrawIndexedIndirectCommand) * 10000;
+            indirectBufferInfo.size = sizeof(VkDrawIndexedIndirectCommand) * InstanceUniforms::MAX_INSTANCES;
             indirectBufferInfo.usage = VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
 
             VmaAllocationCreateInfo indirectAllocInfo = {};
@@ -166,19 +166,16 @@ namespace Dog
 
         std::vector<InstanceUniforms> instanceData{};
 
-        auto& registry = ecs->GetRegistry();
-        auto entityView = registry.view<ModelComponent, TransformComponent>();
-
         AnimationLibrary* al = rr->animationLibrary.get();
         ModelLibrary* ml = rr->modelLibrary.get();
 
         UnifiedMeshes* unifiedMesh = rr->modelLibrary->GetUnifiedMesh();
         Mesh& uMesh = unifiedMesh->GetUnifiedMesh();
 
-        VkDrawIndexedIndirectCommand* solidPtr;
-        vmaMapMemory(rr->allocator->GetAllocator(), mIndirectBufferAllocations[rr->currentFrameIndex], (void**)&solidPtr);
+        VkDrawIndexedIndirectCommand* indirectDrawPtr;
+        vmaMapMemory(rr->allocator->GetAllocator(), mIndirectBufferAllocations[rr->currentFrameIndex], (void**)&indirectDrawPtr);
 
-        int drawIndex = 0, instanceBaseIndex = 0, solidDrawCount = 0;
+        int instanceBaseIndex = 0, drawCount = 0;
 
         const auto& debugData = DebugDrawResource::GetInstanceData();
         if (instanceData.size() + debugData.size() >= InstanceUniforms::MAX_INSTANCES)
@@ -198,11 +195,13 @@ namespace Dog
             drawCommand.firstIndex = meshInfo.firstIndex;
             drawCommand.vertexOffset = meshInfo.vertexOffset;
             drawCommand.firstInstance = instanceBaseIndex;
-            solidPtr[solidDrawCount++] = drawCommand;
+            indirectDrawPtr[drawCount++] = drawCommand;
 
             instanceBaseIndex += (int)debugData.size();
         }
 
+        auto& registry = ecs->GetRegistry();
+        auto entityView = registry.view<ModelComponent, TransformComponent>();
         for (auto& entityHandle : entityView)
         {
             Entity entity(&registry, entityHandle);
@@ -242,7 +241,7 @@ namespace Dog
                 drawCommand.firstIndex = meshInfo.firstIndex;
                 drawCommand.vertexOffset = meshInfo.vertexOffset;
                 drawCommand.firstInstance = instanceBaseIndex++;
-                solidPtr[solidDrawCount++] = drawCommand;
+                indirectDrawPtr[drawCount++] = drawCommand;
             }
         }
 
@@ -263,8 +262,45 @@ namespace Dog
             cmd,
             mIndirectBuffers[rr->currentFrameIndex],
             0,
-            static_cast<uint32_t>(solidDrawCount),
+            static_cast<uint32_t>(drawCount),
             sizeof(VkDrawIndexedIndirectCommand)
         );
+
+        // test calling primitive to geometry
+        Mesh& testMesh = uMesh;
+        VkAccelerationStructureGeometryKHR geometry{};
+        VkAccelerationStructureBuildRangeInfoKHR rangeInfo{};
+        PrimitiveToGeometry(testMesh, geometry, rangeInfo);
+
+        // print stats
+        DOG_INFO("Primitive Count: {}", rangeInfo.primitiveCount);
+
+    }
+
+    void RayRenderSystem::PrimitiveToGeometry(Mesh& mesh, VkAccelerationStructureGeometryKHR& geometry, VkAccelerationStructureBuildRangeInfoKHR& rangeInfo)
+    {
+        VkDeviceAddress vertexAddress = mesh.mVertexBuffer->GetDeviceAddress();
+        VkDeviceAddress indexAddress = mesh.mIndexBuffer->GetDeviceAddress();
+
+        // Describe buffer as array of VertexObj.
+        VkAccelerationStructureGeometryTrianglesDataKHR triangles{
+            .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR,
+            .vertexFormat = VK_FORMAT_R32G32B32_SFLOAT,  // vec3 vertex position data
+            .vertexData = {.deviceAddress = vertexAddress},
+            .vertexStride = sizeof(Vertex),
+            .maxVertex = static_cast<uint32_t>(mesh.mVertices.size() - 1),
+            .indexType = VK_INDEX_TYPE_UINT32, 
+            .indexData = {.deviceAddress = indexAddress},
+        };
+
+        // Identify the above data as containing opaque triangles.
+        geometry = VkAccelerationStructureGeometryKHR{
+            .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR,
+            .geometryType = VK_GEOMETRY_TYPE_TRIANGLES_KHR,
+            .geometry = {.triangles = triangles},
+            .flags = VK_GEOMETRY_NO_DUPLICATE_ANY_HIT_INVOCATION_BIT_KHR | VK_GEOMETRY_OPAQUE_BIT_KHR,
+        };
+
+        rangeInfo = VkAccelerationStructureBuildRangeInfoKHR{ .primitiveCount = mesh.mTriangleCount };
     }
 }

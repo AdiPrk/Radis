@@ -1,5 +1,6 @@
 #include <PCH/pch.h>
 #include "Utils.h"
+#include <direct.h>   // for _getcwd
 
 namespace Dog
 {
@@ -35,7 +36,7 @@ namespace Dog
             PrintAndExit("Invalid or missing '-projectdir' argument.");
         }
 
-        std::cout << "Project Directory: " << projectDir << '\n';
+        //std::cout << "Project Directory: " << projectDir << '\n';
 
         if (projectDir != "Dev")
         {
@@ -48,7 +49,7 @@ namespace Dog
         char cwd[_MAX_PATH];
         if (_getcwd(cwd, _MAX_PATH))
         {
-            std::cout << "Current working directory is: " << cwd << '\n';
+            //std::cout << "Current working directory is: " << cwd << '\n';
         }
         else 
         {

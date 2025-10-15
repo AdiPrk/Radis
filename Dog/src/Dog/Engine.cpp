@@ -65,6 +65,15 @@ namespace Dog
     {
         mEcs.GetResource<SerializationResource>()->Deserialize("Assets/scenes/" + sceneName + ".json");
 
+        DOG_INFO("Info message");
+        DOG_WARN("Warn message");
+        DOG_ERROR("Error message");
+        DOG_CRITICAL("Critical message");
+        DOG_INFO("Info message");
+        DOG_WARN("Warn message");
+        DOG_ERROR("Error message");
+        DOG_CRITICAL("Critical message");
+
         FrameRateController frameRateController(mSpecs.fps);
         while (!mEcs.GetResource<WindowResource>()->window->ShouldClose() && mRunning) 
         {

@@ -1,5 +1,6 @@
 #include <PCH/pch.h>
 #include "FrameRate.h"
+#include "mmsystem.h" // For timeBeginPeriod, timeEndPeriod
 
 using namespace std::chrono;
 
