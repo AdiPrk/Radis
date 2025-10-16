@@ -34,7 +34,7 @@ namespace Dog
 		};
 
 		// Construct with name and trace-file path. Use Init(...) instead of constructing yourself.
-		explicit Logger(std::string name = "DOG", std::string traceFile = "dog_trace.log", bool enableColors = true,
+		explicit Logger(std::string traceFile = "dog_trace.log", bool enableColors = true,
 			std::optional<ColorScheme> scheme = std::nullopt) noexcept;
 
 		// Initialize the global logger (idempotent). Only set color scheme once at start.
@@ -96,7 +96,6 @@ namespace Dog
 		static std::shared_ptr<Logger> sLogger;
 
 		// State
-		std::string            m_name;
 		std::atomic<int>      m_level{ static_cast<int>(Level::Trace) };
 		std::mutex            m_mutex;
 		std::ofstream         m_trace_stream;

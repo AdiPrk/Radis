@@ -224,6 +224,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Dog\ECS\Systems\RayRenderSystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\RenderSystem.cpp" />
     <ClCompile Include="src\Dog\Engine.cpp" />
+    <ClCompile Include="src\Dog\Graphics\Vulkan\Core\AccelerationStructures.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Core\Allocator.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Core\Buffer.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Core\Device.cpp" />
@@ -304,11 +305,13 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Dog\ECS\Systems\RayRenderSystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\RenderSystem.h" />
     <ClInclude Include="src\Dog\Engine.h" />
+    <ClInclude Include="src\Dog\Graphics\Vulkan\Core\AccelerationStructures.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Core\Allocator.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Core\Buffer.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Core\Device.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Core\SwapChain.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Core\Synchronization.h" />
+    <ClInclude Include="src\Dog\Graphics\Vulkan\Core\VulkanFunctions.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Model\Animation\Animation.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Model\Animation\AnimationLibrary.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Model\Animation\Animator.h" />

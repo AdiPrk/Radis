@@ -1,6 +1,7 @@
 #include <PCH/pch.h>
 #include "Device.h"
 #include "Graphics/Window/Window.h"
+#include "VulkanFunctions.h"
 
 namespace Dog {
 
@@ -69,12 +70,15 @@ namespace Dog {
 
         allocator = std::make_unique<Allocator>(*this);
 
-        
-
         VkPhysicalDeviceProperties2 prop2{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 };
         mRtProperties.pNext = &mAsProperties;
         prop2.pNext = &mRtProperties;
         vkGetPhysicalDeviceProperties2(physicalDevice, &prop2);
+
+        g_vkCreateAccelerationStructureKHR = (PFN_vkCreateAccelerationStructureKHR)vkGetDeviceProcAddr(device_, "vkCreateAccelerationStructureKHR");
+        g_vkCmdBuildAccelerationStructuresKHR = (PFN_vkCmdBuildAccelerationStructuresKHR)vkGetDeviceProcAddr(device_, "vkCmdBuildAccelerationStructuresKHR");
+        g_vkGetAccelerationStructureBuildSizesKHR = (PFN_vkGetAccelerationStructureBuildSizesKHR)vkGetDeviceProcAddr(device_, "vkGetAccelerationStructureBuildSizesKHR");
+        g_vkGetAccelerationStructureDeviceAddressKHR = (PFN_vkGetAccelerationStructureDeviceAddressKHR)vkGetDeviceProcAddr(device_, "vkGetAccelerationStructureDeviceAddressKHR");
     }
 
     Device::~Device() 
@@ -544,7 +548,8 @@ namespace Dog {
         }
     }
 
-    VkCommandBuffer Device::BeginSingleTimeCommands() {
+    VkCommandBuffer Device::BeginSingleTimeCommands()
+    {
         // Allocate the command buffer
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -571,7 +576,8 @@ namespace Dog {
         return commandBuffer;
     }
 
-    void Device::EndSingleTimeCommands(VkCommandBuffer commandBuffer) {
+    void Device::EndSingleTimeCommands(VkCommandBuffer commandBuffer) 
+    {
         vkEndCommandBuffer(commandBuffer);
 
         VkSubmitInfo submitInfo{};
@@ -585,7 +591,8 @@ namespace Dog {
         vkFreeCommandBuffers(device_, commandPool, 1, &commandBuffer);
     }
 
-    void Device::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
+    void Device::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) 
+    {
         VkCommandBuffer commandBuffer = BeginSingleTimeCommands();
 
         VkBufferCopy copyRegion{};

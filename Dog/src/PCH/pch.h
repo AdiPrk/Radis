@@ -16,6 +16,9 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
 
+// vulkan
+#include "Graphics/Vulkan/Core/VulkanFunctions.h"
+
 // glm
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE

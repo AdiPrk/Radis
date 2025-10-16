@@ -1,5 +1,7 @@
 #pragma once
 
+#include "AccelerationStructures.h"
+
 namespace Dog
 {
 	class Device;
@@ -11,23 +13,36 @@ namespace Dog
 
 		VmaAllocator GetAllocator() { return mAllocator; }
 
-		/*********************************************************************
-		* param:  size: Size of the buffer to create
-		* param:  usage: What this buffer will hold
-		* param:  memoryUsage: Properties of the buffer's memory
-		* param:  buffer: Will get set to created buffer
-		* param:  bufferAllocation: Will get set to created buffer's memory
-		*
-		* brief:  Creates and allocates buffer
-		*********************************************************************/
+        // Creates buffer of given size
 		void CreateBuffer(
 			VkDeviceSize size,
 			VkBufferUsageFlags usage,
 			VmaMemoryUsage memoryUsage,
 			VkBuffer& buffer,
-			VmaAllocation& bufferAllocation);
+			VmaAllocation& bufferAllocation,
+			VkDeviceSize minAlignment = 0);
+
+		VkResult CreateBuffer(
+			ABuffer& buffer,
+			VkDeviceSize size,
+			VkBufferUsageFlags2KHR usage,
+			VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_AUTO,
+			VmaAllocationCreateFlags flags = {},
+			VkDeviceSize minAlignment = 0);
+
+		VkResult CreateBuffer(ABuffer& buffer,
+			                  const VkBufferCreateInfo& bufferInfo,
+			                  const VmaAllocationCreateInfo& allocInfo,
+			                  VkDeviceSize                   minAlignment = 0) const;
 
 		void DestroyBuffer(VkBuffer buffer, VmaAllocation bufferAllocation);
+		void DestroyBuffer(ABuffer& buffer) const;
+
+		VkResult CreateAcceleration(AccelerationStructure& accel, const VkAccelerationStructureCreateInfoKHR& accInfo) const;
+		VkResult CreateAcceleration(AccelerationStructure& accel,
+			const VkAccelerationStructureCreateInfoKHR& accInfo,
+			const VmaAllocationCreateInfo& vmaInfo,
+			std::span<const uint32_t>                   queueFamilies = {}) const;
 
 		/*********************************************************************
 	 * param:  imageInfo: Create info for image to create
@@ -45,6 +60,7 @@ namespace Dog
 
 	private:
 		VmaAllocator mAllocator;
+        Device& mDevice;
 	};
 
 }
