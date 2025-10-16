@@ -144,8 +144,8 @@ namespace Dog
         Device& mDevice;                            //Device this buffer will be interacting with
         void* mMapped = nullptr;                    //Memory location to memory mapped to the gpu (Null when not active)
 
-        VkBuffer mBuffer = VK_NULL_HANDLE; 				  //Buffer object
-        VmaAllocation mBufferAllocation; 						//Memory allocation for this buffer
+        VkBuffer mBuffer = VK_NULL_HANDLE; 			//Buffer object
+        VmaAllocation mBufferAllocation; 			//Memory allocation for this buffer
 
         VkDeviceSize mBufferSize;                   //Size of this buffer
         uint32_t mInstanceCount;                    //Number of instances of data in this buffer

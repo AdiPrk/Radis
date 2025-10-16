@@ -24,8 +24,8 @@ static Logger::ColorScheme default_colors()
 
 std::shared_ptr<Logger> Logger::sLogger = nullptr;
 
-Logger::Logger(std::string name, std::string traceFile, bool enableColors, std::optional<ColorScheme> scheme) noexcept
-	: m_name(std::move(name)), m_colors(scheme.value_or(default_colors())), m_colors_enabled(enableColors)
+Logger::Logger(std::string traceFile, bool enableColors, std::optional<ColorScheme> scheme) noexcept
+	: m_colors(scheme.value_or(default_colors())), m_colors_enabled(enableColors)
 {
 	// Reserve caches to reduce allocations
 	m_line_cache.reserve(256);
@@ -91,13 +91,11 @@ void Logger::log(Level lvl, const char* func, int line, std::string&& message)
     if (static_cast<int>(lvl) < m_level.load(std::memory_order_relaxed))
         return;
 
-    // Build time string (HH:MM:SS.mmm) — no date.
+    // Build time string
     using namespace std::chrono;
     auto now = system_clock::now();
-    auto now_s = floor<seconds>(now);
-    std::string timestr = std::format("{:%T}", now_s);
-    auto ms = duration_cast<milliseconds>(now - now_s).count();
-    timestr = std::format("{}.{:03}", timestr, static_cast<int>(ms));
+    auto now_m = floor<minutes>(now);
+    std::string timestr = std::format("{:%H:%M}", now_m);
 
     // Level string for trace file
     const char* level_str = (lvl == Level::Trace) ? "TRACE"
@@ -106,9 +104,14 @@ void Logger::log(Level lvl, const char* func, int line, std::string&& message)
         : (lvl == Level::Error) ? "ERROR"
         : "CRITICAL";
 
+    const char* display_func = func;
+    if (func && strncmp(func, "Dog::", 5) == 0) {
+        display_func = func + 5; // Move pointer past "Dog::"
+    }
+
     // Trace-file line (colorless, includes level and logger name)
     // Format: [HH:MM:SS.mmm] NAME LEVEL func:line: message
-    std::string file_line = std::format("[{}] {} {} {}:{}: {}", timestr, m_name, level_str, func ? func : "", line, message);
+    std::string file_line = std::format("[{}] {} {}:{}: {}", timestr, level_str, display_func ? display_func : "", line, message);
 
     std::lock_guard lock(m_mutex);
 
@@ -131,17 +134,17 @@ void Logger::log(Level lvl, const char* func, int line, std::string&& message)
 
     // Console dedupe: require same level + message + func + line
     if (!m_last_message.empty() && lvl == m_last_level && message == m_last_message &&
-        (func ? func : "") == m_last_func && line == m_last_line)
+        (display_func ? display_func : "") == m_last_func && line == m_last_line)
     {
         ++m_last_count;
 
         // When updating the repeated count, print using the stored m_last_message (not the possibly-moved incoming).
         // Build a visible console prefix (dimmed), then colored message, then dimmed "(xN)".
-        std::string console_prefix = std::format("[{}] {}:{}: ", timestr, func ? func : "", line);
+        std::string console_prefix = std::format("[{}] {}:{}: ", timestr, display_func ? display_func : "", line);
 
         if (m_colors_enabled && m_ansi_supported && out_is_tty)
         {
-            // Move cursor up, rewrite the line, then clear to end-of-line (restores previous behavior).
+            // Move cursor up, rewrite the line, then clear to end-of-line
             out << "\x1b[1A\r"
                 << m_colors.dim << console_prefix << m_colors.reset
                 << msg_color << m_last_message << m_colors.reset
@@ -151,7 +154,7 @@ void Logger::log(Level lvl, const char* func, int line, std::string&& message)
         }
         else
         {
-            out << std::format("[{}] {}:{}: (repeated {} times) {}", timestr, func ? func : "", line, m_last_count, m_last_message) << '\n';
+            out << std::format("[{}] {}:{}: (repeated {} times) {}", timestr, display_func ? display_func : "", line, m_last_count, m_last_message) << '\n';
             out.flush();
         }
         return;
@@ -159,13 +162,13 @@ void Logger::log(Level lvl, const char* func, int line, std::string&& message)
 
     // New message: update dedupe state (move the incoming message into stored slot).
     m_last_message = std::move(message);
-    m_last_func = (func ? func : "");
+    m_last_func = (display_func ? display_func : "");
     m_last_line = line;
     m_last_level = lvl;
     m_last_count = 1;
 
     // Build console prefix and print: dimmed prefix + colored message
-    std::string console_prefix = std::format("[{}] {}:{}: ", timestr, func ? func : "", line);
+    std::string console_prefix = std::format("[{}] {}:{}: ", timestr, display_func ? display_func : "", line);
 
     if (m_colors_enabled && m_ansi_supported && out_is_tty)
     {

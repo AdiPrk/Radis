@@ -80,6 +80,11 @@ namespace Dog {
         const VkPhysicalDeviceRayTracingPipelinePropertiesKHR& GetRayTracingProperties() const { return mRtProperties; }
         const VkPhysicalDeviceAccelerationStructurePropertiesKHR& GetAccelerationStructureProperties() const { return mAsProperties; }
 
+        PFN_vkCreateAccelerationStructureKHR g_vkCreateAccelerationStructureKHR;
+        PFN_vkCmdBuildAccelerationStructuresKHR g_vkCmdBuildAccelerationStructuresKHR;
+        PFN_vkGetAccelerationStructureBuildSizesKHR g_vkGetAccelerationStructureBuildSizesKHR;
+        PFN_vkGetAccelerationStructureDeviceAddressKHR g_vkGetAccelerationStructureDeviceAddressKHR;
+
     private:
         void createInstance();
         void setupDebugMessenger();

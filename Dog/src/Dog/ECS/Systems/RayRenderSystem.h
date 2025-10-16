@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ISystem.h"
+#include "Graphics/Vulkan/Core/AccelerationStructures.h"
 
 namespace Dog
 {
@@ -24,6 +25,15 @@ namespace Dog
         void PrimitiveToGeometry(Mesh& mesh,
             VkAccelerationStructureGeometryKHR& geometry,
             VkAccelerationStructureBuildRangeInfoKHR& rangeInfo);
+
+        void CreateAccelerationStructure(VkAccelerationStructureTypeKHR asType, AccelerationStructure& accelStruct, VkAccelerationStructureGeometryKHR& asGeometry, VkAccelerationStructureBuildRangeInfoKHR& asBuildRangeInfo, VkBuildAccelerationStructureFlagsKHR flags);
+        void CreateBottomLevelAS();
+        void CreateTopLevelAS();
+
+    private:
+        // Accleration stuffs
+        std::vector<AccelerationStructure> mBlasAccel; // Bottom Level Acceleration Structures
+        uint32_t mNumInstancesRendered = 0;
 
     private:
         std::unique_ptr<Pipeline> mPipeline;

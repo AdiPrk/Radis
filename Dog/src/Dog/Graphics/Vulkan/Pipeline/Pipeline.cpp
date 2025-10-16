@@ -17,12 +17,15 @@ namespace Dog
 		, mFragPath(ShaderDir + fragFile)
 		, mTescPath("")
 		, mTesePath("")
+        , mColorFormat(colorFormat)
+        , mDepthFormat(depthFormat)
+        , mUniforms(uniforms)
 	{
 		mSpvVertPath = SpvDir + vertFile + ".spv";
 		mSpvFragPath = SpvDir + fragFile + ".spv";
 
 		CreatePipelineLayout(uniforms);
-		CreatePipeline(colorFormat, depthFormat);
+		CreatePipeline();
 	}
 
 	Pipeline::Pipeline(Device& device, VkFormat colorFormat, VkFormat depthFormat, const std::vector<Uniform*>& uniforms, bool wireframe, const std::string& vertFile, const std::string& fragFile, const std::string& tescFile, const std::string& teseFile)
@@ -32,6 +35,9 @@ namespace Dog
 		, mFragPath(ShaderDir + fragFile)
 		, mTescPath(ShaderDir + tescFile)
 		, mTesePath(ShaderDir + teseFile)
+		, mColorFormat(colorFormat)
+		, mDepthFormat(depthFormat)
+		, mUniforms(uniforms)
 	{
 		mSpvVertPath = SpvDir + vertFile + ".spv";
 		mSpvFragPath = SpvDir + fragFile + ".spv";
@@ -39,10 +45,10 @@ namespace Dog
 		mSpvTesePath = SpvDir + teseFile + ".spv";
 
 		CreatePipelineLayout(uniforms);
-		CreatePipeline(colorFormat, depthFormat);
+		CreatePipeline();
 	}
 
-	Pipeline::~Pipeline()
+	void Pipeline::DestroyPipeline()
 	{
 		//Destroy shaders
 		vkDestroyShaderModule(device.GetDevice(), mVertShaderModule, nullptr);
@@ -50,8 +56,24 @@ namespace Dog
 
 		//Destroy pipeline
 		vkDestroyPipeline(device.GetDevice(), mGraphicsPipeline, nullptr);
+	}
 
-		//Destroy created layout
+	void Pipeline::Recreate()
+	{
+        vkDeviceWaitIdle(device.GetDevice());
+		DestroyPipeline();
+		
+		if (!mVertPath.empty()) Shader::CompileShader(mVertPath);
+        if (!mFragPath.empty()) Shader::CompileShader(mFragPath);
+        if (!mTescPath.empty()) Shader::CompileShader(mTescPath);
+        if (!mTesePath.empty()) Shader::CompileShader(mTesePath);
+
+        CreatePipeline();
+	}
+
+	Pipeline::~Pipeline()
+	{
+		DestroyPipeline();
 		vkDestroyPipelineLayout(device.GetDevice(), mPipelineLayout, nullptr);
 	}
 
@@ -94,7 +116,7 @@ namespace Dog
 		}
 	}
 
-	void Pipeline::CreatePipeline(VkFormat colorFormat, VkFormat depthFormat)
+	void Pipeline::CreatePipeline()
 	{
 		//Make sure everything needed exists
 		if (mPipelineLayout == nullptr)
@@ -119,8 +141,8 @@ namespace Dog
 		pipelineConfig.pipeLineLayout = mPipelineLayout;
 
 		//Formats
-        pipelineConfig.colorFormat = colorFormat;
-        pipelineConfig.depthFormat = depthFormat;
+        pipelineConfig.colorFormat = mColorFormat;
+        pipelineConfig.depthFormat = mDepthFormat;
 
 		//Create the pipeline
 		CreateGraphicsPipeline(pipelineConfig);
