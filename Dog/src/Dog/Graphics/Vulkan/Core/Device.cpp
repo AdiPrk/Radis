@@ -176,26 +176,14 @@ namespace Dog {
             queueCreateInfos.push_back(queueCreateInfo);
         }
 
-        VkPhysicalDeviceRobustness2FeaturesKHR robustness2Features{};
-        robustness2Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_KHR;
-        robustness2Features.nullDescriptor = VK_TRUE;
-
         VkPhysicalDeviceFeatures deviceFeatures = {};
-        deviceFeatures.samplerAnisotropy = VK_TRUE;   //Set the feature samplerAnisotropy to true to sigify that we want for this device
-        deviceFeatures.multiDrawIndirect = VK_TRUE;   //Set the feature multiDrawIndirect to true to sigify that we want for this device
-        deviceFeatures.tessellationShader = VK_TRUE;  //Set the feature tessellationShader to true to sigify that we want for this device
+        deviceFeatures.samplerAnisotropy = VK_TRUE;
+        deviceFeatures.multiDrawIndirect = VK_TRUE;
+        deviceFeatures.tessellationShader = VK_TRUE;
         deviceFeatures.pipelineStatisticsQuery = VK_TRUE;
         deviceFeatures.logicOp = VK_TRUE;
         deviceFeatures.fillModeNonSolid = VK_TRUE;
         deviceFeatures.shaderInt16 = VK_TRUE;
-
-        VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeatures{};
-        dynamicRenderingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
-        dynamicRenderingFeatures.dynamicRendering = VK_TRUE;
-
-        VkPhysicalDevice16BitStorageFeatures storage16BitFeatures = {};
-        storage16BitFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_16BIT_STORAGE_FEATURES;
-        storage16BitFeatures.storageBuffer16BitAccess = VK_TRUE;  // Allow uint16_t in SSBOs
 
         VkPhysicalDeviceVulkan13Features vulkan13Features = {};
         vulkan13Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
@@ -216,14 +204,6 @@ namespace Dog {
         VkDeviceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         
-        /*storage16BitFeatures.pNext = &dynamicRenderingFeatures;
-        vulkan12Features.pNext = &storage16BitFeatures;
-        accelFeature.pNext = &vulkan12Features;
-        rtPipelineFeature.pNext = &accelFeature;
-        createInfo.pNext = &rtPipelineFeature;*/
-        //storage16BitFeatures.pNext = &dynamicRenderingFeatures;
-        storage16BitFeatures.pNext = &robustness2Features;
-        vulkan13Features.pNext = &storage16BitFeatures;
         vulkan12Features.pNext = &vulkan13Features;
         createInfo.pNext = &vulkan12Features;
 
@@ -234,8 +214,6 @@ namespace Dog {
         createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
         createInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
-        // might not really be necessary anymore because device specific validation layers
-        // have been deprecated
         if (enableValidationLayers) {
             createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
             createInfo.ppEnabledLayerNames = validationLayers.data();
