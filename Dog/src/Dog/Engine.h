@@ -22,7 +22,7 @@ namespace Dog
 		static constexpr int WIDTH = 1600;
 		static constexpr int HEIGHT = 900;
 
-		Engine(const EngineSpec& specs);
+		Engine(const EngineSpec& specs, int argc, char* argv[]);
 		~Engine();
 
 		Engine(const Engine&) = delete;
@@ -36,6 +36,9 @@ namespace Dog
 		int Run(const std::string& sceneName);
 		int Exit();
 
+		static void SetDevBuild(bool dev) { mDevBuild = dev; }
+		static bool IsDevBuild() { return mDevBuild; }
+
 	private:
 		// Engine Specs
 		EngineSpec mSpecs;
@@ -44,7 +47,10 @@ namespace Dog
 		bool mRunning = true;
 
 		// Entity Component System for the engine
-        ECS mEcs; 
+        ECS mEcs;
+
+		// Dev build?
+        static bool mDevBuild;
 	};
 
 } // namespace Dog

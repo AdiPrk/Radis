@@ -7,8 +7,7 @@
 #include "glslang/SPIRV/GlslangToSpv.h"
 #include "../Uniform/ShaderTypes.h"
 
-#include <direct.h>   // for _getcwd
-
+#include "Engine.h"
 
 namespace Dog
 {
@@ -41,7 +40,16 @@ namespace Dog
         std::string outputPathStr = "Assets/shaders/spv/" + path.filename().string() + ".spv";
 
         // Build command line
-        const char* glslangValidatorPath = "glslangValidator.exe";
+        std::string glslangValidatorPath;
+        if (Engine::IsDevBuild())
+        {
+            glslangValidatorPath = "..\\..\\Dependencies\\glslc\\glslangValidator.exe";
+        }
+        else
+        {
+            glslangValidatorPath = "glslangValidator.exe";
+        }
+
         std::string command = std::format(
             "{} -V --target-env vulkan1.4 -Od -g --spirv-val \"{}\" -o \"{}\"", // No quotes here
             glslangValidatorPath, pathStr, outputPathStr
@@ -49,16 +57,7 @@ namespace Dog
 
         std::cout << "Command: " << command << "\n";
 
-        // print current working directory
-        char cwd[_MAX_PATH];
-        if (_getcwd(cwd, _MAX_PATH))
-        {
-            std::cout << "Current working directory is: " << cwd << '\n';
-        }
-
         int result = std::system(command.c_str());
-        //int result = std::system(glslangValidatorPath);
-
         if (result != 0)
         {
             DOG_ERROR("Shader compilation failed: {}", path.filename().string());

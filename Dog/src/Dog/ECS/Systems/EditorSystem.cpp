@@ -402,7 +402,7 @@ namespace Dog
 
         DrawComponentUI<ModelComponent>("Model", selectedEnt, [&](ModelComponent& component)
         {
-            const std::vector<std::string> modelExtensions = { ".fbx", ".glb" };
+            const std::vector<std::string> modelExtensions = { ".fbx", ".glb", ".obj" };
             const std::vector<std::string>& modelFiles = GetFilesWithExtensions("assets/models/", modelExtensions);
 
             auto rr = ecs->GetResource<RenderingResource>();
@@ -419,7 +419,10 @@ namespace Dog
                     const bool isSelected = currPath == modelPath;
                     if (ImGui::Selectable(modelPath.c_str(), isSelected))
                     {
-                        component.ModelPath = modelPath;
+                        std::string lowerModelPath = modelPath;
+                        std::transform(lowerModelPath.begin(), lowerModelPath.end(), lowerModelPath.begin(), ::tolower);
+
+                        component.ModelPath = lowerModelPath;
                     }
                     if (isSelected)
                     {

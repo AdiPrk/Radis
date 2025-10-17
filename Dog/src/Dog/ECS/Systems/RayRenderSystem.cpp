@@ -86,10 +86,10 @@ namespace Dog
 
         DebugDrawResource::Clear();
 
-        //if (InputSystem::isKeyTriggered(Key::Z))
-        //{
-        //    mPipeline->Recreate();
-        //}
+        if (InputSystem::isKeyTriggered(Key::Z))
+        {
+            mPipeline->Recreate();
+        }
     }
     
     void RayRenderSystem::Update(float dt)
@@ -218,7 +218,7 @@ namespace Dog
             ModelComponent& mc = entity.GetComponent<ModelComponent>();
             TransformComponent& tc = entity.GetComponent<TransformComponent>();
             AnimationComponent* ac = entity.HasComponent<AnimationComponent>() ? &entity.GetComponent<AnimationComponent>() : nullptr;
-            Model* model = rr->modelLibrary->TryAddGetModel(mc.ModelPath);
+            Model* model = rr->modelLibrary->GetModel(mc.ModelPath);
             if (!model) continue;
             
             uint32_t boneOffset = AnimationLibrary::INVALID_ANIMATION_INDEX;

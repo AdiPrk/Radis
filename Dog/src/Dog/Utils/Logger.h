@@ -34,14 +34,10 @@ namespace Dog
 		};
 
 		// Construct with name and trace-file path. Use Init(...) instead of constructing yourself.
-		explicit Logger(std::string traceFile = "dog_trace.log", bool enableColors = true,
-			std::optional<ColorScheme> scheme = std::nullopt) noexcept;
+		explicit Logger(std::string traceFile = "dog_trace.log", bool enableColors = true, std::optional<ColorScheme> scheme = std::nullopt) noexcept;
 
-		// Initialize the global logger (idempotent). Only set color scheme once at start.
-		static void Init(const std::string& name = "DOG",
-			const std::string& traceFile = "dog_trace.log",
-			bool enableColors = true,
-			std::optional<ColorScheme> scheme = std::nullopt);
+		// Initialize the global logger
+		static void Init(const std::string& traceFile = "dog_trace.log", bool enableColors = true, std::optional<ColorScheme> scheme = std::nullopt);
 
 		// Access the global logger.
 		inline static std::shared_ptr<Logger>& GetLogger() { return sLogger; }

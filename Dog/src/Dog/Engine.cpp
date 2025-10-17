@@ -20,12 +20,18 @@
 #include "Graphics/Window/FrameRate.h"
 #include "Graphics/Vulkan/Core/Device.h"
 
+#include "Utils/Utils.h"
+
 namespace Dog 
 {
-    Engine::Engine(const EngineSpec& specs)
+    bool Engine::mDevBuild = false;
+
+    Engine::Engine(const EngineSpec& specs, int argc, char* argv[])
         : mSpecs(specs)
         , mEcs()
     {
+        ValidateStartingDirectory(argc, argv);
+
         Logger::Init();
 
         // Systems -------------------------
