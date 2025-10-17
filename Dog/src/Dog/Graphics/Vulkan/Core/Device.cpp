@@ -197,12 +197,6 @@ namespace Dog {
         deviceFeatures.fillModeNonSolid = VK_TRUE;
         deviceFeatures.shaderInt16 = VK_TRUE;
 
-        VkPhysicalDeviceRobustness2FeaturesKHR robustness2Features
-        {
-            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_KHR,
-            .nullDescriptor = VK_TRUE,
-        };
-
         VkPhysicalDevice16BitStorageFeatures storage16BitFeatures = 
         {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_16BIT_STORAGE_FEATURES,
@@ -247,10 +241,8 @@ namespace Dog {
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         
         accelFeature.pNext = &rtPipelineFeature;
-        robustness2Features.pNext = &accelFeature;
-        storage16BitFeatures.pNext = &robustness2Features;
+        storage16BitFeatures.pNext = &accelFeature;
         vulkan13Features.pNext = &storage16BitFeatures;
-        vulkan12Features.pNext = &vulkan13Features;
         createInfo.pNext = &vulkan12Features;
 
         createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
@@ -260,8 +252,6 @@ namespace Dog {
         createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
         createInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
-        // might not really be necessary anymore because device specific validation layers
-        // have been deprecated
         if (enableValidationLayers) {
             createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
             createInfo.ppEnabledLayerNames = validationLayers.data();
