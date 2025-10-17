@@ -73,11 +73,11 @@ Logger::Logger(std::string traceFile, bool enableColors, std::optional<ColorSche
 		m_colors_enabled = false;
 }
 
-void Logger::Init(const std::string& name, const std::string& traceFile, bool enableColors, std::optional<ColorScheme> scheme)
+void Logger::Init(const std::string& traceFile, bool enableColors, std::optional<ColorScheme> scheme)
 {
 	if (!sLogger)
 	{
-		sLogger = std::make_shared<Logger>(name, traceFile, enableColors, scheme);
+		sLogger = std::make_shared<Logger>(traceFile, enableColors, scheme);
 	}
 	else
 	{

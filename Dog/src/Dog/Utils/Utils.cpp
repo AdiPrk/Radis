@@ -1,5 +1,6 @@
 #include <PCH/pch.h>
 #include "Utils.h"
+#include "Engine.h"
 // #include <direct.h>   // for _getcwd
 
 namespace Dog
@@ -45,6 +46,8 @@ namespace Dog
                 PrintAndExit("Failed to set project directory.");
             }
         }
+
+        Engine::SetDevBuild(projectDir == "Dev");
 
         // char cwd[_MAX_PATH];
         // if (_getcwd(cwd, _MAX_PATH))

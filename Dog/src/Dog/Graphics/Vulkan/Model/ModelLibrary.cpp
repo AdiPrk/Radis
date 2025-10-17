@@ -37,14 +37,17 @@ namespace Dog
             return it->second;
         }
 
-        std::unique_ptr<Model> model = std::make_unique<Model>(mDevice, filePath);
+        std::string lowerPath = filePath;
+        std::transform(lowerPath.begin(), lowerPath.end(), lowerPath.begin(), ::tolower);
+
+        std::unique_ptr<Model> model = std::make_unique<Model>(mDevice, lowerPath);
         
         uint32_t modelID = static_cast<uint32_t>(mModels.size());
         mModels.push_back(std::move(model));
         AddToUnifiedMesh(modelID);
 
         // std::string mModelName = std::filesystem::path(filePath).stem().string();
-        mModelMap[filePath] = modelID;
+        mModelMap[lowerPath] = modelID;
         mLastModelLoaded = modelID;
         
         return modelID;
@@ -56,6 +59,7 @@ namespace Dog
         {
             return;
         }
+
         if (modelIndex >= mModels.size())
         {
             return;
@@ -89,7 +93,10 @@ namespace Dog
     {
         if (modelPath.empty()) return nullptr;
 
-        auto it = mModelMap.find(modelPath);
+        std::string lowerPath = modelPath;
+        std::transform(lowerPath.begin(), lowerPath.end(), lowerPath.begin(), ::tolower);
+
+        auto it = mModelMap.find(lowerPath);
         if (it == mModelMap.end()) return nullptr;
         return GetModel(it->second);
     }
@@ -98,10 +105,13 @@ namespace Dog
     {
         if (modelPath.empty()) return nullptr;
 
-        auto it = mModelMap.find(modelPath);
+        std::string lowerPath = modelPath;
+        std::transform(lowerPath.begin(), lowerPath.end(), lowerPath.begin(), ::tolower);
+
+        auto it = mModelMap.find(lowerPath);
         if (it == mModelMap.end())
         {
-            uint32_t newModelIndex = AddModel(modelPath);
+            uint32_t newModelIndex = AddModel(lowerPath);
             return GetModel(newModelIndex);
         }
         return GetModel(it->second);
@@ -109,6 +119,9 @@ namespace Dog
 
     uint32_t ModelLibrary::GetModelIndex(const std::string& modelPath)
     {
+        std::string lowerPath = modelPath;
+        std::transform(lowerPath.begin(), lowerPath.end(), lowerPath.begin(), ::tolower);
+
         auto it = mModelMap.find(modelPath);
         if (it == mModelMap.end())
         {
