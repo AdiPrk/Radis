@@ -94,8 +94,10 @@ void Logger::log(Level lvl, const char* func, int line, std::string&& message)
     // Build time string
     using namespace std::chrono;
     auto now = system_clock::now();
-    auto now_m = floor<minutes>(now);
-    std::string timestr = std::format("{:%H:%M}", now_m);
+    auto local = zoned_time{ current_zone(), now };
+    auto local_m = floor<minutes>(local.get_local_time());
+
+    std::string timestr = std::format("{:%H:%M}", local_m);
 
     // Level string for trace file
     const char* level_str = (lvl == Level::Trace) ? "TRACE"

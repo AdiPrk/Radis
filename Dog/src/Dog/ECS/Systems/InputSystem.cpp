@@ -4,6 +4,8 @@
 #include "ECS/ECS.h"
 #include "ECS/Resources/InputResource.h"
 
+#include "GLFW/glfw3.h"
+
 #define DO_INPUT_LOGGING 0
 
 namespace Dog {

@@ -4,7 +4,7 @@
 
 namespace Dog
 {
-    class Window;
+    class IWindow;
     class Device;
     class SwapChain;
     class Synchronizer;
@@ -19,7 +19,7 @@ namespace Dog
 
     struct RenderingResource : public IResource
     {
-        RenderingResource(Window& window);
+        RenderingResource(IWindow* window);
         ~RenderingResource();
 
         std::unique_ptr<Device> device;
@@ -60,12 +60,9 @@ namespace Dog
         void UpdateTextureUniform();
 
     private:
-        Window& window;
-
-    private:
         friend class Renderer;
         friend class PresentSystem;
-        void RecreateSwapChain();
+        void RecreateSwapChain(IWindow* window);
 
         void CreateCommandBuffers();
 

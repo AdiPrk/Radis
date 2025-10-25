@@ -4,7 +4,7 @@
 
 namespace Dog {
 
-    class Window;
+    class VulkanWindow;
 
     struct SwapChainSupportDetails {
         VkSurfaceCapabilitiesKHR capabilities;
@@ -28,7 +28,7 @@ namespace Dog {
         bool enableValidationLayers = true;
 #endif
 
-        Device(Window& window);
+        Device(VulkanWindow& window);
         ~Device();
 
         // Not copyable or movable
@@ -107,7 +107,7 @@ namespace Dog {
         VkInstance instance;
         VkDebugUtilsMessengerEXT debugMessenger;
         VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
-        Window& window;
+        VulkanWindow& window;
         VkCommandPool commandPool;
 
         VkDevice device_;

@@ -41,8 +41,8 @@
     <ClCompile Include="src\Dog\Graphics\Vulkan\Uniform\Uniform.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Uniform\UniformData.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Uniform\UniformSettings.cpp" />
-    <ClCompile Include="src\Dog\Graphics\Window\FrameRate.cpp" />
-    <ClCompile Include="src\Dog\Graphics\Window\Window.cpp" />
+    <ClCompile Include="src\Dog\Utils\FrameRate.cpp" />
+    <ClCompile Include="src\Dog\Graphics\Vulkan\VulkanWindow.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Model\AssimpGlmHelper.cpp" />
     <ClCompile Include="src\Dog\Utils\Logger.cpp" />
     <ClCompile Include="src\Dog\Utils\SerializationOperators.cpp" />
@@ -51,6 +51,10 @@
     <ClCompile Include="src\Dog\ECS\Resources\DebugDrawResource.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Model\UnifiedMesh.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\RayRenderSystem.cpp" />
+    <ClCompile Include="src\Dog\Graphics\Vulkan\Core\AccelerationStructures.cpp" />
+    <ClCompile Include="src\Dog\Graphics\IWindow.cpp" />
+    <ClCompile Include="src\Dog\Graphics\OpenGL\OpenGLWindow.cpp" />
+    <ClCompile Include="src\Dog\ECS\Systems\WindowSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\nlohmann\json.hpp" />
@@ -112,8 +116,8 @@
     <ClInclude Include="src\Dog\Graphics\Vulkan\Uniform\Uniform.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Uniform\UniformData.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Uniform\UniformSettings.h" />
-    <ClInclude Include="src\Dog\Graphics\Window\FrameRate.h" />
-    <ClInclude Include="src\Dog\Graphics\Window\Window.h" />
+    <ClInclude Include="src\Dog\Utils\FrameRate.h" />
+    <ClInclude Include="src\Dog\Graphics\Vulkan\VulkanWindow.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Model\AssimpGlmHelper.h" />
     <ClInclude Include="src\Dog\Utils\InputMap.h" />
     <ClInclude Include="src\Dog\Utils\Logger.h" />
@@ -124,8 +128,15 @@
     <ClInclude Include="src\Dog\ECS\Resources\DebugDrawResource.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Model\UnifiedMesh.h" />
     <ClInclude Include="src\Dog\ECS\Systems\RayRenderSystem.h" />
+    <ClInclude Include="src\Dog\Graphics\Vulkan\Core\AccelerationStructures.h" />
+    <ClInclude Include="src\Dog\Graphics\Vulkan\Core\VulkanFunctions.h" />
+    <ClInclude Include="src\Dog\Graphics\IWindow.h" />
+    <ClInclude Include="src\Dog\Graphics\GraphicsAPIs.h" />
+    <ClInclude Include="src\Dog\Graphics\OpenGL\OpenGLWindow.h" />
+    <ClInclude Include="src\Dog\ECS\Systems\WindowSystem.h" />
   </ItemGroup>
   <ItemGroup>
+    <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />

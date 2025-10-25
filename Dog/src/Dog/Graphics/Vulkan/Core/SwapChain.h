@@ -27,7 +27,7 @@ namespace Dog
          * brief:  Create the swapchain and all other parts required to drawing
          *         a frame
          *********************************************************************/
-        SwapChain(Device& deviceRef, VkExtent2D windowExtent);
+        SwapChain(Device& deviceRef, glm::uvec2 windowExtent);
 
         /*********************************************************************
          * param:  deviceRef: Device to create this swapchain for
@@ -38,7 +38,7 @@ namespace Dog
          * brief:  Create the swapchain and all other parts required to drawing
          *         a frame, reuse memeory when  possible from old swapchain
          *********************************************************************/
-        SwapChain(Device& deviceRef, VkExtent2D windowExtent, std::shared_ptr<SwapChain> previous);
+        SwapChain(Device& deviceRef, glm::uvec2 windowExtent, std::shared_ptr<SwapChain> previous);
 
         /*********************************************************************
          * brief:  Delete all data created by this class
@@ -233,7 +233,7 @@ namespace Dog
         std::vector<VkImageView> mSwapChainImageViews;  //Vector of all image views for each image, which are descriptors for the images (stuff like if 2d or 3d, how many layers, ect.)
 
         Device& mDevice;          //Device this swapchain is created for
-        VkExtent2D mWindowExtent; //Extent (size) of the window this swapchain is rendering too
+        glm::uvec2 mWindowExtent; //Extent (size) of the window this swapchain is rendering too
 
         VkSwapchainKHR mSwapChain;                //Swapchain object in vulkan (Like the whole point of this class)
         std::shared_ptr<SwapChain> mOldSwapChain; //Old swapchain that existed before this one (only exists if this is a recreated swapchain)
