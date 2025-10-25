@@ -37,13 +37,16 @@ namespace Dog
         VkSampler defaultSampler = renderData.textureLibrary->GetSampler();
         size_t textureCount = renderData.textureLibrary->GetTextureCount();
 
+        if (textureCount == 0)
+        {
+            DOG_ERROR("Should have loaded square.png by here!!!");
+        }
+
         std::vector<VkDescriptorImageInfo> imageInfos(TextureLibrary::MAX_TEXTURE_COUNT);
         for (size_t j = 0; j < TextureLibrary::MAX_TEXTURE_COUNT; ++j) {
             imageInfos[j].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             imageInfos[j].sampler = defaultSampler;
-
-            if (textureCount == 0) imageInfos[j].imageView = VK_NULL_HANDLE;
-            else imageInfos[j].imageView = renderData.textureLibrary->GetTextureByIndex(static_cast<uint32_t>(std::min(j, textureCount - 1))).GetImageView();
+            imageInfos[j].imageView = renderData.textureLibrary->GetTextureByIndex(static_cast<uint32_t>(std::min(j, textureCount - 1))).GetImageView();
         }
 
         for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex) 

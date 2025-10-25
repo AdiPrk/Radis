@@ -7,14 +7,14 @@
 
 namespace Dog
 {
-    SwapChain::SwapChain(Device& deviceRef, VkExtent2D extent)
+    SwapChain::SwapChain(Device& deviceRef, glm::uvec2 extent)
         : mDevice{ deviceRef }
         , mWindowExtent{ extent }
     {
         Init(mDevice.GetInstance());
     }
 
-    SwapChain::SwapChain(Device& deviceRef, VkExtent2D extent, std::shared_ptr<SwapChain> previous)
+    SwapChain::SwapChain(Device& deviceRef, glm::uvec2 extent, std::shared_ptr<SwapChain> previous)
         : mDevice{ deviceRef }
         , mWindowExtent{ extent }
         , mOldSwapChain{ previous }
@@ -468,7 +468,7 @@ namespace Dog
         else
         {
             //Get size from window size and min/max of image capabilities
-            VkExtent2D actualExtent = mWindowExtent;
+            VkExtent2D actualExtent = { mWindowExtent.x, mWindowExtent.y };
             actualExtent.width = std::max(capabilities.minImageExtent.width, std::min(capabilities.maxImageExtent.width, actualExtent.width));
             actualExtent.height = std::max(capabilities.minImageExtent.height, std::min(capabilities.maxImageExtent.height, actualExtent.height));
             return actualExtent;

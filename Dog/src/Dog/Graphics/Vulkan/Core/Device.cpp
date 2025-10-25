@@ -1,6 +1,6 @@
 ﻿#include <PCH/pch.h>
 #include "Device.h"
-#include "Graphics/Window/Window.h"
+#include "Graphics/Vulkan/VulkanWindow.h"
 #include "VulkanFunctions.h"
 
 namespace Dog {
@@ -58,7 +58,7 @@ namespace Dog {
     }
 
     // class member functions
-    Device::Device(Window& window) 
+    Device::Device(VulkanWindow& window) 
         : window{ window }
     {
         createInstance();
@@ -171,7 +171,7 @@ namespace Dog {
         DOG_INFO("Starting logical device creation.");
 
         if (physicalDevice == VK_NULL_HANDLE) {
-            DOG_ERROR("physicalDevice is VK_NULL_HANDLE — cannot create logical device.");
+            DOG_ERROR("physicalDevice is VK_NULL_HANDLE - cannot create logical device.");
             throw std::runtime_error("physicalDevice is VK_NULL_HANDLE");
         }
 
@@ -298,6 +298,7 @@ namespace Dog {
         accelFeature.pNext = &rtPipelineFeature;
         storage16BitFeatures.pNext = &accelFeature;
         vulkan13Features.pNext = &storage16BitFeatures;
+        vulkan12Features.pNext = &vulkan13Features;
         createInfo.pNext = &vulkan12Features;
 
         createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
@@ -305,8 +306,8 @@ namespace Dog {
 
         createInfo.pEnabledFeatures = &deviceFeatures;
 
-        createInfo.enabledExtensionCount = static_cast<uint32_t>(enabledExtensions.size());
-        createInfo.ppEnabledExtensionNames = enabledExtensions.empty() ? nullptr : enabledExtensions.data();
+        createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
+        createInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
         if (enableValidationLayers) {
             createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
@@ -323,18 +324,18 @@ namespace Dog {
             throw std::runtime_error("No queue create infos prepared");
         }
 
-        DOG_INFO("Calling vkCreateDevice...");
+        //DOG_INFO("Calling vkCreateDevice...");
         VkResult res = vkCreateDevice(physicalDevice, &createInfo, nullptr, &device_);
         if (res != VK_SUCCESS) {
             DOG_ERROR("vkCreateDevice failed with error code {0}", static_cast<int>(res));
             throw std::runtime_error("failed to create logical device!");
         }
-        DOG_INFO("vkCreateDevice succeeded.");
+        //DOG_INFO("vkCreateDevice succeeded.");
 
         // 8) Retrieve queues and validate
-        DOG_INFO("Retrieving queues.");
+        //DOG_INFO("Retrieving queues.");
         vkGetDeviceQueue(device_, indices.graphicsFamily, 0, &graphicsQueue_);
-        DOG_INFO("graphicsQueue_ retrieved from family {0}", indices.graphicsFamily);
+        //DOG_INFO("graphicsQueue_ retrieved from family {0}", indices.graphicsFamily);
 
         if (indices.presentFamily == INVALID_INDEX) {
             DOG_WARN("presentFamily was invalid; skipping vkGetDeviceQueue for presentQueue_.");
@@ -349,7 +350,7 @@ namespace Dog {
             throw std::runtime_error("device_ is VK_NULL_HANDLE after vkCreateDevice");
         }
 
-        DOG_INFO("Logical device created successfully.");
+        //DOG_INFO("Logical device created successfully.");
     }
 
 
@@ -384,7 +385,7 @@ namespace Dog {
         }
     }
 
-    void Device::createSurface() { window.CreateWindowSurface(instance, &surface_); }
+    void Device::createSurface() { window.CreateVulkanSurface(instance, &surface_); }
 
     bool Device::isDeviceSuitable(VkPhysicalDevice device)
     {
@@ -458,7 +459,7 @@ namespace Dog {
     {
         uint32_t glfwExtensionCount = 0;
         const char** glfwExtensions;
-        glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+        glfwExtensions = window.GetRequiredVulkanExtensions(&glfwExtensionCount);
 
         std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 

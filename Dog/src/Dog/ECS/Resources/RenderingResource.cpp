@@ -8,7 +8,7 @@
 #include "Graphics/Vulkan/Pipeline/Pipeline.h"
 #include "Graphics/Vulkan/RenderGraph.h"
 
-#include "Graphics/Window/Window.h"
+#include "Graphics/Vulkan/VulkanWindow.h"
 
 #include "Graphics/Vulkan/Uniform/Uniform.h"
 #include "Graphics/Vulkan/Uniform/UniformData.h"
@@ -23,12 +23,12 @@
 
 namespace Dog
 {
-    RenderingResource::RenderingResource(Window& window)
-        : device(std::make_unique<Device>(window))
-        , window{ window }
-        , allocator(std::make_unique<Allocator>(*device))
+    RenderingResource::RenderingResource(IWindow* window)
     {
-        RecreateSwapChain();
+        device = std::make_unique<Device>(*dynamic_cast<VulkanWindow*>(window));
+        allocator = std::make_unique<Allocator>(*device);
+
+        RecreateSwapChain(window);
 
         VkFormat srgbFormat = swapChain->GetImageFormat();
         VkFormat linearFormat = ToLinearFormat(srgbFormat);
@@ -37,6 +37,7 @@ namespace Dog
         syncObjects = std::make_unique<Synchronizer>(device->GetDevice(), swapChain->ImageCount());
 
         textureLibrary = std::make_unique<TextureLibrary>(*device);
+        textureLibrary->AddTexture("Assets/textures/square.png");
 
         modelLibrary = std::make_unique<ModelLibrary>(*device, *textureLibrary);
         animationLibrary = std::make_unique<AnimationLibrary>();
@@ -52,17 +53,17 @@ namespace Dog
         //animationLibrary->AddAnimation("Assets/models/jack_samba.glb", modelLibrary->GetModel("jack_samba"));
         //modelLibrary->AddModel("Assets/models/travisFloppin.glb");
         //animationLibrary->AddAnimation("Assets/models/travisFloppin.glb", modelLibrary->GetModel("travisFloppin"));
-        //modelLibrary->AddModel("Assets/models/TravisLocomotion/travis.fbx");
-        //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/idle.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-        //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/jump.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-        //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left strafe walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-        //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left strafe.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-        //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left turn 90.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-        //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right strafe walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-        //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right strafe.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-        //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right turn 90.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-        //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/standard run.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-        //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+        modelLibrary->AddModel("Assets/models/TravisLocomotion/travis.fbx");
+        animationLibrary->AddAnimation("Assets/models/TravisLocomotion/idle.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+        animationLibrary->AddAnimation("Assets/models/TravisLocomotion/jump.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+        animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left strafe walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+        animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left strafe.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+        animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left turn 90.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+        animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right strafe walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+        animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right strafe.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+        animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right turn 90.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+        animationLibrary->AddAnimation("Assets/models/TravisLocomotion/standard run.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+        animationLibrary->AddAnimation("Assets/models/TravisLocomotion/walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
         //modelLibrary->AddModel("Assets/models/okayu.pmx");
         //modelLibrary->AddModel("Assets/models/AlisaMikhailovna.fbx");
 
@@ -116,12 +117,12 @@ namespace Dog
         }
     }
 
-    void RenderingResource::RecreateSwapChain()
+    void RenderingResource::RecreateSwapChain(IWindow* window)
     {
-        auto extent = window.GetExtent();
-        while (extent.width == 0 || extent.height == 0) {
-            extent = window.GetExtent();
-            glfwWaitEvents();
+        auto extent = window->GetExtent();
+        while (extent.x == 0 || extent.y == 0) {
+            extent = window->GetExtent();
+            window->WaitEvents();
         }
 
         vkDeviceWaitIdle(*device);

@@ -5,9 +5,12 @@
 #define _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS
 #define NOMINMAX
 
-// glfw
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
+// glew
+#define GLEW_STATIC
+#include <GL/glew.h>
+
+// vulkan
+#include <vulkan/vulkan.h>
 
 // imgui
 #define IMGUI_DEFINE_MATH_OPERATORS
@@ -15,6 +18,7 @@
 #include <imgui_stdlib.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
+#include <backends/imgui_impl_opengl3.h>
 
 // vulkan
 #include "Graphics/Vulkan/Core/VulkanFunctions.h"
@@ -72,6 +76,7 @@
 #include "Utils/Logger.h"
 #include "Graphics/Vulkan/Model/AssimpGlmHelper.h"
 #include "Graphics/Vulkan/Model/Animation/VQS.h"
+#include "Graphics/GraphicsAPIs.h"
 
 // Shared files
 #include "../../Common/src/Core.h"
