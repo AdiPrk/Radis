@@ -112,7 +112,11 @@ namespace Dog
     {
         mRunning = false;
 
-        vkDeviceWaitIdle(mEcs.GetResource<RenderingResource>()->device->GetDevice());
+        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan) 
+        {
+            vkDeviceWaitIdle(mEcs.GetResource<RenderingResource>()->device->GetDevice());
+        }
+
         mEcs.Exit();
 
         return EXIT_SUCCESS;
