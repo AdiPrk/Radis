@@ -8,25 +8,27 @@
 #include "Graphics/Vulkan/Pipeline/Pipeline.h"
 #include "Graphics/Vulkan/RenderGraph.h"
 
-#include "Graphics/Window/Window.h"
+#include "Graphics/Vulkan/VulkanWindow.h"
 
 #include "Graphics/Vulkan/Uniform/Uniform.h"
 #include "Graphics/Vulkan/Uniform/UniformData.h"
 
 #include "Graphics/Vulkan/Model/ModelLibrary.h"
 #include "Graphics/Vulkan/Texture/TextureLibrary.h"
+#include "Graphics/Vulkan/Texture/Texture.h"
 #include "Graphics/Vulkan/Model/Animation/AnimationLibrary.h"
 #include "Graphics/Vulkan/Model/Model.h"
 #include "Graphics/Vulkan/Model/Animation/Animator.h"
+#include "Graphics/Vulkan/Uniform/Descriptors.h"
 
 namespace Dog
 {
-    RenderingResource::RenderingResource(Window& window)
-        : device(std::make_unique<Device>(window))
-        , window{ window }
-        , allocator(std::make_unique<Allocator>(*device))
+    RenderingResource::RenderingResource(IWindow* window)
     {
-        RecreateSwapChain();
+        device = std::make_unique<Device>(*dynamic_cast<VulkanWindow*>(window));
+        allocator = std::make_unique<Allocator>(*device);
+
+        RecreateSwapChain(window);
 
         VkFormat srgbFormat = swapChain->GetImageFormat();
         VkFormat linearFormat = ToLinearFormat(srgbFormat);
@@ -35,6 +37,7 @@ namespace Dog
         syncObjects = std::make_unique<Synchronizer>(device->GetDevice(), swapChain->ImageCount());
 
         textureLibrary = std::make_unique<TextureLibrary>(*device);
+        textureLibrary->AddTexture("Assets/textures/square.png");
 
         modelLibrary = std::make_unique<ModelLibrary>(*device, *textureLibrary);
         animationLibrary = std::make_unique<AnimationLibrary>();
@@ -85,12 +88,41 @@ namespace Dog
         );
     }
 
-    void RenderingResource::RecreateSwapChain()
+    void RenderingResource::UpdateTextureUniform()
     {
-        auto extent = window.GetExtent();
-        while (extent.width == 0 || extent.height == 0) {
-            extent = window.GetExtent();
-            glfwWaitEvents();
+        auto& ml = modelLibrary;
+        if (ml->NeedsTextureUpdate())
+        {
+            ml->LoadTextures();
+
+            auto& tl = textureLibrary;
+
+            size_t textureCount = tl->GetTextureCount();
+            std::vector<VkDescriptorImageInfo> imageInfos(TextureLibrary::MAX_TEXTURE_COUNT);
+
+            VkSampler defaultSampler = tl->GetSampler();
+
+            bool hasTex = textureCount > 0;
+            for (size_t j = 0; j < TextureLibrary::MAX_TEXTURE_COUNT; ++j) {
+                imageInfos[j].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                imageInfos[j].sampler = defaultSampler;
+                imageInfos[j].imageView = hasTex ? tl->GetTextureByIndex(static_cast<uint32_t>(std::min(j, textureCount - 1))).GetImageView() : 0;
+            }
+
+            for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex) {
+                DescriptorWriter writer(*instanceUniform->GetDescriptorLayout(), *instanceUniform->GetDescriptorPool());
+                writer.WriteImage(0, imageInfos.data(), static_cast<uint32_t>(imageInfos.size()));
+                writer.Overwrite(instanceUniform->GetDescriptorSets()[frameIndex]);
+            }
+        }
+    }
+
+    void RenderingResource::RecreateSwapChain(IWindow* window)
+    {
+        auto extent = window->GetExtent();
+        while (extent.x == 0 || extent.y == 0) {
+            extent = window->GetExtent();
+            window->WaitEvents();
         }
 
         vkDeviceWaitIdle(*device);
@@ -304,7 +336,4 @@ namespace Dog
         return format;
     }
 
-    void RenderingResource::LoadAnimations()
-    {
-    }
 }

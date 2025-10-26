@@ -123,6 +123,8 @@ namespace Dog
          *********************************************************************/
         VkDeviceSize GetBufferSize() const { return mBufferSize; }
 
+        VkDeviceAddress GetDeviceAddress();
+
     private:
         /*********************************************************************
          * param:  instanceSize: The size of an instance
@@ -142,8 +144,8 @@ namespace Dog
         Device& mDevice;                            //Device this buffer will be interacting with
         void* mMapped = nullptr;                    //Memory location to memory mapped to the gpu (Null when not active)
 
-        VkBuffer mBuffer = VK_NULL_HANDLE; 				  //Buffer object
-        VmaAllocation mBufferAllocation; 						//Memory allocation for this buffer
+        VkBuffer mBuffer = VK_NULL_HANDLE; 			//Buffer object
+        VmaAllocation mBufferAllocation; 			//Memory allocation for this buffer
 
         VkDeviceSize mBufferSize;                   //Size of this buffer
         uint32_t mInstanceCount;                    //Number of instances of data in this buffer
@@ -151,5 +153,6 @@ namespace Dog
         VkDeviceSize mAlignmentSize;                //Size of an instance when aligning to needed bit alignment (same as instance size if none was given)
         VkBufferUsageFlags mUsageFlags;             //Flags defining how this buffer can be used
         VmaMemoryUsage mMemoryUsage;                //Flags defining how this buffers memory can be accessed/stored
+        VkDeviceAddress mDeviceAddress{ 0 };
     };
 }

@@ -21,6 +21,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ImGui", "ImGui\ImGui.vcxpro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ECS", "ECS\ECS.vcxproj", "{A72E0EE2-35C4-4D38-BA7F-E2165E8D9C77}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DogLauncher", "DogLauncher\DogLauncher.vcxproj", "{7B1AF591-6005-423C-9BF4-3613B4501798}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -64,6 +66,12 @@ Global
 		{A72E0EE2-35C4-4D38-BA7F-E2165E8D9C77}.Release|x64.Build.0 = Release|x64
 		{A72E0EE2-35C4-4D38-BA7F-E2165E8D9C77}.Ship|x64.ActiveCfg = Release|x64
 		{A72E0EE2-35C4-4D38-BA7F-E2165E8D9C77}.Ship|x64.Build.0 = Release|x64
+		{7B1AF591-6005-423C-9BF4-3613B4501798}.Debug|x64.ActiveCfg = Debug|x64
+		{7B1AF591-6005-423C-9BF4-3613B4501798}.Debug|x64.Build.0 = Debug|x64
+		{7B1AF591-6005-423C-9BF4-3613B4501798}.Release|x64.ActiveCfg = Release|x64
+		{7B1AF591-6005-423C-9BF4-3613B4501798}.Release|x64.Build.0 = Release|x64
+		{7B1AF591-6005-423C-9BF4-3613B4501798}.Ship|x64.ActiveCfg = Debug|x64
+		{7B1AF591-6005-423C-9BF4-3613B4501798}.Ship|x64.Build.0 = Debug|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -61,6 +61,9 @@ namespace Dog
 		Pipeline(Device& device, VkFormat colorFormat, VkFormat depthFormat, const std::vector<Uniform*>& uniforms, bool wireframe, const std::string& vertFile, const std::string& fragFile);
 		Pipeline(Device& device, VkFormat colorFormat, VkFormat depthFormat, const std::vector<Uniform*>& uniforms, bool wireframe, const std::string& vertFile, const std::string& fragFile, const std::string& tescFile, const std::string& teseFile);
 
+		void DestroyPipeline();
+		void Recreate();
+
 		~Pipeline();
 
 		Pipeline(const Pipeline&) = delete;
@@ -71,13 +74,9 @@ namespace Dog
 		VkPipelineLayout& GetLayout() { return mPipelineLayout; };
 
 	private:
-
 		void CreatePipelineLayout(const std::vector<Uniform*>& uniforms);
-
-		void CreatePipeline(VkFormat colorFormat, VkFormat depthFormat);
-
+		void CreatePipeline();
 		void DefaultPipelineConfigInfo(PipelineConfigInfo& configInfo);
-
 		void CreateGraphicsPipeline(const PipelineConfigInfo& configInfo);
 		
 		Device& device;				     
@@ -98,5 +97,11 @@ namespace Dog
 		std::string mSpvFragPath;
 		std::string mSpvTescPath;
 		std::string mSpvTesePath;
+
+		// Pipeline info
+        VkFormat mColorFormat;
+        VkFormat mDepthFormat;
+        bool mIsWireframe;
+        const std::vector<Uniform*>& mUniforms;
 	};
 }

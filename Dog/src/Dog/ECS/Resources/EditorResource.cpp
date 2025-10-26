@@ -1,6 +1,6 @@
 #include <PCH/pch.h>
 #include "EditorResource.h"
-#include "Graphics/Window/Window.h"
+#include "Graphics/Vulkan/VulkanWindow.h"
 
 #include "RenderingResource.h"
 #include "WindowResource.h"
@@ -11,7 +11,7 @@
 
 namespace Dog
 {
-    EditorResource::EditorResource(Device& device, SwapChain& swapChain, Window& window)
+    EditorResource::EditorResource(Device& device, SwapChain& swapChain, GLFWwindow* glfwWindow)
     {
 		VkDescriptorPoolSize pool_sizes[] = { 
 			{ VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
@@ -59,7 +59,7 @@ namespace Dog
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;      // Enable docking
 		// io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable multi-viewport / platform windows
 
-		ImGui_ImplGlfw_InitForVulkan(window.GetGLFWwindow(), true);
+		ImGui_ImplGlfw_InitForVulkan(glfwWindow, true);
 		ImGui_ImplVulkan_InitInfo init_info = {};
 		init_info.Instance = device.GetInstance();
 		init_info.PhysicalDevice = device.GetPhysicalDevice();
@@ -87,5 +87,21 @@ namespace Dog
 
 		ImGui::StyleColorsDark();
     }
+
+	EditorResource::EditorResource(GLFWwindow* glfwWindow)
+	{
+		IMGUI_CHECKVERSION();
+		ImGui::CreateContext();
+		ImGuiIO& io = ImGui::GetIO();
+		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+		io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // IF using Docking Branch
+
+		// Setup Platform/Renderer backends
+		ImGui_ImplGlfw_InitForOpenGL(glfwWindow, true);  // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
+		ImGui_ImplOpenGL3_Init();
+
+		ImGui::StyleColorsDark();
+	}
 }
 

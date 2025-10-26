@@ -1,5 +1,6 @@
 #include <PCH/pch.h>
 #include "EditorSystem.h"
+#include "Engine.h"
 #include "../ECS.h"
 #include "../Entities/Components.h"
 
@@ -17,7 +18,7 @@
 #include "Graphics/Vulkan/Model/ModelLibrary.h"
 #include "Graphics/Vulkan/Model/Model.h"
 
-#include "Graphics/Window/Window.h"
+#include "Graphics/Vulkan/VulkanWindow.h"
 
 #include "imgui_internal.h"
 
@@ -25,8 +26,11 @@ namespace Dog
 {
     void EditorSystem::Init()
     {
-        auto rr = ecs->GetResource<RenderingResource>();
-		rr->RecreateAllSceneTextures();
+        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+        {
+            auto rr = ecs->GetResource<RenderingResource>();
+		    rr->RecreateAllSceneTextures();
+        }
     }
 
     void EditorSystem::FrameStart()
@@ -35,21 +39,29 @@ namespace Dog
 
     void EditorSystem::Update(float dt)
     {
-		auto rr = ecs->GetResource<RenderingResource>();
-		if (!rr)
-		{
-			DOG_CRITICAL("No rendering resource in editor system");
-			return;
-		}
-		
-		rr->renderGraph->AddPass(
-			"ImGuiPass",
-			[&](RGPassBuilder& builder) {
-				builder.reads("SceneColor");
-				builder.writes("BackBuffer");
-			},
-			std::bind(&EditorSystem::RenderImGui, this, std::placeholders::_1)
-		);
+        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+        {
+            auto rr = ecs->GetResource<RenderingResource>();
+            if (!rr)
+            {
+                DOG_CRITICAL("No rendering resource in editor system");
+                return;
+            }
+
+            rr->renderGraph->AddPass(
+                "ImGuiPass",
+                [&](RGPassBuilder& builder) {
+                    builder.reads("SceneColor");
+                    builder.writes("BackBuffer");
+                },
+                std::bind(&EditorSystem::RenderImGui, this, std::placeholders::_1)
+            );
+        }
+
+        else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
+        {
+            RenderImGui(VK_NULL_HANDLE);
+        }
     }
 
     void EditorSystem::FrameEnd()
@@ -69,39 +81,50 @@ namespace Dog
 
     void EditorSystem::Exit()
     {
-        auto rr = ecs->GetResource<RenderingResource>();
-        auto er = ecs->GetResource<EditorResource>();
-        Device& device = *rr->device;
+        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan) {
+            auto rr = ecs->GetResource<RenderingResource>();
+            auto er = ecs->GetResource<EditorResource>();
+            Device& device = *rr->device;
 
-		ImGui_ImplVulkan_Shutdown();
-		ImGui_ImplGlfw_Shutdown();
-		ImGui::DestroyContext();
+            ImGui_ImplVulkan_Shutdown();
+            ImGui_ImplGlfw_Shutdown();
+            ImGui::DestroyContext();
 
-		vkDestroyDescriptorSetLayout(device, er->samplerSetLayout, nullptr);
-		vkDestroyDescriptorPool(device, er->descriptorPool, nullptr);
+            vkDestroyDescriptorSetLayout(device, er->samplerSetLayout, nullptr);
+            vkDestroyDescriptorPool(device, er->descriptorPool, nullptr);
 
-		rr->CleanupSceneTexture();
-        rr->CleanupDepthBuffer();
+            rr->CleanupSceneTexture();
+            rr->CleanupDepthBuffer();
+        }
+        else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
+        {
+            ImGui_ImplOpenGL3_Shutdown();
+            ImGui_ImplGlfw_Shutdown();
+            ImGui::DestroyContext();
+        }
     }
 
 	void EditorSystem::RenderImGui(VkCommandBuffer cmd)
 	{
         auto er = ecs->GetResource<EditorResource>();
 
-		// Start the Dear ImGui frame
-		ImGui_ImplVulkan_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
+        // Start the Dear ImGui frame
+        if      (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan) ImGui_ImplVulkan_NewFrame();
+        else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL) ImGui_ImplOpenGL3_NewFrame();
+
+        ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
         RenderMainMenuBar();
 
         ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
-		RenderSceneWindow();
+		
+        RenderSceneWindow();
 		RenderEntitiesWindow(); 
 		RenderInspectorWindow();
 
         ImGui::Begin("Debug");
-        ImGui::Checkbox("Wireframe", &ecs->GetResource<RenderingResource>()->renderWireframe);
+        //ImGui::Checkbox("Wireframe", &ecs->GetResource<RenderingResource>()->renderWireframe);
         ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
         ImGui::End();
 
@@ -140,7 +163,9 @@ namespace Dog
 
 		// Rendering
 		ImGui::Render();
-		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
+
+        if      (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan) ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
+        else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL) ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	}
 
     void EditorSystem::RenderMainMenuBar()
@@ -167,6 +192,16 @@ namespace Dog
 
     void EditorSystem::RenderSceneWindow()
 	{
+        if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
+        {
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+            ImGui::Begin("Viewport");
+            ImGui::Text("Cannot render Scene Viewport in OpenGL yet.");
+            ImGui::End();
+            ImGui::PopStyleVar();
+            return;
+        }
+            
 		// Create a window and display the scene texture
 		VkDescriptorSet sceneTextureDescriptorSet = ecs->GetResource<RenderingResource>()->sceneTextureDescriptorSet;
 
@@ -402,7 +437,7 @@ namespace Dog
 
         DrawComponentUI<ModelComponent>("Model", selectedEnt, [&](ModelComponent& component)
         {
-            const std::vector<std::string> modelExtensions = { ".fbx", ".glb" };
+            const std::vector<std::string> modelExtensions = { ".fbx", ".glb", ".obj" };
             const std::vector<std::string>& modelFiles = GetFilesWithExtensions("assets/models/", modelExtensions);
 
             auto rr = ecs->GetResource<RenderingResource>();
@@ -419,7 +454,10 @@ namespace Dog
                     const bool isSelected = currPath == modelPath;
                     if (ImGui::Selectable(modelPath.c_str(), isSelected))
                     {
-                        component.ModelPath = modelPath;
+                        std::string lowerModelPath = modelPath;
+                        std::transform(lowerModelPath.begin(), lowerModelPath.end(), lowerModelPath.begin(), ::tolower);
+
+                        component.ModelPath = lowerModelPath;
                     }
                     if (isSelected)
                     {

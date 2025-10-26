@@ -1,6 +1,7 @@
 ﻿#include <PCH/pch.h>
 #include "Device.h"
-#include "Graphics/Window/Window.h"
+#include "Graphics/Vulkan/VulkanWindow.h"
+#include "VulkanFunctions.h"
 
 namespace Dog {
 
@@ -57,7 +58,7 @@ namespace Dog {
     }
 
     // class member functions
-    Device::Device(Window& window) 
+    Device::Device(VulkanWindow& window) 
         : window{ window }
     {
         createInstance();
@@ -68,6 +69,16 @@ namespace Dog {
         createCommandPool();
 
         allocator = std::make_unique<Allocator>(*this);
+
+        VkPhysicalDeviceProperties2 prop2{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 };
+        mRtProperties.pNext = &mAsProperties;
+        prop2.pNext = &mRtProperties;
+        vkGetPhysicalDeviceProperties2(physicalDevice, &prop2);
+
+        g_vkCreateAccelerationStructureKHR = (PFN_vkCreateAccelerationStructureKHR)vkGetDeviceProcAddr(device_, "vkCreateAccelerationStructureKHR");
+        g_vkCmdBuildAccelerationStructuresKHR = (PFN_vkCmdBuildAccelerationStructuresKHR)vkGetDeviceProcAddr(device_, "vkCmdBuildAccelerationStructuresKHR");
+        g_vkGetAccelerationStructureBuildSizesKHR = (PFN_vkGetAccelerationStructureBuildSizesKHR)vkGetDeviceProcAddr(device_, "vkGetAccelerationStructureBuildSizesKHR");
+        g_vkGetAccelerationStructureDeviceAddressKHR = (PFN_vkGetAccelerationStructureDeviceAddressKHR)vkGetDeviceProcAddr(device_, "vkGetAccelerationStructureDeviceAddressKHR");
     }
 
     Device::~Device() 
@@ -152,14 +163,15 @@ namespace Dog {
         }
 
         vkGetPhysicalDeviceProperties(physicalDevice, &properties);
-        std::cout << "physical device: " << properties.deviceName << std::endl;
+
+        DOG_INFO("Using GPU: {}", properties.deviceName);
     }
 
     void Device::createLogicalDevice() {
         DOG_INFO("Starting logical device creation.");
 
         if (physicalDevice == VK_NULL_HANDLE) {
-            DOG_ERROR("physicalDevice is VK_NULL_HANDLE — cannot create logical device.");
+            DOG_ERROR("physicalDevice is VK_NULL_HANDLE - cannot create logical device.");
             throw std::runtime_error("physicalDevice is VK_NULL_HANDLE");
         }
 
@@ -240,125 +252,52 @@ namespace Dog {
         deviceFeatures.logicOp = VK_TRUE;
         deviceFeatures.fillModeNonSolid = VK_TRUE;
 
-        VkPhysicalDeviceVulkan13Features vulkan13Features = {};
-        vulkan13Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
-        vulkan13Features.shaderDemoteToHelperInvocation = VK_TRUE;
-        vulkan13Features.dynamicRendering = VK_TRUE;
+        VkPhysicalDevice16BitStorageFeatures storage16BitFeatures = 
+        {
+            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_16BIT_STORAGE_FEATURES,
+            .storageBuffer16BitAccess = VK_TRUE
+        };
 
-        VkPhysicalDeviceVulkan12Features vulkan12Features = {};
-        vulkan12Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
-        vulkan12Features.drawIndirectCount = VK_TRUE;
-        vulkan12Features.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
-        vulkan12Features.runtimeDescriptorArray = VK_TRUE;
-        vulkan12Features.descriptorBindingPartiallyBound = VK_TRUE;
-        vulkan12Features.descriptorBindingVariableDescriptorCount = VK_TRUE;
+        VkPhysicalDeviceVulkan13Features vulkan13Features = 
+        {
+            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
+            .shaderDemoteToHelperInvocation = VK_TRUE,
+            .dynamicRendering = VK_TRUE
+        };
 
-        // Compare requested features against supported features and disable unsupported ones with logs
-        auto warnIfNotSupported = [&](const char* name, bool requested, bool supported, auto& outFlag) {
-            if (requested && !supported) {
-                DOG_WARN("{0} requested but NOT supported by the physical device. Disabling.", name);
-                outFlag = VK_FALSE;
-            }
-            else if (requested && supported) {
-                DOG_INFO("{0} requested and supported.", name);
-                outFlag = VK_TRUE;
-            }
-            else {
-                DOG_INFO("{0} not requested.", name);
-                outFlag = VK_FALSE;
-            }
-            };
+        VkPhysicalDeviceVulkan12Features vulkan12Features = 
+        {
+            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
+            .drawIndirectCount = VK_TRUE,
+            .shaderFloat16 = VK_TRUE,
+            .shaderInt8 = VK_TRUE,
+            .shaderSampledImageArrayNonUniformIndexing = VK_TRUE,
+            .descriptorBindingPartiallyBound = VK_TRUE,
+            .descriptorBindingVariableDescriptorCount = VK_TRUE,
+            .runtimeDescriptorArray = VK_TRUE,
+            .bufferDeviceAddress = VK_TRUE
+        };
 
-        // Core VkPhysicalDeviceFeatures (supportedFeatures2.features)
-        warnIfNotSupported("samplerAnisotropy", deviceFeatures.samplerAnisotropy, supportedFeatures2.features.samplerAnisotropy, deviceFeatures.samplerAnisotropy);
-        warnIfNotSupported("multiDrawIndirect", deviceFeatures.multiDrawIndirect, supportedFeatures2.features.multiDrawIndirect, deviceFeatures.multiDrawIndirect);
-        warnIfNotSupported("tessellationShader", deviceFeatures.tessellationShader, supportedFeatures2.features.tessellationShader, deviceFeatures.tessellationShader);
-        warnIfNotSupported("pipelineStatisticsQuery", deviceFeatures.pipelineStatisticsQuery, supportedFeatures2.features.pipelineStatisticsQuery, deviceFeatures.pipelineStatisticsQuery);
-        warnIfNotSupported("logicOp", deviceFeatures.logicOp, supportedFeatures2.features.logicOp, deviceFeatures.logicOp);
-        warnIfNotSupported("fillModeNonSolid", deviceFeatures.fillModeNonSolid, supportedFeatures2.features.fillModeNonSolid, deviceFeatures.fillModeNonSolid);
+        VkPhysicalDeviceAccelerationStructureFeaturesKHR accelFeature
+        {
+            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR,
+            .accelerationStructure = VK_TRUE
+        };
 
-        // Vulkan 1.2 features
-        warnIfNotSupported("drawIndirectCount", vulkan12Features.drawIndirectCount, supported12.drawIndirectCount, vulkan12Features.drawIndirectCount);
-        warnIfNotSupported("shaderSampledImageArrayNonUniformIndexing", vulkan12Features.shaderSampledImageArrayNonUniformIndexing, supported12.shaderSampledImageArrayNonUniformIndexing, vulkan12Features.shaderSampledImageArrayNonUniformIndexing);
-        warnIfNotSupported("runtimeDescriptorArray", vulkan12Features.runtimeDescriptorArray, supported12.runtimeDescriptorArray, vulkan12Features.runtimeDescriptorArray);
-        warnIfNotSupported("descriptorBindingPartiallyBound", vulkan12Features.descriptorBindingPartiallyBound, supported12.descriptorBindingPartiallyBound, vulkan12Features.descriptorBindingPartiallyBound);
-        warnIfNotSupported("descriptorBindingVariableDescriptorCount", vulkan12Features.descriptorBindingVariableDescriptorCount, supported12.descriptorBindingVariableDescriptorCount, vulkan12Features.descriptorBindingVariableDescriptorCount);
+        VkPhysicalDeviceRayTracingPipelineFeaturesKHR rtPipelineFeature
+        {
+            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR,
+            .rayTracingPipeline = VK_TRUE,
+            .rayTracingPipelineTraceRaysIndirect = VK_TRUE, // Prob gonna be unused for a bit
+            .rayTraversalPrimitiveCulling = VK_TRUE         // Prob gonna be unused for a bit
+        };
 
-        // Vulkan 1.3 features
-        warnIfNotSupported("shaderDemoteToHelperInvocation", vulkan13Features.shaderDemoteToHelperInvocation, supported13.shaderDemoteToHelperInvocation, vulkan13Features.shaderDemoteToHelperInvocation);
-        warnIfNotSupported("dynamicRendering", vulkan13Features.dynamicRendering, supported13.dynamicRendering, vulkan13Features.dynamicRendering);
-
-        // 5) Check device extensions availability
-        DOG_INFO("Checking device extension support.");
-        uint32_t extCount = 0;
-        if (vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extCount, nullptr) != VK_SUCCESS) {
-            DOG_WARN("vkEnumerateDeviceExtensionProperties failed to retrieve count.");
-            extCount = 0;
-        }
-        std::vector<VkExtensionProperties> availableExts(extCount);
-        if (extCount > 0) {
-            if (vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extCount, availableExts.data()) != VK_SUCCESS) {
-                DOG_WARN("vkEnumerateDeviceExtensionProperties failed to retrieve extensions.");
-                availableExts.clear();
-            }
-        }
-
-        std::set<std::string> availableExtNames;
-        for (const auto& e : availableExts) {
-            availableExtNames.insert(e.extensionName);
-        }
-        DOG_INFO("Device exposes {0} extensions.", availableExtNames.size());
-
-        std::vector<const char*> enabledExtensions;
-        enabledExtensions.reserve(deviceExtensions.size());
-        for (const char* ext : deviceExtensions) {
-            if (!ext) continue;
-            std::string ename(ext);
-            if (availableExtNames.count(ename) == 0) {
-                DOG_ERROR("Required device extension not available: {0}", ename.c_str());
-                throw std::runtime_error(std::string("Missing required device extension: ") + ename);
-            }
-            enabledExtensions.push_back(ext);
-            DOG_INFO("Will enable device extension: {0}", ename.c_str());
-        }
-
-        // 6) If validation layers are requested, verify their availability
-        if (enableValidationLayers) {
-            DOG_INFO("Validation layers requested — verifying availability.");
-            uint32_t layerCount = 0;
-            if (vkEnumerateDeviceLayerProperties(physicalDevice, &layerCount, nullptr) != VK_SUCCESS) {
-                DOG_WARN("vkEnumerateDeviceLayerProperties failed to retrieve layer count.");
-                layerCount = 0;
-            }
-            std::vector<VkLayerProperties> availableLayers(layerCount);
-            if (layerCount > 0) {
-                if (vkEnumerateDeviceLayerProperties(physicalDevice, &layerCount, availableLayers.data()) != VK_SUCCESS) {
-                    DOG_WARN("vkEnumerateDeviceLayerProperties failed to list layers.");
-                    availableLayers.clear();
-                }
-            }
-            std::set<std::string> availableLayerNames;
-            for (const auto& l : availableLayers) availableLayerNames.insert(l.layerName);
-
-            for (const char* layer : validationLayers) {
-                if (!layer) continue;
-                if (!availableLayerNames.count(layer)) {
-                    DOG_WARN("Requested validation layer not available at device-level: {0}", layer);
-                }
-                else {
-                    DOG_INFO("Validation layer will be enabled: {0}", layer);
-                }
-            }
-        }
-        else {
-            DOG_INFO("Validation layers not requested.");
-        }
-
-        // 7) Fill create info with validated values
         VkDeviceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-
-        // pNext chain for feature structures: vulkan12 -> vulkan13
+        
+        accelFeature.pNext = &rtPipelineFeature;
+        storage16BitFeatures.pNext = &accelFeature;
+        vulkan13Features.pNext = &storage16BitFeatures;
         vulkan12Features.pNext = &vulkan13Features;
         createInfo.pNext = &vulkan12Features;
 
@@ -367,8 +306,8 @@ namespace Dog {
 
         createInfo.pEnabledFeatures = &deviceFeatures;
 
-        createInfo.enabledExtensionCount = static_cast<uint32_t>(enabledExtensions.size());
-        createInfo.ppEnabledExtensionNames = enabledExtensions.empty() ? nullptr : enabledExtensions.data();
+        createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
+        createInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
         if (enableValidationLayers) {
             createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
@@ -385,18 +324,18 @@ namespace Dog {
             throw std::runtime_error("No queue create infos prepared");
         }
 
-        DOG_INFO("Calling vkCreateDevice...");
+        //DOG_INFO("Calling vkCreateDevice...");
         VkResult res = vkCreateDevice(physicalDevice, &createInfo, nullptr, &device_);
         if (res != VK_SUCCESS) {
             DOG_ERROR("vkCreateDevice failed with error code {0}", static_cast<int>(res));
             throw std::runtime_error("failed to create logical device!");
         }
-        DOG_INFO("vkCreateDevice succeeded.");
+        //DOG_INFO("vkCreateDevice succeeded.");
 
         // 8) Retrieve queues and validate
-        DOG_INFO("Retrieving queues.");
+        //DOG_INFO("Retrieving queues.");
         vkGetDeviceQueue(device_, indices.graphicsFamily, 0, &graphicsQueue_);
-        DOG_INFO("graphicsQueue_ retrieved from family {0}", indices.graphicsFamily);
+        //DOG_INFO("graphicsQueue_ retrieved from family {0}", indices.graphicsFamily);
 
         if (indices.presentFamily == INVALID_INDEX) {
             DOG_WARN("presentFamily was invalid; skipping vkGetDeviceQueue for presentQueue_.");
@@ -411,7 +350,7 @@ namespace Dog {
             throw std::runtime_error("device_ is VK_NULL_HANDLE after vkCreateDevice");
         }
 
-        DOG_INFO("Logical device created successfully.");
+        //DOG_INFO("Logical device created successfully.");
     }
 
 
@@ -446,7 +385,7 @@ namespace Dog {
         }
     }
 
-    void Device::createSurface() { window.CreateWindowSurface(instance, &surface_); }
+    void Device::createSurface() { window.CreateVulkanSurface(instance, &surface_); }
 
     bool Device::isDeviceSuitable(VkPhysicalDevice device)
     {
@@ -520,7 +459,7 @@ namespace Dog {
     {
         uint32_t glfwExtensionCount = 0;
         const char** glfwExtensions;
-        glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+        glfwExtensions = window.GetRequiredVulkanExtensions(&glfwExtensionCount);
 
         std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
@@ -685,7 +624,8 @@ namespace Dog {
         }
     }
 
-    VkCommandBuffer Device::BeginSingleTimeCommands() {
+    VkCommandBuffer Device::BeginSingleTimeCommands()
+    {
         // Allocate the command buffer
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -712,7 +652,8 @@ namespace Dog {
         return commandBuffer;
     }
 
-    void Device::EndSingleTimeCommands(VkCommandBuffer commandBuffer) {
+    void Device::EndSingleTimeCommands(VkCommandBuffer commandBuffer) 
+    {
         vkEndCommandBuffer(commandBuffer);
 
         VkSubmitInfo submitInfo{};
@@ -726,7 +667,8 @@ namespace Dog {
         vkFreeCommandBuffers(device_, commandPool, 1, &commandBuffer);
     }
 
-    void Device::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
+    void Device::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) 
+    {
         VkCommandBuffer commandBuffer = BeginSingleTimeCommands();
 
         VkBufferCopy copyRegion{};

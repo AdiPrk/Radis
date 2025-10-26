@@ -62,16 +62,16 @@ namespace Dog
         for (int i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i) {
             VkBufferCreateInfo indirectBufferInfo = {};
             indirectBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-            indirectBufferInfo.size = sizeof(VkDrawIndexedIndirectCommand) * 10000;
+            indirectBufferInfo.size = sizeof(VkDrawIndexedIndirectCommand) * InstanceUniforms::MAX_INSTANCES;
             indirectBufferInfo.usage = VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
 
             VmaAllocationCreateInfo indirectAllocInfo = {};
-            indirectAllocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU; // This usage allows the CPU to write commands
+            indirectAllocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
 
             // Create the buffers using VMA
             if (vmaCreateBuffer(allocator, &indirectBufferInfo, &indirectAllocInfo, &mIndirectBuffers[i], &mIndirectBufferAllocations[i], nullptr) != VK_SUCCESS) 
             {
-                throw std::runtime_error("Failed to create solid indirect command buffer!");
+                DOG_ERROR("VMA failed to create indirect command buffer");
             }
         }
     }
@@ -196,9 +196,6 @@ namespace Dog
 
         std::vector<InstanceUniforms> instanceData{};
 
-        auto& registry = ecs->GetRegistry();
-        auto entityView = registry.view<ModelComponent, TransformComponent>();
-
         AnimationLibrary* al = rr->animationLibrary.get();
         ModelLibrary* ml = rr->modelLibrary.get();
 
@@ -233,6 +230,8 @@ namespace Dog
             instanceBaseIndex += (int)debugData.size();
         }
 
+        auto& registry = ecs->GetRegistry();
+        auto entityView = registry.view<ModelComponent, TransformComponent>();
         for (auto& entityHandle : entityView)
         {
             Entity entity(&registry, entityHandle);
@@ -253,7 +252,7 @@ namespace Dog
                 InstanceUniforms& data = instanceData.emplace_back();
                 if (boneOffset == AnimationLibrary::INVALID_ANIMATION_INDEX)
                 {
-                    data.model = tc.GetTransform() * model->mNormalizationMatrix;
+                    data.model = tc.GetTransform() * model->GetNormalizationMatrix();
                 }
                 else
                 {
@@ -296,50 +295,5 @@ namespace Dog
             static_cast<uint32_t>(solidDrawCount),
             sizeof(VkDrawIndexedIndirectCommand)
         );
-    }
-
-    void RenderSystem::RenderSkeleton()
-    {
-        // loop over entities with models
-        auto& registry = ecs->GetRegistry();
-        auto entityView = registry.view<ModelComponent, TransformComponent>();
-
-        for (auto& entityHandle : entityView)
-        {
-            Entity entity(&registry, entityHandle);
-            ModelComponent& mc = entity.GetComponent<ModelComponent>();
-            TransformComponent& tc = entity.GetComponent<TransformComponent>();
-            //AnimationComponent* ac = entity.HasComponent<AnimationComponent>() ? &entity.GetComponent<AnimationComponent>() : nullptr;
-            Model* model = ecs->GetResource<RenderingResource>()->modelLibrary->GetModel(mc.ModelPath);
-            if (!model) continue;
-
-            glm::mat4 normalizationMatrix = model->mNormalizationMatrix;
-            //if (!ac) normalizationMatrix = glm::mat4(1.f);
-
-            const aiScene* scene = model->mScene;
-            RecursiveNodeDraw(tc.GetTransform() * normalizationMatrix, scene->mRootNode);
-        }
-    }
-
-    void RenderSystem::RecursiveNodeDraw(const glm::mat4& parentWorldTransform, const aiNode* node)
-    {
-        glm::mat4 localTr = aiMatToGlm(node->mTransformation);
-        glm::mat4 worldTr = parentWorldTransform * localTr;
-
-        glm::vec3 startPos = glm::vec3(parentWorldTransform[3]);
-        glm::vec3 endPos = glm::vec3(worldTr[3]);
-
-        if (node->mParent && node->mParent->mParent != nullptr)
-        {
-            DebugDrawResource::DrawLine(startPos, endPos, glm::vec4(1.f, 0.f, 1.f, 1.f));
-            DebugDrawResource::DrawCube(endPos, glm::vec3(0.01f), glm::vec4(0.f, 1.f, 1.f, 0.4f));
-        }
-
-
-        // Recurse :3
-        for (unsigned int i = 0; i < node->mNumChildren; i++)
-        {
-            RecursiveNodeDraw(worldTr, node->mChildren[i]);
-        }
     }
 }

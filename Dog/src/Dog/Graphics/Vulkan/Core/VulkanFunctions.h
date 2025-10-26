@@ -1,0 +1,6 @@
+#pragma once
+
+//extern PFN_vkCreateAccelerationStructureKHR g_vkCreateAccelerationStructureKHR;
+//extern PFN_vkCmdBuildAccelerationStructuresKHR g_vkCmdBuildAccelerationStructuresKHR;
+//extern PFN_vkGetAccelerationStructureBuildSizesKHR g_vkGetAccelerationStructureBuildSizesKHR;
+//extern PFN_vkGetAccelerationStructureDeviceAddressKHR g_vkGetAccelerationStructureDeviceAddressKHR;
