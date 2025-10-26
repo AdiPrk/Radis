@@ -68,6 +68,7 @@ namespace Dog {
         
         glfwMakeContextCurrent(mWindow);
 
+        glewExperimental = GL_TRUE;
         if (glewInit() != GLEW_OK) {
             std::cout << "oh noes, glew didn't init properly!" << std::endl;
             return;
@@ -75,6 +76,8 @@ namespace Dog {
 
         InitializeDebugCallbacks();
         std::cout << glGetString(GL_VERSION) << std::endl;
+
+        glfwSwapInterval(0); // No V-Sync
     }
 
     OpenGLWindow::~OpenGLWindow() 

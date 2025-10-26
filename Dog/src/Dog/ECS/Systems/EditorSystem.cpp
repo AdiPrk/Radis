@@ -81,20 +81,27 @@ namespace Dog
 
     void EditorSystem::Exit()
     {
-        auto rr = ecs->GetResource<RenderingResource>();
-        auto er = ecs->GetResource<EditorResource>();
-        Device& device = *rr->device;
+        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan) {
+            auto rr = ecs->GetResource<RenderingResource>();
+            auto er = ecs->GetResource<EditorResource>();
+            Device& device = *rr->device;
 
-        if      (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan) ImGui_ImplVulkan_Shutdown();
-        else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL) ImGui_ImplOpenGL3_Shutdown();
-		ImGui_ImplGlfw_Shutdown();
-		ImGui::DestroyContext();
+            ImGui_ImplVulkan_Shutdown();
+            ImGui_ImplGlfw_Shutdown();
+            ImGui::DestroyContext();
 
-		vkDestroyDescriptorSetLayout(device, er->samplerSetLayout, nullptr);
-		vkDestroyDescriptorPool(device, er->descriptorPool, nullptr);
+            vkDestroyDescriptorSetLayout(device, er->samplerSetLayout, nullptr);
+            vkDestroyDescriptorPool(device, er->descriptorPool, nullptr);
 
-		rr->CleanupSceneTexture();
-        rr->CleanupDepthBuffer();
+            rr->CleanupSceneTexture();
+            rr->CleanupDepthBuffer();
+        }
+        else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
+        {
+            ImGui_ImplOpenGL3_Shutdown();
+            ImGui_ImplGlfw_Shutdown();
+            ImGui::DestroyContext();
+        }
     }
 
 	void EditorSystem::RenderImGui(VkCommandBuffer cmd)
