@@ -41,6 +41,7 @@ namespace Dog
         bool mHasIndexBuffer = false;
         std::unique_ptr<Buffer> mIndexBuffer;
         uint32_t mIndexCount = 0;
+        uint32_t mTriangleCount = 0;
 
         std::vector<Vertex> mVertices{};
         std::vector<uint32_t> mIndices{};

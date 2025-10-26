@@ -11,7 +11,7 @@
 #include "Graphics/Vulkan/RenderGraph.h"
 #include "Graphics/Vulkan/Core/Synchronization.h"
 
-#include "Graphics/Window/Window.h"
+#include "Graphics/Vulkan/VulkanWindow.h"
 
 namespace Dog
 {
@@ -22,6 +22,7 @@ namespace Dog
 	void PresentSystem::FrameStart()
 	{
         auto rr = ecs->GetResource<RenderingResource>();
+        auto wr = ecs->GetResource<WindowResource>();
         auto& rg = rr->renderGraph;
 
         // Wait on the current frame's fence (ensures the previous frame's GPU work is done).
@@ -33,7 +34,7 @@ namespace Dog
         // Recreate if needed
         if (result == VK_ERROR_OUT_OF_DATE_KHR)
         {
-            rr->RecreateSwapChain();
+            rr->RecreateSwapChain(wr->window.get());
             rr->RecreateSceneTexture();
             rr->RecreateDepthBuffer();
             return;
@@ -141,11 +142,12 @@ namespace Dog
         // --- Presentation ---
         VkResult result = rr->swapChain->PresentImage(&rr->currentImageIndex, *rr->syncObjects);
 
-        bool winResized = ecs->GetResource<WindowResource>()->window->WasWindowResized();
+        auto wr = ecs->GetResource<WindowResource>();
+        bool winResized = wr->window->WasResized();
         if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || winResized)
         {
-            ecs->GetResource<WindowResource>()->window->ResetWindowResizedFlag();
-            rr->RecreateSwapChain();
+            wr->window->ResetResizeFlag();
+            rr->RecreateSwapChain(wr->window.get());
             rr->RecreateAllSceneTextures();
             rr->syncObjects->ClearImageFences();
         }

@@ -20,9 +20,6 @@ namespace Dog
 
         void RenderScene(VkCommandBuffer cmd);
 
-        void RenderSkeleton();
-        void RecursiveNodeDraw(const glm::mat4& parentTr, const aiNode* node);
-
     private:
         std::unique_ptr<Pipeline> mPipeline;
         std::unique_ptr<Pipeline> mWireframePipeline;

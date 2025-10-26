@@ -1,11 +1,8 @@
 ﻿#include <PCH/pch.h>
 #include "Engine.h"
-#include "Utils/Utils.h"
 
 int main(int argc, char* argv[])
 {   
-    Dog::ValidateStartingDirectory(argc, argv);
-
     Dog::EngineSpec すぺくっす;
     すぺくっす.name = L"ワンワン";
     すぺくっす.width = 1280;
@@ -13,7 +10,8 @@ int main(int argc, char* argv[])
     すぺくっす.fps = 120;
     すぺくっす.serverAddress = "localhost";
     すぺくっす.serverPort = 7777;
+    すぺくっす.graphicsAPI = Dog::GraphicsAPI::OpenGL;
 
-    Dog::Engine Engine(すぺくっす);
+    Dog::Engine Engine(すぺくっす, argc, argv);
     return Engine.Run("scene");
 }

@@ -1,5 +1,7 @@
 #include <PCH/pch.h>
 #include "Utils.h"
+#include "Engine.h"
+// #include <direct.h>   // for _getcwd
 
 namespace Dog
 {
@@ -22,7 +24,7 @@ namespace Dog
         return ""; // Return empty string if not found
     }
 
-    void ValidateStartingDirectory(int argc, char* argv[])
+    void ValidateStartingDirectory(int argc, char* argv[], bool* isDevBuild)
     {
         if (argc == 1) 
         {
@@ -45,14 +47,46 @@ namespace Dog
             }
         }
 
-        char cwd[_MAX_PATH];
-        if (_getcwd(cwd, _MAX_PATH))
-        {
-            std::cout << "Current working directory is: " << cwd << '\n';
-        }
-        else 
-        {
-            PrintAndExit("Failed to get current working directory.");
-        }
+        if (isDevBuild) *isDevBuild = (projectDir == "Dev");
+
+        // char cwd[_MAX_PATH];
+        // if (_getcwd(cwd, _MAX_PATH))
+        // {
+        //     std::cout << "Current working directory is: " << cwd << '\n';
+        // }
+        // else 
+        // {
+        //     PrintAndExit("Failed to get current working directory.");
+        // }
+    }
+
+    std::string WStringToUTF8(const std::wstring& wstr) {
+        if (wstr.empty()) return {};
+
+        // First, get the required buffer size
+        int size_needed = WideCharToMultiByte(
+            CP_UTF8,             // convert to UTF-8
+            0,                   // no special flags
+            wstr.data(),         // source string
+            static_cast<int>(wstr.size()), // length of source
+            nullptr,             // no output yet
+            0,                   // calculate required size
+            nullptr, nullptr     // default handling for invalid chars
+        );
+
+        std::string result(size_needed, 0);
+
+        // Do the actual conversion
+        WideCharToMultiByte(
+            CP_UTF8,
+            0,
+            wstr.data(),
+            static_cast<int>(wstr.size()),
+            result.data(),
+            size_needed,
+            nullptr, nullptr
+        );
+
+        return result;
     }
 }

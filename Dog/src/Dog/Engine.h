@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Graphics/Window/Window.h"
+#include "Graphics/Vulkan/VulkanWindow.h"
 
 #include "ECS/ECS.h"
 #include "ECS/Resources/IResource.h"
@@ -9,12 +9,13 @@ namespace Dog
 {
 	struct EngineSpec
 	{
-		std::wstring name = L"Dog Engine";         // The name of the window.
-		unsigned width = 1280;                   // The width of the window.
-		unsigned height = 720;                   // The height of the window.
-		unsigned fps = 60;			             // The target frames per second.
-        std::string serverAddress = SERVER_IP;   // The address of the server. Defaults to online VPS server.
-        uint16_t serverPort = 7777;              // The port of the server.
+		std::wstring name = L"Dog Engine";             // The name of the window.
+		unsigned width = 1280;                         // The width of the window.
+		unsigned height = 720;                         // The height of the window.
+		unsigned fps = 60;			                   // The target frames per second.
+        std::string serverAddress = SERVER_IP;         // The address of the server. Defaults to online VPS server.
+        uint16_t serverPort = 7777;                    // The port of the server.
+        GraphicsAPI graphicsAPI = GraphicsAPI::OpenGL; // The graphics API to use.
 	};
 
 	class Engine {
@@ -22,7 +23,7 @@ namespace Dog
 		static constexpr int WIDTH = 1600;
 		static constexpr int HEIGHT = 900;
 
-		Engine(const EngineSpec& specs);
+		Engine(const EngineSpec& specs, int argc, char* argv[]);
 		~Engine();
 
 		Engine(const Engine&) = delete;
@@ -36,6 +37,11 @@ namespace Dog
 		int Run(const std::string& sceneName);
 		int Exit();
 
+        // Configuration
+		static void SetDevBuild(bool dev) { mDevBuild = dev; }
+		static bool IsDevBuild() { return mDevBuild; }
+        static GraphicsAPI GetGraphicsAPI() { return mGraphicsAPI; }
+
 	private:
 		// Engine Specs
 		EngineSpec mSpecs;
@@ -44,7 +50,14 @@ namespace Dog
 		bool mRunning = true;
 
 		// Entity Component System for the engine
-        ECS mEcs; 
+        ECS mEcs;
+
+		// Configuration
+        static bool mDevBuild;
+		static GraphicsAPI mGraphicsAPI;
+
+	private:
+        static void SetGraphicsAPI(GraphicsAPI api) { mGraphicsAPI = api; }
 	};
 
 } // namespace Dog
