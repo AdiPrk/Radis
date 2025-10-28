@@ -5,9 +5,11 @@ layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 color;
 layout(location = 2) in vec3 normal;
 layout(location = 3) in vec2 texCoord;
+layout(location = 4) in ivec4 boneIds;
+layout(location = 5) in vec4 weights;
 
 // Per Instance Inputs
-layout(location = 4) in mat4 iModel;
+layout(location = 6) in mat4 iModel;
 
 // Uniforms! (temporary hard coded macro)
 #ifdef VULKAN

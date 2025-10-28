@@ -42,7 +42,6 @@ namespace Dog
         SetGraphicsAPI(specs.graphicsAPI);
 
         Logger::Init();
-        RHI::RHI_Init(specs.graphicsAPI);
 
         // Systems -------------------------
         mEcs.AddSystem<WindowSystem>();

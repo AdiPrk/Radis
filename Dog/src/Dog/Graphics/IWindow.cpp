@@ -58,6 +58,16 @@ namespace Dog
 
     void IWindow::InitGLFWWindow()
     {
+        static bool ft = true;
+        if (ft)
+        {
+            glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+            GLFWwindow* dummy = glfwCreateWindow(1, 1, "", nullptr, nullptr);
+            glfwDestroyWindow(dummy);
+            ft = false;
+        }
+
+        glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
         std::string title_utf8 = WStringToUTF8(mTitle);
         mWindow = glfwCreateWindow(mWidth, mHeight, title_utf8.c_str(), nullptr, nullptr);
         if (!mWindow)

@@ -191,7 +191,6 @@ namespace Dog
             for (auto& mesh : model->mMeshes)
             {
                 std::vector<Vertex> oldVertices = mesh->mVertices;
-                std::vector<SimpleVertex> oldSimpleVertices = mesh->mSimpleVertices;
                 std::vector<uint32_t> oldIndices = mesh->mIndices;
 
                 mesh.reset();
@@ -206,7 +205,6 @@ namespace Dog
                 }
 
                 mesh->mVertices = oldVertices;
-                mesh->mSimpleVertices = oldSimpleVertices;
                 mesh->mIndices = oldIndices;
 
                 mesh->CreateVertexBuffers(device);
