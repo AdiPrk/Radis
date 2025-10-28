@@ -18,13 +18,13 @@ namespace Dog
 
 		// Window state
 		glm::uvec2 GetExtent() const;
-		int GetWidth() const { return mWidth; }
-		int GetHeight() const { return mHeight; }
+		static int GetWidth() { return mWidth; }
+		static int GetHeight() { return mHeight; }
 
 		bool WasResized() const { return mFramebufferResized; }
 		void ResetResizeFlag() { mFramebufferResized = false; }
 
-		void SetTitle(const std::string& title);
+		void SetTitle(const std::wstring& title);
 
         // Get glfw window handle
 		GLFWwindow* GetGLFWwindow() const { return mWindow; }
@@ -44,8 +44,12 @@ namespace Dog
 		static void FramebufferResizeCallback(GLFWwindow* window, int width, int height);
 
 	protected:
-        int mWidth;
-        int mHeight;
+		friend struct WindowResource;
+        static int mWidth;
+        static int mHeight;
+		static int xPos;
+        static int yPos;
+
         bool mFramebufferResized = false;
 
         std::wstring mTitle;

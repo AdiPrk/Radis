@@ -10,6 +10,7 @@ namespace Dog
     {
         WindowResource(int w, int h, std::wstring_view name);
 
+        void Create();
         void Create(int w, int h, std::wstring_view name);
         void Cleanup();
 

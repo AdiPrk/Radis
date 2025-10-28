@@ -20,7 +20,7 @@ namespace Dog
 			return;
 
         Create(device, swapChain, glfwWindow);
-		isInitialized = true;
+		
     }
 
 	EditorResource::EditorResource(GLFWwindow* glfwWindow)
@@ -29,11 +29,12 @@ namespace Dog
 			return;
 
         Create(glfwWindow);
-		isInitialized = true;
 	}
 
 	void EditorResource::Create(Device* device, SwapChain* swapChain, GLFWwindow* glfwWindow)
 	{
+		isInitialized = true;
+
 		VkDescriptorPoolSize pool_sizes[] = {
 			{ VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
 			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
@@ -111,6 +112,8 @@ namespace Dog
 
 	void EditorResource::Create(GLFWwindow* glfwWindow)
 	{
+		isInitialized = true;
+
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
 		ImGuiIO& io = ImGui::GetIO();

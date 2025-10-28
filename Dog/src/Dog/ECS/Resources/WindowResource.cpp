@@ -11,6 +11,11 @@ namespace Dog
         Create(w, h, name);
     }
 
+    void WindowResource::Create()
+    {
+        Create(IWindow::GetWidth(), IWindow::GetHeight(), L"ƒƒ“ƒƒ“");
+    }
+
     void WindowResource::Create(int w, int h, std::wstring_view name)
     {
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
@@ -29,6 +34,12 @@ namespace Dog
 
     void WindowResource::Cleanup()
     {
+        if (window)
+        {
+            GLFWwindow* glfwWindow = window->GetGLFWwindow();
+            glfwGetWindowPos(glfwWindow, &IWindow::xPos, &IWindow::yPos);
+        }
+
         window.reset();
     }
 }

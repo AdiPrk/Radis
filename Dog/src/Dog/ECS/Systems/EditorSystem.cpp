@@ -8,6 +8,7 @@
 #include "../Resources/WindowResource.h"
 #include "../Resources/EditorResource.h"
 #include "../Resources/SerializationResource.h"
+#include "../Resources/SwapRendererBackendResource.h"
 #include "../Systems/InputSystem.h"
 
 #include "Graphics/Vulkan/Core/Device.h"
@@ -183,6 +184,21 @@ namespace Dog
                     ecs->GetResource<SerializationResource>()->Deserialize("assets/scenes/scene.json");
                 }
 
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("Graphics"))
+            {
+                // dropdown for the enum GraphicsAPI
+                auto currentAPI = Engine::GetGraphicsAPI();
+                auto sr = ecs->GetResource<SwapRendererBackendResource>();
+                if (ImGui::MenuItem("Vulkan", nullptr, currentAPI == GraphicsAPI::Vulkan))
+                {
+                    sr->RequestVulkan();
+                }
+                if (ImGui::MenuItem("OpenGL", nullptr, currentAPI == GraphicsAPI::OpenGL))
+                {
+                    sr->RequestOpenGL();
+                }
                 ImGui::EndMenu();
             }
 

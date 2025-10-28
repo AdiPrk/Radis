@@ -11,6 +11,8 @@ namespace Dog {
     {
         InitializeContext();
         InitGLFWWindow();
+
+        SetTitle(std::wstring(name) + L" (VK)");
     }
 
     VulkanWindow::~VulkanWindow() 

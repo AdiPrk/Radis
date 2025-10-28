@@ -16,6 +16,7 @@ namespace Dog {
         const void* userParam) {
         // Displaying the debug message
         if (type == GL_DEBUG_TYPE_OTHER) return;
+        if (id == 131218) return; // Don't care about shader recompilation medium severity warning
 
         std::cerr << "OpenGL Debug Message (ID: " << id << "):\n";
         std::cerr << "Message: " << message << "\n";
@@ -73,7 +74,7 @@ namespace Dog {
         }
 
         InitializeDebugCallbacks();
-        std::cout << glGetString(GL_VERSION) << std::endl;
+        DOG_INFO("OpenGL Version: {}", reinterpret_cast<const char*>(glGetString(GL_VERSION)));
 
         // depth, msaa
         glEnable(GL_DEPTH_TEST);
@@ -82,6 +83,8 @@ namespace Dog {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glfwSwapInterval(0); // No V-Sync
+
+        SetTitle(std::wstring(name) + L" (GL)");
     }
 
     GLWindow::~GLWindow() 
