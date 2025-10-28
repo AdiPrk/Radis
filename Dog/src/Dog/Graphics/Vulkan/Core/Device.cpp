@@ -389,6 +389,7 @@ namespace Dog
         vkGetDeviceQueue(device_, indices.presentFamily, 0, &presentQueue_);
 
         DOG_INFO("Logical device created successfully.");
+        return true;
     }
 
 

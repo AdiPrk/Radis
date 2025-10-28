@@ -15,7 +15,7 @@ namespace Dog
 		unsigned fps = 60;			                   // The target frames per second.
         std::string serverAddress = SERVER_IP;         // The address of the server. Defaults to online VPS server.
         uint16_t serverPort = 7777;                    // The port of the server.
-        GraphicsAPI graphicsAPI = GraphicsAPI::OpenGL; // The graphics API to use.
+        GraphicsAPI graphicsAPI = GraphicsAPI::Vulkan; // The graphics API to use.
 	};
 
 	class Engine {

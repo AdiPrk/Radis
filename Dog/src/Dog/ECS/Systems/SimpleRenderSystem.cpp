@@ -316,11 +316,14 @@ namespace Dog
 
     void SimpleRenderSystem::RenderSceneGL()
     {
+        auto rr = ecs->GetResource<RenderingResource>();
+        auto er = ecs->GetResource<EditorResource>();
+
+        rr->shader->Use();
+
         glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        auto rr = ecs->GetResource<RenderingResource>();
-        auto er = ecs->GetResource<EditorResource>();
 
         rr->sceneFrameBuffer->Bind();
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -345,8 +348,6 @@ namespace Dog
             }
         }
 
-        // set the instance data somehow
-        rr->shader->Use();
         // Set camera uniform!
         {
             CameraUniforms camData{};

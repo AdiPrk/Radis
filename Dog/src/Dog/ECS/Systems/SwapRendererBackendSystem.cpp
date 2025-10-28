@@ -4,6 +4,7 @@
 #include "../Resources/renderingResource.h"
 #include "../Resources/EditorResource.h"
 #include "../Resources/WindowResource.h"
+#include "../Resources/SwapRendererBackendResource.h"
 #include "InputSystem.h"
 #include "Engine.h"
 
@@ -32,9 +33,12 @@ namespace Dog
 
     void SwapRendererBackendSystem::FrameStart()
     {
-        if (InputSystem::isKeyTriggered(Key::K))
+        auto sr = ecs->GetResource<SwapRendererBackendResource>();
+
+        if (sr->SwapRequested())
         {
             SwapBackend();
+            sr->swapRequested = false;
         }
     }
 
@@ -56,7 +60,7 @@ namespace Dog
             rr->Cleanup();
             wr->Cleanup();
             Engine::SetGraphicsAPI(GraphicsAPI::Vulkan);
-            wr->Create(1280, 720, L"ƒƒ“ƒƒ“ (VK)");
+            wr->Create();
             rr->Create(wr->window.get());
             er->Create(rr->device.get(), rr->swapChain.get(), wr->window->GetGLFWwindow());
             er->CreateSceneTextures(rr);
@@ -79,7 +83,7 @@ namespace Dog
             rr->Cleanup();
             wr->Cleanup();
             Engine::SetGraphicsAPI(GraphicsAPI::OpenGL);
-            wr->Create(1280, 720, L"ƒƒ“ƒƒ“ (GL)");
+            wr->Create();
             rr->Create(wr->window.get());
             er->Create(wr->window->GetGLFWwindow());
 

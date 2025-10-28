@@ -46,7 +46,7 @@ namespace Dog
         GLShader::SetupInstanceVBO();
         glBindBuffer(GL_ARRAY_BUFFER, GLShader::GetInstanceVBO());
 
-        std::size_t vec4Size = sizeof(glm::vec4);
+        size_t vec4Size = sizeof(glm::vec4);
         for (int i = 0; i < 4; i++)
         {
             glEnableVertexAttribArray(4 + i);

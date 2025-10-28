@@ -19,6 +19,7 @@
 #include "ECS/Resources/SerializationResource.h"
 #include "ECS/Resources/AnimationResource.h"
 #include "ECS/Resources/DebugDrawResource.h"
+#include "ECS/Resources/SwapRendererBackendResource.h"
 
 #include "Utils/FrameRate.h"
 #include "Graphics/Vulkan/Core/Device.h"
@@ -70,6 +71,7 @@ namespace Dog
         // ---------------------------------
 
         // Resources -----------------------
+        mEcs.AddResource<SwapRendererBackendResource>();
         mEcs.AddResource<WindowResource>(specs.width, specs.height, specs.name);
 
         auto wr = mEcs.GetResource<WindowResource>();
