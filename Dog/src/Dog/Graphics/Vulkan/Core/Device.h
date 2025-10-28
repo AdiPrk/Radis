@@ -85,12 +85,14 @@ namespace Dog {
         PFN_vkGetAccelerationStructureBuildSizesKHR g_vkGetAccelerationStructureBuildSizesKHR;
         PFN_vkGetAccelerationStructureDeviceAddressKHR g_vkGetAccelerationStructureDeviceAddressKHR;
 
+        bool SupportsVulkan() const { return mSupportsVulkan; }
+
     private:
         void createInstance();
         void setupDebugMessenger();
         void createSurface();
-        void pickPhysicalDevice();
-        void createLogicalDevice();
+        bool pickPhysicalDevice();
+        bool createLogicalDevice();
         void createCommandPool();
         void CheckIndirectDrawSupport();
 
@@ -136,6 +138,8 @@ namespace Dog {
 
         VkPhysicalDeviceRayTracingPipelinePropertiesKHR mRtProperties{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR };
         VkPhysicalDeviceAccelerationStructurePropertiesKHR mAsProperties{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_PROPERTIES_KHR };
+
+        bool mSupportsVulkan = true;
     };
 
 } // namespace Dog

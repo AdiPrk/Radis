@@ -12,6 +12,9 @@
 #include "UnifiedMesh.h"
 
 #include "../Vulkan/Texture/TextureLibrary.h"
+#include "../Vulkan/Core/Device.h"
+#include "../OpenGL/GLMesh.h"
+#include "Engine.h"
 
 namespace Dog
 {
@@ -159,6 +162,7 @@ namespace Dog
         }
         */
     }
+
     bool ModelLibrary::NeedsTextureUpdate()
     {
         if (mLastModelLoaded == INVALID_MODEL_INDEX) return false;
@@ -169,13 +173,45 @@ namespace Dog
         return !model->mAddedTexture;
     }
 
-    void ModelLibrary::RecreateAllBuffers()
+    void ModelLibrary::ClearAllBuffers(Device* device)
     {
         for (auto& model : mModels)
         {
             for (auto& mesh : model->mMeshes)
             {
-                
+                mesh->Cleanup();
+            }
+        }
+    }
+
+    void ModelLibrary::RecreateAllBuffers(Device* device)
+    {
+        for (auto& model : mModels)
+        {
+            for (auto& mesh : model->mMeshes)
+            {
+                std::vector<Vertex> oldVertices = mesh->mVertices;
+                std::vector<SimpleVertex> oldSimpleVertices = mesh->mSimpleVertices;
+                std::vector<uint32_t> oldIndices = mesh->mIndices;
+
+                mesh.reset();
+
+                if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
+                {
+                    mesh = std::make_unique<GLMesh>();
+                }
+                else if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+                {
+                    mesh = std::make_unique<VKMesh>();
+                }
+
+                mesh->mVertices = oldVertices;
+                mesh->mSimpleVertices = oldSimpleVertices;
+                mesh->mIndices = oldIndices;
+
+                mesh->CreateVertexBuffers(device);
+                mesh->CreateIndexBuffers(device);
+
             }
         }
     }

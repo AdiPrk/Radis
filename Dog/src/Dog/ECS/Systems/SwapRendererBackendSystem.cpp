@@ -10,49 +10,81 @@
 #include "Graphics/OpenGL/GLShader.h"
 #include "Graphics/Vulkan/Core/Device.h"
 
+#include "Graphics/Common/ModelLibrary.h"
+
 namespace Dog
 {
+    void SwapRendererBackendSystem::Init()
+    {
+        bool canVulkan = Engine::GetVulkanSupported();
+        bool isVulkan = (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan);
+        bool requiresSwap = false;
+        if (!canVulkan && isVulkan)
+        {
+            requiresSwap = true;
+        }
+
+        if (requiresSwap)
+        {
+            SwapBackend();
+        }
+    }
+
     void SwapRendererBackendSystem::FrameStart()
     {
         if (InputSystem::isKeyTriggered(Key::K))
         {
-            DOG_INFO("Key K pressed - Swapping Renderer Backend is disabled in this build.");
+            SwapBackend();
         }
+    }
 
-        if (InputSystem::isKeyTriggered(Key::K))
+    void SwapRendererBackendSystem::SwapBackend()
+    {
+        if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
         {
-            if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
+            bool vulkanSupported = Engine::GetVulkanSupported();
+            if (!vulkanSupported)
             {
-                auto rr = ecs->GetResource<RenderingResource>();
-                auto wr = ecs->GetResource<WindowResource>();
-                auto er = ecs->GetResource<EditorResource>();
-                er->Cleanup(rr->device.get());
-                rr->Cleanup();
-                wr->Cleanup();
-                Engine::SetGraphicsAPI(GraphicsAPI::Vulkan);
-                wr->Create(1280, 720, L"ƒƒ“ƒƒ“ (VK)");
-                rr->Create(wr->window.get());
-                er->Create(*rr->device, *rr->swapChain, wr->window->GetGLFWwindow());
-                er->CreateSceneTextures(rr);
-                InputSystem::ResetWindow(wr->window->GetGLFWwindow());
+                DOG_WARN("Cannot switch to Vulkan; No suitable GPUs!");
+                return;
             }
-            else if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
-            {
-                auto rr = ecs->GetResource<RenderingResource>();
-                auto wr = ecs->GetResource<WindowResource>();
-                auto er = ecs->GetResource<EditorResource>();
 
+            auto rr = ecs->GetResource<RenderingResource>();
+            auto wr = ecs->GetResource<WindowResource>();
+            auto er = ecs->GetResource<EditorResource>();
+            er->Cleanup(rr->device.get());
+            rr->Cleanup();
+            wr->Cleanup();
+            Engine::SetGraphicsAPI(GraphicsAPI::Vulkan);
+            wr->Create(1280, 720, L"ƒƒ“ƒƒ“ (VK)");
+            rr->Create(wr->window.get());
+            er->Create(rr->device.get(), rr->swapChain.get(), wr->window->GetGLFWwindow());
+            er->CreateSceneTextures(rr);
+
+            rr->modelLibrary->RecreateAllBuffers(rr->device.get());
+            InputSystem::ResetWindow(wr->window->GetGLFWwindow());
+        }
+        else if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+        {
+            auto rr = ecs->GetResource<RenderingResource>();
+            auto wr = ecs->GetResource<WindowResource>();
+            auto er = ecs->GetResource<EditorResource>();
+
+            if (rr->device->SupportsVulkan()) 
+            {
                 vkDeviceWaitIdle(rr->device->GetDevice());
-
-                er->Cleanup(rr->device.get());
-                rr->Cleanup();
-                wr->Cleanup();
-                Engine::SetGraphicsAPI(GraphicsAPI::OpenGL);
-                wr->Create(1280, 720, L"ƒƒ“ƒƒ“ (GL)");
-                rr->Create(wr->window.get());
-                er->Create(wr->window->GetGLFWwindow());
-                InputSystem::ResetWindow(wr->window->GetGLFWwindow());
             }
+
+            er->Cleanup(rr->device.get());
+            rr->Cleanup();
+            wr->Cleanup();
+            Engine::SetGraphicsAPI(GraphicsAPI::OpenGL);
+            wr->Create(1280, 720, L"ƒƒ“ƒƒ“ (GL)");
+            rr->Create(wr->window.get());
+            er->Create(wr->window->GetGLFWwindow());
+
+            rr->modelLibrary->RecreateAllBuffers(rr->device.get());
+            InputSystem::ResetWindow(wr->window->GetGLFWwindow());
         }
     }
 }

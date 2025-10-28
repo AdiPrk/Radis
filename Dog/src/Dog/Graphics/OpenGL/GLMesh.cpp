@@ -71,6 +71,22 @@ namespace Dog
         glBindVertexArray(0);
     }
 
+    void GLMesh::Cleanup()
+    {
+        if (mEBO) {
+            glDeleteBuffers(1, &mEBO);
+            mEBO = 0;
+        }
+        if (mVBO) {
+            glDeleteBuffers(1, &mVBO);
+            mVBO = 0;
+        }
+        if (mVAO) {
+            glDeleteVertexArrays(1, &mVAO);
+            mVAO = 0;
+        }
+    }
+
     // all will be nullptr
     void GLMesh::Bind(VkCommandBuffer commandBuffer, VkBuffer instBuffer)
     {

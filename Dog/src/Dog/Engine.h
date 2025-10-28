@@ -42,6 +42,8 @@ namespace Dog
 		static bool IsDevBuild() { return mDevBuild; }
         static GraphicsAPI GetGraphicsAPI() { return mGraphicsAPI; }
 		static void SetGraphicsAPI(GraphicsAPI api) { mGraphicsAPI = api; }
+		static void ForceVulkanUnsupportedSwap() { mVulkanSupported = false; }
+        static bool GetVulkanSupported() { return mVulkanSupported; }
 
 	private:
 		// Engine Specs
@@ -56,8 +58,7 @@ namespace Dog
 		// Configuration
         static bool mDevBuild;
 		static GraphicsAPI mGraphicsAPI;
-
-	private:
+		static bool mVulkanSupported;
 	};
 
 } // namespace Dog
