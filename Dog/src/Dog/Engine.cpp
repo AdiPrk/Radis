@@ -9,6 +9,8 @@
 #include "ECS/Systems/PresentSystem.h"
 #include "ECS/Systems/CameraSystem.h"
 #include "ECS/Systems/RayRenderSystem.h"
+#include "ECS/Systems/SimpleRenderSystem.h"
+#include "ECS/Systems/SwapRendererBackendSystem.h"
 
 #include "ECS/Resources/InputResource.h"
 #include "ECS/Resources/WindowResource.h"
@@ -23,6 +25,8 @@
 
 #include "Utils/Utils.h"
 
+#include "Graphics/RHI/RHI.h"
+
 namespace Dog 
 {
     bool Engine::mDevBuild = false;
@@ -36,21 +40,24 @@ namespace Dog
         SetGraphicsAPI(specs.graphicsAPI);
 
         Logger::Init();
+        RHI::RHI_Init(specs.graphicsAPI);
 
         // Systems -------------------------
         mEcs.AddSystem<WindowSystem>();
         mEcs.AddSystem<InputSystem>();
 
+        mEcs.AddSystem<SwapRendererBackendSystem>();
+        mEcs.AddSystem<PresentSystem>();
+        mEcs.AddSystem<SimpleRenderSystem>();
+        
         if (specs.graphicsAPI == GraphicsAPI::Vulkan)
         {
-            mEcs.AddSystem<PresentSystem>();
-            mEcs.AddSystem<AnimationSystem>();
+            // mEcs.AddSystem<AnimationSystem>();
             // mEcs.AddSystem<RenderSystem>();
-            mEcs.AddSystem<RayRenderSystem>();
+            //mEcs.AddSystem<RayRenderSystem>();
         }
         else if (specs.graphicsAPI == GraphicsAPI::OpenGL)
         {
-
         }
         else
         {
@@ -75,6 +82,7 @@ namespace Dog
         }
         else if (specs.graphicsAPI == GraphicsAPI::OpenGL)
         {
+            mEcs.AddResource<RenderingResource>(wr->window.get());
             mEcs.AddResource<EditorResource>(wr->window->GetGLFWwindow());
         }
         mEcs.AddResource<SerializationResource>();

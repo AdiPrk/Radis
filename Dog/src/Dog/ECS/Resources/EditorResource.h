@@ -13,6 +13,13 @@ namespace Dog
         EditorResource(Device& device, SwapChain& swapChain, GLFWwindow* glfwWindow);
         EditorResource(GLFWwindow* glfwWindow);
 
+        void Create(Device& device, SwapChain& swapChain, GLFWwindow* glfwWindow);
+        void Create(GLFWwindow* glfwWindow);
+        void Cleanup(Device* device);
+
+        void CreateSceneTextures(struct RenderingResource* rr);
+        void CleanSceneTextures(struct RenderingResource* rr);
+
         VkDescriptorPool descriptorPool;
         VkDescriptorSetLayout samplerSetLayout;
 

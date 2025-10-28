@@ -9,12 +9,20 @@ namespace Dog
         glm::mat4 view;
     };
 
-    struct InstanceUniforms {
+    struct InstanceUniforms 
+    {
         glm::mat4 model;
         glm::vec4 tint;
         uint32_t textureIndex;
         uint32_t boneOffset = 10001;
 
+        const static uint32_t MAX_INSTANCES = 10000;
+    };
+
+    struct SimpleInstanceUniforms
+    {
+        glm::mat4 model;
+        
         const static uint32_t MAX_INSTANCES = 10000;
     };
 

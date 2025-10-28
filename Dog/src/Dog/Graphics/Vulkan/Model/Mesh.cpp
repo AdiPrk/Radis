@@ -7,27 +7,21 @@
 
 namespace Dog
 {
-    int Mesh::uniqueMeshIndex = 0;
-
-    Mesh::Mesh(bool assignID)
-        : mMeshID(0)
+    VKMesh::VKMesh(bool assignID)
+        : IMesh(assignID)
     {
-        if (assignID)
-        {
-            mMeshID = uniqueMeshIndex++;
-        }
     }
 
-    void Mesh::CreateVertexBuffers(Device& device)
+    void VKMesh::CreateVertexBuffers(Device* device)
     {
-        mVertexCount = static_cast<uint32_t>(mVertices.size());
+        mVertexCount = static_cast<uint32_t>(mSimpleVertices.size());
         mTriangleCount = mVertexCount / 3;
         //assert(vertexCount >= 3 && "Vertex count must be at least 3");
-        VkDeviceSize bufferSize = sizeof(mVertices[0]) * mVertexCount;
-        uint32_t vertexSize = sizeof(mVertices[0]);
+        VkDeviceSize bufferSize = sizeof(mSimpleVertices[0]) * mVertexCount;
+        uint32_t vertexSize = sizeof(mSimpleVertices[0]);
 
         Buffer stagingBuffer{
-            device,
+            *device,
             vertexSize,
             mVertexCount,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
@@ -35,10 +29,10 @@ namespace Dog
         };
 
         stagingBuffer.Map();
-        stagingBuffer.WriteToBuffer((void*)mVertices.data());
+        stagingBuffer.WriteToBuffer((void*)mSimpleVertices.data());
 
         mVertexBuffer = std::make_unique<Buffer>(
-            device,
+            *device,
             vertexSize,
             mVertexCount,
             VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
@@ -47,7 +41,7 @@ namespace Dog
         stagingBuffer.CopyBuffer(stagingBuffer.GetBuffer(), mVertexBuffer->GetBuffer(), bufferSize);
     }
 
-    void Mesh::CreateIndexBuffers(Device& device)
+    void VKMesh::CreateIndexBuffers(Device* device)
     {
         mIndexCount = static_cast<uint32_t>(mIndices.size());
         mHasIndexBuffer = mIndexCount > 0;
@@ -60,7 +54,7 @@ namespace Dog
         uint32_t indexSize = sizeof(mIndices[0]);
 
         Buffer stagingBuffer{
-            device,
+            *device,
             indexSize,
             mIndexCount,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
@@ -71,7 +65,7 @@ namespace Dog
         stagingBuffer.WriteToBuffer((void*)mIndices.data());
 
         mIndexBuffer = std::make_unique<Buffer>(
-            device,
+            *device,
             indexSize,
             mIndexCount,
             VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
@@ -80,7 +74,7 @@ namespace Dog
         stagingBuffer.CopyBuffer(stagingBuffer.GetBuffer(), mIndexBuffer->GetBuffer(), bufferSize);
     }
 
-    void Mesh::Bind(VkCommandBuffer commandBuffer, VkBuffer instBuffer)
+    void VKMesh::Bind(VkCommandBuffer commandBuffer, VkBuffer instBuffer)
     {
         if (!mHasIndexBuffer)
         {
@@ -94,7 +88,7 @@ namespace Dog
         vkCmdBindIndexBuffer(commandBuffer, mIndexBuffer->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
     }
 
-    void Mesh::Draw(VkCommandBuffer commandBuffer, uint32_t baseIndex)
+    void VKMesh::Draw(VkCommandBuffer commandBuffer, uint32_t baseIndex)  
     {
         if (!mHasIndexBuffer)
         {
@@ -105,9 +99,43 @@ namespace Dog
         vkCmdDrawIndexed(commandBuffer, mIndexCount, 1, 0, 0, baseIndex);
     }
 
-    std::vector<VkVertexInputBindingDescription> Vertex::GetBindingDescriptions()
+    std::vector<VkVertexInputBindingDescription> SimpleVertex::GetBindingDescriptions()
     {
         //Create a 1 long vector of binding descriptions
+        std::vector<VkVertexInputBindingDescription> bindingDescriptions(2);
+        //Set bind description data
+        bindingDescriptions[0].binding = 0;                             
+        bindingDescriptions[0].stride = sizeof(SimpleVertex);                 
+        bindingDescriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX; 
+
+        bindingDescriptions[1].binding = 1;
+        bindingDescriptions[1].stride = sizeof(glm::mat4);
+        bindingDescriptions[1].inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
+        //Return description
+        return bindingDescriptions;
+    }
+
+    std::vector<VkVertexInputAttributeDescription> SimpleVertex::GetAttributeDescriptions()
+    {
+        std::vector<VkVertexInputAttributeDescription> attributeDescriptions{};
+
+        // Per vertex
+        attributeDescriptions.push_back({ 0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(SimpleVertex, position) });
+        attributeDescriptions.push_back({ 1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(SimpleVertex, color) });
+        attributeDescriptions.push_back({ 2, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(SimpleVertex, normal) });
+        attributeDescriptions.push_back({ 3, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(SimpleVertex, uv) });
+
+        // Per instance
+        attributeDescriptions.push_back({ 4, 1, VK_FORMAT_R32G32B32A32_SFLOAT, 0 });
+        attributeDescriptions.push_back({ 5, 1, VK_FORMAT_R32G32B32A32_SFLOAT, sizeof(float) * 4 });
+        attributeDescriptions.push_back({ 6, 1, VK_FORMAT_R32G32B32A32_SFLOAT, sizeof(float) * 8 });
+        attributeDescriptions.push_back({ 7, 1, VK_FORMAT_R32G32B32A32_SFLOAT, sizeof(float) * 12 });
+
+        return attributeDescriptions;
+    }
+
+    std::vector<VkVertexInputBindingDescription> Vertex::GetBindingDescriptions()
+    {
         std::vector<VkVertexInputBindingDescription> bindingDescriptions(2);
 
         //Set bind description data

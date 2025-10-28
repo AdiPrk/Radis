@@ -9,17 +9,17 @@
 
 #include "Graphics/Vulkan/Core/Device.h"
 #include "Graphics/Vulkan/Core/SwapChain.h"
-#include "Graphics/Vulkan/Model/ModelLibrary.h"
+#include "Graphics/Common/ModelLibrary.h"
 #include "Graphics/Vulkan/Uniform/ShaderTypes.h"
 #include "Graphics/Vulkan/Pipeline/Pipeline.h"
-#include "Graphics/Vulkan/Model/Model.h"
+#include "Graphics/Common/Model.h"
 #include "Graphics/Vulkan/Uniform/Uniform.h"
 #include "Graphics/Vulkan/RenderGraph.h"
 #include "Graphics/Vulkan/Model/Animation/AnimationLibrary.h"
 #include "Graphics/Vulkan/Texture/TextureLibrary.h"
 #include "Graphics/Vulkan/Texture/Texture.h"
 #include "Graphics/Vulkan/Uniform/Descriptors.h"
-#include "Graphics/Vulkan/Model/UnifiedMesh.h"
+#include "Graphics/Common/UnifiedMesh.h"
 
 #include "../ECS.h"
 #include "ECS/Entities/Entity.h"
@@ -32,11 +32,12 @@ namespace Dog
 
     void RenderSystem::Init()
     {
+        /*
         auto rr = ecs->GetResource<RenderingResource>();
 
         std::vector<Uniform*> unis{
             rr->cameraUniform.get(),
-            rr->instanceUniform.get()
+            //rr->instanceUniform.get()
         };
 
         mPipeline = std::make_unique<Pipeline>(
@@ -44,7 +45,7 @@ namespace Dog
             rr->swapChain->GetImageFormat(), rr->swapChain->FindDepthFormat(),
             unis,
             false,
-            "basic_model.vert", "basic_model.frag"
+            "verysimple.vert", "verysimple.frag"
         );
 
         mWireframePipeline = std::make_unique<Pipeline>(
@@ -52,7 +53,7 @@ namespace Dog
             rr->swapChain->GetImageFormat(), rr->swapChain->FindDepthFormat(),
             unis,
             true,
-            "basic_model.vert", "basic_model.frag"
+            "verysimple.vert", "verysimple.frag"
         );
 
         VmaAllocator allocator = rr->allocator->GetAllocator();
@@ -74,10 +75,12 @@ namespace Dog
                 DOG_ERROR("VMA failed to create indirect command buffer");
             }
         }
+        */
     }
     
     void RenderSystem::FrameStart()
     {
+        /*
         auto rr = ecs->GetResource<RenderingResource>();
         auto& ml = rr->modelLibrary;
         if (ml->NeedsTextureUpdate())
@@ -104,12 +107,14 @@ namespace Dog
                 writer.Overwrite(rr->instanceUniform->GetDescriptorSets()[frameIndex]);
             }
         }
+        */
 
         DebugDrawResource::Clear();
     }
     
     void RenderSystem::Update(float dt)
     {
+        /*
         auto renderingResource = ecs->GetResource<RenderingResource>();
         auto editorResource = ecs->GetResource<EditorResource>();
         auto& rg = renderingResource->renderGraph;
@@ -156,6 +161,7 @@ namespace Dog
             },
             std::bind(&RenderSystem::RenderScene, this, std::placeholders::_1)
         );
+        */
     }
     
     void RenderSystem::FrameEnd()
@@ -164,6 +170,7 @@ namespace Dog
 
     void RenderSystem::Exit()
     {
+        /*
         mPipeline.reset();
         mWireframePipeline.reset();
 
@@ -172,17 +179,19 @@ namespace Dog
         for (int i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i) {
             vmaDestroyBuffer(rr->allocator->GetAllocator(), mIndirectBuffers[i], mIndirectBufferAllocations[i]);
         }
+        */
     }
 
     void RenderSystem::RenderScene(VkCommandBuffer cmd)
     {
+        /*
         auto rr = ecs->GetResource<RenderingResource>();
 
         rr->renderWireframe ? mWireframePipeline->Bind(cmd) : mPipeline->Bind(cmd);
         VkPipelineLayout pipelineLayout = rr->renderWireframe ? mWireframePipeline->GetLayout() : mPipeline->GetLayout();
 
         rr->cameraUniform->Bind(cmd, pipelineLayout, rr->currentFrameIndex);
-        rr->instanceUniform->Bind(cmd, pipelineLayout, rr->currentFrameIndex);
+        //rr->instanceUniform->Bind(cmd, pipelineLayout, rr->currentFrameIndex);
 
         VkViewport viewport{};
         viewport.width = static_cast<float>(rr->swapChain->GetSwapChainExtent().width);
@@ -200,7 +209,7 @@ namespace Dog
         ModelLibrary* ml = rr->modelLibrary.get();
 
         UnifiedMeshes* unifiedMesh = rr->modelLibrary->GetUnifiedMesh();
-        Mesh& uMesh = unifiedMesh->GetUnifiedMesh();
+        VKMesh& uMesh = unifiedMesh->GetUnifiedMesh();
 
         VkDrawIndexedIndirectCommand* solidPtr;
         vmaMapMemory(rr->allocator->GetAllocator(), mIndirectBufferAllocations[rr->currentFrameIndex], (void**)&solidPtr);
@@ -217,7 +226,7 @@ namespace Dog
             instanceData.insert(instanceData.end(), debugData.begin(), debugData.end());
 
             auto cubeModel = ml->GetModel("Assets/models/cube.obj");
-            const MeshInfo& meshInfo = unifiedMesh->GetMeshInfo(cubeModel->mMeshes[0].mMeshID);
+            const MeshInfo& meshInfo = unifiedMesh->GetMeshInfo(cubeModel->mMeshes[0]->GetID());
 
             VkDrawIndexedIndirectCommand drawCommand = {};
             drawCommand.indexCount = meshInfo.indexCount;
@@ -278,11 +287,12 @@ namespace Dog
         vmaUnmapMemory(rr->allocator->GetAllocator(), mIndirectBufferAllocations[rr->currentFrameIndex]);
 
 
-        rr->instanceUniform->SetUniformData(instanceData, 1, rr->currentFrameIndex);
+        rr->cameraUniform->SetUniformData(instanceData, 1, rr->currentFrameIndex);
+        //rr->instanceUniform->SetUniformData(instanceData, 1, rr->currentFrameIndex);
         
         VkBuffer uMeshVertexBuffer = uMesh.mVertexBuffer->GetBuffer();
         VkBuffer uMeshIndexBuffer = uMesh.mIndexBuffer->GetBuffer();
-        VkBuffer instBuffer = rr->instanceUniform->GetUniformBuffer(1, rr->currentFrameIndex)->GetBuffer();
+        VkBuffer instBuffer = rr->cameraUniform->GetUniformBuffer(1, rr->currentFrameIndex)->GetBuffer();
         VkBuffer buffers[] = { uMeshVertexBuffer, instBuffer };
         VkDeviceSize offsets[] = { 0, 0 };
         vkCmdBindVertexBuffers(cmd, 0, 2, buffers, offsets);
@@ -295,5 +305,6 @@ namespace Dog
             static_cast<uint32_t>(solidDrawCount),
             sizeof(VkDrawIndexedIndirectCommand)
         );
+    */
     }
 }

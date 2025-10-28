@@ -29,6 +29,7 @@ namespace Dog
         }
     }
 
+    /*
     void InstanceUniformInit(Uniform& uniform, RenderingResource& renderData)
     {
         uniform.GetDescriptorSets().resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
@@ -63,4 +64,5 @@ namespace Dog
             writer.Build(uniform.GetDescriptorSets()[frameIndex]);
         }
     }
+    */
 }

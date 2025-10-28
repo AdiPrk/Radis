@@ -2,6 +2,8 @@
 
 #include "IResource.h"
 
+#include "Graphics/OpenGL/GLShader.h"
+
 namespace Dog
 {
     class IWindow;
@@ -16,11 +18,16 @@ namespace Dog
     class ModelLibrary;
     class TextureLibrary;
     class AnimationLibrary;
+    class GLFrameBuffer;
+    class GLShader;
 
     struct RenderingResource : public IResource
     {
         RenderingResource(IWindow* window);
         ~RenderingResource();
+
+        void Create(IWindow* window);
+        void Cleanup();
 
         std::unique_ptr<Device> device;
         std::unique_ptr<SwapChain> swapChain;
@@ -34,7 +41,7 @@ namespace Dog
         
         // Uniforms ----------------
         std::unique_ptr<Uniform> cameraUniform;
-        std::unique_ptr<Uniform> instanceUniform;
+        //std::unique_ptr<Uniform> instanceUniform;
         // -------------------------
 
         std::vector<VkCommandBuffer> commandBuffers;
@@ -54,6 +61,16 @@ namespace Dog
         VkDescriptorSet sceneTextureDescriptorSet{ VK_NULL_HANDLE };
         // --------------------------------
 
+        // Pipelines
+        std::unique_ptr<Pipeline> pipeline;
+        std::unique_ptr<Pipeline> wireframePipeline;
+        // -----------
+
+        // OPENGL STUFFS
+        std::unique_ptr<GLShader> shader;
+        std::unique_ptr<GLFrameBuffer> sceneFrameBuffer;
+        // --------------------------------
+
         bool renderWireframe = false;
 
         // Texture update
@@ -67,7 +84,7 @@ namespace Dog
         void CreateCommandBuffers();
 
         // Scene textures ----------------
-        friend class EditorSystem;
+        friend struct EditorResource;
         void CreateSceneTexture();
         void CleanupSceneTexture();
         void RecreateSceneTexture();

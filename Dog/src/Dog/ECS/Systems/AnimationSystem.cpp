@@ -57,16 +57,16 @@ namespace Dog
             boneOffset += static_cast<uint32_t>(finalMatrices.size());
         }
 
-        auto& rg = rr->renderGraph;
-        rg->AddPass(
-            "UpdateAnimationUniform",
-            [](RGPassBuilder& builder) {},
-            [&](VkCommandBuffer cmd) 
-            {
-                auto renderingData = ecs->GetResource<RenderingResource>();
-                auto animationData = ecs->GetResource<AnimationResource>();
-                renderingData->instanceUniform->SetUniformData(animationData->bonesMatrices, 2, renderingData->currentFrameIndex);
-            }
-        );
+        // auto& rg = rr->renderGraph;
+        // rg->AddPass(
+        //     "UpdateAnimationUniform",
+        //     [](RGPassBuilder& builder) {},
+        //     [&](VkCommandBuffer cmd) 
+        //     {
+        //         auto renderingData = ecs->GetResource<RenderingResource>();
+        //         auto animationData = ecs->GetResource<AnimationResource>();
+        //         renderingData->instanceUniform->SetUniformData(animationData->bonesMatrices, 2, renderingData->currentFrameIndex);
+        //     }
+        // );
     }
 }

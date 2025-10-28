@@ -6,7 +6,7 @@
 namespace Dog
 {
     class Pipeline;
-    class Mesh;
+    class VKMesh;
 
     class RayRenderSystem : public ISystem
     {
@@ -22,7 +22,7 @@ namespace Dog
 
         void RenderScene(VkCommandBuffer cmd);
 
-        void PrimitiveToGeometry(Mesh& mesh,
+        void PrimitiveToGeometry(VKMesh& mesh,
             VkAccelerationStructureGeometryKHR& geometry,
             VkAccelerationStructureBuildRangeInfoKHR& rangeInfo);
 
@@ -36,9 +36,6 @@ namespace Dog
         uint32_t mNumInstancesRendered = 0;
 
     private:
-        std::unique_ptr<Pipeline> mPipeline;
-        std::unique_ptr<Pipeline> mWireframePipeline;
-
         std::vector<VkBuffer> mIndirectBuffers;
         std::vector<VmaAllocation> mIndirectBufferAllocations;
     };
