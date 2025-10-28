@@ -52,11 +52,13 @@ namespace Dog
             // mPipeline->Recreate();
         }
 
-        static int si = 0;
-        if (si++ % 2 == 0) return;
-
-        auto sr = ecs->GetResource<SwapRendererBackendResource>();
-        //sr->RequestSwap();
+        // Heh
+        // static int si = 0;
+        // if (si++ % 2 == 0) 
+        // {
+        //     auto sr = ecs->GetResource<SwapRendererBackendResource>();
+        //     sr->RequestSwap();
+        // }
     }
 
     void SimpleRenderSystem::Update(float dt)
