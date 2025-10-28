@@ -5,6 +5,7 @@
 #include "../Resources/EditorResource.h"
 #include "../Resources/DebugDrawResource.h"
 #include "../Resources/WindowResource.h"
+#include "../Resources/SwapRendererBackendResource.h"
 
 #include "InputSystem.h"
 
@@ -50,6 +51,12 @@ namespace Dog
         {
             // mPipeline->Recreate();
         }
+
+        static int si = 0;
+        if (si++ % 2 == 0) return;
+
+        auto sr = ecs->GetResource<SwapRendererBackendResource>();
+        //sr->RequestSwap();
     }
 
     void SimpleRenderSystem::Update(float dt)

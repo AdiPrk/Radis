@@ -25,7 +25,6 @@ namespace Dog
         meshInfo.vertexOffset = static_cast<int32_t>(unifiedMesh.mVertices.size());
 
         unifiedMesh.mVertices.insert(unifiedMesh.mVertices.end(), mesh.mVertices.begin(), mesh.mVertices.end());
-        unifiedMesh.mSimpleVertices.insert(unifiedMesh.mSimpleVertices.end(), mesh.mSimpleVertices.begin(), mesh.mSimpleVertices.end());
         unifiedMesh.mIndices.insert(unifiedMesh.mIndices.end(), mesh.mIndices.begin(), mesh.mIndices.end());
 
         unifiedMesh.CreateVertexBuffers(&device);

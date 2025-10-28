@@ -93,12 +93,10 @@ namespace Dog
         for (unsigned int j = 0; j < mesh->mNumVertices; j++)
         {
             Vertex vertex{};
-            SimpleVertex svertex{};
 
             //glm::vec4 pos = { mesh->mVertices[j].x, mesh->mVertices[j].y, mesh->mVertices[j].z, 1.f };
             //vertex.position = glm::vec3(transform * pos);
             vertex.position = { mesh->mVertices[j].x, mesh->mVertices[j].y, mesh->mVertices[j].z };
-            svertex.position = vertex.position;
 
             // Update min and max vectors for AABB
             meshMin = glm::min(meshMin, vertex.position);
@@ -111,25 +109,21 @@ namespace Dog
                 //glm::vec4 norm = { mesh->mNormals[j].x, mesh->mNormals[j].y, mesh->mNormals[j].z, 0.f };
                 //vertex.normal = glm::normalize(glm::vec3(normalMatrix * norm));
                 vertex.normal = { mesh->mNormals[j].x, mesh->mNormals[j].y, mesh->mNormals[j].z };
-                svertex.normal = vertex.normal;
             }
 
             // UV Coordinates
             if (mesh->HasTextureCoords(0))
             {
                 vertex.uv = { mesh->mTextureCoords[0][j].x, mesh->mTextureCoords[0][j].y };
-                svertex.uv = vertex.uv;
             }
 
             // Colors
             if (mesh->HasVertexColors(0))
             {
                 vertex.color = { mesh->mColors[0][j].r, mesh->mColors[0][j].g, mesh->mColors[0][j].b };
-                svertex.color = vertex.color;
             }
 
             newMesh.mVertices.push_back(vertex);
-            newMesh.mSimpleVertices.push_back(svertex);
         }
 
         //Update model's AABB

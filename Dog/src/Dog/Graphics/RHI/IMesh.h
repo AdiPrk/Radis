@@ -53,7 +53,6 @@ namespace Dog
 
         // Mesh data
         std::vector<Vertex> mVertices{};
-        std::vector<SimpleVertex> mSimpleVertices{};
         std::vector<uint32_t> mIndices{};
 
         // Unique mesh index

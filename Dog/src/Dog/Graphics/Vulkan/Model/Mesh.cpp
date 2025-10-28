@@ -14,11 +14,11 @@ namespace Dog
 
     void VKMesh::CreateVertexBuffers(Device* device)
     {
-        mVertexCount = static_cast<uint32_t>(mSimpleVertices.size());
+        mVertexCount = static_cast<uint32_t>(mVertices.size());
         mTriangleCount = mVertexCount / 3;
         //assert(vertexCount >= 3 && "Vertex count must be at least 3");
-        VkDeviceSize bufferSize = sizeof(mSimpleVertices[0]) * mVertexCount;
-        uint32_t vertexSize = sizeof(mSimpleVertices[0]);
+        VkDeviceSize bufferSize = sizeof(mVertices[0]) * mVertexCount;
+        uint32_t vertexSize = sizeof(mVertices[0]);
 
         Buffer stagingBuffer{
             *device,
@@ -29,7 +29,7 @@ namespace Dog
         };
 
         stagingBuffer.Map();
-        stagingBuffer.WriteToBuffer((void*)mSimpleVertices.data());
+        stagingBuffer.WriteToBuffer((void*)mVertices.data());
 
         mVertexBuffer = std::make_unique<Buffer>(
             *device,
@@ -105,41 +105,6 @@ namespace Dog
         vkCmdDrawIndexed(commandBuffer, mIndexCount, 1, 0, 0, baseIndex);
     }
 
-    std::vector<VkVertexInputBindingDescription> SimpleVertex::GetBindingDescriptions()
-    {
-        //Create a 1 long vector of binding descriptions
-        std::vector<VkVertexInputBindingDescription> bindingDescriptions(2);
-        //Set bind description data
-        bindingDescriptions[0].binding = 0;                             
-        bindingDescriptions[0].stride = sizeof(SimpleVertex);                 
-        bindingDescriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX; 
-
-        bindingDescriptions[1].binding = 1;
-        bindingDescriptions[1].stride = sizeof(glm::mat4);
-        bindingDescriptions[1].inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
-        //Return description
-        return bindingDescriptions;
-    }
-
-    std::vector<VkVertexInputAttributeDescription> SimpleVertex::GetAttributeDescriptions()
-    {
-        std::vector<VkVertexInputAttributeDescription> attributeDescriptions{};
-
-        // Per vertex
-        attributeDescriptions.push_back({ 0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(SimpleVertex, position) });
-        attributeDescriptions.push_back({ 1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(SimpleVertex, color) });
-        attributeDescriptions.push_back({ 2, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(SimpleVertex, normal) });
-        attributeDescriptions.push_back({ 3, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(SimpleVertex, uv) });
-
-        // Per instance
-        attributeDescriptions.push_back({ 4, 1, VK_FORMAT_R32G32B32A32_SFLOAT, 0 });
-        attributeDescriptions.push_back({ 5, 1, VK_FORMAT_R32G32B32A32_SFLOAT, sizeof(float) * 4 });
-        attributeDescriptions.push_back({ 6, 1, VK_FORMAT_R32G32B32A32_SFLOAT, sizeof(float) * 8 });
-        attributeDescriptions.push_back({ 7, 1, VK_FORMAT_R32G32B32A32_SFLOAT, sizeof(float) * 12 });
-
-        return attributeDescriptions;
-    }
-
     std::vector<VkVertexInputBindingDescription> Vertex::GetBindingDescriptions()
     {
         std::vector<VkVertexInputBindingDescription> bindingDescriptions(2);
@@ -150,7 +115,7 @@ namespace Dog
         bindingDescriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX; 
 
         bindingDescriptions[1].binding = 1;
-        bindingDescriptions[1].stride = sizeof(InstanceUniforms);
+        bindingDescriptions[1].stride = sizeof(SimpleInstanceUniforms);
         bindingDescriptions[1].inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
 
         //Return description
@@ -171,13 +136,13 @@ namespace Dog
         attributeDescriptions.push_back({ 5, 0, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(Vertex, weights) });
 
         // Per instance
-        attributeDescriptions.push_back({ 6,  1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, model)});                      
-        attributeDescriptions.push_back({ 7,  1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, model) + sizeof(float) * 4 }); 
-        attributeDescriptions.push_back({ 8,  1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, model) + sizeof(float) * 8 }); 
-        attributeDescriptions.push_back({ 9,  1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, model) + sizeof(float) * 12 });
-        attributeDescriptions.push_back({ 10, 1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, tint) });
-        attributeDescriptions.push_back({ 11, 1, VK_FORMAT_R32_UINT, offsetof(InstanceUniforms, textureIndex) });
-        attributeDescriptions.push_back({ 12, 1, VK_FORMAT_R32_UINT, offsetof(InstanceUniforms, boneOffset) });
+        attributeDescriptions.push_back({ 6,  1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(SimpleInstanceUniforms, model)});
+        attributeDescriptions.push_back({ 7,  1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(SimpleInstanceUniforms, model) + sizeof(float) * 4 });
+        attributeDescriptions.push_back({ 8,  1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(SimpleInstanceUniforms, model) + sizeof(float) * 8 });
+        attributeDescriptions.push_back({ 9,  1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(SimpleInstanceUniforms, model) + sizeof(float) * 12 });
+        //attributeDescriptions.push_back({ 10, 1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, tint) });
+        //attributeDescriptions.push_back({ 11, 1, VK_FORMAT_R32_UINT, offsetof(InstanceUniforms, textureIndex) });
+        //attributeDescriptions.push_back({ 12, 1, VK_FORMAT_R32_UINT, offsetof(InstanceUniforms, boneOffset) });
 
         //Return description
         return attributeDescriptions;
