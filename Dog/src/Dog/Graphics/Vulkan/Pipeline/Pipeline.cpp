@@ -344,8 +344,8 @@ namespace Dog
 		//vertexInputCreateInfo.vertexAttributeDescriptionCount = 0;
 		//vertexInputCreateInfo.pVertexAttributeDescriptions = nullptr; // Optional
 
-		auto vertBindingDescriptions = Vertex::GetBindingDescriptions();
-		auto vertAttributeDescriptions = Vertex::GetAttributeDescriptions();
+		auto vertBindingDescriptions = SimpleVertex::GetBindingDescriptions();
+		auto vertAttributeDescriptions = SimpleVertex::GetAttributeDescriptions();
 		VkPipelineVertexInputStateCreateInfo vertexInputCreateInfo{};
 		vertexInputCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;                     //Set what will be crated to a vertex input
 		vertexInputCreateInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertAttributeDescriptions.size()); //Counts for attribute desciptions of vertex buffers

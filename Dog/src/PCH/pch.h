@@ -1,16 +1,21 @@
 #pragma once
 
+#define WIN32_LEAN_AND_MEAN
 #define _CRT_SECURE_NO_WARNINGS
 #define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING
 #define _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS
 #define NOMINMAX
 
+// vulkan
+#include <vulkan/vulkan.h>
+
 // glew
 #define GLEW_STATIC
 #include <GL/glew.h>
 
-// vulkan
-#include <vulkan/vulkan.h>
+// Glfw
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
 
 // imgui
 #define IMGUI_DEFINE_MATH_OPERATORS
@@ -74,6 +79,7 @@
 
 // My files
 #include "Utils/Logger.h"
+#include "Events/Event.h"
 #include "Graphics/Vulkan/Model/AssimpGlmHelper.h"
 #include "Graphics/Vulkan/Model/Animation/VQS.h"
 #include "Graphics/GraphicsAPIs.h"

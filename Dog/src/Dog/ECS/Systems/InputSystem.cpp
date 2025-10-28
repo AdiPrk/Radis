@@ -3,6 +3,8 @@
 
 #include "ECS/ECS.h"
 #include "ECS/Resources/InputResource.h"
+#include "ECS/Resources/WindowResource.h"
+#include "Graphics/IWindow.h"
 
 #include "GLFW/glfw3.h"
 
@@ -38,7 +40,7 @@ namespace Dog {
 
 	void InputSystem::Init()
 	{
-		InputSystem::pwindow = ecs->GetResource<InputResource>()->window;
+		InputSystem::pwindow = ecs->GetResource<WindowResource>()->window->GetGLFWwindow();
 
 		glfwSetKeyCallback(InputSystem::pwindow, keyPressCallback);
 		glfwSetMouseButtonCallback(InputSystem::pwindow, mouseButtonCallback);
@@ -113,6 +115,42 @@ namespace Dog {
 	bool InputSystem::isMouseDown(const Mouse& button)
 	{
 		return mouseStates[static_cast<int>(button)].mouseDown;
+	}
+
+	void InputSystem::ResetWindow(GLFWwindow* win)
+	{
+		InputSystem::pwindow = win;
+
+		glfwSetKeyCallback(InputSystem::pwindow, keyPressCallback);
+		glfwSetMouseButtonCallback(InputSystem::pwindow, mouseButtonCallback);
+		glfwSetScrollCallback(InputSystem::pwindow, mouseScrollCallback);
+		glfwSetCharCallback(InputSystem::pwindow, charCallback);
+
+		InputSystem::standardCursor = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
+		glfwSetCursor(InputSystem::pwindow, InputSystem::standardCursor);
+
+		double xpos, ypos;
+		glfwGetCursorPos(pwindow, &xpos, &ypos);
+		InputSystem::mouseScreenX = static_cast<float>(xpos);
+		InputSystem::mouseScreenY = static_cast<float>(ypos);
+		InputSystem::lastMouseScreenX = InputSystem::mouseScreenX;
+		InputSystem::lastMouseScreenY = InputSystem::mouseScreenY;
+
+		// reset all states
+		for (int i = 0; i < static_cast<int>(Key::LAST); i++)
+		{
+			InputSystem::keyStates[i].keyDown = false;
+			InputSystem::keyStates[i].prevKeyDown = false;
+        }
+
+		for (int i = 0; i < static_cast<int>(Mouse::LAST); i++)
+		{
+			InputSystem::mouseStates[i].mouseDown = false;
+			InputSystem::mouseStates[i].mouseReleased = false;
+			InputSystem::mouseStates[i].mouseTriggered = false;
+			InputSystem::mouseStates[i].prevTriggered = false;
+            InputSystem::mouseStates[i].doTriggered = false;
+		}
 	}
 
 	float InputSystem::GetMouseDeltaX()

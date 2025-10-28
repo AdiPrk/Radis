@@ -41,6 +41,7 @@ namespace Dog
 		static void SetDevBuild(bool dev) { mDevBuild = dev; }
 		static bool IsDevBuild() { return mDevBuild; }
         static GraphicsAPI GetGraphicsAPI() { return mGraphicsAPI; }
+		static void SetGraphicsAPI(GraphicsAPI api) { mGraphicsAPI = api; }
 
 	private:
 		// Engine Specs
@@ -57,7 +58,6 @@ namespace Dog
 		static GraphicsAPI mGraphicsAPI;
 
 	private:
-        static void SetGraphicsAPI(GraphicsAPI api) { mGraphicsAPI = api; }
 	};
 
 } // namespace Dog

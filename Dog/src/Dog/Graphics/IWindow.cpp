@@ -2,8 +2,6 @@
 #include "IWindow.h"
 #include "Utils/Utils.h"
 
-#include <GLFW/glfw3.h>
-
 namespace Dog
 {
     IWindow::IWindow(int w, int h, std::wstring_view name, GraphicsAPI api)

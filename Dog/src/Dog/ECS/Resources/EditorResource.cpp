@@ -1,5 +1,6 @@
 #include <PCH/pch.h>
 #include "EditorResource.h"
+#include "RenderingResource.h"
 #include "Graphics/Vulkan/VulkanWindow.h"
 
 #include "RenderingResource.h"
@@ -9,11 +10,23 @@
 #include "Graphics/Vulkan/Core/SwapChain.h"
 #include "Graphics/Vulkan/RenderGraph.h"
 
+#include "Engine.h"
+
 namespace Dog
 {
     EditorResource::EditorResource(Device& device, SwapChain& swapChain, GLFWwindow* glfwWindow)
     {
-		VkDescriptorPoolSize pool_sizes[] = { 
+        Create(device, swapChain, glfwWindow);
+    }
+
+	EditorResource::EditorResource(GLFWwindow* glfwWindow)
+	{
+        Create(glfwWindow);
+	}
+
+	void EditorResource::Create(Device& device, SwapChain& swapChain, GLFWwindow* glfwWindow)
+	{
+		VkDescriptorPoolSize pool_sizes[] = {
 			{ VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
 			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
 			{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
@@ -24,7 +37,7 @@ namespace Dog
 			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
 			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
 			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
-			{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 } 
+			{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
 		};
 
 		VkDescriptorPoolCreateInfo pool_info = {};
@@ -86,9 +99,9 @@ namespace Dog
 		ImGui_ImplVulkan_Init(&init_info);
 
 		ImGui::StyleColorsDark();
-    }
+	}
 
-	EditorResource::EditorResource(GLFWwindow* glfwWindow)
+	void EditorResource::Create(GLFWwindow* glfwWindow)
 	{
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
@@ -102,6 +115,43 @@ namespace Dog
 		ImGui_ImplOpenGL3_Init();
 
 		ImGui::StyleColorsDark();
+	}
+
+	void EditorResource::Cleanup(Device* device)
+	{
+		if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+		{
+			ImGui_ImplVulkan_Shutdown();
+			ImGui_ImplGlfw_Shutdown();
+			ImGui::DestroyContext();
+
+			if (samplerSetLayout != VK_NULL_HANDLE)
+			{
+				vkDestroyDescriptorSetLayout(device->GetDevice(), samplerSetLayout, nullptr);
+				samplerSetLayout = VK_NULL_HANDLE;
+			}
+			if (descriptorPool != VK_NULL_HANDLE)
+			{
+				vkDestroyDescriptorPool(device->GetDevice(), descriptorPool, nullptr);
+				descriptorPool = VK_NULL_HANDLE;
+			}
+		}
+		else
+		{
+			ImGui_ImplOpenGL3_Shutdown();
+			ImGui_ImplGlfw_Shutdown();
+            ImGui::DestroyContext();
+		}
+    }
+	void EditorResource::CreateSceneTextures(RenderingResource* rr)
+	{
+		rr->RecreateAllSceneTextures();
+	}
+
+	void EditorResource::CleanSceneTextures(RenderingResource* rr)
+	{
+        rr->CleanupSceneTexture();
+		rr->CleanupDepthBuffer();
 	}
 }
 

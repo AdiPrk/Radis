@@ -61,6 +61,7 @@ namespace Dog {
     Device::Device(VulkanWindow& window) 
         : window{ window }
     {
+
         createInstance();
         setupDebugMessenger();
         createSurface();
@@ -145,7 +146,7 @@ namespace Dog {
         uint32_t deviceCount = 0;
         vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
         if (deviceCount == 0) {
-            throw std::runtime_error("failed to find GPUs with Vulkan support!");
+            DOG_CRITICAL("No Vulkan-supported GPUs found!");
         }
         // std::cout << "Device count: " << deviceCount << std::endl;
         std::vector<VkPhysicalDevice> devices(deviceCount);
@@ -158,8 +159,9 @@ namespace Dog {
             }
         }
 
-        if (physicalDevice == VK_NULL_HANDLE) {
-            throw std::runtime_error("failed to find a suitable GPU!");
+        if (physicalDevice == VK_NULL_HANDLE)
+        {
+            DOG_CRITICAL("Failed to find a suitable GPU!");
         }
 
         vkGetPhysicalDeviceProperties(physicalDevice, &properties);
@@ -186,7 +188,7 @@ namespace Dog {
             throw std::runtime_error("Graphics queue family not found");
         }
         if (indices.presentFamily == INVALID_INDEX) {
-            DOG_WARN("Present queue family not found — continuing, but present operations may fail.");
+            DOG_WARN("Present queue family not found - continuing, but present operations may fail.");
         }
 
         // 2.a) enumerate actual queue family count and properties to validate indices are in-range
@@ -252,12 +254,6 @@ namespace Dog {
         deviceFeatures.logicOp = VK_TRUE;
         deviceFeatures.fillModeNonSolid = VK_TRUE;
 
-        VkPhysicalDevice16BitStorageFeatures storage16BitFeatures = 
-        {
-            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_16BIT_STORAGE_FEATURES,
-            .storageBuffer16BitAccess = VK_TRUE
-        };
-
         VkPhysicalDeviceVulkan13Features vulkan13Features = 
         {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
@@ -269,8 +265,6 @@ namespace Dog {
         {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
             .drawIndirectCount = VK_TRUE,
-            .shaderFloat16 = VK_TRUE,
-            .shaderInt8 = VK_TRUE,
             .shaderSampledImageArrayNonUniformIndexing = VK_TRUE,
             .descriptorBindingPartiallyBound = VK_TRUE,
             .descriptorBindingVariableDescriptorCount = VK_TRUE,
@@ -295,9 +289,8 @@ namespace Dog {
         VkDeviceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         
-        accelFeature.pNext = &rtPipelineFeature;
-        storage16BitFeatures.pNext = &accelFeature;
-        vulkan13Features.pNext = &storage16BitFeatures;
+        //accelFeature.pNext = &rtPipelineFeature;
+        //vulkan13Features.pNext = &accelFeature;
         vulkan12Features.pNext = &vulkan13Features;
         createInfo.pNext = &vulkan12Features;
 
@@ -402,8 +395,20 @@ namespace Dog {
         VkPhysicalDeviceFeatures supportedFeatures;
         vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
 
-        return indices.isComplete() && extensionsSupported && swapChainAdequate &&
-            supportedFeatures.samplerAnisotropy;
+        DOG_INFO("Evaluating device suitability: {}", [&]() {
+            VkPhysicalDeviceProperties deviceProperties;
+            vkGetPhysicalDeviceProperties(device, &deviceProperties);
+            return std::string(deviceProperties.deviceName);
+        }());
+
+        DOG_INFO("Indices complete: {}, Extensions supported: {}, Swap chain adequate: {}, Sampler anisotropy: {}",
+            indices.isComplete() ? "Yes" : "No",
+            extensionsSupported ? "Yes" : "No",
+            swapChainAdequate ? "Yes" : "No",
+            supportedFeatures.samplerAnisotropy ? "Yes" : "No"
+        );
+
+        return indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy;
     }
 
     void Device::populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
@@ -509,6 +514,11 @@ namespace Dog {
 
         for (const auto& extension : availableExtensions) {
             requiredExtensions.erase(extension.extensionName);
+        }
+
+        // print all missing extensions
+        for (const auto& ext : requiredExtensions) {
+            DOG_WARN("Missing required device extension: {}", ext);
         }
 
         return requiredExtensions.empty();
