@@ -74,6 +74,12 @@ namespace Dog
         stagingBuffer.CopyBuffer(stagingBuffer.GetBuffer(), mIndexBuffer->GetBuffer(), bufferSize);
     }
 
+    void VKMesh::Cleanup()
+    {
+        mVertexBuffer.reset();
+        mIndexBuffer.reset();
+    }
+
     void VKMesh::Bind(VkCommandBuffer commandBuffer, VkBuffer instBuffer)
     {
         if (!mHasIndexBuffer)

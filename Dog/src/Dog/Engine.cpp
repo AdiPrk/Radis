@@ -31,6 +31,7 @@ namespace Dog
 {
     bool Engine::mDevBuild = false;
     GraphicsAPI Engine::mGraphicsAPI = GraphicsAPI::None;
+    bool Engine::mVulkanSupported = true;
 
     Engine::Engine(const EngineSpec& specs, int argc, char* argv[])
         : mSpecs(specs)
@@ -78,7 +79,7 @@ namespace Dog
         {
             mEcs.AddResource<RenderingResource>(wr->window.get());
             auto rr = mEcs.GetResource<RenderingResource>();
-            mEcs.AddResource<EditorResource>(*rr->device, *rr->swapChain, wr->window->GetGLFWwindow());
+            mEcs.AddResource<EditorResource>(rr->device.get(), rr->swapChain.get(), wr->window->GetGLFWwindow());
         }
         else if (specs.graphicsAPI == GraphicsAPI::OpenGL)
         {

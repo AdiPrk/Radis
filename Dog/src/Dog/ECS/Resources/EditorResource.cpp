@@ -14,17 +14,25 @@
 
 namespace Dog
 {
-    EditorResource::EditorResource(Device& device, SwapChain& swapChain, GLFWwindow* glfwWindow)
+    EditorResource::EditorResource(Device* device, SwapChain* swapChain, GLFWwindow* glfwWindow)
     {
+		if (!device || !swapChain || !glfwWindow)
+			return;
+
         Create(device, swapChain, glfwWindow);
+		isInitialized = true;
     }
 
 	EditorResource::EditorResource(GLFWwindow* glfwWindow)
 	{
+		if (!glfwWindow) 
+			return;
+
         Create(glfwWindow);
+		isInitialized = true;
 	}
 
-	void EditorResource::Create(Device& device, SwapChain& swapChain, GLFWwindow* glfwWindow)
+	void EditorResource::Create(Device* device, SwapChain* swapChain, GLFWwindow* glfwWindow)
 	{
 		VkDescriptorPoolSize pool_sizes[] = {
 			{ VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
@@ -46,7 +54,7 @@ namespace Dog
 		pool_info.maxSets = 1000;
 		pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
 		pool_info.pPoolSizes = pool_sizes;
-		vkCreateDescriptorPool(device, &pool_info, VK_NULL_HANDLE, &descriptorPool);
+		vkCreateDescriptorPool(device->GetDevice(), &pool_info, VK_NULL_HANDLE, &descriptorPool);
 
 		VkDescriptorSetLayoutBinding samplerLayoutBinding{};
 		samplerLayoutBinding.binding = 0;
@@ -60,7 +68,7 @@ namespace Dog
 		layoutInfo.bindingCount = 1;
 		layoutInfo.pBindings = &samplerLayoutBinding;
 
-		if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &samplerSetLayout) != VK_SUCCESS) {
+		if (vkCreateDescriptorSetLayout(device->GetDevice(), &layoutInfo, nullptr, &samplerSetLayout) != VK_SUCCESS) {
 			throw std::runtime_error("Failed to create descriptor set layout!");
 		}
 
@@ -74,27 +82,27 @@ namespace Dog
 
 		ImGui_ImplGlfw_InitForVulkan(glfwWindow, true);
 		ImGui_ImplVulkan_InitInfo init_info = {};
-		init_info.Instance = device.GetInstance();
-		init_info.PhysicalDevice = device.GetPhysicalDevice();
-		init_info.Device = device;
-		init_info.QueueFamily = device.GetGraphicsFamily();
-		init_info.Queue = device.GetGraphicsQueue();
+		init_info.Instance = device->GetInstance();
+		init_info.PhysicalDevice = device->GetPhysicalDevice();
+		init_info.Device = device->GetDevice();
+		init_info.QueueFamily = device->GetGraphicsFamily();
+		init_info.Queue = device->GetGraphicsQueue();
 		init_info.PipelineCache = VK_NULL_HANDLE;
 		init_info.DescriptorPool = descriptorPool;// device.getImGuiDescriptorPool();
 		init_info.UseDynamicRendering = VK_TRUE;
 		init_info.RenderPass = VK_NULL_HANDLE;
 		init_info.Subpass = 0;
 
-		VkFormat colorFormat = swapChain.GetImageFormat();
+		VkFormat colorFormat = swapChain->GetImageFormat();
 		init_info.PipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
 		init_info.PipelineRenderingCreateInfo.colorAttachmentCount = 1;
 		init_info.PipelineRenderingCreateInfo.pColorAttachmentFormats = &colorFormat;
-		init_info.PipelineRenderingCreateInfo.depthAttachmentFormat = swapChain.GetDepthFormat();
+		init_info.PipelineRenderingCreateInfo.depthAttachmentFormat = swapChain->GetDepthFormat();
 		init_info.PipelineRenderingCreateInfo.stencilAttachmentFormat = VK_FORMAT_UNDEFINED;
 
 		init_info.Allocator = nullptr;
 		init_info.MinImageCount = SwapChain::MAX_FRAMES_IN_FLIGHT;
-		init_info.ImageCount = static_cast<uint32_t>(swapChain.ImageCount());
+		init_info.ImageCount = static_cast<uint32_t>(swapChain->ImageCount());
 		init_info.CheckVkResultFn = nullptr;
 		ImGui_ImplVulkan_Init(&init_info);
 
@@ -119,6 +127,8 @@ namespace Dog
 
 	void EditorResource::Cleanup(Device* device)
 	{
+		if (!isInitialized) return;
+
 		if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
 		{
 			ImGui_ImplVulkan_Shutdown();
@@ -142,6 +152,8 @@ namespace Dog
 			ImGui_ImplGlfw_Shutdown();
             ImGui::DestroyContext();
 		}
+
+		isInitialized = false;
     }
 	void EditorResource::CreateSceneTextures(RenderingResource* rr)
 	{

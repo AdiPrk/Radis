@@ -50,6 +50,13 @@ namespace Dog
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
         {
             device = std::make_unique<Device>(*dynamic_cast<VulkanWindow*>(window));
+
+            if (!device->SupportsVulkan())
+            {
+                Engine::ForceVulkanUnsupportedSwap();
+                return;
+            }
+
             allocator = std::make_unique<Allocator>(*device);
 
             RecreateSwapChain(window);
@@ -77,35 +84,38 @@ namespace Dog
         //textureLibrary = std::make_unique<TextureLibrary>(*device);
         //textureLibrary->AddTexture("Assets/textures/square.png");
 
-        if (!modelLibrary) modelLibrary = std::make_unique<ModelLibrary>(*device, *textureLibrary);
-        //animationLibrary = std::make_unique<AnimationLibrary>();
+        if (!modelLibrary)
+        {
+            modelLibrary = std::make_unique<ModelLibrary>(*device, *textureLibrary);
+            //animationLibrary = std::make_unique<AnimationLibrary>();
 
-        //modelLibrary->AddModel("Assets/models/quad.obj");
-        //modelLibrary->AddModel("Assets/models/cube.obj");
-        //modelLibrary->AddModel("Assets/models/yena.fbx");
-        //animationLibrary->AddAnimation("Assets/models/yena.fbx", modelLibrary->GetModel("yena"));
-        //modelLibrary->AddModel("Assets/models/FuwawaAbyssgard.pmx");
-        //modelLibrary->AddModel("Assets/models/TaylorDancing.glb");
-        //animationLibrary->AddAnimation("Assets/models/TaylorDancing.glb", modelLibrary->GetModel("Assets/models/TaylorDancing.glb"));
-        //modelLibrary->AddModel("Assets/models/jack_samba.glb");
-        //animationLibrary->AddAnimation("Assets/models/jack_samba.glb", modelLibrary->GetModel("jack_samba"));
-        //modelLibrary->AddModel("Assets/models/travisFloppin.glb");
-        //animationLibrary->AddAnimation("Assets/models/travisFloppin.glb", modelLibrary->GetModel("travisFloppin"));
-        modelLibrary->AddModel("Assets/models/TravisLocomotion/travis.fbx");
-        //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/idle.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-        //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/jump.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-        //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left strafe walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-        //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left strafe.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-        //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left turn 90.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-        //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right strafe walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-        //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right strafe.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-        //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right turn 90.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-        //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/standard run.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-        //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-        //modelLibrary->AddModel("Assets/models/okayu.pmx");
-        //modelLibrary->AddModel("Assets/models/AlisaMikhailovna.fbx");
+            //modelLibrary->AddModel("Assets/models/quad.obj");
+            //modelLibrary->AddModel("Assets/models/cube.obj");
+            //modelLibrary->AddModel("Assets/models/yena.fbx");
+            //animationLibrary->AddAnimation("Assets/models/yena.fbx", modelLibrary->GetModel("yena"));
+            //modelLibrary->AddModel("Assets/models/FuwawaAbyssgard.pmx");
+            //modelLibrary->AddModel("Assets/models/TaylorDancing.glb");
+            //animationLibrary->AddAnimation("Assets/models/TaylorDancing.glb", modelLibrary->GetModel("Assets/models/TaylorDancing.glb"));
+            //modelLibrary->AddModel("Assets/models/jack_samba.glb");
+            //animationLibrary->AddAnimation("Assets/models/jack_samba.glb", modelLibrary->GetModel("jack_samba"));
+            //modelLibrary->AddModel("Assets/models/travisFloppin.glb");
+            //animationLibrary->AddAnimation("Assets/models/travisFloppin.glb", modelLibrary->GetModel("travisFloppin"));
+            modelLibrary->AddModel("Assets/models/TravisLocomotion/travis.fbx");
+            //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/idle.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+            //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/jump.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+            //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left strafe walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+            //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left strafe.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+            //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left turn 90.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+            //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right strafe walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+            //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right strafe.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+            //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right turn 90.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+            //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/standard run.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+            //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+            //modelLibrary->AddModel("Assets/models/okayu.pmx");
+            //modelLibrary->AddModel("Assets/models/AlisaMikhailovna.fbx");
 
-        //modelLibrary->LoadTextures();
+            //modelLibrary->LoadTextures();
+        }
 
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
         {
@@ -142,11 +152,15 @@ namespace Dog
     {
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
         {
-            vkDeviceWaitIdle(*device);
+            if (device->GetDevice()) 
+            {
+                vkDeviceWaitIdle(*device);
+            }
 
             CleanupSceneTexture();
             CleanupDepthBuffer();
             //modelLibrary.reset();
+            if (modelLibrary) modelLibrary->ClearAllBuffers(device.get());
             textureLibrary.reset();
             animationLibrary.reset();
             renderGraph.reset();
@@ -162,6 +176,7 @@ namespace Dog
         else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
         {
             //modelLibrary.reset();
+            modelLibrary->ClearAllBuffers(device.get());
             sceneFrameBuffer.reset();
             shader.reset();
             GLShader::CleanupUBO();

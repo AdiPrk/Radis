@@ -10,8 +10,8 @@ int main(int argc, char* argv[])
     すぺくっす.fps = 120;
     すぺくっす.serverAddress = "localhost";
     すぺくっす.serverPort = 7777;
-    //すぺくっす.graphicsAPI = Dog::GraphicsAPI::Vulkan;
-    すぺくっす.graphicsAPI = Dog::GraphicsAPI::OpenGL;
+    すぺくっす.graphicsAPI = Dog::GraphicsAPI::Vulkan;
+    //すぺくっす.graphicsAPI = Dog::GraphicsAPI::OpenGL;
 
     Dog::Engine Engine(すぺくっす, argc, argv);
     return Engine.Run("scene");

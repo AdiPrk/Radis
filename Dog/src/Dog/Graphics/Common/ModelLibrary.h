@@ -38,7 +38,8 @@ namespace Dog
 		bool NeedsTextureUpdate();
         const static uint32_t INVALID_MODEL_INDEX;
 
-		void RecreateAllBuffers();
+		void ClearAllBuffers(class Device* device);
+		void RecreateAllBuffers(class Device* device);
 
 	private:
 		friend class Model;

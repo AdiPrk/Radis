@@ -33,6 +33,7 @@ namespace Dog
 
         virtual void CreateVertexBuffers(Device* device) = 0;
         virtual void CreateIndexBuffers(Device* device) = 0;
+        virtual void Cleanup() = 0;
 
         virtual void Bind(VkCommandBuffer commandBuffer, VkBuffer instBuffer) = 0;
         virtual void Draw(VkCommandBuffer commandBuffer, uint32_t baseIndex = 0) = 0;
@@ -48,7 +49,9 @@ namespace Dog
 
         std::unique_ptr<Buffer> mVertexBuffer;
         std::unique_ptr<Buffer> mIndexBuffer;
+        GLuint mVAO, mVBO, mEBO;
 
+        // Mesh data
         std::vector<Vertex> mVertices{};
         std::vector<SimpleVertex> mSimpleVertices{};
         std::vector<uint32_t> mIndices{};
