@@ -66,6 +66,10 @@ namespace Dog
             device->SetFormats(linearFormat, srgbFormat);
 
             syncObjects = std::make_unique<Synchronizer>(device->GetDevice(), swapChain->ImageCount());
+
+            textureLibrary = std::make_unique<TextureLibrary>(*device);
+            textureLibrary->AddTexture("Assets/textures/square.png");
+
         }
         else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
         {
@@ -81,9 +85,7 @@ namespace Dog
             sceneFrameBuffer = std::make_unique<GLFrameBuffer>(fbSpec);
         }
 
-        textureLibrary = std::make_unique<TextureLibrary>(*device);
-        textureLibrary->AddTexture("Assets/textures/square.png");
-
+        
         if (!modelLibrary)
         {
             modelLibrary = std::make_unique<ModelLibrary>(*device, *textureLibrary);

@@ -1,6 +1,9 @@
 #version 450
 
-#extension GL_EXT_nonuniform_qualifier : require
+// VK Extensions
+#ifdef VULKAN
+	#extension GL_EXT_nonuniform_qualifier : require
+#endif
 
 layout(location = 0) in vec3 fragColor;
 layout(location = 1) in vec4 fragTint;
@@ -22,10 +25,9 @@ layout(location = 0) out vec4 outColor;
 #ifdef VULKAN
 	layout(set = 0, binding = 3) uniform sampler2D uTextures[];
 #else
-	SSBO_LAYOUT(0, 3) buffer TextureHandles
-	{
+	layout(std140, binding = 0) uniform TexHandles {
 		uvec2 colorTexHandle[];
-	}
+	} texHandles;
 #endif
 
 void main()
@@ -45,10 +47,12 @@ void main()
 		}
 	}
 #else
-    vec4 defaultColor = vec4(fragColor, 1.0);
-    uvec2 colorH = colorTexHandle[textureIndex];
-    vec4 color = colorH == uvec2(0,0) ? defaultColor : texture(sampler2D(colorH), uvOut);
-    color *= fragTint;
-    outColor = vec4(color);
+	outColor = vec4(fragNormal.rgb * fragTint.rgb, fragTint.a);
+
+    //vec4 defaultColor = vec4(fragColor, 1.0);
+    //uvec2 colorH = colorTexHandle[textureIndex];
+    //vec4 color = colorH == uvec2(0,0) ? defaultColor : texture(sampler2D(colorH), uvOut);
+    //color *= fragTint;
+    //outColor = vec4(color);
 #endif
 }
