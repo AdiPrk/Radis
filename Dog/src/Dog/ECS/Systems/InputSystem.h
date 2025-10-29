@@ -24,6 +24,9 @@ namespace Dog
 		static bool isKeyReleased(const Key& key);
 		static bool isMouseDown(const Mouse& button);
 
+		// Init/exit
+		static void ResetWindow(GLFWwindow* win);
+
 		// Mouse delta
 		static float GetMouseDeltaX();
 		static float GetMouseDeltaY();

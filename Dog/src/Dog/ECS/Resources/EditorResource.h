@@ -10,8 +10,15 @@ namespace Dog
 
     struct EditorResource : public IResource
     {
-        EditorResource(Device& device, SwapChain& swapChain, GLFWwindow* glfwWindow);
+        EditorResource(Device* device, SwapChain* swapChain, GLFWwindow* glfwWindow);
         EditorResource(GLFWwindow* glfwWindow);
+
+        void Create(Device* device, SwapChain* swapChain, GLFWwindow* glfwWindow);
+        void Create(GLFWwindow* glfwWindow);
+        void Cleanup(Device* device);
+
+        void CreateSceneTextures(struct RenderingResource* rr);
+        void CleanSceneTextures(struct RenderingResource* rr);
 
         VkDescriptorPool descriptorPool;
         VkDescriptorSetLayout samplerSetLayout;
@@ -21,5 +28,10 @@ namespace Dog
 
         Entity selectedEntity;
         Entity entityToDelete;
+
+        bool GetImGuiInitialized() { return isInitialized; }
+
+    private:
+        bool isInitialized = false;
     };
 }

@@ -13,6 +13,8 @@
 
 #include "Graphics/Vulkan/VulkanWindow.h"
 
+#include "Engine.h"
+
 namespace Dog
 {
 	void PresentSystem::Init()
@@ -21,6 +23,11 @@ namespace Dog
 
 	void PresentSystem::FrameStart()
 	{
+        if (Engine::GetGraphicsAPI() != GraphicsAPI::Vulkan)
+        {
+            return;
+        }
+
         auto rr = ecs->GetResource<RenderingResource>();
         auto wr = ecs->GetResource<WindowResource>();
         auto& rg = rr->renderGraph;
@@ -35,8 +42,7 @@ namespace Dog
         if (result == VK_ERROR_OUT_OF_DATE_KHR)
         {
             rr->RecreateSwapChain(wr->window.get());
-            rr->RecreateSceneTexture();
-            rr->RecreateDepthBuffer();
+            rr->RecreateAllSceneTextures();
             return;
         }
 
@@ -99,6 +105,11 @@ namespace Dog
 
 	void PresentSystem::FrameEnd()
 	{
+        if (Engine::GetGraphicsAPI() != GraphicsAPI::Vulkan)
+        {
+            return;
+        }
+
         auto rr = ecs->GetResource<RenderingResource>();
 
         if (!rr)

@@ -1,14 +1,60 @@
 {
   "Entities": [
     {
+      "AnimationComponent": [
+        {
+          "AnimationIndex": 1,
+          "AnimationTime": 9.90382194519043,
+          "BoneOffset": 0,
+          "IsPlaying": true,
+          "inPlace": false
+        }
+      ],
+      "ModelComponent": [
+        {
+          "ModelPath": "assets/models/TravisLocomotion/travis.fbx",
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0,
+            0.5882353186607361
+          ]
+        }
+      ],
+      "TagComponent": [
+        {
+          "Tag": "Animating Model"
+        }
+      ],
+      "TransformComponent": [
+        {
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "Translation": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      ]
+    },
+    {
       "CameraComponent": [
         {
           "FOV": 45.0,
           "Far": 1000.0,
           "Forward": [
-            0.008740000426769257,
-            -0.9565102458000183,
-            -0.29156777262687683
+            0.15200529992580414,
+            -0.019165709614753723,
+            -0.988193929195404
           ],
           "InvertY": true,
           "MouseSensitivity": 0.800000011920929,
@@ -18,21 +64,21 @@
           "Pitch": -0.3800048828125,
           "PositionSmoothness": 12.0,
           "RotationSmoothness": 18.0,
-          "SmoothedMouseDX": -2.154024159040091e-08,
-          "SmoothedMouseDY": 5.058669655380957e-25,
-          "SmoothedPitch": -73.04031372070313,
+          "SmoothedMouseDX": 0.0,
+          "SmoothedMouseDY": 0.0,
+          "SmoothedPitch": -1.0981813669204712,
           "SmoothedPosition": [
-            -0.1387447714805603,
-            3.557662010192871,
-            0.6655970811843872
+            -0.1755264699459076,
+            0.33077090978622437,
+            1.141512155532837
           ],
-          "SmoothedYaw": 1.7169771194458008,
-          "TargetPitch": -73.04031372070313,
-          "TargetYaw": 1.7169771194458008,
+          "SmoothedYaw": 8.744771957397461,
+          "TargetPitch": -1.0981813669204712,
+          "TargetYaw": 8.744771957397461,
           "Up": [
-            0.028659360483288765,
-            0.29169872403144836,
-            -0.9560807943344116
+            0.002913824049755931,
+            0.9998162984848022,
+            -0.01894291304051876
           ],
           "Yaw": 31.973487854003906,
           "isInitialized": true
@@ -46,8 +92,8 @@
       "TransformComponent": [
         {
           "Rotation": [
-            -73.04031372070313,
-            1.7169771194458008,
+            -1.0981813669204712,
+            8.744771957397461,
             0.0
           ],
           "Scale": [
@@ -56,55 +102,9 @@
             1.0
           ],
           "Translation": [
-            -0.1387447714805603,
-            3.557662010192871,
-            0.6655970811843872
-          ]
-        }
-      ]
-    },
-    {
-      "AnimationComponent": [
-        {
-          "AnimationIndex": 1,
-          "AnimationTime": 45.720760345458984,
-          "BoneOffset": 0,
-          "IsPlaying": true,
-          "inPlace": false
-        }
-      ],
-      "ModelComponent": [
-        {
-          "ModelPath": "assets/models/TravisLocomotion/travis.fbx",
-          "tintColor": [
-            1.0,
-            1.0,
-            1.0,
-            0.6078431606292725
-          ]
-        }
-      ],
-      "TagComponent": [
-        {
-          "Tag": "Animating Model"
-        }
-      ],
-      "TransformComponent": [
-        {
-          "Rotation": [
-            -1.565560221672058,
-            0.0,
-            0.0
-          ],
-          "Scale": [
-            2.0,
-            2.0,
-            2.0
-          ],
-          "Translation": [
-            0.0,
-            0.0,
-            0.0
+            -0.1755264699459076,
+            0.33077090978622437,
+            1.141512155532837
           ]
         }
       ]

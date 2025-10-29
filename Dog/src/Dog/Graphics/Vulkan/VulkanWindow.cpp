@@ -2,7 +2,6 @@
 #include "VulkanWindow.h"
 #include "Utils/Utils.h"
 
-#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
 namespace Dog {
@@ -12,6 +11,8 @@ namespace Dog {
     {
         InitializeContext();
         InitGLFWWindow();
+
+        SetTitle(std::wstring(name) + L" (VK)");
     }
 
     VulkanWindow::~VulkanWindow() 

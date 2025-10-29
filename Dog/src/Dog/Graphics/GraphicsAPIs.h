@@ -6,6 +6,6 @@ namespace Dog
 		None,
 		Vulkan,
 		OpenGL,
-		DirectX
+		//DirectX
 	};
 }

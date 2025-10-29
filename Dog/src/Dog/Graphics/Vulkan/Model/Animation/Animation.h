@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "../Model.h"
+#include "Graphics/Common/Model.h"
 #include "Bone.h"
 #include "Skeleton.h"
 

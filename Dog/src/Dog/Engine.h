@@ -12,10 +12,10 @@ namespace Dog
 		std::wstring name = L"Dog Engine";             // The name of the window.
 		unsigned width = 1280;                         // The width of the window.
 		unsigned height = 720;                         // The height of the window.
-		unsigned fps = 60;			                   // The target frames per second.
+		unsigned fps = 120;			                   // The target frames per second.
         std::string serverAddress = SERVER_IP;         // The address of the server. Defaults to online VPS server.
         uint16_t serverPort = 7777;                    // The port of the server.
-        GraphicsAPI graphicsAPI = GraphicsAPI::OpenGL; // The graphics API to use.
+        GraphicsAPI graphicsAPI = GraphicsAPI::Vulkan; // The graphics API to use.
 	};
 
 	class Engine {
@@ -41,6 +41,9 @@ namespace Dog
 		static void SetDevBuild(bool dev) { mDevBuild = dev; }
 		static bool IsDevBuild() { return mDevBuild; }
         static GraphicsAPI GetGraphicsAPI() { return mGraphicsAPI; }
+		static void SetGraphicsAPI(GraphicsAPI api) { mGraphicsAPI = api; }
+		static void ForceVulkanUnsupportedSwap() { mVulkanSupported = false; }
+        static bool GetVulkanSupported() { return mVulkanSupported; }
 
 	private:
 		// Engine Specs
@@ -55,9 +58,7 @@ namespace Dog
 		// Configuration
         static bool mDevBuild;
 		static GraphicsAPI mGraphicsAPI;
-
-	private:
-        static void SetGraphicsAPI(GraphicsAPI api) { mGraphicsAPI = api; }
+		static bool mVulkanSupported;
 	};
 
 } // namespace Dog

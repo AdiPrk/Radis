@@ -1,6 +1,6 @@
 #include <PCH/pch.h>
 #include "FrameRate.h"
-#include "mmsystem.h" // For timeBeginPeriod, timeEndPeriod
+//#include "mmsystem.h" // For timeBeginPeriod, timeEndPeriod
 
 using namespace std::chrono;
 
@@ -10,7 +10,7 @@ namespace Dog {
         : mTargetFPS(targetFrameRate) 
         , mLastFrameTime(high_resolution_clock::now())
     {
-        timeBeginPeriod(1); // Request 1ms timer resolution
+        //timeBeginPeriod(1); // Request 1ms timer resolution
 
         if (targetFrameRate == 0)
         {
@@ -24,7 +24,7 @@ namespace Dog {
 
     FrameRateController::~FrameRateController()
     {
-        timeEndPeriod(1); // End 1ms timer resolution
+        //timeEndPeriod(1); // End 1ms timer resolution
     }
 
     float FrameRateController::WaitForNextFrame()

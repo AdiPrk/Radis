@@ -9,6 +9,8 @@
 #include "ECS/Systems/PresentSystem.h"
 #include "ECS/Systems/CameraSystem.h"
 #include "ECS/Systems/RayRenderSystem.h"
+#include "ECS/Systems/SimpleRenderSystem.h"
+#include "ECS/Systems/SwapRendererBackendSystem.h"
 
 #include "ECS/Resources/InputResource.h"
 #include "ECS/Resources/WindowResource.h"
@@ -17,16 +19,20 @@
 #include "ECS/Resources/SerializationResource.h"
 #include "ECS/Resources/AnimationResource.h"
 #include "ECS/Resources/DebugDrawResource.h"
+#include "ECS/Resources/SwapRendererBackendResource.h"
 
 #include "Utils/FrameRate.h"
 #include "Graphics/Vulkan/Core/Device.h"
 
 #include "Utils/Utils.h"
 
+#include "Graphics/RHI/RHI.h"
+
 namespace Dog 
 {
     bool Engine::mDevBuild = false;
     GraphicsAPI Engine::mGraphicsAPI = GraphicsAPI::None;
+    bool Engine::mVulkanSupported = true;
 
     Engine::Engine(const EngineSpec& specs, int argc, char* argv[])
         : mSpecs(specs)
@@ -41,42 +47,33 @@ namespace Dog
         mEcs.AddSystem<WindowSystem>();
         mEcs.AddSystem<InputSystem>();
 
-        if (specs.graphicsAPI == GraphicsAPI::Vulkan)
-        {
-            mEcs.AddSystem<PresentSystem>();
-            mEcs.AddSystem<AnimationSystem>();
-            // mEcs.AddSystem<RenderSystem>();
-            mEcs.AddSystem<RayRenderSystem>();
-        }
-        else if (specs.graphicsAPI == GraphicsAPI::OpenGL)
-        {
-
-        }
-        else
-        {
-            DOG_CRITICAL("Unsupported Graphics API!");
-        }
+        mEcs.AddSystem<SwapRendererBackendSystem>();
+        mEcs.AddSystem<PresentSystem>();
+        mEcs.AddSystem<SimpleRenderSystem>();
+        mEcs.AddSystem<AnimationSystem>();
 
         mEcs.AddSystem<EditorSystem>();
         mEcs.AddSystem<CameraSystem>();
         // ---------------------------------
 
         // Resources -----------------------
+        mEcs.AddResource<SwapRendererBackendResource>();
         mEcs.AddResource<WindowResource>(specs.width, specs.height, specs.name);
 
         auto wr = mEcs.GetResource<WindowResource>();
         mEcs.AddResource<InputResource>(wr->window->GetGLFWwindow());
+        mEcs.AddResource<RenderingResource>(wr->window.get());
 
         if (specs.graphicsAPI == GraphicsAPI::Vulkan)
         {
-            mEcs.AddResource<RenderingResource>(wr->window.get());
             auto rr = mEcs.GetResource<RenderingResource>();
-            mEcs.AddResource<EditorResource>(*rr->device, *rr->swapChain, wr->window->GetGLFWwindow());
+            mEcs.AddResource<EditorResource>(rr->device.get(), rr->swapChain.get(), wr->window->GetGLFWwindow());
         }
         else if (specs.graphicsAPI == GraphicsAPI::OpenGL)
         {
             mEcs.AddResource<EditorResource>(wr->window->GetGLFWwindow());
         }
+
         mEcs.AddResource<SerializationResource>();
         mEcs.AddResource<AnimationResource>();
         mEcs.AddResource<DebugDrawResource>();
