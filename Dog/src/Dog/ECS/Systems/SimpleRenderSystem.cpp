@@ -18,7 +18,7 @@
 #include "Graphics/Vulkan/Uniform/Uniform.h"
 #include "Graphics/Vulkan/RenderGraph.h"
 #include "Graphics/Vulkan/Model/Animation/AnimationLibrary.h"
-#include "Graphics/Vulkan/Texture/TextureLibrary.h"
+#include "Graphics/Common/TextureLibrary.h"
 #include "Graphics/Vulkan/Texture/Texture.h"
 #include "Graphics/Vulkan/Uniform/Descriptors.h"
 #include "Graphics/Common/UnifiedMesh.h"
@@ -30,6 +30,7 @@
 #include "Engine.h"
 #include "Graphics/OpenGL/GLMesh.h"
 #include "Graphics/OpenGL/GLFrameBuffer.h"
+#include "Graphics/OpenGL/GLTexture.h"
 
 namespace Dog
 {
@@ -217,6 +218,7 @@ namespace Dog
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         std::vector<InstanceUniforms> instanceData{};
+        std::vector<uint64_t> textureData{};
 
         AnimationLibrary* al = rr->animationLibrary.get();
         ModelLibrary* ml = rr->modelLibrary.get();
@@ -251,8 +253,20 @@ namespace Dog
                 }
 
                 data.tint = mc.tintColor;
-                data.textureIndex = mesh->diffuseTextureIndex;
+                data.textureIndex = 0;
                 data.boneOffset = boneOffset;
+
+                // Texture data
+                auto itex = rr->textureLibrary->GetTextureByIndex(mesh->diffuseTextureIndex);
+                if (itex)
+                {
+                    GLTexture* gltex = static_cast<GLTexture*>(itex);
+                    textureData.push_back(gltex->textureHandle);
+                }
+                else
+                {
+                    textureData.push_back(0);
+                }
             }
         }
 
@@ -289,6 +303,12 @@ namespace Dog
         glBindBuffer(GL_ARRAY_BUFFER, iVBO);
         glBufferData(GL_ARRAY_BUFFER, instanceCount * sizeof(InstanceUniforms), instanceData.data(), GL_DYNAMIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        GLShader::SetupTextureSSBO();
+        GLuint textureSSBO = GLShader::GetTextureSSBO();
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, textureSSBO);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, textureData.size() * sizeof(uint64_t), textureData.data(), GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
         int baseIndex = 0;
         for (auto& entityHandle : entityView)

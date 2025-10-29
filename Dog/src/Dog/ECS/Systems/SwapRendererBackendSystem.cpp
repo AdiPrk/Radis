@@ -12,6 +12,7 @@
 #include "Graphics/Vulkan/Core/Device.h"
 
 #include "Graphics/Common/ModelLibrary.h"
+#include "Graphics/Common/TextureLibrary.h"
 
 namespace Dog
 {
@@ -66,6 +67,7 @@ namespace Dog
             er->CreateSceneTextures(rr);
 
             rr->modelLibrary->RecreateAllBuffers(rr->device.get());
+            //rr->textureLibrary->RecreateAllBuffers(rr->device.get());
             InputSystem::ResetWindow(wr->window->GetGLFWwindow());
         }
         else if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
@@ -88,6 +90,7 @@ namespace Dog
             er->Create(wr->window->GetGLFWwindow());
 
             rr->modelLibrary->RecreateAllBuffers(rr->device.get());
+            //rr->textureLibrary->RecreateAllBuffers(rr->device.get());
             InputSystem::ResetWindow(wr->window->GetGLFWwindow());
         }
     }

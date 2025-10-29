@@ -20,12 +20,24 @@ namespace Dog
         size_t textureCount = renderData.textureLibrary->GetTextureCount();
 
         std::vector<VkDescriptorImageInfo> imageInfos(TextureLibrary::MAX_TEXTURE_COUNT);
-        for (size_t j = 0; j < TextureLibrary::MAX_TEXTURE_COUNT; ++j) {
+        for (size_t j = 0; j < TextureLibrary::MAX_TEXTURE_COUNT; ++j) 
+        {
             imageInfos[j].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             imageInfos[j].sampler = defaultSampler;
 
-            if (textureCount == 0) imageInfos[j].imageView = VK_NULL_HANDLE;
-            else imageInfos[j].imageView = renderData.textureLibrary->GetTextureByIndex(static_cast<uint32_t>(std::min(j, textureCount - 1))).GetImageView();
+            if (textureCount == 0) 
+            {
+                imageInfos[j].imageView = VK_NULL_HANDLE;
+            }
+            else
+            {
+                ITexture* itex = renderData.textureLibrary->GetTextureByIndex(static_cast<uint32_t>(std::min(j, textureCount - 1)));
+                VKTexture* vktex = static_cast<VKTexture*>(itex);
+                if (vktex)
+                {
+                    imageInfos[j].imageView = vktex->GetImageView();
+                }
+            }
         }
 
         // Build descriptor sets for each frame with both buffer and texture data

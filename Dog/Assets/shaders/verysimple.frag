@@ -3,6 +3,8 @@
 // VK Extensions
 #ifdef VULKAN
 	#extension GL_EXT_nonuniform_qualifier : require
+#else
+	#extension GL_ARB_bindless_texture : require
 #endif
 
 layout(location = 0) in vec3 fragColor;
@@ -25,8 +27,8 @@ layout(location = 0) out vec4 outColor;
 #ifdef VULKAN
 	layout(set = 0, binding = 3) uniform sampler2D uTextures[];
 #else
-	layout(std140, binding = 0) uniform TexHandles {
-		uvec2 colorTexHandle[];
+	layout(std140, binding = 3) readonly buffer TexHandles {
+		uvec2 colorHandle[50];
 	} texHandles;
 #endif
 
@@ -47,12 +49,14 @@ void main()
 		}
 	}
 #else
-	outColor = vec4(fragNormal.rgb * fragTint.rgb, fragTint.a);
 
-    //vec4 defaultColor = vec4(fragColor, 1.0);
-    //uvec2 colorH = colorTexHandle[textureIndex];
-    //vec4 color = colorH == uvec2(0,0) ? defaultColor : texture(sampler2D(colorH), uvOut);
-    //color *= fragTint;
-    //outColor = vec4(color);
+	vec4 color = vec4(fragNormal.rgb * fragTint.rgb, fragTint.a);
+    uvec2 colorH = texHandles.colorHandle[textureIndex];
+	if (colorH != uvec2(0,0)) 
+	{
+		color = texture(sampler2D(colorH), fragTexCoord);
+	    color *= fragTint;
+	}
+	outColor = color;	
 #endif
 }

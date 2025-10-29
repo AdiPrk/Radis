@@ -3,7 +3,7 @@
 #include "ShaderTypes.h"
 #include "UniformSettings.h"
 
-#include "../Texture/TextureLibrary.h" // For TextureLibrary::MAX_TEXTURE_COUNT
+#include "Graphics/Common/TextureLibrary.h" // For TextureLibrary::MAX_TEXTURE_COUNT
 
 namespace Dog
 {
