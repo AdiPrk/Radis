@@ -43,7 +43,10 @@ namespace Dog
     void SimpleRenderSystem::FrameStart()
     {
         // Update textures!
-        //ecs->GetResource<RenderingResource>()->UpdateTextureUniform();
+        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+        {
+            ecs->GetResource<RenderingResource>()->UpdateTextureUniform();
+        }
 
         DebugDrawResource::Clear();
 
@@ -140,14 +143,11 @@ namespace Dog
         VkRect2D scissor{ {0, 0}, rr->swapChain->GetSwapChainExtent() };
         vkCmdSetScissor(cmd, 0, 1, &scissor);
 
-        std::vector<SimpleInstanceUniforms> instanceData{};
+        std::vector<InstanceUniforms> instanceData{};
 
         AnimationLibrary* al = rr->animationLibrary.get();
         ModelLibrary* ml = rr->modelLibrary.get();
 
-        UnifiedMeshes* unifiedMesh = rr->modelLibrary->GetUnifiedMesh();
-        VKMesh& uMesh = unifiedMesh->GetUnifiedMesh();
-
         auto& registry = ecs->GetRegistry();
         auto entityView = registry.view<ModelComponent, TransformComponent>();
         for (auto& entityHandle : entityView)
@@ -156,73 +156,7 @@ namespace Dog
             ModelComponent& mc = entity.GetComponent<ModelComponent>();
             TransformComponent& tc = entity.GetComponent<TransformComponent>();
             Model* model = rr->modelLibrary->GetModel(mc.ModelPath);
-            if (!model) continue;
-
-            for (auto& mesh : model->mMeshes)
-            {
-                auto& data = instanceData.emplace_back();
-                data.model = tc.GetTransform() * model->GetNormalizationMatrix();
-            }
-        }
-
-        rr->cameraUniform->SetUniformData(instanceData, 1, rr->currentFrameIndex);
-
-        VkBuffer instBuffer = rr->cameraUniform->GetUniformBuffer(1, rr->currentFrameIndex)->GetBuffer();
-        int baseIndex = 0;
-        for (auto& entityHandle : entityView)
-        {
-            Entity entity(&registry, entityHandle);
-            ModelComponent& mc = entity.GetComponent<ModelComponent>();
-            Model* model = rr->modelLibrary->GetModel(mc.ModelPath);
-            if (!model) continue;
-
-            for (auto& mesh : model->mMeshes)
-            {
-                mesh->Bind(cmd, instBuffer);
-                mesh->Draw(cmd, baseIndex++);
-            }
-        }
-
-        // VkDrawIndexedIndirectCommand* indirectDrawPtr;
-        // vmaMapMemory(rr->allocator->GetAllocator(), mIndirectBufferAllocations[rr->currentFrameIndex], (void**)&indirectDrawPtr);
-        // 
-        // int instanceBaseIndex = 0, drawCount = 0;
-        // mNumInstancesRendered = 0;
-
-        // TODO: NO DEBUG DRAW FOR NOW!
-        /*const auto& debugData = DebugDrawResource::GetInstanceData();
-        if (instanceData.size() + debugData.size() >= InstanceUniforms::MAX_INSTANCES)
-        {
-            DOG_WARN("Too many instances for debug draw render!");
-        }
-        else
-        {
-            instanceData.insert(instanceData.end(), debugData.begin(), debugData.end());
-
-            auto cubeModel = ml->GetModel("Assets/models/cube.obj");
-            const MeshInfo& meshInfo = unifiedMesh->GetMeshInfo(cubeModel->mMeshes[0].mMeshID);
-
-            VkDrawIndexedIndirectCommand drawCommand = {};
-            drawCommand.indexCount = meshInfo.indexCount;
-            drawCommand.instanceCount = (uint32_t)debugData.size();
-            drawCommand.firstIndex = meshInfo.firstIndex;
-            drawCommand.vertexOffset = meshInfo.vertexOffset;
-            drawCommand.firstInstance = instanceBaseIndex;
-            indirectDrawPtr[drawCount++] = drawCommand;
-
-            instanceBaseIndex += (int)debugData.size();
-        }*/
-
-        /*
-        auto& registry = ecs->GetRegistry();
-        auto entityView = registry.view<ModelComponent, TransformComponent>();
-        for (auto& entityHandle : entityView)
-        {
-            Entity entity(&registry, entityHandle);
-            ModelComponent& mc = entity.GetComponent<ModelComponent>();
-            TransformComponent& tc = entity.GetComponent<TransformComponent>();
             AnimationComponent* ac = entity.HasComponent<AnimationComponent>() ? &entity.GetComponent<AnimationComponent>() : nullptr;
-            Model* model = rr->modelLibrary->GetModel(mc.ModelPath);
             if (!model) continue;
 
             uint32_t boneOffset = AnimationLibrary::INVALID_ANIMATION_INDEX;
@@ -244,83 +178,28 @@ namespace Dog
                 }
 
                 data.tint = mc.tintColor;
-                data.textureIndex = mesh.diffuseTextureIndex;
+                data.textureIndex = mesh->diffuseTextureIndex;
                 data.boneOffset = boneOffset;
-
-                // Prepare indirect draw command
-                const MeshInfo& meshInfo = unifiedMesh->GetMeshInfo(mesh.mMeshID);
-                VkDrawIndexedIndirectCommand drawCommand = {};
-                drawCommand.indexCount = meshInfo.indexCount;
-                drawCommand.instanceCount = 1;
-                drawCommand.firstIndex = meshInfo.firstIndex;
-                drawCommand.vertexOffset = meshInfo.vertexOffset;
-                drawCommand.firstInstance = instanceBaseIndex++;
-                indirectDrawPtr[drawCount++] = drawCommand;
-                ++mNumInstancesRendered;
             }
         }
-        */
 
-        /*
-        auto& registry = ecs->GetRegistry();
-        auto entityView = registry.view<ModelComponent, TransformComponent>();
+        rr->cameraUniform->SetUniformData(instanceData, 1, rr->currentFrameIndex);
+
+        VkBuffer instBuffer = rr->cameraUniform->GetUniformBuffer(1, rr->currentFrameIndex)->GetBuffer();
+        int baseIndex = 0;
         for (auto& entityHandle : entityView)
         {
             Entity entity(&registry, entityHandle);
             ModelComponent& mc = entity.GetComponent<ModelComponent>();
-            TransformComponent& tc = entity.GetComponent<TransformComponent>();
             Model* model = rr->modelLibrary->GetModel(mc.ModelPath);
             if (!model) continue;
 
             for (auto& mesh : model->mMeshes)
             {
-                SimpleInstanceUniforms& data = instanceData.emplace_back();
-                data.model = tc.GetTransform() * model->GetNormalizationMatrix();
-
-                // Prepare indirect draw command
-                const MeshInfo& meshInfo = unifiedMesh->GetMeshInfo(mesh->GetID());
-                VkDrawIndexedIndirectCommand drawCommand = {};
-                drawCommand.indexCount = meshInfo.indexCount;
-                drawCommand.instanceCount = 1;
-                drawCommand.firstIndex = meshInfo.firstIndex;
-                drawCommand.vertexOffset = meshInfo.vertexOffset;
-                drawCommand.firstInstance = instanceBaseIndex++;
-                indirectDrawPtr[drawCount++] = drawCommand;
-                ++mNumInstancesRendered;
+                mesh->Bind(cmd, instBuffer);
+                mesh->Draw(cmd, baseIndex++);
             }
         }
-
-        vmaUnmapMemory(rr->allocator->GetAllocator(), mIndirectBufferAllocations[rr->currentFrameIndex]);
-
-
-        //rr->instanceUniform->SetUniformData(instanceData, 1, rr->currentFrameIndex);
-        rr->cameraUniform->SetUniformData(instanceData, 1, rr->currentFrameIndex);
-
-        VkBuffer uMeshVertexBuffer = uMesh.mVertexBuffer->GetBuffer();
-        VkBuffer uMeshIndexBuffer = uMesh.mIndexBuffer->GetBuffer();
-        VkBuffer instBuffer = rr->cameraUniform->GetUniformBuffer(1, rr->currentFrameIndex)->GetBuffer();
-        VkBuffer buffers[] = { uMeshVertexBuffer, instBuffer };
-        VkDeviceSize offsets[] = { 0, 0 };
-        vkCmdBindVertexBuffers(cmd, 0, 2, buffers, offsets);
-        vkCmdBindIndexBuffer(cmd, uMeshIndexBuffer, 0, VK_INDEX_TYPE_UINT32);
-
-        vkCmdDrawIndexedIndirect(
-            cmd,
-            mIndirectBuffers[rr->currentFrameIndex],
-            0,
-            static_cast<uint32_t>(drawCount),
-            sizeof(VkDrawIndexedIndirectCommand)
-        );
-        */
-
-        //// test calling primitive to geometry
-        //VKMesh& testMesh = uMesh;
-        //VkAccelerationStructureGeometryKHR geometry{};
-        //VkAccelerationStructureBuildRangeInfoKHR rangeInfo{};
-        //PrimitiveToGeometry(testMesh, geometry, rangeInfo);
-        //
-        //// print stats
-        //DOG_INFO("Primitive Count: {}", rangeInfo.primitiveCount);
     }
 
     void SimpleRenderSystem::RenderSceneGL()
@@ -330,15 +209,17 @@ namespace Dog
 
         rr->shader->Use();
 
-        glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
 
         rr->sceneFrameBuffer->Bind();
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        std::vector<SimpleInstanceUniforms> instanceData{};
+        std::vector<InstanceUniforms> instanceData{};
+
+        AnimationLibrary* al = rr->animationLibrary.get();
+        ModelLibrary* ml = rr->modelLibrary.get();
 
         auto& registry = ecs->GetRegistry();
         auto entityView = registry.view<ModelComponent, TransformComponent>();
@@ -348,12 +229,30 @@ namespace Dog
             ModelComponent& mc = entity.GetComponent<ModelComponent>();
             TransformComponent& tc = entity.GetComponent<TransformComponent>();
             Model* model = rr->modelLibrary->GetModel(mc.ModelPath);
+            AnimationComponent* ac = entity.HasComponent<AnimationComponent>() ? &entity.GetComponent<AnimationComponent>() : nullptr;
             if (!model) continue;
+
+            uint32_t boneOffset = AnimationLibrary::INVALID_ANIMATION_INDEX;
+            if (ac && al->GetAnimation(ac->AnimationIndex) && al->GetAnimator(ac->AnimationIndex))
+            {
+                boneOffset = ac->BoneOffset;
+            }
 
             for (auto& mesh : model->mMeshes)
             {
-                auto& data = instanceData.emplace_back();
-                data.model = tc.GetTransform() * model->GetNormalizationMatrix();
+                InstanceUniforms& data = instanceData.emplace_back();
+                if (boneOffset == AnimationLibrary::INVALID_ANIMATION_INDEX)
+                {
+                    data.model = tc.GetTransform() * model->GetNormalizationMatrix();
+                }
+                else
+                {
+                    data.model = tc.GetTransform();
+                }
+
+                data.tint = mc.tintColor;
+                data.textureIndex = mesh->diffuseTextureIndex;
+                data.boneOffset = boneOffset;
             }
         }
 
@@ -388,8 +287,7 @@ namespace Dog
         
         GLuint iVBO = GLShader::GetInstanceVBO();
         glBindBuffer(GL_ARRAY_BUFFER, iVBO);
-        glBufferData(GL_ARRAY_BUFFER, instanceCount * sizeof(SimpleInstanceUniforms),
-            instanceData.data(), GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, instanceCount * sizeof(InstanceUniforms), instanceData.data(), GL_DYNAMIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         int baseIndex = 0;

@@ -204,8 +204,6 @@ namespace Dog
 
     bool Device::createLogicalDevice() 
     {
-        DOG_INFO("Starting logical device creation.");
-
         if (physicalDevice == VK_NULL_HANDLE)
         {
             DOG_ERROR("physicalDevice is VK_NULL_HANDLE - cannot create logical device.");
@@ -274,7 +272,6 @@ namespace Dog
         }
 
         // 4) Prepare requested features, but first query supported features (core and 1.2/1.3)
-        DOG_INFO("Querying supported device features!");
         VkPhysicalDeviceFeatures2 supportedFeatures2{};
         supportedFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
 
@@ -327,10 +324,6 @@ namespace Dog
         {
             DOG_ERROR("Not all requested features are supported by the physical device.");
             return false;
-        }
-        else
-        {
-            DOG_INFO("All requested features are supported by the physical device =)");
         }
 
         // VkPhysicalDeviceAccelerationStructureFeaturesKHR accelFeature
@@ -447,12 +440,20 @@ namespace Dog
         VkPhysicalDeviceFeatures supportedFeatures;
         vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
 
-        DOG_INFO("Indices complete: {}, Extensions supported: {}, Swap chain adequate: {}, Sampler anisotropy: {}",
-            indices.isComplete() ? "Yes" : "No",
-            extensionsSupported ? "Yes" : "No",
-            swapChainAdequate ? "Yes" : "No",
-            supportedFeatures.samplerAnisotropy ? "Yes" : "No"
-        );
+        if (indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy) 
+        {
+            DOG_INFO("Device is suitable!");
+        }
+        else 
+        {
+            DOG_WARN("Device is NOT suitable.");
+            DOG_WARN("Indices complete: {}, Extensions supported: {}, Swap chain adequate: {}, Sampler anisotropy: {}",
+                indices.isComplete() ? "Yes" : "No",
+                extensionsSupported ? "Yes" : "No",
+                swapChainAdequate ? "Yes" : "No",
+                supportedFeatures.samplerAnisotropy ? "Yes" : "No"
+            );
+        }
 
         return indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy;
     }

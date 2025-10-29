@@ -502,7 +502,7 @@ namespace Dog
 
         static int selectedAnimationIndex = -1;
 
-        /*
+        
         DrawComponentUI<AnimationComponent>("Animation", selectedEnt, [&](AnimationComponent& component)
         {
             Entity ent(&ecs->GetRegistry(), selectedEnt);
@@ -567,7 +567,7 @@ namespace Dog
             ImGui::Checkbox("Is Playing", &component.IsPlaying);
             ImGui::DragFloat("Animation Time", &component.AnimationTime, 0.05f, 0.0f, FLT_MAX);
         });
-        */
+        
         ImGui::EndChild(); // End of ComponentsRegion
 
         // --- Fixed Footer Region ---

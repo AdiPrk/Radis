@@ -77,18 +77,17 @@ namespace Dog
             fbSpec.width = 1280;
             fbSpec.height = 720;
             fbSpec.samples = 1;
-            fbSpec.attachments = { FBAttachment::RGBA8, FBAttachment::Depth24Stencil8 };
+            fbSpec.attachments = { FBAttachment::RGBA8_SRGB, FBAttachment::Depth24Stencil8 };
             sceneFrameBuffer = std::make_unique<GLFrameBuffer>(fbSpec);
         }
 
-        //textureLibrary = std::make_unique<TextureLibrary>(*device);
-        //textureLibrary->AddTexture("Assets/textures/square.png");
+        textureLibrary = std::make_unique<TextureLibrary>(*device);
+        textureLibrary->AddTexture("Assets/textures/square.png");
 
         if (!modelLibrary)
         {
             modelLibrary = std::make_unique<ModelLibrary>(*device, *textureLibrary);
-            //animationLibrary = std::make_unique<AnimationLibrary>();
-
+            
             //modelLibrary->AddModel("Assets/models/quad.obj");
             //modelLibrary->AddModel("Assets/models/cube.obj");
             //modelLibrary->AddModel("Assets/models/yena.fbx");
@@ -101,20 +100,26 @@ namespace Dog
             //modelLibrary->AddModel("Assets/models/travisFloppin.glb");
             //animationLibrary->AddAnimation("Assets/models/travisFloppin.glb", modelLibrary->GetModel("travisFloppin"));
             modelLibrary->AddModel("Assets/models/TravisLocomotion/travis.fbx");
-            //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/idle.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-            //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/jump.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-            //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left strafe walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-            //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left strafe.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-            //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left turn 90.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-            //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right strafe walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-            //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right strafe.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-            //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right turn 90.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-            //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/standard run.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-            //animationLibrary->AddAnimation("Assets/models/TravisLocomotion/walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+            
             //modelLibrary->AddModel("Assets/models/okayu.pmx");
             //modelLibrary->AddModel("Assets/models/AlisaMikhailovna.fbx");
 
-            //modelLibrary->LoadTextures();
+            modelLibrary->LoadTextures();
+        }
+
+        if (!animationLibrary)
+        {
+            animationLibrary = std::make_unique<AnimationLibrary>();
+            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/idle.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/jump.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left strafe walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left strafe.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left turn 90.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right strafe walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right strafe.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right turn 90.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/standard run.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
         }
 
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
@@ -185,7 +190,6 @@ namespace Dog
 
     void RenderingResource::UpdateTextureUniform()
     {
-        /*
         auto& ml = modelLibrary;
         if (ml->NeedsTextureUpdate())
         {
@@ -206,12 +210,11 @@ namespace Dog
             }
 
             for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex) {
-                DescriptorWriter writer(*instanceUniform->GetDescriptorLayout(), *instanceUniform->GetDescriptorPool());
-                writer.WriteImage(0, imageInfos.data(), static_cast<uint32_t>(imageInfos.size()));
-                writer.Overwrite(instanceUniform->GetDescriptorSets()[frameIndex]);
+                DescriptorWriter writer(*cameraUniform->GetDescriptorLayout(), *cameraUniform->GetDescriptorPool());
+                writer.WriteImage(3, imageInfos.data(), static_cast<uint32_t>(imageInfos.size()));
+                writer.Overwrite(cameraUniform->GetDescriptorSets()[frameIndex]);
             }
         }
-        */
     }
 
     void RenderingResource::RecreateSwapChain(IWindow* window)

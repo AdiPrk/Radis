@@ -50,20 +50,7 @@ namespace Dog
         mEcs.AddSystem<SwapRendererBackendSystem>();
         mEcs.AddSystem<PresentSystem>();
         mEcs.AddSystem<SimpleRenderSystem>();
-        
-        if (specs.graphicsAPI == GraphicsAPI::Vulkan)
-        {
-            // mEcs.AddSystem<AnimationSystem>();
-            // mEcs.AddSystem<RenderSystem>();
-            //mEcs.AddSystem<RayRenderSystem>();
-        }
-        else if (specs.graphicsAPI == GraphicsAPI::OpenGL)
-        {
-        }
-        else
-        {
-            DOG_CRITICAL("Unsupported Graphics API!");
-        }
+        mEcs.AddSystem<AnimationSystem>();
 
         mEcs.AddSystem<EditorSystem>();
         mEcs.AddSystem<CameraSystem>();
@@ -75,18 +62,18 @@ namespace Dog
 
         auto wr = mEcs.GetResource<WindowResource>();
         mEcs.AddResource<InputResource>(wr->window->GetGLFWwindow());
+        mEcs.AddResource<RenderingResource>(wr->window.get());
 
         if (specs.graphicsAPI == GraphicsAPI::Vulkan)
         {
-            mEcs.AddResource<RenderingResource>(wr->window.get());
             auto rr = mEcs.GetResource<RenderingResource>();
             mEcs.AddResource<EditorResource>(rr->device.get(), rr->swapChain.get(), wr->window->GetGLFWwindow());
         }
         else if (specs.graphicsAPI == GraphicsAPI::OpenGL)
         {
-            mEcs.AddResource<RenderingResource>(wr->window.get());
             mEcs.AddResource<EditorResource>(wr->window->GetGLFWwindow());
         }
+
         mEcs.AddResource<SerializationResource>();
         mEcs.AddResource<AnimationResource>();
         mEcs.AddResource<DebugDrawResource>();

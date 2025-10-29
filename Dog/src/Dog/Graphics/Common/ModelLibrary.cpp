@@ -136,7 +136,6 @@ namespace Dog
 
     void ModelLibrary::LoadTextures()
     {
-        /*
         for (auto& model : mModels)
         {
             if (model->mAddedTexture) continue;
@@ -160,7 +159,6 @@ namespace Dog
                 }
             }
         }
-        */
     }
 
     bool ModelLibrary::NeedsTextureUpdate()

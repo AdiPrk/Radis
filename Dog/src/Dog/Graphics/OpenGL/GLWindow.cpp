@@ -85,6 +85,7 @@ namespace Dog {
         glfwSwapInterval(0); // No V-Sync
 
         SetTitle(std::wstring(name) + L" (GL)");
+        glEnable(GL_FRAMEBUFFER_SRGB);
     }
 
     GLWindow::~GLWindow() 
@@ -98,6 +99,7 @@ namespace Dog {
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         glfwWindowHint(GLFW_SAMPLES, 4);
+        glfwWindowHint(GLFW_SRGB_CAPABLE, GL_TRUE);
     }
 
     void GLWindow::InitializeDebugCallbacks()
