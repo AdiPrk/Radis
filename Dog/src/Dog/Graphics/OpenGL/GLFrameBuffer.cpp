@@ -60,6 +60,7 @@ namespace Dog {
 				break;
             case FBAttachment::RGBA:
             case FBAttachment::RGBA8:
+            case FBAttachment::RGBA8_SRGB:
             case FBAttachment::RGBA16F:
             case FBAttachment::RGBA32F:
                 AddColorAttachment(ca);

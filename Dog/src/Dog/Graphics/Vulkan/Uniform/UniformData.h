@@ -13,7 +13,9 @@ namespace Dog
     // Called camera uniform but it's just everything until rhi is better set up
     const UniformSettings cameraUniformSettings = UniformSettings(CameraUniformInit)
         .AddUBBinding(VK_SHADER_STAGE_VERTEX_BIT, sizeof(CameraUniforms))
-        .AddVertexBinding(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::mat4), SimpleInstanceUniforms::MAX_INSTANCES);
+        .AddVertexBinding(VK_SHADER_STAGE_VERTEX_BIT, sizeof(InstanceUniforms), InstanceUniforms::MAX_INSTANCES)
+        .AddSSBOBinding(VK_SHADER_STAGE_VERTEX_BIT, sizeof(InstanceUniforms), 10000)
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, TextureLibrary::MAX_TEXTURE_COUNT);
 
     //const UniformSettings instanceUniformSettings = UniformSettings(InstanceUniformInit)
     //    .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, TextureLibrary::MAX_TEXTURE_COUNT)

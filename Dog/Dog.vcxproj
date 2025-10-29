@@ -136,7 +136,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.4.321.1\Lib;$(SolutionDir)Dependencies\glfw\lib;$(SolutionDir)Dependencies\glew\lib\;$(SolutionDir)Dependencies\assimp\lib;$(SolutionDir)Dependencies\spdlog\lib;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\yaml-cpp\lib;$(SolutionDir)Dependencies\enet\lib;$(SolutionDir)Common\$(Platform)\$(Configuration)\;$(SolutionDir)Dependencies\imgui\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opengl32.lib;glew32s.lib;winmm.lib;meshoptimizer.lib;ImGuiRelease.lib;Common.lib;enet64.lib;ws2_32.lib;vulkan-1.lib;glfw3.lib;spdlog.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glew32s.lib;winmm.lib;meshoptimizer.lib;ImGui.lib;Common.lib;enet64.lib;ws2_32.lib;vulkan-1.lib;glfw3.lib;spdlog.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099</AdditionalOptions>
     </Link>
     <PreBuildEvent>
@@ -181,7 +181,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.4.321.1\Lib;$(SolutionDir)Dependencies\glfw\lib;$(SolutionDir)Dependencies\glew\lib\;$(SolutionDir)Dependencies\assimp\lib;$(SolutionDir)Dependencies\spdlog\lib;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\enet\lib;$(SolutionDir)Common\$(Platform)\$(Configuration)\;$(SolutionDir)Dependencies\imgui\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opengl32.lib;glew32s.lib;winmm.lib;meshoptimizer.lib;ImGuiRelease.lib;Common.lib;enet64.lib;ws2_32.lib;vulkan-1.lib;glfw3.lib;spdlog.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glew32s.lib;winmm.lib;meshoptimizer.lib;ImGui.lib;Common.lib;enet64.lib;ws2_32.lib;vulkan-1.lib;glfw3.lib;spdlog.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099</AdditionalOptions>
     </Link>
     <PreBuildEvent>

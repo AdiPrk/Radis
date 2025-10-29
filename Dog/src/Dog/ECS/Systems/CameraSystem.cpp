@@ -47,7 +47,7 @@ namespace Dog
                 camera.isInitialized = true;
             }
 
-            const bool mouseHeld = InputSystem::isMouseDown(Mouse::LEFT) && !InputSystem::IsMouseInputLocked();
+            const bool mouseHeld = InputSystem::isMouseDown(Mouse::RIGHT) && !InputSystem::IsMouseInputLocked();
 
             // --- gather raw mouse delta ---
             float rawDX = 0.0f;

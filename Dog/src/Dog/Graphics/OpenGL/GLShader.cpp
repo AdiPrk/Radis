@@ -11,6 +11,7 @@ namespace Dog {
     GLuint GLShader::uboMatrices = 0;
     GLuint GLShader::uboMatricesBindingPoint = 0;
     GLuint GLShader::instanceVBO = 0;
+    GLuint GLShader::animationVBO = 0;
 
     int GLShader::CurrentID = 0;
     GLShader GLShader::activeShader = GLShader();
@@ -273,8 +274,20 @@ namespace Dog {
 
         glGenBuffers(1, &instanceVBO);
         glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-        uint32_t maxInstances = SimpleInstanceUniforms::MAX_INSTANCES;
-        glBufferData(GL_ARRAY_BUFFER, maxInstances * sizeof(glm::mat4), nullptr, GL_DYNAMIC_DRAW);
+        uint32_t maxInstances = InstanceUniforms::MAX_INSTANCES;
+        glBufferData(GL_ARRAY_BUFFER, maxInstances * sizeof(InstanceUniforms), nullptr, GL_DYNAMIC_DRAW);
+
+    }
+
+    void GLShader::SetupAnimationVBO()
+    {
+        if (animationVBO != 0) return;
+
+        glGenBuffers(1, &animationVBO);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, animationVBO);
+        uint32_t maxAnimations = AnimationUniforms::MAX_BONES;
+        glBufferData(GL_SHADER_STORAGE_BUFFER, maxAnimations * sizeof(AnimationUniforms), nullptr, GL_DYNAMIC_DRAW);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, animationVBO);
     }
 
     bool GLShader::checkCompileErrors(unsigned int object, std::string type)
@@ -355,6 +368,9 @@ namespace Dog {
 
         glDeleteBuffers(1, &instanceVBO);
         instanceVBO = 0;
+
+        glDeleteBuffers(1, &animationVBO);
+        animationVBO = 0;
 
         CurrentID = 0;
     }
