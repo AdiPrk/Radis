@@ -4,6 +4,7 @@
 #include <sstream>
 
 #include "Graphics/Vulkan/Uniform/ShaderTypes.h"
+#include "Graphics/Common/TextureLibrary.h"
 
 namespace Dog {
 
@@ -11,7 +12,8 @@ namespace Dog {
     GLuint GLShader::uboMatrices = 0;
     GLuint GLShader::uboMatricesBindingPoint = 0;
     GLuint GLShader::instanceVBO = 0;
-    GLuint GLShader::animationVBO = 0;
+    GLuint GLShader::animationSSBO = 0;
+    GLuint GLShader::textureSSBO = 0;
 
     int GLShader::CurrentID = 0;
     GLShader GLShader::activeShader = GLShader();
@@ -279,15 +281,26 @@ namespace Dog {
 
     }
 
-    void GLShader::SetupAnimationVBO()
+    void GLShader::SetupAnimationSSBO()
     {
-        if (animationVBO != 0) return;
+        if (animationSSBO != 0) return;
 
-        glGenBuffers(1, &animationVBO);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, animationVBO);
+        glGenBuffers(1, &animationSSBO);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, animationSSBO);
         uint32_t maxAnimations = AnimationUniforms::MAX_BONES;
         glBufferData(GL_SHADER_STORAGE_BUFFER, maxAnimations * sizeof(AnimationUniforms), nullptr, GL_DYNAMIC_DRAW);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, animationVBO);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, animationSSBO);
+    }
+
+    void GLShader::SetupTextureSSBO()
+    {
+        if (textureSSBO != 0) return;
+
+        glGenBuffers(1, &textureSSBO);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, textureSSBO);
+        uint32_t maxTextures = TextureLibrary::MAX_TEXTURE_COUNT;
+        glBufferData(GL_SHADER_STORAGE_BUFFER, maxTextures * sizeof(GLuint64), nullptr, GL_DYNAMIC_DRAW);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, textureSSBO);
     }
 
     bool GLShader::checkCompileErrors(unsigned int object, std::string type)
@@ -364,13 +377,13 @@ namespace Dog {
     void GLShader::CleanupUBO()
     {
         glDeleteBuffers(1, &uboMatrices);
-        uboMatrices = 0;
-
         glDeleteBuffers(1, &instanceVBO);
+        glDeleteBuffers(1, &animationSSBO);
+        glDeleteBuffers(1, &textureSSBO);
+        uboMatrices = 0;
         instanceVBO = 0;
-
-        glDeleteBuffers(1, &animationVBO);
-        animationVBO = 0;
+        animationSSBO = 0;
+        textureSSBO = 0;
 
         CurrentID = 0;
     }

@@ -76,8 +76,8 @@ namespace Dog
         else
         {
             rr->shader->Use();
-            GLShader::SetupAnimationVBO();
-            GLuint animationVBO = GLShader::GetAnimationVBO();
+            GLShader::SetupAnimationSSBO();
+            GLuint animationVBO = GLShader::GetAnimationSSBO();
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, animationVBO);
             glBufferData(GL_SHADER_STORAGE_BUFFER, bonesMatrices.size() * sizeof(VQS), bonesMatrices.data(), GL_DYNAMIC_DRAW);
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);

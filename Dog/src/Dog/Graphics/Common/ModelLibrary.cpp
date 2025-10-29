@@ -11,7 +11,7 @@
 #include "Model.h"
 #include "UnifiedMesh.h"
 
-#include "../Vulkan/Texture/TextureLibrary.h"
+#include "TextureLibrary.h"
 #include "../Vulkan/Core/Device.h"
 #include "../OpenGL/GLMesh.h"
 #include "Engine.h"
@@ -145,8 +145,6 @@ namespace Dog
             {
                 if (mesh->diffuseTexturePath.empty())
                 {
-                    if (!mesh->mTextureData || mesh->mTextureSize == 0) continue;
-
                     uint32_t ind = mTextureLibrary.AddTexture(mesh->mTextureData.get(), mesh->mTextureSize, "EmbeddedTexture_" + std::to_string(mesh->mMeshID));
                     mesh->diffuseTextureIndex = ind;
                     mesh->mTextureData.reset();
@@ -175,6 +173,7 @@ namespace Dog
     {
         for (auto& model : mModels)
         {
+            model->mAddedTexture = false;
             for (auto& mesh : model->mMeshes)
             {
                 mesh->Cleanup();
@@ -190,24 +189,27 @@ namespace Dog
             {
                 std::vector<Vertex> oldVertices = mesh->mVertices;
                 std::vector<uint32_t> oldIndices = mesh->mIndices;
+                uint32_t oldMeshID = mesh->GetID();
+                uint32_t oldDiffuseTextureIndex = mesh->diffuseTextureIndex;
 
                 mesh.reset();
 
                 if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
                 {
-                    mesh = std::make_unique<GLMesh>();
+                    mesh = std::make_unique<GLMesh>(false);
                 }
                 else if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
                 {
-                    mesh = std::make_unique<VKMesh>();
+                    mesh = std::make_unique<VKMesh>(false);
                 }
 
+                mesh->mMeshID = oldMeshID;
                 mesh->mVertices = oldVertices;
                 mesh->mIndices = oldIndices;
+                mesh->diffuseTextureIndex = oldDiffuseTextureIndex;
 
                 mesh->CreateVertexBuffers(device);
                 mesh->CreateIndexBuffers(device);
-
             }
         }
     }

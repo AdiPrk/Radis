@@ -233,8 +233,10 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Dog\Graphics\OpenGL\GLFrameBuffer.cpp" />
     <ClCompile Include="src\Dog\Graphics\OpenGL\GLMesh.cpp" />
     <ClCompile Include="src\Dog\Graphics\OpenGL\GLShader.cpp" />
+    <ClCompile Include="src\Dog\Graphics\OpenGL\GLTexture.cpp" />
     <ClCompile Include="src\Dog\Graphics\OpenGL\GLWindow.cpp" />
     <ClCompile Include="src\Dog\Graphics\RHI\IMesh.cpp" />
+    <ClCompile Include="src\Dog\Graphics\RHI\ITexture.cpp" />
     <ClCompile Include="src\Dog\Graphics\RHI\RHI.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Core\AccelerationStructures.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Core\Allocator.cpp" />
@@ -253,7 +255,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Dog\Graphics\Vulkan\Pipeline\Shader.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\RenderGraph.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Texture\Texture.cpp" />
-    <ClCompile Include="src\Dog\Graphics\Vulkan\Texture\TextureLibrary.cpp" />
+    <ClCompile Include="src\Dog\Graphics\Common\TextureLibrary.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Uniform\Descriptors.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Uniform\ShaderTypes.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Uniform\Uniform.cpp" />
@@ -327,8 +329,10 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Dog\Graphics\OpenGL\GLFrameBuffer.h" />
     <ClInclude Include="src\Dog\Graphics\OpenGL\GLMesh.h" />
     <ClInclude Include="src\Dog\Graphics\OpenGL\GLShader.h" />
+    <ClInclude Include="src\Dog\Graphics\OpenGL\GLTexture.h" />
     <ClInclude Include="src\Dog\Graphics\OpenGL\GLWindow.h" />
     <ClInclude Include="src\Dog\Graphics\RHI\IMesh.h" />
+    <ClInclude Include="src\Dog\Graphics\RHI\ITexture.h" />
     <ClInclude Include="src\Dog\Graphics\RHI\RHI.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Core\AccelerationStructures.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Core\Allocator.h" />
@@ -350,7 +354,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Dog\Graphics\Vulkan\Pipeline\Shader.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\RenderGraph.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Texture\Texture.h" />
-    <ClInclude Include="src\Dog\Graphics\Vulkan\Texture\TextureLibrary.h" />
+    <ClInclude Include="src\Dog\Graphics\Common\TextureLibrary.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Uniform\Descriptors.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Uniform\ShaderTypes.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Uniform\Uniform.h" />

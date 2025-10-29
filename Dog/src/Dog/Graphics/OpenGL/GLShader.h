@@ -56,8 +56,10 @@ namespace Dog {
 
         static GLuint GetInstanceVBO() { return instanceVBO; }
         static void SetupInstanceVBO();
-        static GLuint GetAnimationVBO() { return animationVBO; }
-        static void SetupAnimationVBO();
+        static GLuint GetAnimationSSBO() { return animationSSBO; }
+        static void SetupAnimationSSBO();
+        static GLuint GetTextureSSBO() { return textureSSBO; }
+        static void SetupTextureSSBO();
 
     private:
         // checks if compilation or linking failed and if so, print the error logs
@@ -66,7 +68,8 @@ namespace Dog {
 
         static GLShader activeShader;
         static GLuint instanceVBO;
-        static GLuint animationVBO;
+        static GLuint animationSSBO;
+        static GLuint textureSSBO;
     };
 
 }

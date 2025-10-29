@@ -14,7 +14,7 @@
 #include "Graphics/Vulkan/Uniform/UniformData.h"
 
 #include "Graphics/Common/ModelLibrary.h"
-#include "Graphics/Vulkan/Texture/TextureLibrary.h"
+#include "Graphics/Common/TextureLibrary.h"
 #include "Graphics/Vulkan/Texture/Texture.h"
 #include "Graphics/Vulkan/Model/Animation/AnimationLibrary.h"
 #include "Graphics/Common/Model.h"
@@ -66,10 +66,6 @@ namespace Dog
             device->SetFormats(linearFormat, srgbFormat);
 
             syncObjects = std::make_unique<Synchronizer>(device->GetDevice(), swapChain->ImageCount());
-
-            textureLibrary = std::make_unique<TextureLibrary>(*device);
-            textureLibrary->AddTexture("Assets/textures/square.png");
-
         }
         else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
         {
@@ -85,7 +81,16 @@ namespace Dog
             sceneFrameBuffer = std::make_unique<GLFrameBuffer>(fbSpec);
         }
 
-        
+        if (!textureLibrary)
+        {
+            textureLibrary = std::make_unique<TextureLibrary>(device.get());
+            textureLibrary->AddTexture("Assets/textures/square.png");
+        }
+        else
+        {
+            textureLibrary->SetDevice(device.get());
+        }
+
         if (!modelLibrary)
         {
             modelLibrary = std::make_unique<ModelLibrary>(*device, *textureLibrary);
@@ -105,8 +110,6 @@ namespace Dog
             
             //modelLibrary->AddModel("Assets/models/okayu.pmx");
             //modelLibrary->AddModel("Assets/models/AlisaMikhailovna.fbx");
-
-            modelLibrary->LoadTextures();
         }
 
         if (!animationLibrary)
@@ -124,10 +127,16 @@ namespace Dog
             animationLibrary->AddAnimation("Assets/models/TravisLocomotion/walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
         }
 
+        // Recreation if needed
+        textureLibrary->CreateTextureSampler();
+        textureLibrary->RecreateAllBuffers(device.get());
+        modelLibrary->LoadTextures();
+        
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
         {
             CreateCommandBuffers();
             renderGraph = std::make_unique<RenderGraph>();
+
 
             cameraUniform = std::make_unique<Uniform>(*device, *this, cameraUniformSettings);
             //instanceUniform = std::make_unique<Uniform>(*device, *this, instanceUniformSettings);
@@ -167,8 +176,9 @@ namespace Dog
             CleanupSceneTexture();
             CleanupDepthBuffer();
             //modelLibrary.reset();
+            //textureLibrary.reset();
             if (modelLibrary) modelLibrary->ClearAllBuffers(device.get());
-            textureLibrary.reset();
+            if (textureLibrary) textureLibrary->ClearAllBuffers(device.get());
             animationLibrary.reset();
             renderGraph.reset();
             cameraUniform.reset();
@@ -183,7 +193,9 @@ namespace Dog
         else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
         {
             //modelLibrary.reset();
-            modelLibrary->ClearAllBuffers(device.get());
+            //textureLibrary.reset();
+            if (modelLibrary) modelLibrary->ClearAllBuffers(device.get());
+            if (textureLibrary) textureLibrary->ClearAllBuffers(device.get());
             sceneFrameBuffer.reset();
             shader.reset();
             GLShader::CleanupUBO();
@@ -208,7 +220,17 @@ namespace Dog
             for (size_t j = 0; j < TextureLibrary::MAX_TEXTURE_COUNT; ++j) {
                 imageInfos[j].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 imageInfos[j].sampler = defaultSampler;
-                imageInfos[j].imageView = hasTex ? tl->GetTextureByIndex(static_cast<uint32_t>(std::min(j, textureCount - 1))).GetImageView() : 0;
+                imageInfos[j].imageView = 0;
+
+                if (hasTex)
+                {
+                    ITexture* itex = tl->GetTextureByIndex(static_cast<uint32_t>(std::min(j, textureCount - 1)));
+                    VKTexture* vktex = static_cast<VKTexture*>(itex);
+                    if (vktex)
+                    {
+                        imageInfos[j].imageView = vktex->GetImageView();
+                    }
+                }
             }
 
             for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex) {

@@ -280,6 +280,10 @@ namespace Dog
         VkPhysicalDeviceVulkan13Features supported13{};
         supported13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
 
+        VkPhysicalDeviceRobustness2FeaturesKHR robustness2Supported{};
+        robustness2Supported.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_KHR;
+
+        supported13.pNext = &robustness2Supported;
         supported12.pNext = &supported13;
         supportedFeatures2.pNext = &supported12;
 
@@ -303,6 +307,10 @@ namespace Dog
         REQUEST_FEATURE(deviceFeatures, supportedFeatures2.features, pipelineStatisticsQuery);
         REQUEST_FEATURE(deviceFeatures, supportedFeatures2.features, logicOp);
         REQUEST_FEATURE(deviceFeatures, supportedFeatures2.features, fillModeNonSolid);
+
+        VkPhysicalDeviceRobustness2FeaturesKHR robustness2Features = {};
+        robustness2Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_KHR;
+        REQUEST_FEATURE(robustness2Features, robustness2Supported, nullDescriptor);
 
         VkPhysicalDeviceVulkan13Features vulkan13Features = {};
         vulkan13Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
@@ -344,7 +352,8 @@ namespace Dog
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         
         //accelFeature.pNext = &rtPipelineFeature;
-        //vulkan13Features.pNext = &accelFeature;
+        //robustness2Features.pNext = &accelFeature;
+        vulkan13Features.pNext = &robustness2Features;
         vulkan12Features.pNext = &vulkan13Features;
         createInfo.pNext = &vulkan12Features;
 
