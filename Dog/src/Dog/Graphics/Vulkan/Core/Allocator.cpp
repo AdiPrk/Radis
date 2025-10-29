@@ -35,10 +35,27 @@ namespace Dog {
         allocInfo.usage = memoryUsage;
         allocInfo.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
 
-        // Create the buffer and allocate memory using VMA
-        if (vmaCreateBufferWithAlignment(mAllocator, &bufferInfo, &allocInfo, minAlignment, &buffer, &bufferAllocation, nullptr) != VK_SUCCESS)
+        VkResult result = vmaCreateBufferWithAlignment(mAllocator, &bufferInfo, &allocInfo, minAlignment, &buffer, &bufferAllocation, nullptr);
+
+        if (result != VK_SUCCESS)
         {
-            DOG_CRITICAL("failed to create buffer using VMA!");
+            const char* errorStr = "";
+            switch (result)
+            {
+                case VK_ERROR_OUT_OF_HOST_MEMORY: errorStr = "VK_ERROR_OUT_OF_HOST_MEMORY"; break;
+                case VK_ERROR_OUT_OF_DEVICE_MEMORY: errorStr = "VK_ERROR_OUT_OF_DEVICE_MEMORY"; break;
+                case VK_ERROR_INITIALIZATION_FAILED: errorStr = "VK_ERROR_INITIALIZATION_FAILED"; break;
+                case VK_ERROR_MEMORY_MAP_FAILED: errorStr = "VK_ERROR_MEMORY_MAP_FAILED"; break;
+                case VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS: errorStr = "VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS"; break;
+                default: errorStr = "Unknown VkResult error"; break;
+            }
+
+            printf("Failed to create buffer using VMA!\n");
+            printf("  VkResult: %d (%s)\n", result, errorStr);
+            printf("  Size: %llu bytes\n", static_cast<unsigned long long>(size));
+            printf("  Usage: 0x%X\n", usage);
+            printf("  MemoryUsage: %d\n", memoryUsage);
+            printf("  MinAlignment: %llu\n", static_cast<unsigned long long>(minAlignment));
         }
     }
 

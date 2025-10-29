@@ -13,79 +13,193 @@
 #include "Graphics/Vulkan/Uniform/Uniform.h"
 #include "Graphics/Vulkan/Uniform/UniformData.h"
 
-#include "Graphics/Vulkan/Model/ModelLibrary.h"
-#include "Graphics/Vulkan/Texture/TextureLibrary.h"
+#include "Graphics/Common/ModelLibrary.h"
+#include "Graphics/Common/TextureLibrary.h"
 #include "Graphics/Vulkan/Texture/Texture.h"
 #include "Graphics/Vulkan/Model/Animation/AnimationLibrary.h"
-#include "Graphics/Vulkan/Model/Model.h"
+#include "Graphics/Common/Model.h"
 #include "Graphics/Vulkan/Model/Animation/Animator.h"
 #include "Graphics/Vulkan/Uniform/Descriptors.h"
+
+#include "Graphics/OpenGL/GLFrameBuffer.h"
+
+#include "Engine.h"
 
 namespace Dog
 {
     RenderingResource::RenderingResource(IWindow* window)
     {
-        device = std::make_unique<Device>(*dynamic_cast<VulkanWindow*>(window));
-        allocator = std::make_unique<Allocator>(*device);
-
-        RecreateSwapChain(window);
-
-        VkFormat srgbFormat = swapChain->GetImageFormat();
-        VkFormat linearFormat = ToLinearFormat(srgbFormat);
-        device->SetFormats(linearFormat, srgbFormat);
-
-        syncObjects = std::make_unique<Synchronizer>(device->GetDevice(), swapChain->ImageCount());
-
-        textureLibrary = std::make_unique<TextureLibrary>(*device);
-        textureLibrary->AddTexture("Assets/textures/square.png");
-
-        modelLibrary = std::make_unique<ModelLibrary>(*device, *textureLibrary);
-        animationLibrary = std::make_unique<AnimationLibrary>();
-        
-        modelLibrary->AddModel("Assets/models/quad.obj");
-        modelLibrary->AddModel("Assets/models/cube.obj");
-        //modelLibrary->AddModel("Assets/models/yena.fbx");
-        //animationLibrary->AddAnimation("Assets/models/yena.fbx", modelLibrary->GetModel("yena"));
-        //modelLibrary->AddModel("Assets/models/FuwawaAbyssgard.pmx");
-        //modelLibrary->AddModel("Assets/models/TaylorDancing.glb");
-        //animationLibrary->AddAnimation("Assets/models/TaylorDancing.glb", modelLibrary->GetModel("Assets/models/TaylorDancing.glb"));
-        //modelLibrary->AddModel("Assets/models/jack_samba.glb");
-        //animationLibrary->AddAnimation("Assets/models/jack_samba.glb", modelLibrary->GetModel("jack_samba"));
-        //modelLibrary->AddModel("Assets/models/travisFloppin.glb");
-        //animationLibrary->AddAnimation("Assets/models/travisFloppin.glb", modelLibrary->GetModel("travisFloppin"));
-        modelLibrary->AddModel("Assets/models/TravisLocomotion/travis.fbx");
-        animationLibrary->AddAnimation("Assets/models/TravisLocomotion/idle.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-        animationLibrary->AddAnimation("Assets/models/TravisLocomotion/jump.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-        animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left strafe walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-        animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left strafe.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-        animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left turn 90.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-        animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right strafe walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-        animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right strafe.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-        animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right turn 90.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-        animationLibrary->AddAnimation("Assets/models/TravisLocomotion/standard run.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-        animationLibrary->AddAnimation("Assets/models/TravisLocomotion/walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-        //modelLibrary->AddModel("Assets/models/okayu.pmx");
-        //modelLibrary->AddModel("Assets/models/AlisaMikhailovna.fbx");
-
-
-        modelLibrary->LoadTextures();
-
-        CreateCommandBuffers();
-        renderGraph = std::make_unique<RenderGraph>();
-
-        cameraUniform = std::make_unique<Uniform>(*device, *this, cameraUniformSettings);
-        instanceUniform = std::make_unique<Uniform>(*device, *this, instanceUniformSettings);
-
+        Create(window);
     }
 
     RenderingResource::~RenderingResource()
     {
-        vkFreeCommandBuffers(
-            device->GetDevice(),
-            device->GetCommandPool(),
-            static_cast<uint32_t>(commandBuffers.size()),
-            commandBuffers.data()
-        );
+        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+        {
+            vkFreeCommandBuffers(
+                device->GetDevice(),
+                device->GetCommandPool(),
+                static_cast<uint32_t>(commandBuffers.size()),
+                commandBuffers.data()
+            );
+        }
+    }
+
+    void RenderingResource::Create(IWindow* window)
+    {
+        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+        {
+            device = std::make_unique<Device>(*dynamic_cast<VulkanWindow*>(window));
+
+            if (!device->SupportsVulkan())
+            {
+                Engine::ForceVulkanUnsupportedSwap();
+                return;
+            }
+
+            allocator = std::make_unique<Allocator>(*device);
+
+            RecreateSwapChain(window);
+
+            VkFormat srgbFormat = swapChain->GetImageFormat();
+            VkFormat linearFormat = ToLinearFormat(srgbFormat);
+            device->SetFormats(linearFormat, srgbFormat);
+
+            syncObjects = std::make_unique<Synchronizer>(device->GetDevice(), swapChain->ImageCount());
+        }
+        else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
+        {
+            GLShader::SetupUBO();
+            shader = std::make_unique<GLShader>();
+            shader->load("Assets/shaders/verysimple.vert", "Assets/shaders/verysimple.frag");
+
+            FrameBufferSpecification fbSpec;
+            fbSpec.width = 1280;
+            fbSpec.height = 720;
+            fbSpec.samples = 1;
+            fbSpec.attachments = { FBAttachment::RGBA8_SRGB, FBAttachment::Depth24Stencil8 };
+            sceneFrameBuffer = std::make_unique<GLFrameBuffer>(fbSpec);
+        }
+
+        if (!textureLibrary)
+        {
+            textureLibrary = std::make_unique<TextureLibrary>(device.get());
+            textureLibrary->AddTexture("Assets/textures/square.png");
+        }
+        else
+        {
+            textureLibrary->SetDevice(device.get());
+        }
+
+        if (!modelLibrary)
+        {
+            modelLibrary = std::make_unique<ModelLibrary>(*device, *textureLibrary);
+            
+            //modelLibrary->AddModel("Assets/models/quad.obj");
+            //modelLibrary->AddModel("Assets/models/cube.obj");
+            //modelLibrary->AddModel("Assets/models/yena.fbx");
+            //animationLibrary->AddAnimation("Assets/models/yena.fbx", modelLibrary->GetModel("yena"));
+            //modelLibrary->AddModel("Assets/models/FuwawaAbyssgard.pmx");
+            //modelLibrary->AddModel("Assets/models/TaylorDancing.glb");
+            //animationLibrary->AddAnimation("Assets/models/TaylorDancing.glb", modelLibrary->GetModel("Assets/models/TaylorDancing.glb"));
+            //modelLibrary->AddModel("Assets/models/jack_samba.glb");
+            //animationLibrary->AddAnimation("Assets/models/jack_samba.glb", modelLibrary->GetModel("jack_samba"));
+            //modelLibrary->AddModel("Assets/models/travisFloppin.glb");
+            //animationLibrary->AddAnimation("Assets/models/travisFloppin.glb", modelLibrary->GetModel("travisFloppin"));
+            modelLibrary->AddModel("Assets/models/TravisLocomotion/travis.fbx");
+            
+            //modelLibrary->AddModel("Assets/models/okayu.pmx");
+            //modelLibrary->AddModel("Assets/models/AlisaMikhailovna.fbx");
+        }
+
+        if (!animationLibrary)
+        {
+            animationLibrary = std::make_unique<AnimationLibrary>();
+            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/idle.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/jump.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left strafe walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left strafe.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left turn 90.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right strafe walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right strafe.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right turn 90.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/standard run.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+        }
+
+        // Recreation if needed
+        textureLibrary->CreateTextureSampler();
+        textureLibrary->RecreateAllBuffers(device.get());
+        modelLibrary->LoadTextures();
+        
+        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+        {
+            CreateCommandBuffers();
+            renderGraph = std::make_unique<RenderGraph>();
+
+
+            cameraUniform = std::make_unique<Uniform>(*device, *this, cameraUniformSettings);
+            //instanceUniform = std::make_unique<Uniform>(*device, *this, instanceUniformSettings);
+
+            std::vector<Uniform*> unis{
+                cameraUniform.get(),
+                //instanceUniform.get()
+            };
+
+            pipeline = std::make_unique<Pipeline>(
+                *device,
+                swapChain->GetImageFormat(), swapChain->FindDepthFormat(),
+                unis,
+                false,
+                "verysimple.vert", "verysimple.frag"
+            );
+
+            wireframePipeline = std::make_unique<Pipeline>(
+                *device,
+                swapChain->GetImageFormat(), swapChain->FindDepthFormat(),
+                unis,
+                true,
+                "verysimple.vert", "verysimple.frag"
+            );
+        }
+    }
+
+    void RenderingResource::Cleanup()
+    {
+        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+        {
+            if (device->GetDevice()) 
+            {
+                vkDeviceWaitIdle(*device);
+            }
+
+            CleanupSceneTexture();
+            CleanupDepthBuffer();
+            //modelLibrary.reset();
+            //textureLibrary.reset();
+            if (modelLibrary) modelLibrary->ClearAllBuffers(device.get());
+            if (textureLibrary) textureLibrary->ClearAllBuffers(device.get());
+            animationLibrary.reset();
+            renderGraph.reset();
+            cameraUniform.reset();
+            //instanceUniform.reset();
+            pipeline.reset();
+            wireframePipeline.reset();
+            syncObjects.reset();
+            allocator.reset();
+            swapChain.reset();
+            device.reset();
+        }
+        else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
+        {
+            //modelLibrary.reset();
+            //textureLibrary.reset();
+            if (modelLibrary) modelLibrary->ClearAllBuffers(device.get());
+            if (textureLibrary) textureLibrary->ClearAllBuffers(device.get());
+            sceneFrameBuffer.reset();
+            shader.reset();
+            GLShader::CleanupUBO();
+        }
     }
 
     void RenderingResource::UpdateTextureUniform()
@@ -106,13 +220,23 @@ namespace Dog
             for (size_t j = 0; j < TextureLibrary::MAX_TEXTURE_COUNT; ++j) {
                 imageInfos[j].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 imageInfos[j].sampler = defaultSampler;
-                imageInfos[j].imageView = hasTex ? tl->GetTextureByIndex(static_cast<uint32_t>(std::min(j, textureCount - 1))).GetImageView() : 0;
+                imageInfos[j].imageView = 0;
+
+                if (hasTex)
+                {
+                    ITexture* itex = tl->GetTextureByIndex(static_cast<uint32_t>(std::min(j, textureCount - 1)));
+                    VKTexture* vktex = static_cast<VKTexture*>(itex);
+                    if (vktex)
+                    {
+                        imageInfos[j].imageView = vktex->GetImageView();
+                    }
+                }
             }
 
             for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex) {
-                DescriptorWriter writer(*instanceUniform->GetDescriptorLayout(), *instanceUniform->GetDescriptorPool());
-                writer.WriteImage(0, imageInfos.data(), static_cast<uint32_t>(imageInfos.size()));
-                writer.Overwrite(instanceUniform->GetDescriptorSets()[frameIndex]);
+                DescriptorWriter writer(*cameraUniform->GetDescriptorLayout(), *cameraUniform->GetDescriptorPool());
+                writer.WriteImage(3, imageInfos.data(), static_cast<uint32_t>(imageInfos.size()));
+                writer.Overwrite(cameraUniform->GetDescriptorSets()[frameIndex]);
             }
         }
     }

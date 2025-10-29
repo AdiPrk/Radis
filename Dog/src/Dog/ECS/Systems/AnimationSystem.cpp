@@ -13,6 +13,8 @@
 #include "Graphics/Vulkan/Uniform/Uniform.h"
 #include "Graphics/Vulkan/RenderGraph.h"
 
+#include "Engine.h"
+
 namespace Dog
 {
     void AnimationSystem::Update(float dt)
@@ -57,16 +59,28 @@ namespace Dog
             boneOffset += static_cast<uint32_t>(finalMatrices.size());
         }
 
-        auto& rg = rr->renderGraph;
-        rg->AddPass(
-            "UpdateAnimationUniform",
-            [](RGPassBuilder& builder) {},
-            [&](VkCommandBuffer cmd) 
-            {
-                auto renderingData = ecs->GetResource<RenderingResource>();
-                auto animationData = ecs->GetResource<AnimationResource>();
-                renderingData->instanceUniform->SetUniformData(animationData->bonesMatrices, 2, renderingData->currentFrameIndex);
-            }
-        );
+        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+        {
+            auto& rg = rr->renderGraph;
+            rg->AddPass(
+                "UpdateAnimationUniform",
+                [](RGPassBuilder& builder) {},
+                [&](VkCommandBuffer cmd)
+                {
+                    auto renderingData = ecs->GetResource<RenderingResource>();
+                    auto animationData = ecs->GetResource<AnimationResource>();
+                    renderingData->cameraUniform->SetUniformData(animationData->bonesMatrices, 2, renderingData->currentFrameIndex);
+                }
+            );
+        }
+        else
+        {
+            rr->shader->Use();
+            GLShader::SetupAnimationSSBO();
+            GLuint animationVBO = GLShader::GetAnimationSSBO();
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, animationVBO);
+            glBufferData(GL_SHADER_STORAGE_BUFFER, bonesMatrices.size() * sizeof(VQS), bonesMatrices.data(), GL_DYNAMIC_DRAW);
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+        }
     }
 }

@@ -2,8 +2,8 @@
 #include "DebugDrawResource.h"
 
 #include "Graphics/Vulkan/Uniform/ShaderTypes.h"
-#include "Graphics/Vulkan/Model/ModelLibrary.h"
-#include "Graphics/Vulkan/Model/Model.h"
+#include "Graphics/Common/ModelLibrary.h"
+#include "Graphics/Common/Model.h"
 
 namespace Dog
 {

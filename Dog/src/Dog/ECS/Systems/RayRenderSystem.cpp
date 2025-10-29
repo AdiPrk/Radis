@@ -9,17 +9,17 @@
 
 #include "Graphics/Vulkan/Core/Device.h"
 #include "Graphics/Vulkan/Core/SwapChain.h"
-#include "Graphics/Vulkan/Model/ModelLibrary.h"
+#include "Graphics/Common/ModelLibrary.h"
 #include "Graphics/Vulkan/Uniform/ShaderTypes.h"
 #include "Graphics/Vulkan/Pipeline/Pipeline.h"
-#include "Graphics/Vulkan/Model/Model.h"
+#include "Graphics/Common/Model.h"
 #include "Graphics/Vulkan/Uniform/Uniform.h"
 #include "Graphics/Vulkan/RenderGraph.h"
 #include "Graphics/Vulkan/Model/Animation/AnimationLibrary.h"
-#include "Graphics/Vulkan/Texture/TextureLibrary.h"
+#include "Graphics/Common/TextureLibrary.h"
 #include "Graphics/Vulkan/Texture/Texture.h"
 #include "Graphics/Vulkan/Uniform/Descriptors.h"
-#include "Graphics/Vulkan/Model/UnifiedMesh.h"
+#include "Graphics/Common/UnifiedMesh.h"
 
 #include "../ECS.h"
 #include "ECS/Entities/Entity.h"
@@ -33,27 +33,6 @@ namespace Dog
     void RayRenderSystem::Init()
     {
         auto rr = ecs->GetResource<RenderingResource>();
-
-        std::vector<Uniform*> unis{
-            rr->cameraUniform.get(),
-            rr->instanceUniform.get()
-        };
-
-        mPipeline = std::make_unique<Pipeline>(
-            *rr->device,
-            rr->swapChain->GetImageFormat(), rr->swapChain->FindDepthFormat(),
-            unis,
-            false,
-            "basic_model.vert", "basic_model.frag"
-        );
-
-        mWireframePipeline = std::make_unique<Pipeline>(
-            *rr->device,
-            rr->swapChain->GetImageFormat(), rr->swapChain->FindDepthFormat(),
-            unis,
-            true,
-            "basic_model.vert", "basic_model.frag"
-        );
 
         VmaAllocator allocator = rr->allocator->GetAllocator();
         mIndirectBuffers.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
@@ -88,7 +67,7 @@ namespace Dog
 
         if (InputSystem::isKeyTriggered(Key::Z))
         {
-            mPipeline->Recreate();
+            // mPipeline->Recreate();
         }
     }
     
@@ -142,9 +121,6 @@ namespace Dog
 
     void RayRenderSystem::Exit()
     {
-        mPipeline.reset();
-        mWireframePipeline.reset();
-
         auto rr = ecs->GetResource<RenderingResource>();
         
         for (int i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i) {
@@ -156,11 +132,11 @@ namespace Dog
     {
         auto rr = ecs->GetResource<RenderingResource>();
 
-        rr->renderWireframe ? mWireframePipeline->Bind(cmd) : mPipeline->Bind(cmd);
-        VkPipelineLayout pipelineLayout = rr->renderWireframe ? mWireframePipeline->GetLayout() : mPipeline->GetLayout();
+        rr->renderWireframe ? rr->wireframePipeline->Bind(cmd) : rr->pipeline->Bind(cmd);
+        VkPipelineLayout pipelineLayout = rr->renderWireframe ? rr->wireframePipeline->GetLayout() : rr->pipeline->GetLayout();
 
         rr->cameraUniform->Bind(cmd, pipelineLayout, rr->currentFrameIndex);
-        rr->instanceUniform->Bind(cmd, pipelineLayout, rr->currentFrameIndex);
+        //rr->instanceUniform->Bind(cmd, pipelineLayout, rr->currentFrameIndex);
 
         VkViewport viewport{};
         viewport.width = static_cast<float>(rr->swapChain->GetSwapChainExtent().width);
@@ -172,13 +148,13 @@ namespace Dog
         VkRect2D scissor{ {0, 0}, rr->swapChain->GetSwapChainExtent() };
         vkCmdSetScissor(cmd, 0, 1, &scissor);
 
-        std::vector<InstanceUniforms> instanceData{};
+        std::vector<SimpleInstanceUniforms> instanceData{};
 
         AnimationLibrary* al = rr->animationLibrary.get();
         ModelLibrary* ml = rr->modelLibrary.get();
 
         UnifiedMeshes* unifiedMesh = rr->modelLibrary->GetUnifiedMesh();
-        Mesh& uMesh = unifiedMesh->GetUnifiedMesh();
+        VKMesh& uMesh = unifiedMesh->GetUnifiedMesh();
 
         VkDrawIndexedIndirectCommand* indirectDrawPtr;
         vmaMapMemory(rr->allocator->GetAllocator(), mIndirectBufferAllocations[rr->currentFrameIndex], (void**)&indirectDrawPtr);
@@ -210,6 +186,7 @@ namespace Dog
             instanceBaseIndex += (int)debugData.size();
         }*/
 
+        /*
         auto& registry = ecs->GetRegistry();
         auto entityView = registry.view<ModelComponent, TransformComponent>();
         for (auto& entityHandle : entityView)
@@ -255,15 +232,45 @@ namespace Dog
                 ++mNumInstancesRendered;
             }
         }
+        */
+
+        auto& registry = ecs->GetRegistry();
+        auto entityView = registry.view<ModelComponent, TransformComponent>();
+        for (auto& entityHandle : entityView)
+        {
+            Entity entity(&registry, entityHandle);
+            ModelComponent& mc = entity.GetComponent<ModelComponent>();
+            TransformComponent& tc = entity.GetComponent<TransformComponent>();
+            Model* model = rr->modelLibrary->GetModel(mc.ModelPath);
+            if (!model) continue;
+
+            for (auto& mesh : model->mMeshes)
+            {
+                SimpleInstanceUniforms& data = instanceData.emplace_back();
+                data.model = tc.GetTransform() * model->GetNormalizationMatrix();
+                
+                // Prepare indirect draw command
+                const MeshInfo& meshInfo = unifiedMesh->GetMeshInfo(mesh->GetID());
+                VkDrawIndexedIndirectCommand drawCommand = {};
+                drawCommand.indexCount = meshInfo.indexCount;
+                drawCommand.instanceCount = 1;
+                drawCommand.firstIndex = meshInfo.firstIndex;
+                drawCommand.vertexOffset = meshInfo.vertexOffset;
+                drawCommand.firstInstance = instanceBaseIndex++;
+                indirectDrawPtr[drawCount++] = drawCommand;
+                ++mNumInstancesRendered;
+            }
+        }
 
         vmaUnmapMemory(rr->allocator->GetAllocator(), mIndirectBufferAllocations[rr->currentFrameIndex]);
 
 
-        rr->instanceUniform->SetUniformData(instanceData, 1, rr->currentFrameIndex);
+        //rr->instanceUniform->SetUniformData(instanceData, 1, rr->currentFrameIndex);
+        rr->cameraUniform->SetUniformData(instanceData, 1, rr->currentFrameIndex);
         
         VkBuffer uMeshVertexBuffer = uMesh.mVertexBuffer->GetBuffer();
         VkBuffer uMeshIndexBuffer = uMesh.mIndexBuffer->GetBuffer();
-        VkBuffer instBuffer = rr->instanceUniform->GetUniformBuffer(1, rr->currentFrameIndex)->GetBuffer();
+        VkBuffer instBuffer = rr->cameraUniform->GetUniformBuffer(1, rr->currentFrameIndex)->GetBuffer();
         VkBuffer buffers[] = { uMeshVertexBuffer, instBuffer };
         VkDeviceSize offsets[] = { 0, 0 };
         vkCmdBindVertexBuffers(cmd, 0, 2, buffers, offsets);
@@ -278,7 +285,7 @@ namespace Dog
         );
 
         //// test calling primitive to geometry
-        //Mesh& testMesh = uMesh;
+        //VKMesh& testMesh = uMesh;
         //VkAccelerationStructureGeometryKHR geometry{};
         //VkAccelerationStructureBuildRangeInfoKHR rangeInfo{};
         //PrimitiveToGeometry(testMesh, geometry, rangeInfo);
@@ -287,7 +294,7 @@ namespace Dog
         //DOG_INFO("Primitive Count: {}", rangeInfo.primitiveCount);
     }
 
-    void RayRenderSystem::PrimitiveToGeometry(Mesh& mesh, VkAccelerationStructureGeometryKHR& geometry, VkAccelerationStructureBuildRangeInfoKHR& rangeInfo)
+    void RayRenderSystem::PrimitiveToGeometry(VKMesh& mesh, VkAccelerationStructureGeometryKHR& geometry, VkAccelerationStructureBuildRangeInfoKHR& rangeInfo)
     {
         VkDeviceAddress vertexAddress = mesh.mVertexBuffer->GetDeviceAddress();
         VkDeviceAddress indexAddress = mesh.mIndexBuffer->GetDeviceAddress();
@@ -433,13 +440,13 @@ namespace Dog
             auto unifiedMesh = rr->modelLibrary->GetUnifiedMesh();
             for (auto& mesh : model->mMeshes)
             {
-                const MeshInfo& meshInfo = unifiedMesh->GetMeshInfo(mesh.mMeshID);
+                const MeshInfo& meshInfo = unifiedMesh->GetMeshInfo(mesh->GetID());
 
                 VkAccelerationStructureInstanceKHR asInstance{};
                 asInstance.transform = toTransformMatrixKHR(tc.GetTransform() * model->GetNormalizationMatrix());  // Position of the instance
 
                 // TODO: Fix the custom instance to match the one in BLAS
-                asInstance.instanceCustomIndex = mesh.mMeshID;                       // gl_InstanceCustomIndexEXT
+                asInstance.instanceCustomIndex = mesh->GetID();                       // gl_InstanceCustomIndexEXT
                 // asInstance.accelerationStructureReference = m_blasAccel[instance.meshIndex].address;  // Will be set in Phase 3
                 asInstance.instanceShaderBindingTableRecordOffset = 0;  // We will use the same hit group for all objects
                 asInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_CULL_DISABLE_BIT_NV;  // No culling - double sided

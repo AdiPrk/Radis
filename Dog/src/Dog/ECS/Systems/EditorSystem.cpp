@@ -8,6 +8,7 @@
 #include "../Resources/WindowResource.h"
 #include "../Resources/EditorResource.h"
 #include "../Resources/SerializationResource.h"
+#include "../Resources/SwapRendererBackendResource.h"
 #include "../Systems/InputSystem.h"
 
 #include "Graphics/Vulkan/Core/Device.h"
@@ -15,10 +16,11 @@
 #include "Graphics/Vulkan/RenderGraph.h"
 #include "Graphics/Vulkan/Model/Animation/AnimationLibrary.h"
 #include "Graphics/Vulkan/Model/Animation/Animation.h"
-#include "Graphics/Vulkan/Model/ModelLibrary.h"
-#include "Graphics/Vulkan/Model/Model.h"
+#include "Graphics/Common/ModelLibrary.h"
+#include "Graphics/Common/Model.h"
 
 #include "Graphics/Vulkan/VulkanWindow.h"
+#include "Graphics/OpenGL/GLFrameBuffer.h"
 
 #include "imgui_internal.h"
 
@@ -28,13 +30,68 @@ namespace Dog
     {
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
         {
+            auto er = ecs->GetResource<EditorResource>();
             auto rr = ecs->GetResource<RenderingResource>();
-		    rr->RecreateAllSceneTextures();
+            er->CreateSceneTextures(rr);
         }
     }
 
     void EditorSystem::FrameStart()
     {
+        auto er = ecs->GetResource<EditorResource>();
+
+        // Start the Dear ImGui frame
+        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan) ImGui_ImplVulkan_NewFrame();
+        else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL) ImGui_ImplOpenGL3_NewFrame();
+
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        RenderMainMenuBar();
+
+        ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
+
+        RenderSceneWindow();
+        RenderEntitiesWindow();
+        RenderInspectorWindow();
+
+        ImGui::Begin("Debug");
+        //ImGui::Checkbox("Wireframe", &ecs->GetResource<RenderingResource>()->renderWireframe);
+        ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+        ImGui::End();
+
+        // Handle mouse lock for ImGui windows (excluding "Viewport")
+        {
+            ImGuiIO& io = ImGui::GetIO();
+
+            // If left mouse button just pressed
+            if (InputSystem::isMouseDown(Mouse::LEFT))
+            {
+                ImGuiWindow* hoveredWindow = ImGui::GetCurrentContext()->HoveredWindow;
+                if (hoveredWindow && strcmp(hoveredWindow->Name, "Viewport") != 0)
+                {
+                    mLockMouse = true;
+                }
+            }
+
+            // If left mouse released -> unlock
+            if (!InputSystem::isMouseDown(Mouse::LEFT))
+            {
+                mLockMouse = false;
+            }
+
+            InputSystem::SetMouseInputLocked(mLockMouse);
+        }
+
+        if (er->selectedEntity)
+        {
+            // if ctrl + d
+            if (ImGui::GetIO().KeyCtrl && InputSystem::isKeyTriggered(Key::D))
+            {
+                Entity newEntity = ecs->CloneEntity(er->selectedEntity);
+                er->selectedEntity = newEntity;
+            }
+        }
     }
 
     void EditorSystem::Update(float dt)
@@ -93,8 +150,7 @@ namespace Dog
             vkDestroyDescriptorSetLayout(device, er->samplerSetLayout, nullptr);
             vkDestroyDescriptorPool(device, er->descriptorPool, nullptr);
 
-            rr->CleanupSceneTexture();
-            rr->CleanupDepthBuffer();
+            er->CleanSceneTextures(rr);
         }
         else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
         {
@@ -106,61 +162,6 @@ namespace Dog
 
 	void EditorSystem::RenderImGui(VkCommandBuffer cmd)
 	{
-        auto er = ecs->GetResource<EditorResource>();
-
-        // Start the Dear ImGui frame
-        if      (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan) ImGui_ImplVulkan_NewFrame();
-        else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL) ImGui_ImplOpenGL3_NewFrame();
-
-        ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
-
-        RenderMainMenuBar();
-
-        ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
-		
-        RenderSceneWindow();
-		RenderEntitiesWindow(); 
-		RenderInspectorWindow();
-
-        ImGui::Begin("Debug");
-        //ImGui::Checkbox("Wireframe", &ecs->GetResource<RenderingResource>()->renderWireframe);
-        ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
-        ImGui::End();
-
-        // Handle mouse lock for ImGui windows (excluding "Viewport")
-        {
-            ImGuiIO& io = ImGui::GetIO();
-
-            // If left mouse button just pressed
-            if (InputSystem::isMouseDown(Mouse::LEFT))
-            {
-                ImGuiWindow* hoveredWindow = ImGui::GetCurrentContext()->HoveredWindow;
-                if (hoveredWindow && strcmp(hoveredWindow->Name, "Viewport") != 0)
-                {
-                    mLockMouse = true;
-                }
-            }
-
-            // If left mouse released -> unlock
-            if (!InputSystem::isMouseDown(Mouse::LEFT))
-            {
-                mLockMouse = false;
-            }
-
-            InputSystem::SetMouseInputLocked(mLockMouse);
-        }
-
-        if (er->selectedEntity)
-        {
-            // if ctrl + d
-            if (ImGui::GetIO().KeyCtrl && InputSystem::isKeyTriggered(Key::D))
-            {
-                Entity newEntity = ecs->CloneEntity(er->selectedEntity);
-                er->selectedEntity = newEntity;
-            }
-        }
-
 		// Rendering
 		ImGui::Render();
 
@@ -185,34 +186,58 @@ namespace Dog
 
                 ImGui::EndMenu();
             }
+            if (ImGui::BeginMenu("Graphics"))
+            {
+                // dropdown for the enum GraphicsAPI
+                auto currentAPI = Engine::GetGraphicsAPI();
+                auto sr = ecs->GetResource<SwapRendererBackendResource>();
+                if (ImGui::MenuItem("Vulkan", nullptr, currentAPI == GraphicsAPI::Vulkan))
+                {
+                    sr->RequestVulkan();
+                }
+                if (ImGui::MenuItem("OpenGL", nullptr, currentAPI == GraphicsAPI::OpenGL))
+                {
+                    sr->RequestOpenGL();
+                }
+                ImGui::EndMenu();
+            }
 
             ImGui::EndMainMenuBar();
         }
     }
 
     void EditorSystem::RenderSceneWindow()
-	{
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
-        {
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-            ImGui::Begin("Viewport");
-            ImGui::Text("Cannot render Scene Viewport in OpenGL yet.");
-            ImGui::End();
-            ImGui::PopStyleVar();
-            return;
-        }
-            
+	{            
 		// Create a window and display the scene texture
-		VkDescriptorSet sceneTextureDescriptorSet = ecs->GetResource<RenderingResource>()->sceneTextureDescriptorSet;
+        void* sceneTexturePtr;
+        auto rr = ecs->GetResource<RenderingResource>();
+        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+        {
+            sceneTexturePtr = reinterpret_cast<void*>(rr->sceneTextureDescriptorSet);
+        }
+        else
+        {
+            sceneTexturePtr = (void*)(uintptr_t)rr->sceneFrameBuffer->GetColorAttachmentID(0);
+        }
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		ImGui::Begin("Viewport");
+
+        float flipY = static_cast<float>(Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL);
+        ImVec2 uv0 = { 0.0f, flipY * 1.0f + (1.0f - flipY) * 0.0f };
+        ImVec2 uv1 = { 1.0f, flipY * 0.0f + (1.0f - flipY) * 1.0f };
+
 		ImVec2 viewportSize = ImGui::GetContentRegionAvail();
-		ImGui::Image(reinterpret_cast<void*>(sceneTextureDescriptorSet), viewportSize);
+		ImGui::Image(sceneTexturePtr, viewportSize, uv0, uv1);
 		ImGui::End();
         ImGui::PopStyleVar();
 
 		auto editorResource = ecs->GetResource<EditorResource>();
+        if (editorResource->sceneWindowWidth != viewportSize.x ||
+            editorResource->sceneWindowHeight != viewportSize.y)
+        {
+            PUBLISH_EVENT(Event::SceneResize, (int)viewportSize.x, (int)viewportSize.y);
+        }
 		editorResource->sceneWindowWidth = viewportSize.x;
 		editorResource->sceneWindowHeight = viewportSize.y;
 	}
@@ -221,7 +246,7 @@ namespace Dog
 	{
         auto er = ecs->GetResource<EditorResource>();
 
-		ImGui::Begin("Entities##window", nullptr, ImGuiWindowFlags_MenuBar);
+		ImGui::Begin("Entities##window");
 		entt::registry& registry = ecs->GetRegistry();
 		auto view = registry.view<TagComponent>();
 
@@ -477,6 +502,7 @@ namespace Dog
 
         static int selectedAnimationIndex = -1;
 
+        
         DrawComponentUI<AnimationComponent>("Animation", selectedEnt, [&](AnimationComponent& component)
         {
             Entity ent(&ecs->GetRegistry(), selectedEnt);
@@ -541,7 +567,7 @@ namespace Dog
             ImGui::Checkbox("Is Playing", &component.IsPlaying);
             ImGui::DragFloat("Animation Time", &component.AnimationTime, 0.05f, 0.0f, FLT_MAX);
         });
-
+        
         ImGui::EndChild(); // End of ComponentsRegion
 
         // --- Fixed Footer Region ---

@@ -1,0 +1,45 @@
+#pragma once
+
+#include "Graphics/RHI/ITexture.h"
+
+namespace Dog 
+{
+    class GLTexture : public ITexture
+    {
+    public:
+        GLTexture(const std::string& filePath);
+        GLTexture(const std::string& filePath, const unsigned char* textureData, uint32_t textureSize);
+        GLTexture(const UncompressedPixelData& data);
+        GLTexture(const GLTexture& other) = default;
+        ~GLTexture();
+
+        // generates texture from image data
+        void Generate(unsigned int width, unsigned int height, const unsigned char* data, unsigned int numSprites = 1);
+        void Bind() const;
+
+        bool load(const std::string& path);
+        bool loadFromData(const std::vector<char>& data);
+
+        // holds the ID of the texture object, used for all texture operations to reference to this particular texture
+        unsigned int ID;
+        // texture image dimensions
+        unsigned int NumSprites; // number of sprites in spritesheet
+        unsigned int SpriteWidth, SpriteHeight; // For spritesheets
+        unsigned int Rows, Columns; // For spritesheets
+        unsigned int Index; // Index for spritesheet
+        bool IsSpriteSheet; // is it a spritesheet?
+        // texture Format
+        unsigned int Internal_Format; // format of texture object
+        unsigned int Image_Format; // format of loaded image
+        // texture configuration
+        unsigned int Wrap_S; // wrapping mode on S axis
+        unsigned int Wrap_T; // wrapping mode on T axis
+        unsigned int Filter_Min; // filtering mode if texture pixels < screen pixels
+        unsigned int Filter_Max; // filtering mode if texture pixels > screen pixels
+        unsigned long long textureHandle; // texture handle for bindless textures
+
+        // keeps track of the currently bound texture ID
+        static unsigned int CurrentTextureID;
+    };
+
+}

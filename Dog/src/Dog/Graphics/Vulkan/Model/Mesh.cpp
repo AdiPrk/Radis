@@ -7,18 +7,12 @@
 
 namespace Dog
 {
-    int Mesh::uniqueMeshIndex = 0;
-
-    Mesh::Mesh(bool assignID)
-        : mMeshID(0)
+    VKMesh::VKMesh(bool assignID)
+        : IMesh(assignID)
     {
-        if (assignID)
-        {
-            mMeshID = uniqueMeshIndex++;
-        }
     }
 
-    void Mesh::CreateVertexBuffers(Device& device)
+    void VKMesh::CreateVertexBuffers(Device* device)
     {
         mVertexCount = static_cast<uint32_t>(mVertices.size());
         mTriangleCount = mVertexCount / 3;
@@ -27,7 +21,7 @@ namespace Dog
         uint32_t vertexSize = sizeof(mVertices[0]);
 
         Buffer stagingBuffer{
-            device,
+            *device,
             vertexSize,
             mVertexCount,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
@@ -38,7 +32,7 @@ namespace Dog
         stagingBuffer.WriteToBuffer((void*)mVertices.data());
 
         mVertexBuffer = std::make_unique<Buffer>(
-            device,
+            *device,
             vertexSize,
             mVertexCount,
             VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
@@ -47,7 +41,7 @@ namespace Dog
         stagingBuffer.CopyBuffer(stagingBuffer.GetBuffer(), mVertexBuffer->GetBuffer(), bufferSize);
     }
 
-    void Mesh::CreateIndexBuffers(Device& device)
+    void VKMesh::CreateIndexBuffers(Device* device)
     {
         mIndexCount = static_cast<uint32_t>(mIndices.size());
         mHasIndexBuffer = mIndexCount > 0;
@@ -60,7 +54,7 @@ namespace Dog
         uint32_t indexSize = sizeof(mIndices[0]);
 
         Buffer stagingBuffer{
-            device,
+            *device,
             indexSize,
             mIndexCount,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
@@ -71,7 +65,7 @@ namespace Dog
         stagingBuffer.WriteToBuffer((void*)mIndices.data());
 
         mIndexBuffer = std::make_unique<Buffer>(
-            device,
+            *device,
             indexSize,
             mIndexCount,
             VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
@@ -80,7 +74,13 @@ namespace Dog
         stagingBuffer.CopyBuffer(stagingBuffer.GetBuffer(), mIndexBuffer->GetBuffer(), bufferSize);
     }
 
-    void Mesh::Bind(VkCommandBuffer commandBuffer, VkBuffer instBuffer)
+    void VKMesh::Cleanup()
+    {
+        mVertexBuffer.reset();
+        mIndexBuffer.reset();
+    }
+
+    void VKMesh::Bind(VkCommandBuffer commandBuffer, VkBuffer instBuffer)
     {
         if (!mHasIndexBuffer)
         {
@@ -94,7 +94,7 @@ namespace Dog
         vkCmdBindIndexBuffer(commandBuffer, mIndexBuffer->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
     }
 
-    void Mesh::Draw(VkCommandBuffer commandBuffer, uint32_t baseIndex)
+    void VKMesh::Draw(VkCommandBuffer commandBuffer, uint32_t baseIndex)  
     {
         if (!mHasIndexBuffer)
         {
@@ -107,7 +107,6 @@ namespace Dog
 
     std::vector<VkVertexInputBindingDescription> Vertex::GetBindingDescriptions()
     {
-        //Create a 1 long vector of binding descriptions
         std::vector<VkVertexInputBindingDescription> bindingDescriptions(2);
 
         //Set bind description data
@@ -137,9 +136,9 @@ namespace Dog
         attributeDescriptions.push_back({ 5, 0, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(Vertex, weights) });
 
         // Per instance
-        attributeDescriptions.push_back({ 6,  1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, model)});                      
-        attributeDescriptions.push_back({ 7,  1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, model) + sizeof(float) * 4 }); 
-        attributeDescriptions.push_back({ 8,  1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, model) + sizeof(float) * 8 }); 
+        attributeDescriptions.push_back({ 6,  1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, model)});
+        attributeDescriptions.push_back({ 7,  1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, model) + sizeof(float) * 4 });
+        attributeDescriptions.push_back({ 8,  1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, model) + sizeof(float) * 8 });
         attributeDescriptions.push_back({ 9,  1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, model) + sizeof(float) * 12 });
         attributeDescriptions.push_back({ 10, 1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, tint) });
         attributeDescriptions.push_back({ 11, 1, VK_FORMAT_R32_UINT, offsetof(InstanceUniforms, textureIndex) });
