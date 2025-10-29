@@ -27,7 +27,7 @@ layout(location = 0) out vec4 outColor;
 #ifdef VULKAN
 	layout(set = 0, binding = 3) uniform sampler2D uTextures[];
 #else
-	layout(std140, binding = 3) readonly buffer TexHandles {
+	layout(std430, binding = 3) readonly buffer TexHandles {
 		uvec2 colorHandle[50];
 	} texHandles;
 #endif
@@ -49,13 +49,11 @@ void main()
 		}
 	}
 #else
-
 	vec4 color = vec4(fragNormal.rgb * fragTint.rgb, fragTint.a);
     uvec2 colorH = texHandles.colorHandle[textureIndex];
 	if (colorH != uvec2(0,0)) 
 	{
-		color = texture(sampler2D(colorH), fragTexCoord);
-	    color *= fragTint;
+		color = texture(sampler2D(colorH), fragTexCoord) * fragTint;
 	}
 	outColor = color;	
 #endif
