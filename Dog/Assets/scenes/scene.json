@@ -1,73 +1,10 @@
 {
   "Entities": [
     {
-      "CameraComponent": [
-        {
-          "FOV": 45.0,
-          "Far": 1000.0,
-          "Forward": [
-            -0.06998933106660843,
-            -0.07531916350126266,
-            -0.9947002530097961
-          ],
-          "InvertY": true,
-          "MouseSensitivity": 0.800000011920929,
-          "MouseSmoothness": 20.0,
-          "MoveSpeed": 15.0,
-          "Near": 0.10000000149011612,
-          "Pitch": -0.3800048828125,
-          "PositionSmoothness": 12.0,
-          "RotationSmoothness": 18.0,
-          "SmoothedMouseDX": 4.203895392974451e-45,
-          "SmoothedMouseDY": 4.203895392974451e-45,
-          "SmoothedPitch": -4.319561004638672,
-          "SmoothedPosition": [
-            0.1544162929058075,
-            0.3943195343017578,
-            1.7554197311401367
-          ],
-          "SmoothedYaw": -4.024825572967529,
-          "TargetPitch": -4.319561004638672,
-          "TargetYaw": -4.024825572967529,
-          "Up": [
-            -0.005286554340273142,
-            0.9971595406532288,
-            -0.07513341307640076
-          ],
-          "Yaw": 31.973487854003906,
-          "isInitialized": true
-        }
-      ],
-      "TagComponent": [
-        {
-          "Tag": "Camera"
-        }
-      ],
-      "TransformComponent": [
-        {
-          "Rotation": [
-            -4.319561004638672,
-            -4.024825572967529,
-            0.0
-          ],
-          "Scale": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "Translation": [
-            0.1544162929058075,
-            0.3943195343017578,
-            1.7554197311401367
-          ]
-        }
-      ]
-    },
-    {
       "AnimationComponent": [
         {
           "AnimationIndex": 1,
-          "AnimationTime": 58.91887664794922,
+          "AnimationTime": 9.90382194519043,
           "BoneOffset": 0,
           "IsPlaying": true,
           "inPlace": false
@@ -80,7 +17,7 @@
             1.0,
             1.0,
             1.0,
-            0.6078431606292725
+            0.5882353186607361
           ]
         }
       ],
@@ -105,6 +42,69 @@
             0.0,
             0.0,
             0.0
+          ]
+        }
+      ]
+    },
+    {
+      "CameraComponent": [
+        {
+          "FOV": 45.0,
+          "Far": 1000.0,
+          "Forward": [
+            0.15200529992580414,
+            -0.019165709614753723,
+            -0.988193929195404
+          ],
+          "InvertY": true,
+          "MouseSensitivity": 0.800000011920929,
+          "MouseSmoothness": 20.0,
+          "MoveSpeed": 15.0,
+          "Near": 0.10000000149011612,
+          "Pitch": -0.3800048828125,
+          "PositionSmoothness": 12.0,
+          "RotationSmoothness": 18.0,
+          "SmoothedMouseDX": 0.0,
+          "SmoothedMouseDY": 0.0,
+          "SmoothedPitch": -1.0981813669204712,
+          "SmoothedPosition": [
+            -0.1755264699459076,
+            0.33077090978622437,
+            1.141512155532837
+          ],
+          "SmoothedYaw": 8.744771957397461,
+          "TargetPitch": -1.0981813669204712,
+          "TargetYaw": 8.744771957397461,
+          "Up": [
+            0.002913824049755931,
+            0.9998162984848022,
+            -0.01894291304051876
+          ],
+          "Yaw": 31.973487854003906,
+          "isInitialized": true
+        }
+      ],
+      "TagComponent": [
+        {
+          "Tag": "Camera"
+        }
+      ],
+      "TransformComponent": [
+        {
+          "Rotation": [
+            -1.0981813669204712,
+            8.744771957397461,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "Translation": [
+            -0.1755264699459076,
+            0.33077090978622437,
+            1.141512155532837
           ]
         }
       ]

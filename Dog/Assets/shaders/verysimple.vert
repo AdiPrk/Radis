@@ -23,9 +23,11 @@ struct VQS {
 #ifdef VULKAN
     #define UBO_LAYOUT(s, b) layout(set = s, binding = b)
     #define SSBO_LAYOUT(s, b) layout(set = s, binding = b)
+    #define INSTANCE_ID gl_InstanceIndex
 #else
     #define UBO_LAYOUT(s, b) layout(std140, binding = b)
     #define SSBO_LAYOUT(s, b) layout(std430, binding = b)
+    #define INSTANCE_ID gl_InstanceID
 #endif
 
 // Uniforms!
@@ -36,7 +38,7 @@ UBO_LAYOUT(0, 0) uniform Uniforms
     mat4 view;
 } uniforms;
 
-SSBO_LAYOUT(0, 2) buffer BoneBuffer
+SSBO_LAYOUT(0, 2) readonly buffer BoneBuffer
 {
     VQS finalBoneVQS[10000];
 } animationData;
@@ -101,5 +103,5 @@ void main()
     fragNormal = normalize(totalNormal);
     fragTexCoord = texCoord;
     textureIndex = iTextureIndex;
-    instanceIndex = gl_InstanceIndex;
+    instanceIndex = INSTANCE_ID;
 }
