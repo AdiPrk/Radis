@@ -62,8 +62,8 @@ Global
 		{7B1AF591-6005-423C-9BF4-3613B4501798}.Debug|x64.Build.0 = Debug|x64
 		{7B1AF591-6005-423C-9BF4-3613B4501798}.Release|x64.ActiveCfg = Release|x64
 		{7B1AF591-6005-423C-9BF4-3613B4501798}.Release|x64.Build.0 = Release|x64
-		{7B1AF591-6005-423C-9BF4-3613B4501798}.Ship|x64.ActiveCfg = Debug|x64
-		{7B1AF591-6005-423C-9BF4-3613B4501798}.Ship|x64.Build.0 = Debug|x64
+		{7B1AF591-6005-423C-9BF4-3613B4501798}.Ship|x64.ActiveCfg = Ship|x64
+		{7B1AF591-6005-423C-9BF4-3613B4501798}.Ship|x64.Build.0 = Ship|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

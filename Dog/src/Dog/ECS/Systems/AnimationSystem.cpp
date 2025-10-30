@@ -129,7 +129,7 @@ namespace Dog
                     speedMultiplier = worldSpeed / moveSpeed;
                 }
 
-                ac.AnimationTime += anim->GetTicksPerSecond() * dt * speedMultiplier;
+                ac.AnimationTime += anim->GetTicksPerSecond() * dt * (float)speedMultiplier;
                 ac.AnimationTime = fmod(ac.AnimationTime, anim->GetDuration());
 
                 glm::mat4 characterTransform = pathFollower.GetTransformAtTime(t_norm, { 0, 1, 0 });
