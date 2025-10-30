@@ -109,7 +109,7 @@ namespace Dog
     void Animation::PrecomputeAnimationDataSimple()
     {
         for (auto& node : mNodes) {
-            node.transformation = (node.debugName.find("$AssimpFbx$") != std::string::npos);
+            node.skipTransform = (node.debugName.find("$AssimpFbx$") != std::string::npos);
         }
     }
 

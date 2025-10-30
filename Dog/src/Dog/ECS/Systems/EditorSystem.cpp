@@ -14,8 +14,8 @@
 #include "Graphics/Vulkan/Core/Device.h"
 #include "Graphics/Vulkan/Core/SwapChain.h"
 #include "Graphics/Vulkan/RenderGraph.h"
-#include "Graphics/Vulkan/Model/Animation/AnimationLibrary.h"
-#include "Graphics/Vulkan/Model/Animation/Animation.h"
+#include "Graphics/Common/Animation/AnimationLibrary.h"
+#include "Graphics/Common/Animation/Animation.h"
 #include "Graphics/Common/ModelLibrary.h"
 #include "Graphics/Common/Model.h"
 
@@ -56,7 +56,13 @@ namespace Dog
         RenderInspectorWindow();
 
         ImGui::Begin("Debug");
-        //ImGui::Checkbox("Wireframe", &ecs->GetResource<RenderingResource>()->renderWireframe);
+        ImGui::Checkbox("Wireframe", &ecs->GetResource<RenderingResource>()->renderWireframe);
+        
+        if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
+        {
+            glPolygonMode(GL_FRONT_AND_BACK, ecs->GetResource<RenderingResource>()->renderWireframe ? GL_LINE : GL_FILL);
+        }
+
         ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
         ImGui::End();
 

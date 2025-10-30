@@ -49,12 +49,20 @@ void main()
 		}
 	}
 #else
-	vec4 color = vec4(fragNormal.rgb * fragTint.rgb, fragTint.a);
+	vec4 color = vec4(fragColor * fragTint.rgb, fragTint.a);
     uvec2 colorH = texHandles.colorHandle[textureIndex];
 	if (colorH != uvec2(0,0)) 
 	{
 		color = texture(sampler2D(colorH), fragTexCoord) * fragTint;
 	}
-	outColor = color;	
+	// Apply gamma de-correction (sRGB to Linear approximation)
+	const float gamma = 2.2;
+	vec3 corrected = pow(color.rgb, vec3(gamma));
+	outColor = vec4(corrected, color.a);
+	//outColor = color;
+	if (outColor.a < 0.1)
+	{
+		discard;
+	}
 #endif
 }

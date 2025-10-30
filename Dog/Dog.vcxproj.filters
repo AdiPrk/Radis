@@ -24,10 +24,10 @@
     <ClCompile Include="src\Dog\Graphics\Vulkan\Core\Device.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Core\SwapChain.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Core\Synchronization.cpp" />
-    <ClCompile Include="src\Dog\Graphics\Vulkan\Model\Animation\Animation.cpp" />
-    <ClCompile Include="src\Dog\Graphics\Vulkan\Model\Animation\AnimationLibrary.cpp" />
-    <ClCompile Include="src\Dog\Graphics\Vulkan\Model\Animation\Animator.cpp" />
-    <ClCompile Include="src\Dog\Graphics\Vulkan\Model\Animation\Bone.cpp" />
+    <ClCompile Include="src\Dog\Graphics\Common\Animation\Animation.cpp" />
+    <ClCompile Include="src\Dog\Graphics\Common\Animation\AnimationLibrary.cpp" />
+    <ClCompile Include="src\Dog\Graphics\Common\Animation\Animator.cpp" />
+    <ClCompile Include="src\Dog\Graphics\Common\Animation\Bone.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Model\Mesh.cpp" />
     <ClCompile Include="src\Dog\Graphics\Common\ModelLibrary.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Pipeline\Pipeline.cpp" />
@@ -42,7 +42,7 @@
     <ClCompile Include="src\Dog\Graphics\Vulkan\Uniform\UniformSettings.cpp" />
     <ClCompile Include="src\Dog\Utils\FrameRate.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\VulkanWindow.cpp" />
-    <ClCompile Include="src\Dog\Graphics\Vulkan\Model\AssimpGlmHelper.cpp" />
+    <ClCompile Include="src\Dog\Graphics\Common\AssimpGlmHelper.cpp" />
     <ClCompile Include="src\Dog\Utils\Logger.cpp" />
     <ClCompile Include="src\Dog\Utils\SerializationOperators.cpp" />
     <ClCompile Include="src\Dog\Utils\Utils.cpp" />
@@ -66,6 +66,10 @@
     <ClCompile Include="src\Dog\ECS\Resources\SwapRendererBackendResource.cpp" />
     <ClCompile Include="src\Dog\Graphics\RHI\ITexture.cpp" />
     <ClCompile Include="src\Dog\Graphics\OpenGL\GLTexture.cpp" />
+    <ClCompile Include="src\Dog\Graphics\Common\Path\CubicSpline.cpp" />
+    <ClCompile Include="src\Dog\Graphics\Common\Path\ArcLengthTable.cpp" />
+    <ClCompile Include="src\Dog\Graphics\Common\Path\SpeedControl.cpp" />
+    <ClCompile Include="src\Dog\Graphics\Common\Path\PathFollower.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\nlohmann\json.hpp" />
@@ -109,11 +113,11 @@
     <ClInclude Include="src\Dog\Graphics\Vulkan\Core\Device.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Core\SwapChain.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Core\Synchronization.h" />
-    <ClInclude Include="src\Dog\Graphics\Vulkan\Model\Animation\Animation.h" />
-    <ClInclude Include="src\Dog\Graphics\Vulkan\Model\Animation\AnimationLibrary.h" />
-    <ClInclude Include="src\Dog\Graphics\Vulkan\Model\Animation\Animator.h" />
-    <ClInclude Include="src\Dog\Graphics\Vulkan\Model\Animation\Bone.h" />
-    <ClInclude Include="src\Dog\Graphics\Vulkan\Model\Animation\VQS.h" />
+    <ClInclude Include="src\Dog\Graphics\Common\Animation\Animation.h" />
+    <ClInclude Include="src\Dog\Graphics\Common\Animation\AnimationLibrary.h" />
+    <ClInclude Include="src\Dog\Graphics\Common\Animation\Animator.h" />
+    <ClInclude Include="src\Dog\Graphics\Common\Animation\Bone.h" />
+    <ClInclude Include="src\Dog\Graphics\Common\Animation\VQS.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Model\Mesh.h" />
     <ClInclude Include="src\Dog\Graphics\Common\ModelLibrary.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Pipeline\Pipeline.h" />
@@ -128,13 +132,13 @@
     <ClInclude Include="src\Dog\Graphics\Vulkan\Uniform\UniformSettings.h" />
     <ClInclude Include="src\Dog\Utils\FrameRate.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\VulkanWindow.h" />
-    <ClInclude Include="src\Dog\Graphics\Vulkan\Model\AssimpGlmHelper.h" />
+    <ClInclude Include="src\Dog\Graphics\Common\AssimpGlmHelper.h" />
     <ClInclude Include="src\Dog\Utils\InputMap.h" />
     <ClInclude Include="src\Dog\Utils\Logger.h" />
     <ClInclude Include="src\Dog\Utils\SerializationOperators.h" />
     <ClInclude Include="src\Dog\Utils\Utils.h" />
     <ClInclude Include="src\PCH\pch.h" />
-    <ClInclude Include="src\Dog\Graphics\Vulkan\Model\Animation\Skeleton.h" />
+    <ClInclude Include="src\Dog\Graphics\Common\Animation\Skeleton.h" />
     <ClInclude Include="src\Dog\ECS\Resources\DebugDrawResource.h" />
     <ClInclude Include="src\Dog\Graphics\Common\UnifiedMesh.h" />
     <ClInclude Include="src\Dog\ECS\Systems\RayRenderSystem.h" />
@@ -156,8 +160,15 @@
     <ClInclude Include="src\Dog\ECS\Resources\SwapRendererBackendResource.h" />
     <ClInclude Include="src\Dog\Graphics\RHI\ITexture.h" />
     <ClInclude Include="src\Dog\Graphics\OpenGL\GLTexture.h" />
+    <ClInclude Include="src\Dog\Graphics\Common\Path\CubicSpline.h" />
+    <ClInclude Include="src\Dog\Graphics\Common\Path\ArcLengthTable.h" />
+    <ClInclude Include="src\Dog\Graphics\Common\Path\SpeedControl.h" />
+    <ClInclude Include="src\Dog\Graphics\Common\Path\PathFollower.h" />
   </ItemGroup>
   <ItemGroup>
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
