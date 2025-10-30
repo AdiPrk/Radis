@@ -18,20 +18,6 @@ namespace Dog
 
     void SerializationResource::Serialize(const std::string& filepath)
     {
-        nlohmann::json urjson;
-
-        for (auto& [key, value] : urjson.items())
-        {
-            
-        }
-
-
-
-
-
-
-
-
         // Get all entities
         entt::registry& registry = ecs->GetRegistry();
         auto view = registry.view<entt::entity>();
@@ -69,7 +55,7 @@ namespace Dog
         std::ofstream file(filepath);
         if (file.is_open())
         {
-            file << entitiesJson.dump(2);
+            file << entitiesJson.dump();
             file.close();
             DOG_INFO("Scene serialized to {0}", filepath);
         }

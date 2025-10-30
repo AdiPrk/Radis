@@ -63,6 +63,7 @@
 #include <random>
 #include <filesystem>
 #include <ranges>
+#include <stack>
 
 #include "vk_mem_alloc.h"
 
@@ -80,8 +81,8 @@
 // My files
 #include "Utils/Logger.h"
 #include "Events/Event.h"
-#include "Graphics/Vulkan/Model/AssimpGlmHelper.h"
-#include "Graphics/Vulkan/Model/Animation/VQS.h"
+#include "Graphics/Common/AssimpGlmHelper.h"
+#include "Graphics/Common/Animation/VQS.h"
 #include "Graphics/GraphicsAPIs.h"
 
 // Shared files
