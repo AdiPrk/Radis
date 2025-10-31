@@ -15,7 +15,7 @@
 #include "Graphics/Common/Model.h"
 #include "Graphics/Vulkan/Uniform/Uniform.h"
 #include "Graphics/Vulkan/RenderGraph.h"
-#include "Graphics/Vulkan/Model/Animation/AnimationLibrary.h"
+#include "Graphics/Common/Animation/AnimationLibrary.h"
 #include "Graphics/Common/TextureLibrary.h"
 #include "Graphics/Vulkan/Texture/Texture.h"
 #include "Graphics/Vulkan/Uniform/Descriptors.h"

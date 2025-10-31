@@ -12,9 +12,9 @@ namespace Dog
     std::vector<DebugDrawResource::Cube> DebugDrawResource::cubes{};
     std::vector<DebugDrawResource::Circle> DebugDrawResource::circles{};
 
-    void DebugDrawResource::DrawLine(const glm::vec3& start, const glm::vec3& end, const glm::vec4& color)
+    void DebugDrawResource::DrawLine(const glm::vec3& start, const glm::vec3& end, const glm::vec4& color, float thickness)
     {
-        lines.emplace_back(start, end, color);
+        lines.emplace_back(start, end, color, thickness);
     }
 
     void DebugDrawResource::DrawRect(const glm::vec3& center, const glm::vec2& size, const glm::vec4& color)
@@ -55,7 +55,7 @@ namespace Dog
             const glm::vec3 delta = line.end - line.start;
             const float length = glm::length(delta);
 
-            const float thickness = 0.005f;
+            const float thickness = line.thickness;
             instance.model = glm::mat4(1.0f);
 
             if (length > 1e-6f)

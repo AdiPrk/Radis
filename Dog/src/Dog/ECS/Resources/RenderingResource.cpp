@@ -16,9 +16,9 @@
 #include "Graphics/Common/ModelLibrary.h"
 #include "Graphics/Common/TextureLibrary.h"
 #include "Graphics/Vulkan/Texture/Texture.h"
-#include "Graphics/Vulkan/Model/Animation/AnimationLibrary.h"
+#include "Graphics/Common/Animation/AnimationLibrary.h"
+#include "Graphics/Common/Animation/Animator.h"
 #include "Graphics/Common/Model.h"
-#include "Graphics/Vulkan/Model/Animation/Animator.h"
 #include "Graphics/Vulkan/Uniform/Descriptors.h"
 
 #include "Graphics/OpenGL/GLFrameBuffer.h"
@@ -96,7 +96,7 @@ namespace Dog
             modelLibrary = std::make_unique<ModelLibrary>(*device, *textureLibrary);
             
             //modelLibrary->AddModel("Assets/models/quad.obj");
-            //modelLibrary->AddModel("Assets/models/cube.obj");
+            modelLibrary->AddModel("Assets/models/cube.obj");
             //modelLibrary->AddModel("Assets/models/yena.fbx");
             //animationLibrary->AddAnimation("Assets/models/yena.fbx", modelLibrary->GetModel("yena"));
             //modelLibrary->AddModel("Assets/models/FuwawaAbyssgard.pmx");

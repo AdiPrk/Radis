@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../Vulkan/Model/Mesh.h"
-#include "../Vulkan/Model/Animation/Bone.h"
-#include "../Vulkan/Model/Animation/Skeleton.h"
+#include "../Common/Animation/Bone.h"
+#include "../Common/Animation/Skeleton.h"
 
 namespace Dog
 {
