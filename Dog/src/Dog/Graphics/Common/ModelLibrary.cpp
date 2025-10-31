@@ -145,6 +145,8 @@ namespace Dog
             {
                 if (mesh->diffuseTexturePath.empty())
                 {
+                    if ((mesh->mTextureData == nullptr || mesh->mTextureSize == 0) && mesh->diffuseTextureIndex == 10001) continue;
+
                     uint32_t ind = mTextureLibrary.AddTexture(mesh->mTextureData.get(), mesh->mTextureSize, "EmbeddedTexture_" + std::to_string(mesh->mMeshID));
                     mesh->diffuseTextureIndex = ind;
                     mesh->mTextureData.reset();

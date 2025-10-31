@@ -48,9 +48,9 @@ namespace Dog
         mEcs.AddSystem<InputSystem>();
 
         mEcs.AddSystem<SwapRendererBackendSystem>();
+        mEcs.AddSystem<AnimationSystem>();
         mEcs.AddSystem<PresentSystem>();
         mEcs.AddSystem<SimpleRenderSystem>();
-        mEcs.AddSystem<AnimationSystem>();
 
         mEcs.AddSystem<EditorSystem>();
         mEcs.AddSystem<CameraSystem>();

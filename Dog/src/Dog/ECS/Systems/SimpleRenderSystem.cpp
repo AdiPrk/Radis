@@ -17,7 +17,7 @@
 #include "Graphics/Common/Model.h"
 #include "Graphics/Vulkan/Uniform/Uniform.h"
 #include "Graphics/Vulkan/RenderGraph.h"
-#include "Graphics/Vulkan/Model/Animation/AnimationLibrary.h"
+#include "Graphics/Common/Animation/AnimationLibrary.h"
 #include "Graphics/Common/TextureLibrary.h"
 #include "Graphics/Vulkan/Texture/Texture.h"
 #include "Graphics/Vulkan/Uniform/Descriptors.h"
@@ -32,6 +32,11 @@
 #include "Graphics/OpenGL/GLFrameBuffer.h"
 #include "Graphics/OpenGL/GLTexture.h"
 
+#include "Graphics/Common/Path/PathFollower.h"
+#include "Graphics/Common/Path/ArcLengthTable.h"
+#include "Graphics/Common/Path/SpeedControl.h"
+#include "Graphics/Common/Path/CubicSpline.h"
+
 namespace Dog
 {
     SimpleRenderSystem::SimpleRenderSystem() : ISystem("SimpleRenderSystem") {}
@@ -39,6 +44,48 @@ namespace Dog
 
     void SimpleRenderSystem::Init()
     {
+    }
+
+    /*********************************************************************
+     * param:  gridSize: Number of lines in each direction from the center (total lines = gridSize * 2 + 1)
+     * param:  step: Distance between each grid line
+     *
+     * brief:  Draws a standard editor grid on the XZ plane (Y=0).
+     *********************************************************************/
+    void DrawEditorGrid(int gridSize = 50, float step = 1.0f)
+    {
+        // Define colors
+        glm::vec4 gridColor(0.4f, 0.4f, 0.4f, 0.75f);   // A medium grey
+        glm::vec4 xAxisColor(1.0f, 0.0f, 0.0f, 0.75f);  // Red
+        glm::vec4 zAxisColor(0.0f, 0.0f, 1.0f, 0.75f);  // Blue
+
+        float fGridSize = (float)gridSize * step;
+
+        // Draw lines parallel to the Z-axis (varying x)
+        for (int i = -gridSize; i <= gridSize; ++i)
+        {
+            float x = (float)i * step;
+            glm::vec3 start(x, 0.0f, -fGridSize);
+            glm::vec3 end(x, 0.0f, fGridSize);
+
+            // Use Z-axis color if x is 0, otherwise use regular grid color
+            glm::vec4 color = (i == 0) ? zAxisColor : gridColor;
+
+            DebugDrawResource::DrawLine(start, end, color);
+        }
+
+        // Draw lines parallel to the X-axis (varying z)
+        for (int i = -gridSize; i <= gridSize; ++i)
+        {
+            float z = (float)i * step;
+            glm::vec3 start(-fGridSize, 0.0f, z);
+            glm::vec3 end(fGridSize, 0.0f, z);
+
+            // Use X-axis color if z is 0, otherwise use regular grid color
+            glm::vec4 color = (i == 0) ? xAxisColor : gridColor;
+
+            DebugDrawResource::DrawLine(start, end, color);
+        }
     }
 
     void SimpleRenderSystem::FrameStart()
@@ -50,6 +97,8 @@ namespace Dog
         }
 
         DebugDrawResource::Clear();
+
+        DrawEditorGrid(50, 1.0f);
 
         if (InputSystem::isKeyTriggered(Key::Z))
         {
@@ -145,6 +194,15 @@ namespace Dog
         vkCmdSetScissor(cmd, 0, 1, &scissor);
 
         std::vector<InstanceUniforms> instanceData{};
+        const auto& debugData = DebugDrawResource::GetInstanceData();
+        if (instanceData.size() + debugData.size() >= InstanceUniforms::MAX_INSTANCES)
+        {
+            DOG_WARN("Too many instances for debug draw render!");
+        }
+        else
+        {
+            instanceData.insert(instanceData.end(), debugData.begin(), debugData.end());            
+        }
 
         AnimationLibrary* al = rr->animationLibrary.get();
         ModelLibrary* ml = rr->modelLibrary.get();
@@ -188,6 +246,14 @@ namespace Dog
 
         VkBuffer instBuffer = rr->cameraUniform->GetUniformBuffer(1, rr->currentFrameIndex)->GetBuffer();
         int baseIndex = 0;
+        for (auto& data : debugData)
+        {
+            Model* cubeModel = ml->GetModel("Assets/models/cube.obj");
+            auto& mesh = cubeModel->mMeshes[0];
+            mesh->Bind(cmd, instBuffer);
+            mesh->Draw(cmd, baseIndex++);
+        }
+
         for (auto& entityHandle : entityView)
         {
             Entity entity(&registry, entityHandle);
@@ -219,6 +285,15 @@ namespace Dog
 
         std::vector<InstanceUniforms> instanceData{};
         std::vector<uint64_t> textureData{};
+        const auto& debugData = DebugDrawResource::GetInstanceData();
+        if (instanceData.size() + debugData.size() >= InstanceUniforms::MAX_INSTANCES)
+        {
+            DOG_WARN("Too many instances for debug draw render!");
+        }
+        else
+        {
+            instanceData.insert(instanceData.end(), debugData.begin(), debugData.end());
+        }
 
         AnimationLibrary* al = rr->animationLibrary.get();
         ModelLibrary* ml = rr->modelLibrary.get();
@@ -292,7 +367,7 @@ namespace Dog
         glBufferData(GL_ARRAY_BUFFER, instanceCount * sizeof(InstanceUniforms), instanceData.data(), GL_DYNAMIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        for (int i = 0; i < rr->textureLibrary->GetTextureCount(); ++i)
+        for (uint32_t i = 0; i < rr->textureLibrary->GetTextureCount(); ++i)
         {
             auto itex = rr->textureLibrary->GetTextureByIndex(i);
             if (itex)
@@ -309,6 +384,14 @@ namespace Dog
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
         int baseIndex = 0;
+        for (auto& data : debugData)
+        {
+            Model* cubeModel = ml->GetModel("Assets/models/cube.obj");
+            auto& mesh = cubeModel->mMeshes[0];
+            mesh->Bind(nullptr, nullptr);
+            mesh->Draw(nullptr, baseIndex++);
+        }
+
         for (auto& entityHandle : entityView)
         {
             Entity entity(&registry, entityHandle);
