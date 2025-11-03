@@ -14,16 +14,6 @@ layout(location = 10) in vec4 iTint;
 layout(location = 11) in uint iTextureIndex;
 layout(location = 12) in uint iBoneOffset;
 
-/*
-struct Instance
-{
-	mat4 model;
-	vec4 tint;
-	uint textureIndex;
-	uint boneOffset;
-}
-*/
-
 struct VQS {
     vec4 rotation;    // Quat
     vec3 translation; // Vector

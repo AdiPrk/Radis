@@ -15,7 +15,6 @@ namespace Dog
     void VKMesh::CreateVertexBuffers(Device* device)
     {
         mVertexCount = static_cast<uint32_t>(mVertices.size());
-        mTriangleCount = mVertexCount / 3;
         //assert(vertexCount >= 3 && "Vertex count must be at least 3");
         VkDeviceSize bufferSize = sizeof(mVertices[0]) * mVertexCount;
         uint32_t vertexSize = sizeof(mVertices[0]);
@@ -35,6 +34,8 @@ namespace Dog
             *device,
             vertexSize,
             mVertexCount,
+            VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
+            VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
             VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
             VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
 
@@ -45,6 +46,8 @@ namespace Dog
     {
         mIndexCount = static_cast<uint32_t>(mIndices.size());
         mHasIndexBuffer = mIndexCount > 0;
+
+        mTriangleCount = mIndexCount / 3;
 
         if (!mHasIndexBuffer) {
             return;
@@ -68,6 +71,8 @@ namespace Dog
             *device,
             indexSize,
             mIndexCount,
+            VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
+            VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
             VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
             VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
 

@@ -15,9 +15,7 @@ namespace Dog
         //Get size needed for buffer when using alignment size
         mBufferSize = mAlignmentSize * instanceCount;
 
-        //Create the buffer based on passed data and calculated size
-        
-        // @TODO: COME BACK TO THIS FOR VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
+        //Create the buffer based on passed data and calculated size        
         mDevice.GetAllocator()->CreateBuffer(mBufferSize, usageFlags, memoryUsage, mBuffer, mBufferAllocation);
     }
 
