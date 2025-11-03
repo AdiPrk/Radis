@@ -44,6 +44,8 @@ namespace Dog
 			const VmaAllocationCreateInfo& vmaInfo,
 			std::span<const uint32_t>                   queueFamilies = {}) const;
 
+		void DestroyAcceleration(AccelerationStructure& accel) const;
+
 		/*********************************************************************
 	 * param:  imageInfo: Create info for image to create
 	 * param:  memoryUsage: Properties of the memory to be created for

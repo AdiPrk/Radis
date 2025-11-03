@@ -90,6 +90,8 @@ namespace Dog
         g_vkCmdBuildAccelerationStructuresKHR = (PFN_vkCmdBuildAccelerationStructuresKHR)vkGetDeviceProcAddr(device_, "vkCmdBuildAccelerationStructuresKHR");
         g_vkGetAccelerationStructureBuildSizesKHR = (PFN_vkGetAccelerationStructureBuildSizesKHR)vkGetDeviceProcAddr(device_, "vkGetAccelerationStructureBuildSizesKHR");
         g_vkGetAccelerationStructureDeviceAddressKHR = (PFN_vkGetAccelerationStructureDeviceAddressKHR)vkGetDeviceProcAddr(device_, "vkGetAccelerationStructureDeviceAddressKHR");
+        g_vkDestroyAccelerationStructureKHR = (PFN_vkDestroyAccelerationStructureKHR)vkGetDeviceProcAddr(device_, "vkDestroyAccelerationStructureKHR");
+        g_vkSetDebugUtilsObjectNameEXT = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(instance, "vkSetDebugUtilsObjectNameEXT");
     }
 
     Device::~Device() 
@@ -145,6 +147,10 @@ namespace Dog
         createInfo.pApplicationInfo = &appInfo;
 
         auto extensions = getRequiredExtensions();
+        if (enableValidationLayers) {
+            extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+        }
+
         createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
         createInfo.ppEnabledExtensionNames = extensions.data();
 
@@ -274,15 +280,19 @@ namespace Dog
         // 4) Prepare requested features, but first query supported features (core and 1.2/1.3)
         VkPhysicalDeviceFeatures2 supportedFeatures2{};
         supportedFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-
         VkPhysicalDeviceVulkan12Features supported12{};
         supported12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
         VkPhysicalDeviceVulkan13Features supported13{};
         supported13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
-
         VkPhysicalDeviceRobustness2FeaturesKHR robustness2Supported{};
         robustness2Supported.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_KHR;
+        VkPhysicalDeviceAccelerationStructureFeaturesKHR supportedAs{};
+        supportedAs.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
+        VkPhysicalDeviceRayTracingPipelineFeaturesKHR supportedRtPipeline{};
+        supportedRtPipeline.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
 
+        supportedAs.pNext = &supportedRtPipeline;
+        robustness2Supported.pNext = &supportedAs;
         supported13.pNext = &robustness2Supported;
         supported12.pNext = &supported13;
         supportedFeatures2.pNext = &supported12;
@@ -325,6 +335,17 @@ namespace Dog
         REQUEST_FEATURE(vulkan12Features, supported12, descriptorBindingVariableDescriptorCount);
         REQUEST_FEATURE(vulkan12Features, supported12, runtimeDescriptorArray);
         REQUEST_FEATURE(vulkan12Features, supported12, bufferDeviceAddress);
+        REQUEST_FEATURE(vulkan12Features, supported12, bufferDeviceAddressCaptureReplay);
+
+        VkPhysicalDeviceAccelerationStructureFeaturesKHR accelFeature{};
+        accelFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
+        REQUEST_FEATURE(accelFeature, supportedAs, accelerationStructure);
+
+        VkPhysicalDeviceRayTracingPipelineFeaturesKHR rtPipelineFeature{};
+        rtPipelineFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
+        REQUEST_FEATURE(rtPipelineFeature, supportedRtPipeline, rayTracingPipeline);
+        REQUEST_FEATURE(rtPipelineFeature, supportedRtPipeline, rayTracingPipelineTraceRaysIndirect);
+        REQUEST_FEATURE(rtPipelineFeature, supportedRtPipeline, rayTraversalPrimitiveCulling);
 
 #undef REQUEST_FEATURE
 
@@ -334,25 +355,11 @@ namespace Dog
             return false;
         }
 
-        // VkPhysicalDeviceAccelerationStructureFeaturesKHR accelFeature
-        // {
-        //     .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR,
-        //     .accelerationStructure = VK_TRUE
-        // };
-        // 
-        // VkPhysicalDeviceRayTracingPipelineFeaturesKHR rtPipelineFeature
-        // {
-        //     .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR,
-        //     .rayTracingPipeline = VK_TRUE,
-        //     .rayTracingPipelineTraceRaysIndirect = VK_TRUE, // Prob gonna be unused for a bit
-        //     .rayTraversalPrimitiveCulling = VK_TRUE         // Prob gonna be unused for a bit
-        // };
-
         VkDeviceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         
-        //accelFeature.pNext = &rtPipelineFeature;
-        //robustness2Features.pNext = &accelFeature;
+        accelFeature.pNext = &rtPipelineFeature;
+        robustness2Features.pNext = &accelFeature;
         vulkan13Features.pNext = &robustness2Features;
         vulkan12Features.pNext = &vulkan13Features;
         createInfo.pNext = &vulkan12Features;

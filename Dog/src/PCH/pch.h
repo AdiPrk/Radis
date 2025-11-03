@@ -65,7 +65,7 @@
 #include <ranges>
 #include <stack>
 
-#include "vk_mem_alloc.h"
+#include "vma/vk_mem_alloc.h"
 
 #define AI_SBBC_DEFAULT_MAX_BONES 500
 #include "assimp/Importer.hpp"
