@@ -243,7 +243,7 @@ namespace Dog
                 InstanceUniforms& data = instanceData.emplace_back();
                 if (boneOffset == AnimationLibrary::INVALID_ANIMATION_INDEX)
                 {
-                    data.model = tc.GetTransform() * model->GetNormalizationMatrix();
+                    data.model = tc.GetTransform()/* * model->GetNormalizationMatrix()*/;
                 }
                 else
                 {

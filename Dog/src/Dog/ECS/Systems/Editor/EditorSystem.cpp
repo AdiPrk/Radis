@@ -54,13 +54,14 @@ namespace Dog
 
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-
+        ImGuizmo::BeginFrame();
+        
         RenderMainMenuBar();
 
         ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
 
-        EditorWindows::RenderSceneWindow(rr, er);
-        EditorWindows::RenderEntitiesWindow(er, ecs);
+        EditorWindows::RenderSceneWindow(ecs);
+        EditorWindows::RenderEntitiesWindow(ecs);
         RenderInspectorWindow();
 
         auto& tl = ecs->GetResource<RenderingResource>()->textureLibrary;
@@ -110,7 +111,6 @@ namespace Dog
         }
 
         // If clicking anywhere outside "Entities" window, deselect entity
-        
     }
 
     void EditorSystem::Update(float dt)
