@@ -268,9 +268,9 @@ namespace Dog
         //rr->instanceUniform->SetUniformData(instanceData, 1, rr->currentFrameIndex);
         rr->cameraUniform->SetUniformData(instanceData, 1, rr->currentFrameIndex);
         
-        VkBuffer uMeshVertexBuffer = uMesh.mVertexBuffer->GetBuffer();
-        VkBuffer uMeshIndexBuffer = uMesh.mIndexBuffer->GetBuffer();
-        VkBuffer instBuffer = rr->cameraUniform->GetUniformBuffer(1, rr->currentFrameIndex)->GetBuffer();
+        VkBuffer uMeshVertexBuffer = uMesh.mVertexBuffer.buffer;
+        VkBuffer uMeshIndexBuffer = uMesh.mIndexBuffer.buffer;
+        VkBuffer instBuffer = rr->cameraUniform->GetUniformBuffer(1, rr->currentFrameIndex).buffer;
         VkBuffer buffers[] = { uMeshVertexBuffer, instBuffer };
         VkDeviceSize offsets[] = { 0, 0 };
         vkCmdBindVertexBuffers(cmd, 0, 2, buffers, offsets);
@@ -296,8 +296,8 @@ namespace Dog
 
     void RayRenderSystem::PrimitiveToGeometry(VKMesh& mesh, VkAccelerationStructureGeometryKHR& geometry, VkAccelerationStructureBuildRangeInfoKHR& rangeInfo)
     {
-        VkDeviceAddress vertexAddress = mesh.mVertexBuffer->GetDeviceAddress();
-        VkDeviceAddress indexAddress = mesh.mIndexBuffer->GetDeviceAddress();
+        VkDeviceAddress vertexAddress = mesh.mVertexBuffer.address;
+        VkDeviceAddress indexAddress = mesh.mIndexBuffer.address;
 
         // Describe buffer as array of VertexObj.
         VkAccelerationStructureGeometryTrianglesDataKHR triangles{
@@ -358,7 +358,7 @@ namespace Dog
         VkDeviceSize scratchSize = alignUp(asBuildSize.buildScratchSize, asProps.minAccelerationStructureScratchOffsetAlignment);
 
         // Create the scratch buffer to store the temporary data for the build
-        ABuffer scratchBuffer;
+        Buffer scratchBuffer;
         
         rr->allocator->CreateBuffer(scratchBuffer, scratchSize, VK_BUFFER_USAGE_2_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT
             | VK_BUFFER_USAGE_2_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR, VMA_MEMORY_USAGE_AUTO, asProps.minAccelerationStructureScratchOffsetAlignment);

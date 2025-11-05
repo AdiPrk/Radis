@@ -20,7 +20,6 @@
     <ClCompile Include="src\Dog\ECS\Systems\RenderSystem.cpp" />
     <ClCompile Include="src\Dog\Engine.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Core\Allocator.cpp" />
-    <ClCompile Include="src\Dog\Graphics\Vulkan\Core\Buffer.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Core\Device.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Core\SwapChain.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Core\Synchronization.cpp" />
@@ -75,6 +74,7 @@
     <ClCompile Include="src\Dog\ECS\Systems\Editor\Windows\SceneWindow.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\Editor\Windows\EntitiesWindow.cpp" />
     <ClCompile Include="src\Dog\Assets\CaseInsensitiveHash.cpp" />
+    <ClCompile Include="src\Dog\Graphics\Vulkan\Core\Buffer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\nlohmann\json.hpp" />
@@ -175,6 +175,9 @@
     <ClInclude Include="src\Dog\Assets\CaseInsensitiveHash.h" />
   </ItemGroup>
   <ItemGroup>
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />

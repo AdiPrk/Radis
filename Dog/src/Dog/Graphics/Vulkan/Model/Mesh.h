@@ -6,7 +6,6 @@ namespace Dog
 {
     // Forward reference
     class Device;
-    class Buffer;
 
     class VKMesh : public IMesh {
     public:
