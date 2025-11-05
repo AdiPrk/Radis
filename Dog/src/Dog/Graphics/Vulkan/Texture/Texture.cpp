@@ -78,7 +78,7 @@ namespace Dog
 		mMipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(mWidth, mHeight)))) + 1;
 
 		// Create a staging buffer to load texture data
-		ABuffer stagingBuffer{};
+		Buffer stagingBuffer{};
 		mDevice.GetAllocator()->CreateBuffer(
 			stagingBuffer,
 			mImageSize,

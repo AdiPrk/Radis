@@ -1,11 +1,11 @@
 #pragma once
 
 #include "Graphics/RHI/RHI.h"
+#include "Graphics/Vulkan/Core/AccelerationStructures.h"
 
 namespace Dog
 {
     class Device;
-    class Buffer;
 
     struct Vertex
     {
@@ -47,8 +47,8 @@ namespace Dog
         uint32_t mVertexCount = 0;
         uint32_t mIndexCount = 0;
 
-        std::unique_ptr<Buffer> mVertexBuffer;
-        std::unique_ptr<Buffer> mIndexBuffer;
+        Buffer mVertexBuffer;
+        Buffer mIndexBuffer;
         GLuint mVAO, mVBO, mEBO;
 
         // Mesh data

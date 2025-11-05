@@ -276,7 +276,7 @@ namespace Dog
 
         rr->cameraUniform->SetUniformData(instanceData, 1, rr->currentFrameIndex);
 
-        VkBuffer instBuffer = rr->cameraUniform->GetUniformBuffer(1, rr->currentFrameIndex)->GetBuffer();
+        VkBuffer instBuffer = rr->cameraUniform->GetUniformBuffer(1, rr->currentFrameIndex).buffer;
         int baseIndex = 0;
         for (auto& data : debugData)
         {
@@ -452,8 +452,8 @@ namespace Dog
 
     void SimpleRenderSystem::PrimitiveToGeometry(VKMesh& mesh, VkAccelerationStructureGeometryKHR& geometry, VkAccelerationStructureBuildRangeInfoKHR& rangeInfo)
     {
-        VkDeviceAddress vertexAddress = mesh.mVertexBuffer->GetDeviceAddress();
-        VkDeviceAddress indexAddress = mesh.mIndexBuffer->GetDeviceAddress();
+        VkDeviceAddress vertexAddress = mesh.mVertexBuffer.address;
+        VkDeviceAddress indexAddress = mesh.mIndexBuffer.address;
 
         // Describe buffer as array of VertexObj.
         VkAccelerationStructureGeometryTrianglesDataKHR triangles{
@@ -514,7 +514,7 @@ namespace Dog
         VkDeviceSize scratchSize = alignUp(asBuildSize.buildScratchSize, asProps.minAccelerationStructureScratchOffsetAlignment);
 
         // Create the scratch buffer to store the temporary data for the build
-        ABuffer scratchBuffer;
+        Buffer scratchBuffer;
 
         rr->allocator->CreateBuffer(
             scratchBuffer,
@@ -633,8 +633,8 @@ namespace Dog
 
         // Then create the buffer with the instance data
         // --- Stage & Copy TLAS instance data ---
-        ABuffer stagingBuffer;
-        ABuffer tlasInstancesBuffer;
+        Buffer stagingBuffer;
+        Buffer tlasInstancesBuffer;
 
         {
             VkDeviceSize bufferSize = std::span<VkAccelerationStructureInstanceKHR const>(tlasInstances).size_bytes();

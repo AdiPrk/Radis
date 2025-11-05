@@ -10,6 +10,7 @@
 #pragma once
 #include "Uniform.h"
 #include "../Core/Buffer.h"
+#include "../Core/AccelerationStructures.h"
 
 namespace Dog 
 {
@@ -17,36 +18,29 @@ namespace Dog
     void Uniform::SetUniformData(const T& data, int bindingIndex, int frameIndex)
     {
         auto& buffer = mBuffersPerBinding[bindingIndex][frameIndex];
-        VkDeviceSize dataSize = sizeof(T);
+        memcpy(buffer.mapping, &data, sizeof(T));
 
-        buffer->WriteToBuffer(&data, dataSize);
     }
 
     template<typename T>
     void Uniform::SetUniformData(const std::vector<T>& data, int bindingIndex, int frameIndex)
     {
         auto& buffer = mBuffersPerBinding[bindingIndex][frameIndex];
-        VkDeviceSize dataSize = data.size() * sizeof(T);
-
-        buffer->WriteToBuffer(data.data(), dataSize);
+        memcpy(buffer.mapping, data.data(), data.size() * sizeof(T));
     }
 
     template<typename T>
     void Uniform::SetUniformData(const std::vector<T>& data, int bindingIndex, int frameIndex, int count)
     {
         auto& buffer = mBuffersPerBinding[bindingIndex][frameIndex];
-        VkDeviceSize dataSize = count * sizeof(T);
-
-        buffer->WriteToBuffer(data.data(), dataSize);
+        memcpy(buffer.mapping, data.data(), count * sizeof(T));
     }
 
     template<typename T, std::size_t N>
     void Uniform::SetUniformData(const std::array<T, N>& data, int bindingIndex, int frameIndex)
     {
         auto& buffer = mBuffersPerBinding[bindingIndex][frameIndex];
-        VkDeviceSize dataSize = N * sizeof(T);
-
-        buffer->WriteToBuffer(data.data(), dataSize);
+        memcpy(buffer.mapping, data.data(), N * sizeof(T));
     }
 
-} // namespace Rendering
+} // namespace Dog

@@ -9,6 +9,8 @@
  *********************************************************************/
 #pragma once
 
+#include "../Core/Buffer.h"
+
 namespace Dog
 {
     //Forward declarations
@@ -17,7 +19,6 @@ namespace Dog
     struct RenderingResource;
     class DescriptorPool;
     class DescriptorSetLayout;
-    class Buffer;
 
     class Uniform {
     public:
@@ -66,15 +67,16 @@ namespace Dog
         // Getters
         std::unique_ptr<DescriptorSetLayout>& GetDescriptorLayout() { return mUniformDescriptorLayout; }
         std::vector<VkDescriptorSet>& GetDescriptorSets() { return mUniformDescriptorSets; }
-        std::unique_ptr<Buffer>& GetUniformBuffer(int binding, int frameIndex) { return mBuffersPerBinding[binding][frameIndex]; }
+        Buffer& GetUniformBuffer(int binding, int frameIndex) { return mBuffersPerBinding[binding][frameIndex]; }
         std::unique_ptr<DescriptorPool>& GetDescriptorPool() { return mUniformPool; }
 
     private:
-        std::unordered_map<int, std::vector<std::unique_ptr<Buffer>>> mBuffersPerBinding;
+        std::unordered_map<int, std::vector<Buffer>> mBuffersPerBinding;
         std::vector<VkDescriptorSet> mUniformDescriptorSets;
         std::unique_ptr<DescriptorPool> mUniformPool;
         std::unique_ptr<DescriptorSetLayout> mUniformDescriptorLayout;
         unsigned int mPipelineBindingIndex = std::numeric_limits<unsigned int>::max();
+        Device& mDevice;
     };
 
 } // namespace Dog

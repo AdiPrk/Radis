@@ -41,19 +41,35 @@ namespace Dog
         }
 
         // Build descriptor sets for each frame with both buffer and texture data
-        for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex) {
+        for(int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex)
+        {
             DescriptorWriter writer(*uniform.GetDescriptorLayout(), *uniform.GetDescriptorPool());
 
-            // Bind the uniform buffer at binding 0
-            VkDescriptorBufferInfo bufferInfo = uniform.GetUniformBuffer(0, frameIndex)->DescriptorInfo();
-            VkDescriptorBufferInfo bufferInfo1 = uniform.GetUniformBuffer(1, frameIndex)->DescriptorInfo();
-            VkDescriptorBufferInfo bufferInfo2 = uniform.GetUniformBuffer(2, frameIndex)->DescriptorInfo();
-            writer.WriteBuffer(0, &bufferInfo);
+            // Bind uniform buffers (0-2) directly
+            const Buffer& ubuf0 = uniform.GetUniformBuffer(0, frameIndex);
+            const Buffer& ubuf1 = uniform.GetUniformBuffer(1, frameIndex);
+            const Buffer& ubuf2 = uniform.GetUniformBuffer(2, frameIndex);
+
+            VkDescriptorBufferInfo bufferInfo0{
+                .buffer = ubuf0.buffer,
+                .range = ubuf0.bufferSize
+            };
+            VkDescriptorBufferInfo bufferInfo1{
+                .buffer = ubuf1.buffer,
+                .range = ubuf1.bufferSize
+            };
+            VkDescriptorBufferInfo bufferInfo2{
+                .buffer = ubuf2.buffer,
+                .range = ubuf2.bufferSize
+            };
+
+            writer.WriteBuffer(0, &bufferInfo0);
             writer.WriteBuffer(1, &bufferInfo1);
             writer.WriteBuffer(2, &bufferInfo2);
+
+            // Texture descriptors unchanged
             writer.WriteImage(3, imageInfos.data(), static_cast<uint32_t>(imageInfos.size()));
 
-            // Build descriptor set for the frame
             writer.Build(uniform.GetDescriptorSets()[frameIndex]);
         }
     }

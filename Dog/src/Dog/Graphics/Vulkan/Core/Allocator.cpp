@@ -72,7 +72,7 @@ namespace Dog {
         // }
     }
 
-    VkResult Allocator::CreateBuffer(ABuffer& buffer, VkDeviceSize size, VkBufferUsageFlags2KHR usage, VmaMemoryUsage memoryUsage, VmaAllocationCreateFlags flags, VkDeviceSize minAlignment)
+    VkResult Allocator::CreateBuffer(Buffer& buffer, VkDeviceSize size, VkBufferUsageFlags2KHR usage, VmaMemoryUsage memoryUsage, VmaAllocationCreateFlags flags, VkDeviceSize minAlignment)
     {
         const VkBufferUsageFlags2CreateInfo bufferUsageFlags2CreateInfo{
             .sType = VK_STRUCTURE_TYPE_BUFFER_USAGE_FLAGS_2_CREATE_INFO,
@@ -92,7 +92,7 @@ namespace Dog {
         return CreateBuffer(buffer, bufferInfo, allocInfo, minAlignment);
     }
 
-    VkResult Allocator::CreateBuffer(ABuffer& buffer, const VkBufferCreateInfo& bufferInfo, const VmaAllocationCreateInfo& allocInfo, VkDeviceSize minAlignment) const
+    VkResult Allocator::CreateBuffer(Buffer& buffer, const VkBufferCreateInfo& bufferInfo, const VmaAllocationCreateInfo& allocInfo, VkDeviceSize minAlignment) const
     {
         buffer = {};
 
@@ -138,7 +138,7 @@ namespace Dog {
         bufferAllocation = VK_NULL_HANDLE;
     }
 
-    void Allocator::DestroyBuffer(ABuffer& buffer) const
+    void Allocator::DestroyBuffer(Buffer& buffer) const
     {
         vmaDestroyBuffer(mAllocator, buffer.buffer, buffer.allocation);
         buffer = {};

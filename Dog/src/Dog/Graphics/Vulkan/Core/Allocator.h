@@ -14,7 +14,7 @@ namespace Dog
 		VmaAllocator GetAllocator() { return mAllocator; }
 
         // Creates buffer of given size
-        //[[deprecated("Use CreateBuffer with ABuffer instead")]]
+        //[[deprecated("Use CreateBuffer with Buffer instead")]]
 		void CreateBuffer(
 			VkDeviceSize size,
 			VkBufferUsageFlags usage,
@@ -23,21 +23,20 @@ namespace Dog
 			VmaAllocation& bufferAllocation,
 			VkDeviceSize minAlignment = 0);
 
-		VkResult CreateBuffer(
-			ABuffer& buffer,
-			VkDeviceSize size,
-			VkBufferUsageFlags2KHR usage,
-			VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_AUTO,
-			VmaAllocationCreateFlags flags = {},
-			VkDeviceSize minAlignment = 0);
+		VkResult CreateBuffer(Buffer& buffer,
+							  VkDeviceSize size,
+							  VkBufferUsageFlags2KHR usage,
+							  VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_AUTO,
+							  VmaAllocationCreateFlags flags = {},
+							  VkDeviceSize minAlignment = 0);
 
-		VkResult CreateBuffer(ABuffer& buffer,
+		VkResult CreateBuffer(Buffer& buffer,
 			                  const VkBufferCreateInfo& bufferInfo,
 			                  const VmaAllocationCreateInfo& allocInfo,
 			                  VkDeviceSize                   minAlignment = 0) const;
 
 		void DestroyBuffer(VkBuffer buffer, VmaAllocation bufferAllocation);
-		void DestroyBuffer(ABuffer& buffer) const;
+		void DestroyBuffer(Buffer& buffer) const;
 
 		VkResult CreateAcceleration(AccelerationStructure& accel, const VkAccelerationStructureCreateInfoKHR& accInfo) const;
 		VkResult CreateAcceleration(AccelerationStructure& accel,

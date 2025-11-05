@@ -12,77 +12,90 @@ namespace Dog
     {
     }
 
+    Buffer mVertexBuffer;
+    Buffer mIndexBuffer;
+
     void VKMesh::CreateVertexBuffers(Device* device)
     {
         mVertexCount = static_cast<uint32_t>(mVertices.size());
-        //assert(vertexCount >= 3 && "Vertex count must be at least 3");
-        VkDeviceSize bufferSize = sizeof(mVertices[0]) * mVertexCount;
-        uint32_t vertexSize = sizeof(mVertices[0]);
+        if (mVertexCount == 0) return;
 
-        Buffer stagingBuffer{
-            *device,
-            vertexSize,
-            mVertexCount,
-            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-            VMA_MEMORY_USAGE_CPU_ONLY,
-        };
+        const VkDeviceSize bufferSize = sizeof(mVertices[0]) * mVertexCount;
 
-        stagingBuffer.Map();
-        stagingBuffer.WriteToBuffer((void*)mVertices.data());
+        // -- Create staging buffer (CPU-visible) --
+        Buffer staging{};
+        device->GetAllocator()->CreateBuffer(
+            staging,
+            bufferSize,
+            VK_BUFFER_USAGE_2_TRANSFER_SRC_BIT_KHR,
+            VMA_MEMORY_USAGE_AUTO,
+            VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT
+        );
 
-        mVertexBuffer = std::make_unique<Buffer>(
-            *device,
-            vertexSize,
-            mVertexCount,
-            VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
-            VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
-            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-            VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
+        // Copy vertex data to staging buffer
+        memcpy(staging.mapping, mVertices.data(), static_cast<size_t>(bufferSize));
 
-        stagingBuffer.CopyBuffer(stagingBuffer.GetBuffer(), mVertexBuffer->GetBuffer(), bufferSize);
+        // -- Create device-local vertex buffer --
+        device->GetAllocator()->CreateBuffer(
+            mVertexBuffer,
+            bufferSize,
+            VK_BUFFER_USAGE_2_VERTEX_BUFFER_BIT_KHR |
+            VK_BUFFER_USAGE_2_TRANSFER_DST_BIT_KHR |
+            VK_BUFFER_USAGE_2_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
+            VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT_KHR,
+            VMA_MEMORY_USAGE_GPU_ONLY
+        );
+
+        // Copy from staging to GPU buffer
+        device->CopyBuffer(staging.buffer, mVertexBuffer.buffer, bufferSize);
+
+        // Optional: destroy staging buffer immediately
+        device->GetAllocator()->DestroyBuffer(staging);
     }
 
     void VKMesh::CreateIndexBuffers(Device* device)
     {
         mIndexCount = static_cast<uint32_t>(mIndices.size());
         mHasIndexBuffer = mIndexCount > 0;
-
         mTriangleCount = mIndexCount / 3;
 
-        if (!mHasIndexBuffer) {
-            return;
-        }
+        if (!mHasIndexBuffer) return;
 
-        VkDeviceSize bufferSize = sizeof(mIndices[0]) * mIndexCount;
-        uint32_t indexSize = sizeof(mIndices[0]);
+        const VkDeviceSize bufferSize = sizeof(mIndices[0]) * mIndexCount;
 
-        Buffer stagingBuffer{
-            *device,
-            indexSize,
-            mIndexCount,
-            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-            VMA_MEMORY_USAGE_CPU_ONLY,
-        };
+        // -- Create staging buffer (CPU-visible) --
+        Buffer staging{};
+        device->GetAllocator()->CreateBuffer(
+            staging,
+            bufferSize,
+            VK_BUFFER_USAGE_2_TRANSFER_SRC_BIT_KHR,
+            VMA_MEMORY_USAGE_AUTO,
+            VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT
+        );
 
-        stagingBuffer.Map();
-        stagingBuffer.WriteToBuffer((void*)mIndices.data());
+        memcpy(staging.mapping, mIndices.data(), static_cast<size_t>(bufferSize));
 
-        mIndexBuffer = std::make_unique<Buffer>(
-            *device,
-            indexSize,
-            mIndexCount,
-            VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
-            VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
-            VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-            VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
+        // -- Create device-local index buffer --
+        device->GetAllocator()->CreateBuffer(
+            mIndexBuffer,
+            bufferSize,
+            VK_BUFFER_USAGE_2_INDEX_BUFFER_BIT_KHR |
+            VK_BUFFER_USAGE_2_TRANSFER_DST_BIT_KHR |
+            VK_BUFFER_USAGE_2_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR |
+            VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT_KHR,
+            VMA_MEMORY_USAGE_GPU_ONLY
+        );
 
-        stagingBuffer.CopyBuffer(stagingBuffer.GetBuffer(), mIndexBuffer->GetBuffer(), bufferSize);
+        // Copy staging ¨ GPU
+        device->CopyBuffer(staging.buffer, mIndexBuffer.buffer, bufferSize);
+
+        device->GetAllocator()->DestroyBuffer(staging);
     }
 
     void VKMesh::Cleanup()
     {
-        mVertexBuffer.reset();
-        mIndexBuffer.reset();
+        // cleanup
+
     }
 
     void VKMesh::Bind(VkCommandBuffer commandBuffer, VkBuffer instBuffer)
@@ -93,10 +106,10 @@ namespace Dog
             return;
         }
 
-        VkBuffer buffers[] = { mVertexBuffer->GetBuffer(), instBuffer };
+        VkBuffer buffers[] = { mVertexBuffer.buffer, instBuffer };
         VkDeviceSize offsets[] = { 0, 0 };
         vkCmdBindVertexBuffers(commandBuffer, 0, 2, buffers, offsets);
-        vkCmdBindIndexBuffer(commandBuffer, mIndexBuffer->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
+        vkCmdBindIndexBuffer(commandBuffer, mIndexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
     }
 
     void VKMesh::Draw(VkCommandBuffer commandBuffer, uint32_t baseIndex)  
