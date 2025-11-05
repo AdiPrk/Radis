@@ -1,9 +1,9 @@
 #include <PCH/pch.h>
-#include "Mesh.h"
+#include "VKMesh.h"
 
-#include "../Core/Device.h"
-#include "../Core/Buffer.h"
-#include "../Uniform/ShaderTypes.h"
+#include "Core/Device.h"
+#include "Core/Buffer.h"
+#include "Uniform/ShaderTypes.h"
 
 namespace Dog
 {

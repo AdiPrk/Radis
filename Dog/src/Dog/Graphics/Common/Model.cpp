@@ -1,7 +1,7 @@
 #include <PCH/pch.h>
 #include "Model.h"
 #include "../Vulkan/Core/Buffer.h"
-#include "../Vulkan/Model/Mesh.h"
+#include "../Vulkan/VKMesh.h"
 #include "../OpenGL/GLMesh.h"
 
 #include "Graphics/RHI/RHI.h"

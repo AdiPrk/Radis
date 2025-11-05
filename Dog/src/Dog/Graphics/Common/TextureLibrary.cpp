@@ -2,7 +2,7 @@
 #include "TextureLibrary.h"
 
 #include "../RHI/ITexture.h"
-#include "../Vulkan/Texture/Texture.h"
+#include "../Vulkan/Texture/VKTexture.h"
 #include "../Vulkan/Core/Device.h"
 #include "../OpenGL/GLTexture.h"
 

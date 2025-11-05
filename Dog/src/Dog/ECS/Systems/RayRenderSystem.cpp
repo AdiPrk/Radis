@@ -17,7 +17,7 @@
 #include "Graphics/Vulkan/RenderGraph.h"
 #include "Graphics/Common/Animation/AnimationLibrary.h"
 #include "Graphics/Common/TextureLibrary.h"
-#include "Graphics/Vulkan/Texture/Texture.h"
+#include "Graphics/Vulkan/Texture/VKTexture.h"
 #include "Graphics/Vulkan/Uniform/Descriptors.h"
 #include "Graphics/Common/UnifiedMesh.h"
 

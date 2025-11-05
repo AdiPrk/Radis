@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Vulkan/Model/Mesh.h"
+#include "../Vulkan/VKMesh.h"
 #include "../Common/Animation/Bone.h"
 #include "../Common/Animation/Skeleton.h"
 

@@ -15,7 +15,7 @@
 
 #include "Graphics/Common/ModelLibrary.h"
 #include "Graphics/Common/TextureLibrary.h"
-#include "Graphics/Vulkan/Texture/Texture.h"
+#include "Graphics/Vulkan/Texture/VKTexture.h"
 #include "Graphics/Common/Animation/AnimationLibrary.h"
 #include "Graphics/Common/Animation/Animator.h"
 #include "Graphics/Common/Model.h"

@@ -85,7 +85,7 @@ namespace Dog
 		VkShaderModule mFragShaderModule;            
 		VkShaderModule mTessCtrlShaderModule = NULL; 
 		VkShaderModule mTessEvalShaderModule = NULL; 
-		VkPipelineLayout mPipelineLayout;            
+		VkPipelineLayout mPipelineLayout;  
 		bool isWireframe;
 
 		// Shader paths

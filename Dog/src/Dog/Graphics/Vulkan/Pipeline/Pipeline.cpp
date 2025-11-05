@@ -3,7 +3,7 @@
 #include "Shader.h"
 
 #include "../Core/Device.h"
-#include "../Model/Mesh.h"
+#include "../VKMesh.h"
 
 #include "../Uniform/Uniform.h"
 #include "../Uniform/Descriptors.h"
