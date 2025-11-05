@@ -178,8 +178,7 @@ namespace Dog
 	{
 		ImGuiIO& io = ImGui::GetIO();
 		ImFontConfig config;
-		float fontSize = std::roundf(25.f * dpiScale);
-		//config.GlyphOffset.y = std::roundf(-fontSize * 0.075f);
+		float fontSize = std::roundf(24.f * dpiScale);
 		io.Fonts->AddFontFromFileTTF(std::string(Assets::FontsPath + "Inter_24pt-Regular.ttf").c_str(), fontSize, &config);
 	}
 }

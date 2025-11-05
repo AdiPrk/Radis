@@ -22,7 +22,94 @@ namespace Dog
 			std::filesystem::path currentDir;
 		};
 		
-        FileBrowser browser;
+		// Helper struct to load and hold all icons
+		struct AssetIcons {
+			void* folder = nullptr;
+			void* shader = nullptr;
+			void* scene = nullptr;
+			void* model = nullptr;
+			void* defaultFile = nullptr;
+
+			AssetIcons(TextureLibrary* tl) {
+				if (!tl) return;
+
+				auto GetTexID = [&](const std::string& name) -> void* {
+					if (auto itex = tl->GetTexture(Assets::ImagesPath + name)) {
+						return itex->GetTextureID();
+					}
+					return nullptr;
+				};
+
+				folder = GetTexID("folderIcon.png");
+				shader = GetTexID("glslIcon.png");
+				scene = GetTexID("dog.png");
+				model = GetTexID("dogmodel.png");
+				defaultFile = folder; // Use folder as a fallback default
+			}
+		};
+
+		// Renders text centered and wrapped under an item.
+		void DrawItemText(const std::string& text, float itemWidth)
+		{
+			// 1. Get the natural, unwrapped size of the text
+			ImVec2 textSize = ImGui::CalcTextSize(text.c_str());
+
+			// 2. Get the current X position (at the start of the item)
+			float startX = ImGui::GetCursorPosX();
+
+			// 3. Conditionally center the text if it's narrower than the item
+			if (textSize.x < itemWidth)
+			{
+				float offsetX = (itemWidth - textSize.x) * 0.5f;
+				ImGui::SetCursorPosX(startX + offsetX);
+			}
+
+			// 4. Render the text, forcing it to wrap at the width of the item
+			ImGui::PushTextWrapPos(startX + itemWidth);
+			ImGui::TextUnformatted(text.c_str());
+			ImGui::PopTextWrapPos();
+		}
+
+		// Draws a single thumbnail for a file or directory.
+		// Returns true if the item was clicked.
+		bool DrawAssetThumbnail(
+			const char* id,
+			void* iconID,
+			float size,
+			const ImVec2& uv0,
+			const ImVec2& uv1,
+			const std::string& displayText,
+			const char* payloadType = nullptr, // Optional: for drag/drop
+			const std::string& payloadData = "" // Optional: payload
+		) {
+			ImGui::PushID(id);
+
+			// Draw the button
+			bool clicked = ImGui::ImageButton("##thumbnail", iconID, { size, size }, uv0, uv1, { 0,0,0,0 });
+
+			// Handle drag-and-drop source
+			if (payloadType && ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
+				ImGui::SetDragDropPayload(payloadType, payloadData.c_str(), payloadData.size() + 1);
+				ImGui::Image(iconID, { size, size }, uv0, uv1); // Show preview
+				ImGui::TextUnformatted(displayText.c_str());
+				ImGui::EndDragDropSource();
+			}
+
+			// Handle tooltip
+			if (ImGui::IsItemHovered()) {
+				ImGui::BeginTooltip();
+				ImGui::TextUnformatted(displayText.c_str());
+				ImGui::EndTooltip();
+			}
+
+			// Draw the centered, wrapped text
+			DrawItemText(displayText, size);
+
+			ImGui::PopID();
+			ImGui::NextColumn();
+
+			return clicked;
+		}
 
 		bool SameDir(const std::string& d1, const std::string& d2) {
 			// dirs may or may not have trailing backslash, so just check for string minus backslash
@@ -40,24 +127,29 @@ namespace Dog
 		{
 			if (!tl) return;
 
+			static FileBrowser browser;
+
 			float flipY = static_cast<float>(Engine::GetGraphicsAPI() != GraphicsAPI::OpenGL);
 			ImVec2 uv0 = { 0.0f, 1.0f };
 			ImVec2 uv1 = { 1.0f, 0.0f };
 
+			AssetIcons icons(tl);
+
 			ImGui::Begin("Assets");
 
-			if (!SameDir(browser.currentDir.string(), browser.baseDir.string()))
+			if (browser.currentDir != browser.baseDir)
 			{
 				if (ImGui::Button("Back"))
 				{
 					browser.currentDir = browser.currentDir.parent_path();
 				}
+				ImGui::SameLine();
 			}
+			ImGui::TextUnformatted(browser.currentDir.string().c_str());
 
 			static float padding = 16.0f;
-			static float imageSize = 100.0f;
-			float cellSize = imageSize + padding;
-			ImVec2 imageSizeVec = ImVec2(imageSize, imageSize);
+			static float thumbnailSize = 100.0f;
+			float cellSize = thumbnailSize + padding;
 
 			float panelWidth = ImGui::GetContentRegionAvail().x;
 			int columnCount = (int)(panelWidth / cellSize);
@@ -65,23 +157,23 @@ namespace Dog
 				columnCount = 1;
 
 			std::string currentDirName = browser.currentDir.filename().string();
-			if (SameDir(currentDirName, Assets::ImagesDir) || SameDir(currentDirName, Assets::ShadersDir))
+			if (currentDirName == Assets::ImagesDir || currentDirName == Assets::ShadersDir)
 			{
-				ImGui::SliderFloat("Image Size", &imageSize, 16, 512);
+				ImGui::SliderFloat("Thumbnail Size", &thumbnailSize, 16, 512);
 			}
 
 			// --- Collect and Sort Entries ---
 			std::vector<std::filesystem::directory_entry> directories;
 			std::vector<std::filesystem::directory_entry> files;
 
-			// Check if directory exists before iterating
 			if (std::filesystem::exists(browser.currentDir) && std::filesystem::is_directory(browser.currentDir))
 			{
 				for (const auto& entry : std::filesystem::directory_iterator(browser.currentDir))
 				{
+					std::string filename = entry.path().filename().string();
 					if (entry.is_directory()) {
-                        std::string filename = entry.path().filename().string();
-						if (SameDir(filename, Assets::EditorDir) || (SameDir(filename, "spv"))) continue;
+						// Filter out specific directories
+						if (filename == Assets::EditorDir || filename == "spv") continue;
 						directories.push_back(entry);
 					}
 					else {
@@ -90,17 +182,17 @@ namespace Dog
 				}
 			}
 
-			// Sort alphabetically
-			std::sort(directories.begin(), directories.end(), [](const auto& a, const auto& b) {
+			auto sortAlpha = [](const auto& a, const auto& b) {
 				return a.path().filename().string() < b.path().filename().string();
-			});
-			std::sort(files.begin(), files.end(), [](const auto& a, const auto& b) {
-				return a.path().filename().string() < b.path().filename().string();
-			});
-			// --- End Collect and Sort ---
+			};
+			std::sort(directories.begin(), directories.end(), sortAlpha);
+			std::sort(files.begin(), files.end(), sortAlpha);
 
 
-			ImGui::Columns(1);
+			// --- Setup columns for the grid ---
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f)); // Transparent background
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5.0f, 5.0f));
+			ImGui::Columns(columnCount, 0, false);
 
 			// --- Render Directories ---
 			for (const auto& entry : directories)
@@ -108,15 +200,13 @@ namespace Dog
 				const auto& path = entry.path();
 				std::string filename = path.filename().string();
 
-				if (ImGui::Button(filename.c_str())) {
+				if (DrawAssetThumbnail(path.string().c_str(), icons.folder, thumbnailSize, uv0, uv1, filename)) 
+				{
 					browser.currentDir = path;
 				}
 			}
 
-            ImGui::Columns(columnCount, 0, false);
-
 			// --- Render Separator ---
-			// Only add separator if there are both directories and files
 			if (!directories.empty() && !files.empty()) {
 				ImGui::Columns(1);
 				ImGui::Separator();
@@ -127,196 +217,48 @@ namespace Dog
 			for (const auto& entry : files)
 			{
 				const auto& path = entry.path();
+				std::string fileName = path.filename().string();
+				std::string fullPath = path.string();
+				std::replace(fullPath.begin(), fullPath.end(), '\\', '/');
 
-				// This is the start of the *original* 'else' block
-				if (currentDirName == "") {
-					continue;
-				}
+				// Default asset name (e.g., for images)
+				std::string assetName = fileName;
+				// Asset name without extension (e.g., for shaders, scenes)
+				std::string baseName = fileName.substr(0, fileName.find_last_of("."));
 
-				ImGui::Spacing();
-				ImGui::Spacing();
 
-				// Different behavior depending on the directory.
-				if (SameDir(Assets::AssetsDir, currentDirName)) {
-					// Nothing to be done, really. Just default I guess?
-					// Most likely there's no files here and it never comes to this point.
-					ImGui::Text(path.filename().string().c_str());
-				}
-				else if (SameDir(currentDirName, Assets::ImagesDir)) {
-					// Get the texture from the path
-					std::string fileName = path.filename().string();
-					std::string filePath = path.string();
-
-					// image name to use:
-					// std::string imagePath = Assets::AssetsDir + currentDirName + "/" + fileName;
-
-					// tex id
-					void* texId = 0;
+				if (SameDir(currentDirName, Assets::ImagesDir)) 
+				{
+					void* texID = icons.defaultFile; // Fallback
 					if (auto itex = tl->GetTexture(Assets::ImagesPath + fileName))
 					{
-						texId = itex->GetTextureID();
+						texID = itex->GetTextureID();
 					}
-
-					bool clicked = ImGui::ImageButton(fileName.c_str(), texId, imageSizeVec, uv0, uv1);
-
-					if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
-						ImGui::SetDragDropPayload("Texture2D", fileName.c_str(), fileName.size() + 1);
-						ImGui::Image(texId, imageSizeVec, uv0, uv1);
-						ImGui::Text(fileName.c_str());
-						ImGui::EndDragDropSource();
-					}
-
-					if (ImGui::IsItemHovered()) {
-						ImGui::BeginTooltip();
-						ImGui::Text(fileName.c_str());
-						ImGui::EndTooltip();
-					}
-
-					// for multi-line centered text
-					ImVec2 textSize = ImGui::CalcTextSize(fileName.c_str(), NULL, true, imageSize);
-					ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (imageSize - textSize.x) * 0.5f);
-					ImGui::TextWrapped(fileName.c_str());
+					DrawAssetThumbnail(fullPath.c_str(), texID, thumbnailSize, uv0, uv1, fileName, "Texture2D", fileName);
 				}
-				else if (SameDir(currentDirName, Assets::ShadersDir)) {
-					// Get the texture from the path
-					std::string fileName = path.filename().string();
-					std::string filePath = path.string();
-					std::string shaderAssetName = fileName;
-					shaderAssetName = shaderAssetName.substr(0, shaderAssetName.find_last_of("."));
-
-					// tex id
-					void* texId = 0;
-					if (auto itex = tl->GetTexture(Assets::ImagesPath + "glslIcon.png"))
-					{
-						texId = itex->GetTextureID();
-					}
-
-					std::string fullPath = path.string();
-
-					bool clicked = ImGui::ImageButton(fullPath.c_str(), texId, imageSizeVec, uv0, uv1);
-
-					bool isImageHovered = ImGui::IsItemHovered();
-					bool doubleClicked = ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
-
-					// get if item is double clicked
-					// if (isImageHovered && doubleClicked) {
-					// 	std::string shaderPath = Assets::ShadersPath + fileName;
-					// 
-					// 	TextEditorWrapper::MyDocument shaderDoc(fileName, true, shaderPath);
-					// 	textEditor.CreateNewDocument(shaderDoc);
-					// }
-
-					if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
-						ImGui::SetDragDropPayload("Shader", shaderAssetName.c_str(), shaderAssetName.size() + 1);
-						ImGui::Image(texId, imageSizeVec, uv0, uv1);
-						ImGui::Text(shaderAssetName.c_str());
-						ImGui::EndDragDropSource();
-					}
-
-					if (ImGui::IsItemHovered()) {
-						ImGui::BeginTooltip();
-						ImGui::Text(shaderAssetName.c_str());
-						ImGui::EndTooltip();
-					}
-
-					// for multi-line centered text
-					ImVec2 textSize = ImGui::CalcTextSize(shaderAssetName.c_str(), NULL, true, imageSize);
-					ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (imageSize - textSize.x) * 0.5f);
-					ImGui::TextWrapped(shaderAssetName.c_str());
+				else if (SameDir(currentDirName, Assets::ShadersDir))
+				{
+					DrawAssetThumbnail(fullPath.c_str(), icons.shader, thumbnailSize, uv0, uv1, baseName, "Shader", baseName);
 				}
-				else if (SameDir(currentDirName, Assets::ScenesDir)) {
-					// Get the scene from the path
-					std::string fileName = path.filename().string();
-					std::string filePath = path.string();
-					std::string sceneAssetName = Assets::ScenesPath + fileName;
-
-					std::string sceneName = fileName;
-					sceneName = sceneName.substr(0, sceneName.find_last_of("."));
-
-					// tex id
-					void* texId = 0;
-					if (auto itex = tl->GetTexture(Assets::ImagesPath + "dog.png"))
-					{
-						texId = itex->GetTextureID();
-					}
-
-					std::string fullPath = path.string();
-
-					bool clicked = ImGui::ImageButton(fullPath.c_str(), texId, imageSizeVec, uv0, uv1);
-
-					bool isImageHovered = ImGui::IsItemHovered();
-					bool doubleClicked = ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
-
-					// get if item is double clicked
-					//if (isImageHovered && doubleClicked) {
-					//	std::string shaderPath = sceneAssetName;
-					//
-					//	TextEditorWrapper::MyDocument sceneDoc(fileName, true, shaderPath);
-					//	textEditor.CreateNewDocument(sceneDoc);
-					//}
-
-					if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
-						ImGui::SetDragDropPayload("Scene", sceneName.c_str(), sceneName.size() + 1);
-						ImGui::Image((void*)(intptr_t)texId, imageSizeVec, uv0, uv1);
-						ImGui::Text(sceneName.c_str());
-						ImGui::EndDragDropSource();
-					}
-
-					if (ImGui::IsItemHovered()) {
-						ImGui::BeginTooltip();
-						ImGui::Text(sceneName.c_str());
-						ImGui::EndTooltip();
-					}
-
-					// for multi-line centered text
-					ImVec2 textSize = ImGui::CalcTextSize(sceneName.c_str(), NULL, true, imageSize);
-					ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (imageSize - textSize.x) * 0.5f);
-					ImGui::TextWrapped(sceneName.c_str());
+				else if (SameDir(currentDirName, Assets::ScenesDir)) 
+				{
+					DrawAssetThumbnail(fullPath.c_str(), icons.scene, thumbnailSize, uv0, uv1, baseName, "Scene", baseName);
 				}
-				else if (SameDir(currentDirName, Assets::ModelsDir)) {
-					// Get the scene from the path
-					std::string fileName = path.filename().string();
-					std::string filePath = path.string();
-					std::string sceneAssetName = Assets::ScenesPath + fileName;
-
-					std::string modelName = fileName;
-					modelName = modelName.substr(0, modelName.find_last_of("."));
-
-					// tex id
-					void* texId = 0;
-					if (auto itex = tl->GetTexture(Assets::ImagesPath + "dogmodel.png"))
-					{
-						texId = itex->GetTextureID();
-					}
-
-					std::string fullPath = path.string();
-                    std::replace(fullPath.begin(), fullPath.end(), '\\', '/');
-
-					bool clicked = ImGui::ImageButton(fullPath.c_str(), texId, imageSizeVec, uv0, uv1);
-
-					if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
-						ImGui::SetDragDropPayload("Model", fullPath.c_str(), fullPath.size() + 1);
-						ImGui::Image((void*)(intptr_t)texId, imageSizeVec, uv0, uv1);
-						ImGui::Text(modelName.c_str());
-						ImGui::EndDragDropSource();
-					}
-
-					if (ImGui::IsItemHovered()) {
-						ImGui::BeginTooltip();
-						ImGui::Text(modelName.c_str());
-						ImGui::EndTooltip();
-					}
-
-					// for multi-line centered text
-					ImVec2 textSize = ImGui::CalcTextSize(modelName.c_str(), NULL, true, imageSize);
-					ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (imageSize - textSize.x) * 0.5f);
-					ImGui::TextWrapped(modelName.c_str());
+				else if (SameDir(currentDirName, Assets::ModelsDir)) 
+				{
+					DrawAssetThumbnail(fullPath.c_str(), icons.model, thumbnailSize, uv0, uv1, baseName, "Model", fullPath);
+				}
+				else 
+				{
+					// Default fallback for other files
+					DrawAssetThumbnail(fullPath.c_str(), icons.defaultFile, thumbnailSize, uv0, uv1, fileName);
 				}
 
-				ImGui::NextColumn();
 			} // End file loop
 
-
+			// Pop styles and reset columns
+			ImGui::PopStyleVar();
+			ImGui::PopStyleColor();
 			ImGui::Columns(1);
 
 			ImGui::End(); // Assets

@@ -6,10 +6,10 @@ namespace Dog
 	public:
 		inline static const std::string AssetsDir = "Assets/";
 
-		inline static const std::string EditorDir = "editor/";
-		inline static const std::string ShadersDir = "shaders/";
-		inline static const std::string ImagesDir = "textures/";
-		inline static const std::string ScenesDir = "scenes/";
+		inline static const std::string EditorDir = "Editor/";
+		inline static const std::string ShadersDir = "Shaders/";
+		inline static const std::string ImagesDir = "Textures/";
+		inline static const std::string ScenesDir = "Scenes/";
 		inline static const std::string FontsDir = "Fonts/";
 		inline static const std::string ModelsDir = "Models/";
 		inline static const std::string ModelTexturesDir = "Models/ModelTextures/";

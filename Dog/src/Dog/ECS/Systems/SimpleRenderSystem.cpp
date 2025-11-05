@@ -262,7 +262,7 @@ namespace Dog
         int baseIndex = 0;
         for (auto& data : debugData)
         {
-            Model* cubeModel = ml->GetModel("Assets/models/cube.obj");
+            Model* cubeModel = ml->GetModel("Assets/Models/cube.obj");
             auto& mesh = cubeModel->mMeshes[0];
             mesh->Bind(cmd, instBuffer);
             mesh->Draw(cmd, baseIndex++);
@@ -404,7 +404,7 @@ namespace Dog
         int baseIndex = 0;
         for (auto& data : debugData)
         {
-            Model* cubeModel = ml->GetModel("Assets/models/cube.obj");
+            Model* cubeModel = ml->GetModel("Assets/Models/cube.obj");
             auto& mesh = cubeModel->mMeshes[0];
             mesh->Bind(nullptr, nullptr);
             mesh->Draw(nullptr, baseIndex++);
