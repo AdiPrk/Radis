@@ -1,8 +1,6 @@
 #ifndef DOG_COMMON_H
 #define DOG_COMMON_H
 
-#include <cstddef>
-
 namespace Dog
 {
     const size_t PACKET_BUFFER_SIZE = 256;

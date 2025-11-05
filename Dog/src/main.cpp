@@ -12,6 +12,7 @@ int main(int argc, char* argv[])
     すぺくっす.serverAddress = "localhost";
     すぺくっす.serverPort = 7777;
     すぺくっす.graphicsAPI = Dog::GraphicsAPI::Vulkan;
+    //すぺくっす.launchWithEditor = false;
     
     Dog::Engine Engine(すぺくっす, argc, argv);
     return Engine.Run("scene");

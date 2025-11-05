@@ -33,11 +33,13 @@ namespace Dog
     bool Engine::mDevBuild = false;
     GraphicsAPI Engine::mGraphicsAPI = GraphicsAPI::None;
     bool Engine::mVulkanSupported = true;
+    bool Engine::mEditorEnabled = true;
 
     Engine::Engine(const DogLaunch::EngineSpec& specs, int argc, char* argv[])
         : mSpecs(specs)
         , mEcs()
     {
+        mEditorEnabled = mSpecs.launchWithEditor;
         Logger::Init();
 
         DogLaunch::EngineSpec launchArgs = LoadConfig(argc, argv, &mDevBuild);
@@ -53,8 +55,10 @@ namespace Dog
         mEcs.AddSystem<AnimationSystem>();
         mEcs.AddSystem<PresentSystem>();
         mEcs.AddSystem<SimpleRenderSystem>();
-
-        mEcs.AddSystem<EditorSystem>();
+        if (mEditorEnabled)
+        {
+            mEcs.AddSystem<EditorSystem>();
+        }
         mEcs.AddSystem<CameraSystem>();
         // ---------------------------------
 
@@ -69,11 +73,18 @@ namespace Dog
         if (mSpecs.graphicsAPI == GraphicsAPI::Vulkan)
         {
             auto rr = mEcs.GetResource<RenderingResource>();
-            mEcs.AddResource<EditorResource>(rr->device.get(), rr->swapChain.get(), wr->window->GetGLFWwindow(), wr->window->GetDPIScale());
+
+            if (mEditorEnabled) 
+            {
+                mEcs.AddResource<EditorResource>(rr->device.get(), rr->swapChain.get(), wr->window->GetGLFWwindow(), wr->window->GetDPIScale());
+            }
         }
         else if (mSpecs.graphicsAPI == GraphicsAPI::OpenGL)
         {
-            mEcs.AddResource<EditorResource>(wr->window->GetGLFWwindow(), wr->window->GetDPIScale());
+            if (mEditorEnabled)
+            {
+                mEcs.AddResource<EditorResource>(wr->window->GetGLFWwindow(), wr->window->GetDPIScale());
+            }
         }
 
         mEcs.AddResource<SerializationResource>();

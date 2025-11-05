@@ -8,4 +8,6 @@ namespace Dog
     DogLaunch::EngineSpec LoadConfig(int argc, char* argv[], bool* isDevBuild);
 
     std::vector<std::string> GetFilesWithExtensions(const std::string& directoryPath, const std::vector<std::string>& extensions);
+
+    void LaunchVSForFolder(const std::string& folderPath);
 }

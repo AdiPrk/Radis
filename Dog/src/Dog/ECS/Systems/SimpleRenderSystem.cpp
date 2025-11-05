@@ -136,9 +136,14 @@ namespace Dog
 
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
         {
-            auto renderingResource = ecs->GetResource<RenderingResource>();
-            auto editorResource = ecs->GetResource<EditorResource>();
-            auto& rg = renderingResource->renderGraph;
+            auto rr = ecs->GetResource<RenderingResource>();
+            float aspectRatio = static_cast<float>(rr->swapChain->GetWidth()) / static_cast<float>(rr->swapChain->GetHeight());
+            if (Engine::GetEditorEnabled())
+            {
+                auto editorResource = ecs->GetResource<EditorResource>();
+                aspectRatio = editorResource->sceneWindowWidth / editorResource->sceneWindowHeight;
+            }
+            auto& rg = rr->renderGraph;
 
             // Set camera uniform!
             {
@@ -161,21 +166,34 @@ namespace Dog
                     camData.view = glm::lookAt(cameraPos, cameraTarget, upDir);
                 }
 
-                camData.projection = glm::perspective(glm::radians(45.0f), editorResource->sceneWindowWidth / editorResource->sceneWindowHeight, 0.1f, 100.0f);
+                camData.projection = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 100.0f);
                 camData.projection[1][1] *= -1;
                 camData.projectionView = camData.projection * camData.view;
-                renderingResource->cameraUniform->SetUniformData(camData, 0, renderingResource->currentFrameIndex);
+                rr->cameraUniform->SetUniformData(camData, 0, rr->currentFrameIndex);
             }
 
             // Add the scene render pass
-            rg->AddPass(
-                "ScenePass",
-                [&](RGPassBuilder& builder) {
-                    builder.writes("SceneColor");
-                    builder.writes("SceneDepth");
-                },
-                std::bind(&SimpleRenderSystem::RenderSceneVK, this, std::placeholders::_1)
-            );
+            if (Engine::GetEditorEnabled()) {
+                rg->AddPass(
+                    "ScenePass",
+                    [&](RGPassBuilder& builder) {
+                        builder.writes("SceneColor");
+                        builder.writes("SceneDepth");
+                    },
+                    std::bind(&SimpleRenderSystem::RenderSceneVK, this, std::placeholders::_1)
+                );
+            }
+            else
+            {
+                rg->AddPass(
+                    "ScenePass",
+                    [&](RGPassBuilder& builder) {
+                        builder.writes("BackBuffer");
+                        builder.writes("SceneDepth");
+                    },
+                    std::bind(&SimpleRenderSystem::RenderSceneVK, this, std::placeholders::_1)
+                );
+            }
         }
         else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
         {

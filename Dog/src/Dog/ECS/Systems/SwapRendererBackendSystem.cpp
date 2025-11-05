@@ -45,6 +45,8 @@ namespace Dog
 
     void SwapRendererBackendSystem::SwapBackend()
     {
+        bool hasEditor = Engine::GetEditorEnabled();
+
         if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
         {
             bool vulkanSupported = Engine::GetVulkanSupported();
@@ -56,15 +58,20 @@ namespace Dog
 
             auto rr = ecs->GetResource<RenderingResource>();
             auto wr = ecs->GetResource<WindowResource>();
-            auto er = ecs->GetResource<EditorResource>();
-            er->Cleanup(rr->device.get());
+            EditorResource* er = nullptr;
+            if (hasEditor) {
+                er = ecs->GetResource<EditorResource>();
+                er->Cleanup(rr->device.get());
+            }
             rr->Cleanup();
             wr->Cleanup();
             Engine::SetGraphicsAPI(GraphicsAPI::Vulkan);
             wr->Create();
             rr->Create(wr->window.get());
-            er->Create(rr->device.get(), rr->swapChain.get(), wr->window->GetGLFWwindow(), wr->window->GetDPIScale());
-            er->CreateSceneTextures(rr);
+            if (hasEditor) {
+                er->Create(rr->device.get(), rr->swapChain.get(), wr->window->GetGLFWwindow(), wr->window->GetDPIScale());
+                er->CreateSceneTextures(rr);
+            }
 
             rr->modelLibrary->RecreateAllBuffers(rr->device.get());
             //rr->textureLibrary->RecreateAllBuffers(rr->device.get());
@@ -74,20 +81,25 @@ namespace Dog
         {
             auto rr = ecs->GetResource<RenderingResource>();
             auto wr = ecs->GetResource<WindowResource>();
-            auto er = ecs->GetResource<EditorResource>();
+            EditorResource* er = nullptr;
 
             if (rr->device->SupportsVulkan()) 
             {
                 vkDeviceWaitIdle(rr->device->GetDevice());
             }
 
-            er->Cleanup(rr->device.get());
+            if (hasEditor) {
+                er = ecs->GetResource<EditorResource>();
+                er->Cleanup(rr->device.get());
+            }
             rr->Cleanup();
             wr->Cleanup();
             Engine::SetGraphicsAPI(GraphicsAPI::OpenGL);
             wr->Create();
             rr->Create(wr->window.get());
-            er->Create(wr->window->GetGLFWwindow(), wr->window->GetDPIScale());
+            if (hasEditor) {
+                er->Create(wr->window->GetGLFWwindow(), wr->window->GetDPIScale());
+            }
 
             rr->modelLibrary->RecreateAllBuffers(rr->device.get());
             //rr->textureLibrary->RecreateAllBuffers(rr->device.get());

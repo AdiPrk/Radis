@@ -357,6 +357,7 @@ void LaunchApplication(const std::string& projectName, std::map<std::string, HAN
     engineSpec.serverPort = 7777;
     engineSpec.graphicsAPI = Dog::GraphicsAPI::Vulkan;
     engineSpec.workingDirectory = projectDir.string();
+    engineSpec.launchWithEditor = true;
 
     // Serialize to JSON and write to launch.json
     try {

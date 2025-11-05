@@ -5,6 +5,7 @@
 #include "ECS/Resources/InputResource.h"
 #include "ECS/Resources/WindowResource.h"
 #include "Graphics/IWindow.h"
+#include "Engine.h"
 
 #include "GLFW/glfw3.h"
 
@@ -220,7 +221,9 @@ namespace Dog {
 
 	void InputSystem::keyPressCallback(GLFWwindow* windowPointer, int key, int scanCode, int action, int mod)
 	{
-		ImGui_ImplGlfw_KeyCallback(windowPointer, key, scanCode, action, mod);
+		if (Engine::GetEditorEnabled()) {
+			ImGui_ImplGlfw_KeyCallback(windowPointer, key, scanCode, action, mod);
+		}
 
 		// check if imgui is capturing the keyboard
 		if (keyInputLocked) {
@@ -251,7 +254,9 @@ namespace Dog {
 
 	void InputSystem::mouseButtonCallback(GLFWwindow* windowPointer, int mouseButton, int action, int mod)
 	{
-		ImGui_ImplGlfw_MouseButtonCallback(windowPointer, mouseButton, action, mod);
+		if (Engine::GetEditorEnabled()) {
+			ImGui_ImplGlfw_MouseButtonCallback(windowPointer, mouseButton, action, mod);
+		}
 
 		// check if imgui is capturing the mouse
 		if (mouseButton < 0 || mouseButton > static_cast<int>(Mouse::LAST))
@@ -275,7 +280,9 @@ namespace Dog {
 
 	void InputSystem::mouseScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 	{
-		ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
+		if (Engine::GetEditorEnabled()) {
+			ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
+		}
 
 		if (mouseInputLocked) {
 #if DO_INPUT_LOGGING
@@ -293,7 +300,9 @@ namespace Dog {
 
 	void InputSystem::charCallback(GLFWwindow* window, unsigned int codepoint)
 	{
-		ImGui_ImplGlfw_CharCallback(window, codepoint);
+		if (Engine::GetEditorEnabled()) {
+			ImGui_ImplGlfw_CharCallback(window, codepoint);
+		}
 
 		if (codepoint < 0x20 || codepoint > 0x7E) {
 			// Ignore non-printable characters
