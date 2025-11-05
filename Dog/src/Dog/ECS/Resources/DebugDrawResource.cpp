@@ -3,6 +3,7 @@
 
 #include "Graphics/Vulkan/Uniform/ShaderTypes.h"
 #include "Graphics/Common/ModelLibrary.h"
+#include "Graphics/Common/TextureLibrary.h"
 #include "Graphics/Common/Model.h"
 
 namespace Dog
@@ -45,67 +46,104 @@ namespace Dog
         std::vector<InstanceUniforms> instanceData;
         instanceData.reserve(lines.size() + rects.size() + circles.size());
 
+        // Define a robust "up" vector for calculating orientation
+        const glm::vec3 UP_VECTOR(0.0f, 1.0f, 0.0f);
+        const glm::vec3 ALT_UP_VECTOR(1.0f, 0.0f, 0.0f);
+
         for (const auto& line : lines)
         {
             InstanceUniforms& instance = instanceData.emplace_back();
-            uint32_t textureIndex = 10001; // No texture
+            const float thickness = line.thickness;
 
-            // Calculate the line's properties: center, the vector from start to end, and its length.
             const glm::vec3 center = (line.start + line.end) * 0.5f;
             const glm::vec3 delta = line.end - line.start;
-            const float length = glm::length(delta);
 
-            const float thickness = line.thickness;
-            instance.model = glm::mat4(1.0f);
+            // Use squared length for the check. This avoids a sqrt operation
+            // for the zero-length 'else' case.
+            const float lengthSq = glm::dot(delta, delta);
 
-            if (length > 1e-6f)
+            // Epsilon check (1e-6 * 1e-6 = 1e-12)
+            if (lengthSq > 1e-12f)
             {
-                const glm::vec3 direction = delta / length;
+                // Now we calculate the actual length and direction
+                const float length = glm::sqrt(lengthSq);
+                const glm::vec3 direction = delta / length; // This is our new X-axis
 
-                instance.model = glm::translate(instance.model, center);
+                // --- Build the rotation matrix basis vectors ---
+                // Find a vector that is not collinear with 'direction'
+                glm::vec3 up = UP_VECTOR;
+                if (glm::abs(glm::dot(direction, up)) > 0.999f)
+                {
+                    up = ALT_UP_VECTOR; // Use alternate if parallel
+                }
 
-                glm::quat rotation = glm::rotation(glm::vec3(1.0f, 0.0f, 0.0f), direction);
-                instance.model *= glm::mat4_cast(rotation);
+                // Use cross products to find the other two orthogonal axes
+                const glm::vec3 newZ = glm::normalize(glm::cross(direction, up)); // New Z-axis
+                const glm::vec3 newY = glm::cross(newZ, direction); // New Y-axis
 
-                instance.model = glm::scale(instance.model, glm::vec3(length * 0.5f, thickness * 0.5f, thickness * 0.5f));
+                // --- Directly construct the final Model Matrix (T * R * S) ---
+                // The final matrix columns are the scaled basis vectors (R*S)
+                // and the translation vector (T).
+
+                const float halfLength = length * 0.5f;
+                const float halfThick = thickness * 0.5f;
+
+                instance.model = glm::mat4(
+                    // Column 1: New X-axis (direction) scaled by length
+                    glm::vec4(direction * halfLength, 0.0f),
+                    // Column 2: New Y-axis scaled by thickness
+                    glm::vec4(newY * halfThick, 0.0f),
+                    // Column 3: New Z-axis scaled by thickness
+                    glm::vec4(newZ * halfThick, 0.0f),
+                    // Column 4: Translation (center)
+                    glm::vec4(center, 1.0f)
+                );
             }
-            else
+            else // This is a zero-length line (a "dot")
             {
-                instance.model = glm::translate(instance.model, line.start);
-                instance.model = glm::scale(instance.model, glm::vec3(thickness * 0.5f));
+                // Directly construct a uniform scale (T * S) matrix
+                const float scale = thickness * 0.5f;
+                instance.model = glm::mat4(
+                    // Column 1
+                    scale, 0.0f, 0.0f, 0.0f,
+                    // Column 2
+                    0.0f, scale, 0.0f, 0.0f,
+                    // Column 3
+                    0.0f, 0.0f, scale, 0.0f,
+                    // Column 4 (Translation)
+                    line.start.x, line.start.y, line.start.z, 1.0f
+                );
             }
 
             instance.tint = line.color;
-            instance.textureIndex = textureIndex;
+            instance.textureIndex = TextureLibrary::INVALID_TEXTURE_INDEX;
         }
 
         for (const auto& rect : rects)
         {
             InstanceUniforms& instance = instanceData.emplace_back();
-            uint32_t textureIndex = 10001; // No texture
 
             instance.model = glm::mat4(1.0f);
             instance.model = glm::translate(instance.model, rect.center);
             instance.model = glm::scale(instance.model, glm::vec3(rect.size.x * 0.5f, 0.02f, rect.size.y * 0.5f));
             instance.tint = rect.color;
-            instance.textureIndex = textureIndex;
+            instance.textureIndex = TextureLibrary::INVALID_TEXTURE_INDEX;
         }
 
         for (const auto& cube : cubes)
         {
             InstanceUniforms& instance = instanceData.emplace_back();
-            uint32_t textureIndex = 10001; // No texture
             instance.model = glm::mat4(1.0f);
             instance.model = glm::translate(instance.model, cube.center);
             instance.model = glm::scale(instance.model, glm::vec3(cube.size * 0.5f));
             instance.tint = cube.color, 1.0f;
-            instance.textureIndex = textureIndex;
+            instance.textureIndex = TextureLibrary::INVALID_TEXTURE_INDEX;
         }
 
         for (const auto& circle : circles)
         {
             InstanceUniforms& instance = instanceData.emplace_back();
-            uint32_t textureIndex = 10001; // Change to circle texture later
+            uint32_t textureIndex = TextureLibrary::INVALID_TEXTURE_INDEX; // Change to circle texture later
 
             instance.model = glm::mat4(1.0f);
             instance.model = glm::translate(instance.model, circle.center);

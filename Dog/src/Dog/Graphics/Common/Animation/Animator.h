@@ -25,12 +25,14 @@ namespace Dog
 
         const std::vector<VQS>& GetFinalBoneVQS() const { return mFinalBoneVQS; }
         bool IsPlaying() const { return mIsPlaying; }
+        float GetPrevTime() const { return mPrevTime; }
 
     private:
         std::vector<VQS> mFinalBoneVQS;
 
         Animation* mCurrentAnimation;
         float mCurrentTime;
+        float mPrevTime;
 
         bool mIsPlaying = true;
     };

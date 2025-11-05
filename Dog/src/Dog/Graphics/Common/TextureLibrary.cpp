@@ -11,6 +11,7 @@
 namespace Dog
 {
     const uint32_t TextureLibrary::MAX_TEXTURE_COUNT = 50;
+    const uint32_t TextureLibrary::INVALID_TEXTURE_INDEX = 10001;
 
     TextureLibrary::TextureLibrary(Device* device)
         : device{ device }

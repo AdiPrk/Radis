@@ -108,4 +108,52 @@ namespace Dog
             return {};
         }
     }
+    
+    std::vector<std::string> GetFilesWithExtensions(const std::string& directoryPath, const std::vector<std::string>& extensions)
+    {
+        std::vector<std::string> fileNames;
+        try
+        {
+            // Check if the directory exists
+            if (!std::filesystem::exists(directoryPath) || !std::filesystem::is_directory(directoryPath))
+            {
+                // You could log an error here if you want
+                return fileNames;
+            }
+
+            // Iterate over each entry in the directory
+            for (const auto& entry : std::filesystem::directory_iterator(directoryPath))
+            {
+                if (entry.is_regular_file())
+                {
+                    // Get the file extension
+                    std::string extension = entry.path().extension().string();
+
+                    // Convert extension to lower case for case-insensitive comparison
+                    std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
+
+                    // Check if the file's extension is in our list of desired extensions
+                    for (const auto& desiredExt : extensions)
+                    {
+                        if (extension == desiredExt)
+                        {
+                            // Add the filename to our list
+                            std::string fn = entry.path().string();
+                            std::replace(fn.begin(), fn.end(), '\\', '/'); // Normalize to forward slashes
+                            fileNames.push_back(fn);
+                            break; // Move to the next file
+                        }
+                    }
+                }
+            }
+        }
+        catch (const std::filesystem::filesystem_error& e)
+        {
+            // Handle potential exceptions, e.g., permission errors
+            // For now, we can just print to stderr
+            fprintf(stderr, "Filesystem error: %s\n", e.what());
+        }
+
+        return fileNames;
+    }
 }

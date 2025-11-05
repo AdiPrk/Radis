@@ -23,8 +23,11 @@
 #include "Graphics/OpenGL/GLFrameBuffer.h"
 
 #include "Windows/AssetsWindow.h"
+#include "Windows/SceneWindow.h"
+#include "Windows/EntitiesWindow.h"
 
 #include "Assets/Assets.h"
+#include "Utils/Utils.h"
 
 #include "imgui_internal.h"
 
@@ -42,6 +45,7 @@ namespace Dog
 
     void EditorSystem::FrameStart()
     {
+        auto rr = ecs->GetResource<RenderingResource>();
         auto er = ecs->GetResource<EditorResource>();
 
         // Start the Dear ImGui frame
@@ -55,8 +59,8 @@ namespace Dog
 
         ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
 
-        RenderSceneWindow();
-        RenderEntitiesWindow();
+        EditorWindows::RenderSceneWindow(rr, er);
+        EditorWindows::RenderEntitiesWindow(er, ecs);
         RenderInspectorWindow();
 
         auto& tl = ecs->GetResource<RenderingResource>()->textureLibrary;
@@ -98,13 +102,15 @@ namespace Dog
 
         if (er->selectedEntity)
         {
-            // if ctrl + d
             if (ImGui::GetIO().KeyCtrl && InputSystem::isKeyTriggered(Key::D))
             {
                 Entity newEntity = ecs->CloneEntity(er->selectedEntity);
                 er->selectedEntity = newEntity;
             }
         }
+
+        // If clicking anywhere outside "Entities" window, deselect entity
+        
     }
 
     void EditorSystem::Update(float dt)
@@ -130,7 +136,7 @@ namespace Dog
 
         else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
         {
-            RenderImGui(VK_NULL_HANDLE);
+            RenderImGui();
         }
     }
 
@@ -219,86 +225,6 @@ namespace Dog
         }
     }
 
-    void EditorSystem::RenderSceneWindow()
-	{            
-		// Create a window and display the scene texture
-        void* sceneTexturePtr;
-        auto rr = ecs->GetResource<RenderingResource>();
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
-        {
-            sceneTexturePtr = reinterpret_cast<void*>(rr->sceneTextureDescriptorSet);
-        }
-        else
-        {
-            sceneTexturePtr = (void*)(uintptr_t)rr->sceneFrameBuffer->GetColorAttachmentID(0);
-        }
-
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-		ImGui::Begin("Viewport");
-
-        float flipY = static_cast<float>(Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL);
-        ImVec2 uv0 = { 0.0f, flipY * 1.0f + (1.0f - flipY) * 0.0f };
-        ImVec2 uv1 = { 1.0f, flipY * 0.0f + (1.0f - flipY) * 1.0f };
-
-		ImVec2 viewportSize = ImGui::GetContentRegionAvail();
-		ImGui::Image(sceneTexturePtr, viewportSize, uv0, uv1);
-		ImGui::End();
-        ImGui::PopStyleVar();
-
-		auto editorResource = ecs->GetResource<EditorResource>();
-        if (editorResource->sceneWindowWidth != viewportSize.x ||
-            editorResource->sceneWindowHeight != viewportSize.y)
-        {
-            PUBLISH_EVENT(Event::SceneResize, (int)viewportSize.x, (int)viewportSize.y);
-        }
-		editorResource->sceneWindowWidth = viewportSize.x;
-		editorResource->sceneWindowHeight = viewportSize.y;
-	}
-
-	void EditorSystem::RenderEntitiesWindow()
-	{
-        auto er = ecs->GetResource<EditorResource>();
-
-		ImGui::Begin("Entities##window");
-		entt::registry& registry = ecs->GetRegistry();
-		auto view = registry.view<TagComponent>();
-
-		for (auto& entityHandle : view) 
-		{
-			Entity entity(&registry, entityHandle);
-			TagComponent& tag = entity.GetComponent<TagComponent>();
-
-            ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_SpanAvailWidth;
-            if (er->selectedEntity == entity)
-            {
-                flags |= ImGuiTreeNodeFlags_Selected;
-            }
-
-            bool opened = ImGui::TreeNodeEx((void*)(uint64_t)entityHandle, flags, tag.Tag.c_str());
-            if (ImGui::IsItemClicked())
-            {
-                er->selectedEntity = entity;
-            }
-
-            if (ImGui::BeginPopupContextItem())
-            {
-                if (ImGui::MenuItem("Remove Entity"))
-                {
-                    // Mark for deletion, but don't delete yet!
-                    er->entityToDelete = entity;
-                }
-                ImGui::EndPopup();
-            }
-
-            if (opened)
-            {
-                ImGui::TreePop();
-            }
-		}
-
-		ImGui::End(); // End of Entities
-	}
-
     template<typename T, typename UIFunction>
     static void DrawComponentUI(const char* name, Entity entity, UIFunction uiFunction)
     {
@@ -351,7 +277,7 @@ namespace Dog
         // Remove component if needed
         if (componentRemoved)
         {
-            // Avoid removal of Tag and Transform
+            // Avoid removal of Tag
             if constexpr (!std::is_same_v<T, TagComponent>/* && !std::is_same_v<T, TransformComponent>*/)
             {
                 entity.RemoveComponent<T>();
@@ -373,54 +299,6 @@ namespace Dog
         }
     }
 
-    static std::vector<std::string> GetFilesWithExtensions(const std::string& directoryPath, const std::vector<std::string>& extensions)
-    {
-        std::vector<std::string> fileNames;
-        try
-        {
-            // Check if the directory exists
-            if (!std::filesystem::exists(directoryPath) || !std::filesystem::is_directory(directoryPath))
-            {
-                // You could log an error here if you want
-                return fileNames;
-            }
-
-            // Iterate over each entry in the directory
-            for (const auto& entry : std::filesystem::directory_iterator(directoryPath))
-            {
-                if (entry.is_regular_file())
-                {
-                    // Get the file extension
-                    std::string extension = entry.path().extension().string();
-
-                    // Convert extension to lower case for case-insensitive comparison
-                    std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
-
-                    // Check if the file's extension is in our list of desired extensions
-                    for (const auto& desiredExt : extensions)
-                    {
-                        if (extension == desiredExt)
-                        {
-                            // Add the filename to our list
-                            std::string fn = entry.path().string();
-                            std::replace(fn.begin(), fn.end(), '\\', '/'); // Normalize to forward slashes
-                            fileNames.push_back(fn);
-                            break; // Move to the next file
-                        }
-                    }
-                }
-            }
-        }
-        catch (const std::filesystem::filesystem_error& e)
-        {
-            // Handle potential exceptions, e.g., permission errors
-            // For now, we can just print to stderr
-            fprintf(stderr, "Filesystem error: %s\n", e.what());
-        }
-
-        return fileNames;
-    }
-
     // --- Main Inspector Window Function ---
     void EditorSystem::RenderInspectorWindow()
     {
@@ -436,6 +314,15 @@ namespace Dog
             return;
         }
 
+        auto rr = ecs->GetResource<RenderingResource>();
+        if (!rr)
+        {
+            DOG_CRITICAL("No rendering resource in editor system");
+            ImGui::Text("No rendering resource found.");
+            ImGui::End();
+            return;
+        }
+
         // --- Tag Component (Special case, always at the top) ---
         if (selectedEnt.HasComponent<TagComponent>())
         {
@@ -447,7 +334,7 @@ namespace Dog
         // We create a child window to house the components. This allows the component list to
         // scroll while the footer with the 'Add Component' and 'Add Entity' buttons remains fixed.
         // The negative height tells ImGui to use all available space minus the specified amount.
-        const float footerHeight = ImGui::GetFrameHeightWithSpacing() * 2.2f;
+        const float footerHeight = ImGui::GetFrameHeightWithSpacing() * 1.1f;
         ImGui::BeginChild("ComponentsRegion", ImVec2(0, -footerHeight), false, ImGuiWindowFlags_HorizontalScrollbar);
 
         DrawComponentUI<TransformComponent>("Transform", selectedEnt, [](auto& component)
@@ -526,14 +413,11 @@ namespace Dog
             ImGui::ColorEdit4("Tint Color", glm::value_ptr(component.tintColor));
         });
 
-        auto rr = ecs->GetResource<RenderingResource>();
-        auto& animationLibrary = rr->animationLibrary;
-
-        static int selectedAnimationIndex = -1;
-
-        
         DrawComponentUI<AnimationComponent>("Animation", selectedEnt, [&](AnimationComponent& component)
         {
+            auto& animationLibrary = rr->animationLibrary;
+            static int selectedAnimationIndex = -1;
+
             Entity ent(&ecs->GetRegistry(), selectedEnt);
             bool hasModel = ent.HasComponent<ModelComponent>();
 
@@ -614,14 +498,6 @@ namespace Dog
             DisplayAddComponentEntry<AnimationComponent>("Animation", selectedEnt);
             // Add more component types here!
             ImGui::EndPopup();
-        }
-
-        // Button to add a new entity to the scene
-        if (ImGui::Button("Add Entity", ImVec2(-1, 0)))
-        {
-            Entity newEntity = ecs->AddEntity("New Entity");
-            // Automatically select the new entity for immediate editing
-            ecs->GetResource<EditorResource>()->selectedEntity = newEntity;
         }
 
         ImGui::End(); // End of Inspector window

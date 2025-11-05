@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Graphics/Common/Animation/AnimationLibrary.h" // For AnimationLibrary::INVALID_ANIMATION_INDEX
+
 namespace Dog {
 
 	struct TagComponent
@@ -34,7 +36,7 @@ namespace Dog {
 	struct AnimationComponent
 	{
         bool IsPlaying = true;
-        uint32_t AnimationIndex = 10001; // AnimationLibrary::INVALID_ANIMATION_INDEX
+		uint32_t AnimationIndex = AnimationLibrary::INVALID_ANIMATION_INDEX;
         float AnimationTime = 0.0f;
 		bool inPlace = false;
 
@@ -55,7 +57,7 @@ namespace Dog {
 
 		float Yaw{ 0.0f };
 		float Pitch{ 0.0f };
-		float MouseSensitivity{ 1.f };
+		float MouseSensitivity{ 0.2f };
 		bool InvertY{ true };
 		float MoveSpeed{ 10.f };
 

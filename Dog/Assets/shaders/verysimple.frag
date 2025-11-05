@@ -27,46 +27,30 @@ layout(location = 0) out vec4 outColor;
 #ifdef VULKAN
 	layout(set = 0, binding = 3) uniform sampler2D uTextures[];
 #else
-	layout(std430, binding = 3) readonly buffer TexHandles {
+	SSBO_LAYOUT(0, 3) readonly buffer TexHandles {
 		uvec2 colorHandle[50];
 	} texHandles;
 #endif
 
 void main()
 {
+	outColor = vec4(fragColor * fragTint.rgb, fragTint.a);
+
+	if (textureIndex != 10001)
+	{
 #ifdef VULKAN
-    if (textureIndex == 10001)
-	{
-		outColor = vec4(fragColor * fragTint.rgb, fragTint.a);
-	}
-	else
-	{
 		outColor = texture(uTextures[textureIndex], fragTexCoord) * fragTint;
-
-		if (outColor.a < 0.1)
-		{
-			discard;
-		}
-	}
 #else
-	vec4 color = vec4(fragColor * fragTint.rgb, fragTint.a);
-    uvec2 colorH = texHandles.colorHandle[textureIndex];
-	if (colorH != uvec2(0,0)) 
-	{
-		color = texture(sampler2D(colorH), fragTexCoord) * fragTint;
+		uvec2 colorH = texHandles.colorHandle[textureIndex];
+		if (colorH != uvec2(0,0)) 
+		{
+			outColor = texture(sampler2D(colorH), fragTexCoord) * fragTint;
+		}
+#endif
 	}
 
-	// Apply gamma de-correction (sRGB to Linear approximation)
-	//outColor = vec4(pow(color.rgb, vec3(2.2)), color.a);
-
-	// Apply gamma correction 
-	// color.rgb = pow(color.rgb, vec3(1.0 / 2.2)); 
-	// outColor = color;
-
-	outColor = color;
 	if (outColor.a < 0.1)
 	{
 		discard;
 	}
-#endif
 }
