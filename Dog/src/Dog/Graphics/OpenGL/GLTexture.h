@@ -13,6 +13,8 @@ namespace Dog
         GLTexture(const GLTexture& other) = default;
         ~GLTexture();
 
+        void* GetTextureID() override { return reinterpret_cast<void*>(static_cast<uintptr_t>(ID)); }
+
         // generates texture from image data
         void Generate(unsigned int width, unsigned int height, const unsigned char* data, unsigned int numSprites = 1);
         void Bind() const;

@@ -32,11 +32,6 @@
 #include "Graphics/OpenGL/GLFrameBuffer.h"
 #include "Graphics/OpenGL/GLTexture.h"
 
-#include "Graphics/Common/Path/PathFollower.h"
-#include "Graphics/Common/Path/ArcLengthTable.h"
-#include "Graphics/Common/Path/SpeedControl.h"
-#include "Graphics/Common/Path/CubicSpline.h"
-
 namespace Dog
 {
     SimpleRenderSystem::SimpleRenderSystem() : ISystem("SimpleRenderSystem") {}
@@ -103,13 +98,13 @@ namespace Dog
 
     void SimpleRenderSystem::FrameStart()
     {
-        static bool createdAS = false;
-        if (!createdAS && Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
-        {
-            CreateBottomLevelAS();  // Set up BLAS infrastructure
-            CreateTopLevelAS();     // Set up TLAS infrastructure
-            createdAS = true;
-        }
+        // static bool createdAS = false;
+        // if (!createdAS && Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+        // {
+        //     CreateBottomLevelAS();  // Set up BLAS infrastructure
+        //     CreateTopLevelAS();     // Set up TLAS infrastructure
+        //     createdAS = true;
+        // }
 
         // Update textures!
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
@@ -233,7 +228,7 @@ namespace Dog
             Entity entity(&registry, entityHandle);
             ModelComponent& mc = entity.GetComponent<ModelComponent>();
             TransformComponent& tc = entity.GetComponent<TransformComponent>();
-            Model* model = rr->modelLibrary->GetModel(mc.ModelPath);
+            Model* model = rr->modelLibrary->TryAddGetModel(mc.ModelPath);
             AnimationComponent* ac = entity.HasComponent<AnimationComponent>() ? &entity.GetComponent<AnimationComponent>() : nullptr;
             if (!model) continue;
 
@@ -596,7 +591,7 @@ namespace Dog
             Entity entity(&registry, entityHandle);
             ModelComponent& mc = entity.GetComponent<ModelComponent>();
             TransformComponent& tc = entity.GetComponent<TransformComponent>();
-            Model* model = rr->modelLibrary->TryAddGetModel(mc.ModelPath);
+            Model* model = rr->modelLibrary->GetModel(mc.ModelPath);
             if (!model) continue;
 
             auto unifiedMesh = rr->modelLibrary->GetUnifiedMesh();

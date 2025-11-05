@@ -5,59 +5,19 @@
 
 namespace Dog
 {
-    void PrintAndExit(const std::string& message) 
+    // --- Helper function to parse argv ---
+    std::string GetArg(int argc, char* argv[], const std::string& flag)
     {
-        std::cerr << message << "\nPress 'Enter' to exit.\n";
-        std::cin.get();
-        exit(EXIT_FAILURE);
-    }
-
-    std::string GetProjectDirectory(int argc, char* argv[])
-    {
-        for (int i = 1; i < argc - 1; ++i) 
+        for (int i = 1; i < argc; ++i) // Start at 1 to skip exe name
         {
-            if (std::string(argv[i]) == "-projectdir")
+            // Check if the current argument matches the flag
+            if (std::string(argv[i]) == flag && (i + 1 < argc))
             {
-                return argv[i + 1]; // Return the next argument as the project directory
+                // Return the next argument (the value)
+                return std::string(argv[i + 1]);
             }
         }
-        return ""; // Return empty string if not found
-    }
-
-    void ValidateStartingDirectory(int argc, char* argv[], bool* isDevBuild)
-    {
-        if (argc == 1) 
-        {
-            PrintAndExit("No project directory provided. Use the launcher to run the engine.");
-        }
-
-        std::string projectDir = GetProjectDirectory(argc, argv);
-        if (projectDir.empty())
-        {
-            PrintAndExit("Invalid or missing '-projectdir' argument.");
-        }
-
-        std::cout << "Project Directory: " << projectDir << '\n';
-
-        if (projectDir != "Dev")
-        {
-            //FreeConsole();
-            if (!SetCurrentDirectoryA(projectDir.c_str())) {
-                PrintAndExit("Failed to set project directory.");
-            }
-        }
-
-        if (isDevBuild) *isDevBuild = (projectDir == "Dev");
-
-        // char cwd[_MAX_PATH];
-        // if (_getcwd(cwd, _MAX_PATH))
-        // {
-        //     std::cout << "Current working directory is: " << cwd << '\n';
-        // }
-        // else 
-        // {
-        //     PrintAndExit("Failed to get current working directory.");
-        // }
+        return ""; // Flag not found
     }
 
     std::string WStringToUTF8(const std::wstring& wstr) {
@@ -88,5 +48,64 @@ namespace Dog
         );
 
         return result;
+    }
+
+    DogLaunch::EngineSpec LoadConfig(int argc, char* argv[], bool* isDevBuild)
+    {
+        if (argc == 2 && std::string(argv[1]) == "$DevBuild$")
+        {
+            if (isDevBuild) {
+                *isDevBuild = true;
+            }
+            std::cout << "Running in Dev mode." << std::endl;
+            return {};
+        }
+
+        try {
+            std::string configPath = GetArg(argc, argv, "-config");
+            if (configPath.empty()) {
+                std::cerr << "Error: No -config file provided." << std::endl;
+                throw std::runtime_error("No -config file provided. Use the launcher.");
+            }
+
+            std::ifstream f(configPath);
+            if (!f.is_open()) {
+                std::cerr << "Error: Could not open config file: " << configPath << std::endl;
+                throw std::runtime_error("Could not open config file.");
+            }
+
+            DogLaunch::EngineSpec args;
+            try {
+                nlohmann::json j = nlohmann::json::parse(f);
+                f.close();
+                std::filesystem::remove(configPath);
+
+                args = j.get<DogLaunch::EngineSpec>();
+            }
+            catch (const std::exception& e)
+            {
+                std::cerr << "Error: Failed to parse launch.json: " << e.what() << std::endl;
+                throw;
+            }
+
+            // If it's not a dev build, change the working directory to the project path
+            if (args.workingDirectory.empty()) {
+                throw std::runtime_error("Project directory is empty in launch.json.");
+            }
+
+            if (!SetCurrentDirectoryA(args.workingDirectory.c_str())) {
+                std::cerr << "Error: Failed to set project directory to: " << args.workingDirectory << std::endl;
+                throw std::runtime_error("Failed to set project directory.");
+            }
+            std::cout << "Set working directory to: " << args.workingDirectory << '\n';
+            
+            return args;
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "Failed to initialize: " << e.what() << std::endl;
+            std::cin.get();
+            return {};
+        }
     }
 }

@@ -35,12 +35,12 @@ namespace Dog {
         // Set the internal and image formats based on the number of channels
         if (nrChannels == 4)
         {
-            Internal_Format = GL_RGBA;
+            Internal_Format = GL_SRGB8_ALPHA8;
             Image_Format = GL_RGBA;
         }
         else if (nrChannels == 3)
         {
-            Internal_Format = GL_RGB;
+            Internal_Format = GL_SRGB8;
             Image_Format = GL_RGB;
         }
         else
@@ -86,7 +86,7 @@ namespace Dog {
         }
 
         // Set the internal and image formats based on the number of channels
-        Internal_Format = GL_RGBA;
+        Internal_Format = GL_SRGB8_ALPHA8;
         Image_Format = GL_RGBA;
 
         mUncompressedData.data.resize(width * height * nrChannels);
@@ -116,7 +116,7 @@ namespace Dog {
         , Columns(1)
         , Index(0)
         , IsSpriteSheet(false)
-        , Internal_Format(GL_RGB)
+        , Internal_Format(GL_SRGB8)
         , Image_Format(GL_RGB)
         , Wrap_S(GL_REPEAT)
         , Wrap_T(GL_REPEAT)
@@ -141,7 +141,7 @@ namespace Dog {
         , Columns(1)
         , Index(0)
         , IsSpriteSheet(false)
-        , Internal_Format(GL_RGB)
+        , Internal_Format(GL_SRGB8)
         , Image_Format(GL_RGB)
         , Wrap_S(GL_REPEAT)
         , Wrap_T(GL_REPEAT)
@@ -171,7 +171,7 @@ namespace Dog {
         , Columns(1)
         , Index(0)
         , IsSpriteSheet(false)
-        , Internal_Format(GL_RGB)
+        , Internal_Format(GL_SRGB8)
         , Image_Format(GL_RGB)
         , Wrap_S(GL_REPEAT)
         , Wrap_T(GL_REPEAT)
@@ -189,19 +189,8 @@ namespace Dog {
 
         mUncompressedData = data;
 
-        Internal_Format = GL_RGBA;
+        Internal_Format = GL_SRGB8_ALPHA8;
         Image_Format = GL_RGBA;
-
-        //if (data.channels == 4)
-        //{
-        //    Internal_Format = GL_RGBA;
-        //    Image_Format = GL_RGBA;
-        //}
-        //else
-        //{
-        //    Internal_Format = GL_RGB;
-        //    Image_Format = GL_RGB;
-        //}
 
         unsigned columns = 1, rows = 1;
         SpriteWidth = data.width / columns;

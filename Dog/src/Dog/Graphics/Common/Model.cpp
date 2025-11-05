@@ -40,8 +40,13 @@ namespace Dog
             return;
         }
 
-        mDirectory = filepath.substr(0, filepath.find_last_of('/')) + "/";
-        mModelName = std::filesystem::path(filepath).stem().string();
+        // change all double backslash to forwardslash in filepath
+        std::string newPath = filepath;
+        std::replace(newPath.begin(), newPath.end(), '\\', '/');
+
+        std::filesystem::path pathObj(newPath);
+        mDirectory = pathObj.parent_path().string();
+        mModelName = pathObj.stem().string();
 
         ProcessNode(mScene->mRootNode);
 

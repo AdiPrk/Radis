@@ -29,7 +29,9 @@ namespace Dog
 		void ClearAllBuffers(class Device* device);
 		void RecreateAllBuffers(class Device* device);
 
-        void CreateTextureSampler();
+		void CreateTextureSampler();
+		void CreateDescriptors();
+		void CreateDescriptorSet(class VKTexture* texture);
         void SetDevice(Device* dev) { device = dev; }
 
 	private:
@@ -40,6 +42,8 @@ namespace Dog
 
 		Device* device;
 		VkSampler mTextureSampler;
+		VkDescriptorSetLayout mImageDescriptorSetLayout;
+		VkDescriptorPool mImageDescriptorPool;
 
 		std::vector<ITexture::UncompressedPixelData> mCpuPixelArrays;
 	};

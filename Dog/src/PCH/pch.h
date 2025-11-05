@@ -83,7 +83,6 @@
 #include "Events/Event.h"
 #include "Graphics/Common/AssimpGlmHelper.h"
 #include "Graphics/Common/Animation/VQS.h"
-#include "Graphics/GraphicsAPIs.h"
 
 // Shared files
 #include "../../Common/src/Core.h"

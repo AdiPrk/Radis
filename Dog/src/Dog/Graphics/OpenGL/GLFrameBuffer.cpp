@@ -38,7 +38,7 @@ namespace Dog {
 
 		//Shader::SetResolutionUBO(glm::vec2(event.width, event.height));
 
-		DOG_INFO("GLFrameBuffer::OnSceneResize({}, {})", specification.width, specification.height);
+		//DOG_INFO("GLFrameBuffer::OnSceneResize({}, {})", specification.width, specification.height);
 
 		Create();
 	}

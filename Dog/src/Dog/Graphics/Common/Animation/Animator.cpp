@@ -84,13 +84,13 @@ namespace Dog
       VQS globalTransformation = parentTransform * nodeTransform;
 
       // draw debug stuffs
-      if (!InputSystem::isKeyDown(Key::H) && node.parentId > 0 && (bone && bone->debugName != "mixamorig:Hips")) {
-          glm::vec3 start = glm::vec3(tr * glm::vec4(parentTransform.translation, 1.f));
-          glm::vec3 end = glm::vec3(tr * glm::vec4(globalTransformation.translation, 1.f));
-
-          DebugDrawResource::DrawLine(start, end, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
-          DebugDrawResource::DrawCube(end, glm::vec3(0.01f), glm::vec4(0.0f, 1.0f, 1.0f, 0.4f));
-      }
+      // if (!InputSystem::isKeyDown(Key::H) && node.parentId > 0 && (bone && bone->debugName != "mixamorig:Hips")) {
+      //     glm::vec3 start = glm::vec3(tr * glm::vec4(parentTransform.translation, 1.f));
+      //     glm::vec3 end = glm::vec3(tr * glm::vec4(globalTransformation.translation, 1.f));
+      // 
+      //     DebugDrawResource::DrawLine(start, end, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
+      //     DebugDrawResource::DrawCube(end, glm::vec3(0.01f), glm::vec4(0.0f, 1.0f, 1.0f, 0.4f));
+      // }
 
       const auto& boneInfoMap = mCurrentAnimation->GetBoneIDMap();
       auto boneIt = boneInfoMap.find(nodeId);

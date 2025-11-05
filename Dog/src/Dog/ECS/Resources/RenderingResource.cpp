@@ -84,7 +84,17 @@ namespace Dog
         if (!textureLibrary)
         {
             textureLibrary = std::make_unique<TextureLibrary>(device.get());
+            textureLibrary->AddTexture("Assets/textures/circle.png");
+            textureLibrary->AddTexture("Assets/textures/circleOutline2.png");
+            textureLibrary->AddTexture("Assets/textures/dog.png");
+            textureLibrary->AddTexture("Assets/textures/dogmodel.png");
+            textureLibrary->AddTexture("Assets/textures/error.png");
+            textureLibrary->AddTexture("Assets/textures/ErrorTexture.png");
+            textureLibrary->AddTexture("Assets/textures/glslIcon.png");
+            textureLibrary->AddTexture("Assets/textures/playButton.png");
             textureLibrary->AddTexture("Assets/textures/square.png");
+            textureLibrary->AddTexture("Assets/textures/stopButton.png");
+            textureLibrary->AddTexture("Assets/textures/texture.jpg");
         }
         else
         {
@@ -95,8 +105,8 @@ namespace Dog
         {
             modelLibrary = std::make_unique<ModelLibrary>(*device, *textureLibrary);
             
-            //modelLibrary->AddModel("Assets/models/quad.obj");
             modelLibrary->AddModel("Assets/models/cube.obj");
+            modelLibrary->AddModel("Assets/models/quad.obj");
             //modelLibrary->AddModel("Assets/models/yena.fbx");
             //animationLibrary->AddAnimation("Assets/models/yena.fbx", modelLibrary->GetModel("yena"));
             //modelLibrary->AddModel("Assets/models/FuwawaAbyssgard.pmx");
@@ -106,7 +116,8 @@ namespace Dog
             //animationLibrary->AddAnimation("Assets/models/jack_samba.glb", modelLibrary->GetModel("jack_samba"));
             //modelLibrary->AddModel("Assets/models/travisFloppin.glb");
             //animationLibrary->AddAnimation("Assets/models/travisFloppin.glb", modelLibrary->GetModel("travisFloppin"));
-            modelLibrary->AddModel("Assets/models/TravisLocomotion/travis.fbx");
+            modelLibrary->AddModel("Assets/models/TravisLocomotion/TravisLocomotion.fbx");
+            modelLibrary->AddModel("Assets/models/jack_samba.glb");
             
             //modelLibrary->AddModel("Assets/models/okayu.pmx");
             //modelLibrary->AddModel("Assets/models/AlisaMikhailovna.fbx");
@@ -115,20 +126,23 @@ namespace Dog
         if (!animationLibrary)
         {
             animationLibrary = std::make_unique<AnimationLibrary>();
-            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/idle.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/jump.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left strafe walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left strafe.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left turn 90.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right strafe walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right strafe.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right turn 90.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/standard run.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/idle.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/idle.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/jump.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left strafe walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left strafe.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left turn 90.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right strafe walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right strafe.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right turn 90.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/standard run.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation("Assets/models/jack_samba.glb", modelLibrary->GetModel("Assets/models/jack_samba.glb"));
         }
 
         // Recreation if needed
         textureLibrary->CreateTextureSampler();
+        textureLibrary->CreateDescriptors();
         textureLibrary->RecreateAllBuffers(device.get());
         modelLibrary->LoadTextures();
         
@@ -179,7 +193,7 @@ namespace Dog
             //textureLibrary.reset();
             if (modelLibrary) modelLibrary->ClearAllBuffers(device.get());
             if (textureLibrary) textureLibrary->ClearAllBuffers(device.get());
-            animationLibrary.reset();
+            //animationLibrary.reset();
             renderGraph.reset();
             cameraUniform.reset();
             //instanceUniform.reset();

@@ -52,13 +52,18 @@ namespace Dog
             if (!anim || !animator)
                 continue;
 
-            if (ac.IsPlaying) 
+            if (ac.IsPlaying)
             {
                 ac.AnimationTime += anim->GetTicksPerSecond() * dt;
-                ac.AnimationTime = fmod(ac.AnimationTime, anim->GetDuration());
+            }
+            ac.AnimationTime = fmod(ac.AnimationTime, anim->GetDuration());
 
+            if (ac.AnimationTime != ac.PrevAnimationTime || ac.prevInPlace != ac.inPlace)
+            {
                 glm::mat4 tr = tc.GetTransform();
                 animator->UpdateAnimationInstant(ac.AnimationTime, ac.inPlace, tr);
+                ac.PrevAnimationTime = ac.AnimationTime;
+                ac.prevInPlace = ac.inPlace;
             }
 
             const auto& finalMatrices = animator->GetFinalBoneVQS();

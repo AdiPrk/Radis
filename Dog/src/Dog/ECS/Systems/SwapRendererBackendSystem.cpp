@@ -63,7 +63,7 @@ namespace Dog
             Engine::SetGraphicsAPI(GraphicsAPI::Vulkan);
             wr->Create();
             rr->Create(wr->window.get());
-            er->Create(rr->device.get(), rr->swapChain.get(), wr->window->GetGLFWwindow());
+            er->Create(rr->device.get(), rr->swapChain.get(), wr->window->GetGLFWwindow(), wr->window->GetDPIScale());
             er->CreateSceneTextures(rr);
 
             rr->modelLibrary->RecreateAllBuffers(rr->device.get());
@@ -87,7 +87,7 @@ namespace Dog
             Engine::SetGraphicsAPI(GraphicsAPI::OpenGL);
             wr->Create();
             rr->Create(wr->window.get());
-            er->Create(wr->window->GetGLFWwindow());
+            er->Create(wr->window->GetGLFWwindow(), wr->window->GetDPIScale());
 
             rr->modelLibrary->RecreateAllBuffers(rr->device.get());
             //rr->textureLibrary->RecreateAllBuffers(rr->device.get());

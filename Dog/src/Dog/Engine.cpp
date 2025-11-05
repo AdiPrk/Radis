@@ -5,7 +5,7 @@
 #include "ECS/Systems/InputSystem.h"
 #include "ECS/Systems/AnimationSystem.h"
 #include "ECS/Systems/RenderSystem.h"
-#include "ECS/Systems/EditorSystem.h"
+#include "ECS/Systems/Editor/EditorSystem.h"
 #include "ECS/Systems/PresentSystem.h"
 #include "ECS/Systems/CameraSystem.h"
 #include "ECS/Systems/RayRenderSystem.h"
@@ -34,14 +34,16 @@ namespace Dog
     GraphicsAPI Engine::mGraphicsAPI = GraphicsAPI::None;
     bool Engine::mVulkanSupported = true;
 
-    Engine::Engine(const EngineSpec& specs, int argc, char* argv[])
+    Engine::Engine(const DogLaunch::EngineSpec& specs, int argc, char* argv[])
         : mSpecs(specs)
         , mEcs()
     {
-        ValidateStartingDirectory(argc, argv, &mDevBuild);
-        SetGraphicsAPI(specs.graphicsAPI);
-
         Logger::Init();
+
+        DogLaunch::EngineSpec launchArgs = LoadConfig(argc, argv, &mDevBuild);
+        if (!mDevBuild) mSpecs = launchArgs;
+
+        SetGraphicsAPI(mSpecs.graphicsAPI);
 
         // Systems -------------------------
         mEcs.AddSystem<WindowSystem>();
@@ -58,20 +60,20 @@ namespace Dog
 
         // Resources -----------------------
         mEcs.AddResource<SwapRendererBackendResource>();
-        mEcs.AddResource<WindowResource>(specs.width, specs.height, specs.name);
+        mEcs.AddResource<WindowResource>(mSpecs.width, mSpecs.height, mSpecs.name);
 
         auto wr = mEcs.GetResource<WindowResource>();
         mEcs.AddResource<InputResource>(wr->window->GetGLFWwindow());
         mEcs.AddResource<RenderingResource>(wr->window.get());
 
-        if (specs.graphicsAPI == GraphicsAPI::Vulkan)
+        if (mSpecs.graphicsAPI == GraphicsAPI::Vulkan)
         {
             auto rr = mEcs.GetResource<RenderingResource>();
-            mEcs.AddResource<EditorResource>(rr->device.get(), rr->swapChain.get(), wr->window->GetGLFWwindow());
+            mEcs.AddResource<EditorResource>(rr->device.get(), rr->swapChain.get(), wr->window->GetGLFWwindow(), wr->window->GetDPIScale());
         }
-        else if (specs.graphicsAPI == GraphicsAPI::OpenGL)
+        else if (mSpecs.graphicsAPI == GraphicsAPI::OpenGL)
         {
-            mEcs.AddResource<EditorResource>(wr->window->GetGLFWwindow());
+            mEcs.AddResource<EditorResource>(wr->window->GetGLFWwindow(), wr->window->GetDPIScale());
         }
 
         mEcs.AddResource<SerializationResource>();

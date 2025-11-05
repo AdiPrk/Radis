@@ -22,9 +22,9 @@ namespace Dog
             if (strcmp(pCallbackData->pMessage, message.c_str()) == 0) {
                 return VK_FALSE;
             }
-        }        
+        }
 
-        std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+        DOG_ERROR("validation layer: {}", pCallbackData->pMessage);
 
         return VK_FALSE;
     }

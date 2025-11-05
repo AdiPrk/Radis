@@ -13,7 +13,7 @@
     <ClCompile Include="src\Dog\ECS\Resources\WindowResource.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\AnimationSystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\CameraSystem.cpp" />
-    <ClCompile Include="src\Dog\ECS\Systems\EditorSystem.cpp" />
+    <ClCompile Include="src\Dog\ECS\Systems\Editor\EditorSystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\InputSystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\ISystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\PresentSystem.cpp" />
@@ -70,6 +70,8 @@
     <ClCompile Include="src\Dog\Graphics\Common\Path\ArcLengthTable.cpp" />
     <ClCompile Include="src\Dog\Graphics\Common\Path\SpeedControl.cpp" />
     <ClCompile Include="src\Dog\Graphics\Common\Path\PathFollower.cpp" />
+    <ClCompile Include="src\Dog\Assets\Assets.cpp" />
+    <ClCompile Include="src\Dog\ECS\Systems\Editor\Windows\AssetsWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\nlohmann\json.hpp" />
@@ -102,7 +104,7 @@
     <ClInclude Include="src\Dog\ECS\Resources\WindowResource.h" />
     <ClInclude Include="src\Dog\ECS\Systems\AnimationSystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\CameraSystem.h" />
-    <ClInclude Include="src\Dog\ECS\Systems\EditorSystem.h" />
+    <ClInclude Include="src\Dog\ECS\Systems\Editor\EditorSystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\InputSystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\ISystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\PresentSystem.h" />
@@ -145,7 +147,6 @@
     <ClInclude Include="src\Dog\Graphics\Vulkan\Core\AccelerationStructures.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Core\VulkanFunctions.h" />
     <ClInclude Include="src\Dog\Graphics\IWindow.h" />
-    <ClInclude Include="src\Dog\Graphics\GraphicsAPIs.h" />
     <ClInclude Include="src\Dog\Graphics\OpenGL\GLWindow.h" />
     <ClInclude Include="src\Dog\ECS\Systems\WindowSystem.h" />
     <ClInclude Include="src\Dog\Graphics\RHI\RHI.h" />
@@ -164,8 +165,16 @@
     <ClInclude Include="src\Dog\Graphics\Common\Path\ArcLengthTable.h" />
     <ClInclude Include="src\Dog\Graphics\Common\Path\SpeedControl.h" />
     <ClInclude Include="src\Dog\Graphics\Common\Path\PathFollower.h" />
+    <ClInclude Include="src\Dog\Assets\Assets.h" />
+    <ClInclude Include="src\Dog\ECS\Systems\Editor\Windows\AssetsWindow.h" />
   </ItemGroup>
   <ItemGroup>
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />

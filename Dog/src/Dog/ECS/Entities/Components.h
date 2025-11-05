@@ -38,7 +38,10 @@ namespace Dog {
         float AnimationTime = 0.0f;
 		bool inPlace = false;
 
-        uint32_t BoneOffset = 0; // Used internally
+		// Used internally:
+        float PrevAnimationTime = AnimationTime;
+        bool prevInPlace = inPlace;
+        uint32_t BoneOffset = 0;
 	};
 
 	struct CameraComponent

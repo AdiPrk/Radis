@@ -153,14 +153,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\imgui;$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glew\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\imgui;$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glew\include;$(SolutionDir)Dependencies\nlohmann;$(SolutionDir)Dependencies\enet\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\imgui\lib\;$(SolutionDir)Dependencies\glew\lib\;$(SolutionDir)Dependencies\glfw\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opengl32.lib;glfw3d.lib;glew32s.lib;ImGuiDebug.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\imgui\lib\;$(SolutionDir)Dependencies\glew\lib\;$(SolutionDir)Dependencies\glfw\lib\;$(SolutionDir)Dependencies\enet\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>enet64.lib;opengl32.lib;glfw3d.lib;glew32s.lib;ImGuiDebug.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>robocopy "$(SolutionDir)Dog\Assets" "$(OutDir)base\Assets" /E
@@ -175,14 +175,14 @@ IF %ERRORLEVEL% LSS 8 (exit 0) ELSE (exit %ERRORLEVEL%)</Command>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\imgui;$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glew\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\imgui;$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glew\include;$(SolutionDir)Dependencies\nlohmann;$(SolutionDir)Dependencies\enet\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\imgui\lib\;$(SolutionDir)Dependencies\glew\lib\;$(SolutionDir)Dependencies\glfw\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opengl32.lib;glfw3.lib;glew32s.lib;ImGui.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>enet64.lib;opengl32.lib;glfw3.lib;glew32s.lib;ImGui.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>robocopy "$(SolutionDir)Dog\Assets" "$(OutDir)base\Assets" /E
@@ -197,14 +197,14 @@ IF %ERRORLEVEL% LSS 8 (exit 0) ELSE (exit %ERRORLEVEL%)</Command>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\imgui;$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glew\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\imgui;$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glew\include;$(SolutionDir)Dependencies\nlohmann;$(SolutionDir)Dependencies\enet\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\imgui\lib\;$(SolutionDir)Dependencies\glew\lib\;$(SolutionDir)Dependencies\glfw\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opengl32.lib;glfw3.lib;glew32s.lib;ImGui.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>enet64.lib;opengl32.lib;glfw3.lib;glew32s.lib;ImGui.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>robocopy "$(SolutionDir)Dog\Assets" "$(OutDir)base\Assets" /E
