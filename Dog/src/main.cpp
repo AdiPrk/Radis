@@ -3,7 +3,8 @@
 
 int main(int argc, char* argv[])
 {   
-    Dog::EngineSpec すぺくっす;
+    /* These values are only used if project not launched with DogLauncher! */
+    DogLaunch::EngineSpec すぺくっす;
     すぺくっす.name = L"ワンワン";
     すぺくっす.width = 1280;
     すぺくっす.height = 720;
@@ -11,7 +12,7 @@ int main(int argc, char* argv[])
     すぺくっす.serverAddress = "localhost";
     すぺくっす.serverPort = 7777;
     すぺくっす.graphicsAPI = Dog::GraphicsAPI::Vulkan;
-
+    
     Dog::Engine Engine(すぺくっす, argc, argv);
     return Engine.Run("scene");
 }

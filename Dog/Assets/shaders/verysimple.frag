@@ -55,11 +55,15 @@ void main()
 	{
 		color = texture(sampler2D(colorH), fragTexCoord) * fragTint;
 	}
+
 	// Apply gamma de-correction (sRGB to Linear approximation)
-	const float gamma = 2.2;
-	vec3 corrected = pow(color.rgb, vec3(gamma));
-	outColor = vec4(corrected, color.a);
-	//outColor = color;
+	//outColor = vec4(pow(color.rgb, vec3(2.2)), color.a);
+
+	// Apply gamma correction 
+	// color.rgb = pow(color.rgb, vec3(1.0 / 2.2)); 
+	// outColor = color;
+
+	outColor = color;
 	if (outColor.a < 0.1)
 	{
 		discard;

@@ -20,6 +20,10 @@ namespace Dog
 		const VkImageView& GetImageView() const { return mTextureImageView; }
 		static void TransitionImageLayout(Device& mDevice, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels);
 
+        void* GetTextureID() override { return reinterpret_cast<void*>(mDescriptorSet); }
+
+		VkDescriptorSet mDescriptorSet;
+
 	private:
 
 		void LoadPixelsFromFile(const std::string& filepath);

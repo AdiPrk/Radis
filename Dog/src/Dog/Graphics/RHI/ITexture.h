@@ -13,6 +13,8 @@ namespace Dog
         int GetChannels() const { return mChannels; }
         uint64_t GetImageSize() const { return mImageSize; }
 
+        virtual void* GetTextureID() = 0;
+
     protected:
         int mWidth, mHeight, mChannels;
         uint64_t mImageSize;

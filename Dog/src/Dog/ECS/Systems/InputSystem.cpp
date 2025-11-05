@@ -173,6 +173,51 @@ namespace Dog {
 		mouseInputLocked = locked;
 	}
 
+	void InputSystem::WrapMouseOverScreen()
+	{
+		int windowWidth, windowHeight;
+		glfwGetWindowSize(pwindow, &windowWidth, &windowHeight);
+		double xpos = mouseScreenX;
+		double ypos = mouseScreenY;
+		bool wrapped = false;
+		if (mouseScreenX < 0)
+		{
+			xpos = static_cast<double>(windowWidth - 1);
+			wrapped = true;
+		}
+		else if (mouseScreenX >= windowWidth)
+		{
+			xpos = 0.0;
+			wrapped = true;
+		}
+		if (mouseScreenY < 0)
+		{
+			ypos = static_cast<double>(windowHeight - 1);
+			wrapped = true;
+		}
+		else if (mouseScreenY >= windowHeight)
+		{
+			ypos = 0.0;
+			wrapped = true;
+		}
+		if (wrapped)
+		{
+			glfwSetCursorPos(pwindow, xpos, ypos);
+			mouseScreenX = static_cast<float>(xpos);
+			mouseScreenY = static_cast<float>(ypos);
+        }
+	}
+
+	void InputSystem::DisableCursor()
+	{
+		glfwSetInputMode(pwindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	}
+
+	void InputSystem::EnableCursor()
+	{
+		glfwSetInputMode(pwindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	}
+
 	void InputSystem::keyPressCallback(GLFWwindow* windowPointer, int key, int scanCode, int action, int mod)
 	{
 		ImGui_ImplGlfw_KeyCallback(windowPointer, key, scanCode, action, mod);

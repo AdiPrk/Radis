@@ -10,15 +10,17 @@ namespace Dog
 
     struct EditorResource : public IResource
     {
-        EditorResource(Device* device, SwapChain* swapChain, GLFWwindow* glfwWindow);
-        EditorResource(GLFWwindow* glfwWindow);
+        EditorResource(Device* device, SwapChain* swapChain, GLFWwindow* glfwWindow, float dpiScale);
+        EditorResource(GLFWwindow* glfwWindow, float dpiScale);
 
-        void Create(Device* device, SwapChain* swapChain, GLFWwindow* glfwWindow);
-        void Create(GLFWwindow* glfwWindow);
+        void Create(Device* device, SwapChain* swapChain, GLFWwindow* glfwWindow, float dpiScale);
+        void Create(GLFWwindow* glfwWindow, float dpiScale);
         void Cleanup(Device* device);
 
         void CreateSceneTextures(struct RenderingResource* rr);
         void CleanSceneTextures(struct RenderingResource* rr);
+
+        void SetupFonts(float dpiScale);
 
         VkDescriptorPool descriptorPool;
         VkDescriptorSetLayout samplerSetLayout;

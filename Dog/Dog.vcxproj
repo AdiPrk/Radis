@@ -174,7 +174,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
       <ShowIncludes>false</ShowIncludes>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <PreprocessToFile>true</PreprocessToFile>
+      <PreprocessToFile>false</PreprocessToFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -206,6 +206,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Dog\Assets\Assets.cpp" />
     <ClCompile Include="src\Dog\ECS\ECS.cpp" />
     <ClCompile Include="src\Dog\ECS\Entities\Components.cpp" />
     <ClCompile Include="src\Dog\ECS\Entities\Entity.cpp" />
@@ -219,7 +220,8 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Dog\ECS\Resources\WindowResource.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\AnimationSystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\CameraSystem.cpp" />
-    <ClCompile Include="src\Dog\ECS\Systems\EditorSystem.cpp" />
+    <ClCompile Include="src\Dog\ECS\Systems\Editor\EditorSystem.cpp" />
+    <ClCompile Include="src\Dog\ECS\Systems\Editor\Windows\AssetsWindow.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\InputSystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\ISystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\PresentSystem.cpp" />
@@ -304,6 +306,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="Dependencies\imgui\imstb_truetype.h" />
     <ClInclude Include="Dependencies\imgui\ImZoomSlider.h" />
     <ClInclude Include="Dependencies\nlohmann\json.hpp" />
+    <ClInclude Include="src\Dog\Assets\Assets.h" />
     <ClInclude Include="src\Dog\ECS\ECS.h" />
     <ClInclude Include="src\Dog\ECS\Entities\Components.h" />
     <ClInclude Include="src\Dog\ECS\Entities\Entity.h" />
@@ -318,7 +321,8 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Dog\ECS\Resources\WindowResource.h" />
     <ClInclude Include="src\Dog\ECS\Systems\AnimationSystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\CameraSystem.h" />
-    <ClInclude Include="src\Dog\ECS\Systems\EditorSystem.h" />
+    <ClInclude Include="src\Dog\ECS\Systems\Editor\EditorSystem.h" />
+    <ClInclude Include="src\Dog\ECS\Systems\Editor\Windows\AssetsWindow.h" />
     <ClInclude Include="src\Dog\ECS\Systems\InputSystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\ISystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\PresentSystem.h" />
@@ -334,7 +338,6 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Dog\Graphics\Common\Path\CubicSpline.h" />
     <ClInclude Include="src\Dog\Graphics\Common\Path\PathFollower.h" />
     <ClInclude Include="src\Dog\Graphics\Common\Path\SpeedControl.h" />
-    <ClInclude Include="src\Dog\Graphics\GraphicsAPIs.h" />
     <ClInclude Include="src\Dog\Graphics\OpenGL\GLFrameBuffer.h" />
     <ClInclude Include="src\Dog\Graphics\OpenGL\GLMesh.h" />
     <ClInclude Include="src\Dog\Graphics\OpenGL\GLShader.h" />

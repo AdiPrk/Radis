@@ -1,15 +1,15 @@
 #include <PCH/pch.h>
 #include "EditorSystem.h"
 #include "Engine.h"
-#include "../ECS.h"
-#include "../Entities/Components.h"
+#include "ECS/ECS.h"
+#include "ECS/Entities/Components.h"
 
-#include "../Resources/RenderingResource.h"
-#include "../Resources/WindowResource.h"
-#include "../Resources/EditorResource.h"
-#include "../Resources/SerializationResource.h"
-#include "../Resources/SwapRendererBackendResource.h"
-#include "../Systems/InputSystem.h"
+#include "ECS/Resources/RenderingResource.h"
+#include "ECS/Resources/WindowResource.h"
+#include "ECS/Resources/EditorResource.h"
+#include "ECS/Resources/SerializationResource.h"
+#include "ECS/Resources/SwapRendererBackendResource.h"
+#include "ECS/Systems/InputSystem.h"
 
 #include "Graphics/Vulkan/Core/Device.h"
 #include "Graphics/Vulkan/Core/SwapChain.h"
@@ -21,6 +21,10 @@
 
 #include "Graphics/Vulkan/VulkanWindow.h"
 #include "Graphics/OpenGL/GLFrameBuffer.h"
+
+#include "Windows/AssetsWindow.h"
+
+#include "Assets/Assets.h"
 
 #include "imgui_internal.h"
 
@@ -54,6 +58,9 @@ namespace Dog
         RenderSceneWindow();
         RenderEntitiesWindow();
         RenderInspectorWindow();
+
+        auto& tl = ecs->GetResource<RenderingResource>()->textureLibrary;
+        EditorWindows::UpdateAssetsWindow(tl.get());
 
         ImGui::Begin("Debug");
         ImGui::Checkbox("Wireframe", &ecs->GetResource<RenderingResource>()->renderWireframe);
@@ -395,7 +402,9 @@ namespace Dog
                         if (extension == desiredExt)
                         {
                             // Add the filename to our list
-                            fileNames.push_back(entry.path().string());
+                            std::string fn = entry.path().string();
+                            std::replace(fn.begin(), fn.end(), '\\', '/'); // Normalize to forward slashes
+                            fileNames.push_back(fn);
                             break; // Move to the next file
                         }
                     }
@@ -469,7 +478,8 @@ namespace Dog
         DrawComponentUI<ModelComponent>("Model", selectedEnt, [&](ModelComponent& component)
         {
             const std::vector<std::string> modelExtensions = { ".fbx", ".glb", ".obj" };
-            const std::vector<std::string>& modelFiles = GetFilesWithExtensions("assets/models/", modelExtensions);
+            std::vector<std::string> modelFiles = GetFilesWithExtensions("assets/models/", modelExtensions);
+            modelFiles.push_back("Assets/Models/TravisLocomotion/TravisLocomotion.fbx"); // Extra
 
             auto rr = ecs->GetResource<RenderingResource>();
             auto& mc = rr->modelLibrary;
@@ -498,6 +508,19 @@ namespace Dog
                 }
                 
                 ImGui::EndCombo();
+            }
+
+            //ImGui::InputText("Model Path", &component.ModelPath);
+
+            if (ImGui::BeginDragDropTarget()) 
+            {
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Model"))
+                {
+                    std::string path = std::string((char*)payload->Data, payload->DataSize - 1); // -1 to remove null terminator
+                    component.ModelPath = path;
+                }
+
+                ImGui::EndDragDropTarget();
             }
 
             ImGui::ColorEdit4("Tint Color", glm::value_ptr(component.tintColor));
