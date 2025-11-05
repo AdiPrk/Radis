@@ -25,6 +25,8 @@ namespace Dog
         VkDescriptorPool descriptorPool;
         VkDescriptorSetLayout samplerSetLayout;
 
+        float sceneWindowX = 1.f;
+        float sceneWindowY = 1.f;
         float sceneWindowWidth = 1.f;
         float sceneWindowHeight = 1.f;
 

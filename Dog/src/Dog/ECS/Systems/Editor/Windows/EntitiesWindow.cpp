@@ -9,8 +9,11 @@ namespace Dog
 {
     namespace EditorWindows
     {
-        void RenderEntitiesWindow(EditorResource* er, ECS* ecs)
+        void RenderEntitiesWindow(ECS* ecs)
         {
+            auto er = ecs->GetResource<EditorResource>();
+            if (!er) return;
+
             entt::registry& registry = ecs->GetRegistry();
 
             ImGui::Begin("Entities##window");
