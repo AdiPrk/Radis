@@ -20,6 +20,7 @@ namespace DogLaunch
         Dog::GraphicsAPI graphicsAPI = Dog::GraphicsAPI::Vulkan; // The graphics API to use.
 
         std::string workingDirectory = "";              // The working directory of the engine.
+        bool launchWithEditor = true;                   // Whether to launch the engine with the editor.
     };
 
     inline void to_json(nlohmann::json& j, const EngineSpec& args) {
@@ -31,7 +32,8 @@ namespace DogLaunch
             {"serverAddress", args.serverAddress},
             {"serverPort", args.serverPort},
             {"graphicsAPI", args.graphicsAPI},
-            {"workingDirectory", args.workingDirectory }
+            {"workingDirectory", args.workingDirectory },
+            {"launchWithEditor", args.launchWithEditor }
         };
     }
 
@@ -44,6 +46,7 @@ namespace DogLaunch
         j.at("serverPort").get_to(args.serverPort);
         j.at("graphicsAPI").get_to(args.graphicsAPI);
         j.at("workingDirectory").get_to(args.workingDirectory);
+        j.at("launchWithEditor").get_to(args.launchWithEditor);
     }
 
 } // namespace DogLaunch

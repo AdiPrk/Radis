@@ -357,7 +357,10 @@ namespace Dog
             DOG_CRITICAL("Failed to create scene sampler");
         }
         
-        sceneTextureDescriptorSet = ImGui_ImplVulkan_AddTexture(sceneSampler, sceneImageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        if (Engine::GetEditorEnabled())
+        {
+            sceneTextureDescriptorSet = ImGui_ImplVulkan_AddTexture(sceneSampler, sceneImageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        }
     }
 
     void RenderingResource::CleanupSceneTexture()

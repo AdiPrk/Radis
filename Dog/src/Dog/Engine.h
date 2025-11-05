@@ -9,9 +9,6 @@ namespace Dog
 {
 	class Engine {
 	public:
-		static constexpr int WIDTH = 1600;
-		static constexpr int HEIGHT = 900;
-
 		Engine(const DogLaunch::EngineSpec& specs, int argc, char* argv[]);
 		~Engine();
 
@@ -33,6 +30,7 @@ namespace Dog
 		static void SetGraphicsAPI(GraphicsAPI api) { mGraphicsAPI = api; }
 		static void ForceVulkanUnsupportedSwap() { mVulkanSupported = false; }
         static bool GetVulkanSupported() { return mVulkanSupported; }
+        static bool GetEditorEnabled() { return mEditorEnabled; }
 
 	private:
 		// Engine Specs
@@ -48,6 +46,7 @@ namespace Dog
         static bool mDevBuild;
 		static GraphicsAPI mGraphicsAPI;
 		static bool mVulkanSupported;
+		static bool mEditorEnabled;
 	};
 
 } // namespace Dog

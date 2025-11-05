@@ -35,12 +35,6 @@ namespace Dog
 {
     void EditorSystem::Init()
     {
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
-        {
-            auto er = ecs->GetResource<EditorResource>();
-            auto rr = ecs->GetResource<RenderingResource>();
-            er->CreateSceneTextures(rr);
-        }
     }
 
     void EditorSystem::FrameStart()

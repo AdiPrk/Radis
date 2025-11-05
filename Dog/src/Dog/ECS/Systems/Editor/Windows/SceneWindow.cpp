@@ -18,7 +18,6 @@ namespace Dog
             auto er = ecs->GetResource<EditorResource>();
             if (!rr || !er) return;
 
-            // Create a window and display the scene texture
             void* sceneTexturePtr;
             if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
             {
@@ -29,46 +28,31 @@ namespace Dog
                 sceneTexturePtr = (void*)(uintptr_t)(rr->sceneFrameBuffer->GetColorAttachmentID(0));
             }
 
-            // --- 2. Begin Window ---
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
             ImGui::Begin("Viewport");
 
-            // --- 3. Get Viewport Rect ---
-            // This is the CRITICAL part for ImGuizmo. We need the exact pixel coordinates
-            // of the content area (where the image is drawn).
             ImVec2 contentRegionMin = ImGui::GetWindowContentRegionMin();
             ImVec2 contentRegionMax = ImGui::GetWindowContentRegionMax();
             ImVec2 windowPos = ImGui::GetWindowPos();
-
-            // These are the screen-space coordinates ImGuizmo needs
             ImVec2 viewportTopLeft = ImVec2(windowPos.x + contentRegionMin.x, windowPos.y + contentRegionMin.y);
             ImVec2 viewportSize = ImVec2(contentRegionMax.x - contentRegionMin.x, contentRegionMax.y - contentRegionMin.y);
 
-            // --- 4. Update EditorResource & Handle Resize ---
-            // Update the resource *before* calling UpdateImGuizmo, so it uses the latest data.
-            if (er->sceneWindowWidth != viewportSize.x ||
-                er->sceneWindowHeight != viewportSize.y)
+            if (er->sceneWindowWidth != viewportSize.x || er->sceneWindowHeight != viewportSize.y)
             {
-                // Update dimensions in the resource
                 er->sceneWindowWidth = viewportSize.x;
                 er->sceneWindowHeight = viewportSize.y;
 
-                // Publish resize event
                 PUBLISH_EVENT(Event::SceneResize, (int)viewportSize.x, (int)viewportSize.y);
             }
-            // Update position in the resource
+
             er->sceneWindowX = viewportTopLeft.x;
             er->sceneWindowY = viewportTopLeft.y;
 
-
-            // --- 5. Calculate UVs (Unchanged) ---
             float flipY = static_cast<float>(Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL);
             ImVec2 uv0 = { 0.0f, flipY * 1.0f + (1.0f - flipY) * 0.0f };
             ImVec2 uv1 = { 1.0f, flipY * 0.0f + (1.0f - flipY) * 1.0f };
 
-            // --- 6. (THE FIX) Draw Scene as Background ---
-            // We use AddImage from the window's draw list. This does NOT create
-            // a widget, so it won't capture mouse input.
+            // Use AddImage so it won't capture mouse input
             ImGui::GetWindowDrawList()->AddImage(
                 sceneTexturePtr,
                 viewportTopLeft, // Top-left corner
@@ -77,14 +61,8 @@ namespace Dog
                 uv1
             );
 
-            // --- 7. (THE FIX) Call ImGuizmo ---
-            // Now that the 'er' resource is updated and the scene is drawn,
-            // we call ImGuizmo. It will use the correct rect from 'er'
-            // and draw on top of the background image.
-            UpdateImGuizmo(ecs); // Assumes this is a member function of your class
+            UpdateImGuizmo(ecs); 
 
-
-            // --- 8. End Window ---
             ImGui::End();
             ImGui::PopStyleVar();
         }

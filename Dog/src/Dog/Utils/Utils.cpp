@@ -1,7 +1,8 @@
 #include <PCH/pch.h>
 #include "Utils.h"
 #include "Engine.h"
-// #include <direct.h>   // for _getcwd
+#include <tchar.h>
+#include <shellapi.h> // For ShellExecuteA
 
 namespace Dog
 {
@@ -155,5 +156,78 @@ namespace Dog
         }
 
         return fileNames;
+    }
+
+    /**
+ * @brief Executes a command and captures its standard output.
+ * @param cmd The command to execute (e.g., "vswhere.exe -latest").
+ * @return The stdout output from the command as a string.
+ */
+    std::string ExecAndGetOutput(const char* cmd) {
+        std::array<char, 128> buffer;
+        std::string result;
+        // Use _popen to open a pipe to the command's stdout
+        std::unique_ptr<FILE, decltype(&_pclose)> pipe(_popen(cmd, "r"), _pclose);
+        if (!pipe) {
+            return "ERROR: _popen() failed!";
+        }
+        // Read the output a chunk at a time
+        while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+            result += buffer.data();
+        }
+        return result;
+    }
+
+    /**
+     * @brief Finds the latest Visual Studio installation and launches it to
+     * open the specified folder.
+     * @param folderPath The absolute path to the folder you want to open.
+     */
+    void LaunchVSForFolder(const std::string& folderPath)
+    {
+        // 1. Find vswhere.exe. It's in a standard location.
+        const char* vswherePath = "%ProgramFiles(x86)%\\Microsoft Visual Studio\\Installer\\vswhere.exe";
+
+        // 2. Build the command to find the latest VS installation path
+        //    -latest: Finds the newest installed version.
+        //    -property installationPath: Asks for just the root path.
+        std::string command = "\"";
+        command += vswherePath;
+        command += "\" -latest -property installationPath";
+
+        // 3. Run the command and get the output
+        std::string vsInstallPath = ExecAndGetOutput(command.c_str());
+
+        // Clean up the output string (it often has a newline)
+        if (!vsInstallPath.empty()) {
+            vsInstallPath.erase(vsInstallPath.find_last_not_of(" \n\r\t") + 1);
+        }
+
+        if (vsInstallPath.empty() || vsInstallPath.find("ERROR") != std::string::npos) {
+            std::cerr << "Could not find Visual Studio. Is it installed?" << std::endl;
+            return;
+        }
+
+        // 4. Construct the path to devenv.exe
+        std::string devenvPath = vsInstallPath + "\\Common7\\IDE\\devenv.exe";
+
+        // 5. Launch Visual Studio with the folder!
+        //    We use ShellExecuteA to launch the process.
+        //    - "open": The verb (like right-clicking and selecting "Open").
+        //    - devenvPath: The application to run.
+        //    - folderPath: The argument to pass (this is what makes it open your folder).
+        HINSTANCE result = ShellExecuteA(
+            NULL,           // Parent window handle
+            "open",         // Verb
+            devenvPath.c_str(), // File to execute
+            folderPath.c_str(), // Parameters (the folder to open)
+            NULL,           // Working directory
+            SW_SHOWDEFAULT  // Show the window
+        );
+
+        // ShellExecute returns a value <= 32 on error
+        if ((uintptr_t)result <= 32) {
+            std::cerr << "Failed to launch Visual Studio." << std::endl;
+        }
     }
 }

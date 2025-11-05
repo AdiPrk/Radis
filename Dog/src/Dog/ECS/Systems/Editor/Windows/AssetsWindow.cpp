@@ -1,8 +1,9 @@
-#include <PCH/pch.h>
+﻿#include <PCH/pch.h>
 #include "AssetsWindow.h"
 #include "Assets/Assets.h"
 #include "Graphics/Common/TextureLibrary.h"
 #include "Engine.h"
+#include "Utils/Utils.h"
 
 namespace Dog 
 {
@@ -137,6 +138,14 @@ namespace Dog
 
 			ImGui::Begin("Assets");
 
+			// --- Header Bar ---
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8, 4));
+			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(6, 6));
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.18f, 0.18f, 0.18f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.28f, 0.28f, 0.28f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.38f, 0.38f, 0.38f, 1.0f));
+
+			// Left side controls
 			if (browser.currentDir != browser.baseDir)
 			{
 				if (ImGui::Button("Back"))
@@ -145,8 +154,34 @@ namespace Dog
 				}
 				ImGui::SameLine();
 			}
+
 			ImGui::TextUnformatted(browser.currentDir.string().c_str());
 
+			// Align "Launch VS" button to the right
+			float rightButtonWidth = 120.0f;
+			float offset = ImGui::GetContentRegionAvail().x - rightButtonWidth;
+			if (offset > 0) ImGui::SameLine(offset);
+
+			// --- Stylized Launch VS Button ---
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.20f, 0.45f, 0.75f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.30f, 0.55f, 0.90f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.15f, 0.35f, 0.65f, 1.0f));
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 6.0f);
+
+			if (ImGui::Button("Launch VS", ImVec2(rightButtonWidth, 0)))
+			{
+				LaunchVSForFolder(Assets::AssetsDir);
+			}
+
+			ImGui::PopStyleVar();
+			ImGui::PopStyleColor(3);
+
+			ImGui::Separator();
+
+			ImGui::PopStyleColor(3);
+			ImGui::PopStyleVar(2);
+
+			// --- Continue with thumbnail grid ---
 			static float padding = 16.0f;
 			static float thumbnailSize = 100.0f;
 			float cellSize = thumbnailSize + padding;
