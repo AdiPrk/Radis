@@ -8,7 +8,7 @@
 #include "../Core/Buffer.h"
 #include "../Core/SwapChain.h"
 
-#include "../Texture/Texture.h"
+#include "../Texture/VKTexture.h"
 
 namespace Dog
 {

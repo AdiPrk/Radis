@@ -1,5 +1,5 @@
 #include <PCH/pch.h>
-#include "Texture.h"
+#include "VKTexture.h"
 
 #include "../Core/Device.h"
 #include "../Core/Buffer.h"
