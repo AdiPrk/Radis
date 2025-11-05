@@ -88,4 +88,4 @@ namespace Dog
         mCurrentFrame = (mCurrentFrame + 1) % SwapChain::MAX_FRAMES_IN_FLIGHT;
     }
 
-} // namespace Rendering
+} // namespace Dog

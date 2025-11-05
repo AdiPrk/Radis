@@ -45,7 +45,7 @@ namespace Dog
 				shader = GetTexID("glslIcon.png");
 				scene = GetTexID("dog.png");
 				model = GetTexID("dogmodel.png");
-				defaultFile = folder; // Use folder as a fallback default
+				defaultFile = GetTexID("unknownFileIcon.png");
 			}
 		};
 
@@ -146,7 +146,7 @@ namespace Dog
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.38f, 0.38f, 0.38f, 1.0f));
 
 			// Left side controls
-			if (browser.currentDir != browser.baseDir)
+			if (!SameDir(browser.currentDir.string(), browser.baseDir.string()))
 			{
 				if (ImGui::Button("Back"))
 				{
@@ -170,7 +170,7 @@ namespace Dog
 
 			if (ImGui::Button("Launch VS", ImVec2(rightButtonWidth, 0)))
 			{
-				LaunchVSForFolder(Assets::AssetsDir);
+				LaunchVSCode(Assets::AssetsDir);
 			}
 
 			ImGui::PopStyleVar();

@@ -97,6 +97,7 @@ namespace Dog
             textureLibrary->AddTexture(Assets::ImagesPath + "stopButton.png");
             textureLibrary->AddTexture(Assets::ImagesPath + "texture.jpg");
             textureLibrary->AddTexture(Assets::ImagesPath + "folderIcon.png");
+            textureLibrary->AddTexture(Assets::ImagesPath + "unknownFileIcon.png");
         }
         else
         {

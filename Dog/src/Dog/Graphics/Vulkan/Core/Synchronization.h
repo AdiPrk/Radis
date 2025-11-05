@@ -43,4 +43,4 @@ namespace Dog
 
         size_t mCurrentFrame = 0;                           // Current frame being rendered
     };
-} // namespace Rendering
+} // namespace Dog
