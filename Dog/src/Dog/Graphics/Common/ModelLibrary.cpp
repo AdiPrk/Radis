@@ -40,17 +40,14 @@ namespace Dog
             return it->second;
         }
 
-        std::string lowerPath = filePath;
-        std::transform(lowerPath.begin(), lowerPath.end(), lowerPath.begin(), ::tolower);
-
-        std::unique_ptr<Model> model = std::make_unique<Model>(mDevice, lowerPath);
+        std::unique_ptr<Model> model = std::make_unique<Model>(mDevice, filePath);
         
         uint32_t modelID = static_cast<uint32_t>(mModels.size());
         mModels.push_back(std::move(model));
         //AddToUnifiedMesh(modelID);
 
         // std::string mModelName = std::filesystem::path(filePath).stem().string();
-        mModelMap[lowerPath] = modelID;
+        mModelMap[filePath] = modelID;
         mLastModelLoaded = modelID;
         
         return modelID;
@@ -96,10 +93,7 @@ namespace Dog
     {
         if (modelPath.empty()) return nullptr;
 
-        std::string lowerPath = modelPath;
-        std::transform(lowerPath.begin(), lowerPath.end(), lowerPath.begin(), ::tolower);
-
-        auto it = mModelMap.find(lowerPath);
+        auto it = mModelMap.find(modelPath);
         if (it == mModelMap.end()) return nullptr;
         return GetModel(it->second);
     }
@@ -108,13 +102,10 @@ namespace Dog
     {
         if (modelPath.empty()) return nullptr;
 
-        std::string lowerPath = modelPath;
-        std::transform(lowerPath.begin(), lowerPath.end(), lowerPath.begin(), ::tolower);
-
-        auto it = mModelMap.find(lowerPath);
+        auto it = mModelMap.find(modelPath);
         if (it == mModelMap.end())
         {
-            uint32_t newModelIndex = AddModel(lowerPath);
+            uint32_t newModelIndex = AddModel(modelPath);
             return GetModel(newModelIndex);
         }
         return GetModel(it->second);
@@ -122,9 +113,6 @@ namespace Dog
 
     uint32_t ModelLibrary::GetModelIndex(const std::string& modelPath)
     {
-        std::string lowerPath = modelPath;
-        std::transform(lowerPath.begin(), lowerPath.end(), lowerPath.begin(), ::tolower);
-
         auto it = mModelMap.find(modelPath);
         if (it == mModelMap.end())
         {
@@ -145,7 +133,7 @@ namespace Dog
             {
                 if (mesh->diffuseTexturePath.empty())
                 {
-                    if ((mesh->mTextureData == nullptr || mesh->mTextureSize == 0) && mesh->diffuseTextureIndex == 10001) continue;
+                    if ((mesh->mTextureData == nullptr || mesh->mTextureSize == 0) && mesh->diffuseTextureIndex == TextureLibrary::INVALID_TEXTURE_INDEX) continue;
 
                     uint32_t ind = mTextureLibrary.AddTexture(mesh->mTextureData.get(), mesh->mTextureSize, "EmbeddedTexture_" + std::to_string(mesh->mMeshID));
                     mesh->diffuseTextureIndex = ind;

@@ -44,7 +44,7 @@ namespace Dog
             ModelComponent& mc = view.get<ModelComponent>(entityHandle);
             AnimationComponent& ac = view.get<AnimationComponent>(entityHandle);
 
-            if (ac.AnimationIndex == 10001) continue;
+            if (ac.AnimationIndex == AnimationLibrary::INVALID_ANIMATION_INDEX) continue;
 
             Animation* anim = al->GetAnimation(ac.AnimationIndex);
             Animator* animator = al->GetAnimator(ac.AnimationIndex);
@@ -58,13 +58,15 @@ namespace Dog
             }
             ac.AnimationTime = fmod(ac.AnimationTime, anim->GetDuration());
 
-            if (ac.AnimationTime != ac.PrevAnimationTime || ac.prevInPlace != ac.inPlace)
-            {
+            //if (ac.AnimationTime != ac.PrevAnimationTime || 
+            //    animator->GetPrevTime() != ac.AnimationTime || 
+            //    ac.prevInPlace != ac.inPlace)
+            //{
                 glm::mat4 tr = tc.GetTransform();
                 animator->UpdateAnimationInstant(ac.AnimationTime, ac.inPlace, tr);
                 ac.PrevAnimationTime = ac.AnimationTime;
                 ac.prevInPlace = ac.inPlace;
-            }
+            //}
 
             const auto& finalMatrices = animator->GetFinalBoneVQS();
             bonesMatrices.insert(bonesMatrices.end(), finalMatrices.begin(), finalMatrices.end());

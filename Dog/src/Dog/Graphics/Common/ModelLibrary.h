@@ -9,6 +9,7 @@
 #pragma once
 
 #include "../Vulkan/Core/Device.h"
+#include "Assets/CaseInsensitiveHash.h"
 
 namespace Dog
 {
@@ -45,7 +46,7 @@ namespace Dog
 		friend class Model;
 
 		std::vector<std::unique_ptr<Model>> mModels;
-		std::unordered_map<std::string, uint32_t> mModelMap;
+		std::unordered_map<std::string, uint32_t, CaseInsensitiveHash, CaseInsensitiveEqual> mModelMap;
 
         std::unique_ptr<UnifiedMeshes> mUnifiedMesh;
 

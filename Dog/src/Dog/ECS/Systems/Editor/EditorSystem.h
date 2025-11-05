@@ -17,11 +17,9 @@ namespace Dog
         void Exit();
 
     private:
-        void RenderImGui(VkCommandBuffer cmd);
+        void RenderImGui(VkCommandBuffer cmd = VK_NULL_HANDLE);
 
         void RenderMainMenuBar();
-        void RenderSceneWindow();
-        void RenderEntitiesWindow();
         void RenderInspectorWindow();
 
         bool mMouseDown = false;

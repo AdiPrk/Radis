@@ -25,6 +25,7 @@ namespace Dog
         VkSampler GetSampler() const { return mTextureSampler; }
 
 		const static uint32_t MAX_TEXTURE_COUNT;
+		const static uint32_t INVALID_TEXTURE_INDEX;
 
 		void ClearAllBuffers(class Device* device);
 		void RecreateAllBuffers(class Device* device);

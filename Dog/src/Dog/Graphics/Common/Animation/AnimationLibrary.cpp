@@ -6,9 +6,6 @@ namespace Dog
 {
     const uint32_t AnimationLibrary::INVALID_ANIMATION_INDEX = 10001;
 
-    
-
-
     AnimationLibrary::AnimationLibrary()
     {
     }
