@@ -113,8 +113,20 @@ namespace Dog {
         buffer.mapping = static_cast<uint8_t*>(allocInfoOut.pMappedData);
 
         // Get the GPU address of the buffer
-        const VkBufferDeviceAddressInfo info = { .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO, .buffer = buffer.buffer };
-        buffer.address = vkGetBufferDeviceAddress(mDevice.GetDevice(), &info);
+        const VkBufferUsageFlags2KHR usage = reinterpret_cast<const VkBufferUsageFlags2CreateInfo*>(bufferInfo.pNext)->usage;
+
+        if (usage & VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT)
+        {
+            const VkBufferDeviceAddressInfo addrInfo{
+                .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
+                .buffer = buffer.buffer
+            };
+            buffer.address = vkGetBufferDeviceAddress(mDevice.GetDevice(), &addrInfo);
+        }
+        else
+        {
+            buffer.address = 0;
+        }
 
         return result;
     }

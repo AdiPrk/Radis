@@ -14,6 +14,7 @@ namespace Dog
 		VmaAllocator GetAllocator() { return mAllocator; }
 
         // Creates buffer of given size
+        //[[deprecated("Use CreateBuffer with ABuffer instead")]]
 		void CreateBuffer(
 			VkDeviceSize size,
 			VkBufferUsageFlags usage,

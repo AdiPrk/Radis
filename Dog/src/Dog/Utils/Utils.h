@@ -9,5 +9,5 @@ namespace Dog
 
     std::vector<std::string> GetFilesWithExtensions(const std::string& directoryPath, const std::vector<std::string>& extensions);
 
-    void LaunchVSForFolder(const std::string& folderPath);
+    void LaunchVSCode(const std::filesystem::path& folderPath);
 }

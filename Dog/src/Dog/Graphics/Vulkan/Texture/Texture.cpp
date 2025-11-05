@@ -78,21 +78,25 @@ namespace Dog
 		mMipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(mWidth, mHeight)))) + 1;
 
 		// Create a staging buffer to load texture data
-		VkBuffer stagingBuffer;
-		VmaAllocation stagingBufferAllocation;  // VMA allocation replaces VkDeviceMemory
+		ABuffer stagingBuffer{};
 		mDevice.GetAllocator()->CreateBuffer(
-			mImageSize,
-			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-			VMA_MEMORY_USAGE_CPU_ONLY,  // Use CPU_ONLY for host-visible memory
 			stagingBuffer,
-			stagingBufferAllocation
+			mImageSize,
+			VK_BUFFER_USAGE_2_TRANSFER_SRC_BIT_KHR,  // Note: new flag type (VkBufferUsageFlags2KHR)
+			VMA_MEMORY_USAGE_AUTO,                   // auto-select memory type
+			VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT // ensures host-visible, coherent memory
 		);
 
-		// Copy pixel data to staging buffer
-		void* data;
-		vmaMapMemory(mDevice.GetVmaAllocator(), stagingBufferAllocation, &data);  // VMA maps memory for you
-		memcpy(data, mPixels, static_cast<size_t>(mImageSize));  // Copy pixel data into mapped memory
-		vmaUnmapMemory(mDevice.GetVmaAllocator(), stagingBufferAllocation);  // Unmap the memory after copy
+		// Copy pixel data to staging buffer (mapping is stored in ABuffer.mapping)
+		if (stagingBuffer.mapping)
+		{
+			memcpy(stagingBuffer.mapping, mPixels, static_cast<size_t>(mImageSize));
+		}
+		else
+		{
+            DOG_ERROR("No Mapping found for staging buffer when creating texture image!");
+			return;
+		}
 
 		// Free the pixel data
 		stbi_image_free(mPixels);
@@ -107,10 +111,10 @@ namespace Dog
 		TransitionImageLayout(mDevice, mTextureImage, mImageFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mMipLevels);
 
 		// Copy the staging buffer to the image
-		CopyBufferToImage(stagingBuffer, mTextureImage, static_cast<uint32_t>(mWidth), static_cast<uint32_t>(mHeight), 1);
+		CopyBufferToImage(stagingBuffer.buffer, mTextureImage, static_cast<uint32_t>(mWidth), static_cast<uint32_t>(mHeight), 1);
 
 		// Destroy the staging buffer
-		vmaDestroyBuffer(mDevice.GetVmaAllocator(), stagingBuffer, stagingBufferAllocation);
+		vmaDestroyBuffer(mDevice.GetVmaAllocator(), stagingBuffer.buffer, stagingBuffer.allocation);
 
 		// Generate mipmaps
 		GenerateMipmaps();
