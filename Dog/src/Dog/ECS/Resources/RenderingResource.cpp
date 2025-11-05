@@ -23,6 +23,7 @@
 
 #include "Graphics/OpenGL/GLFrameBuffer.h"
 
+#include "Assets/Assets.h"
 #include "Engine.h"
 
 namespace Dog
@@ -84,17 +85,18 @@ namespace Dog
         if (!textureLibrary)
         {
             textureLibrary = std::make_unique<TextureLibrary>(device.get());
-            textureLibrary->AddTexture("Assets/textures/circle.png");
-            textureLibrary->AddTexture("Assets/textures/circleOutline2.png");
-            textureLibrary->AddTexture("Assets/textures/dog.png");
-            textureLibrary->AddTexture("Assets/textures/dogmodel.png");
-            textureLibrary->AddTexture("Assets/textures/error.png");
-            textureLibrary->AddTexture("Assets/textures/ErrorTexture.png");
-            textureLibrary->AddTexture("Assets/textures/glslIcon.png");
-            textureLibrary->AddTexture("Assets/textures/playButton.png");
-            textureLibrary->AddTexture("Assets/textures/square.png");
-            textureLibrary->AddTexture("Assets/textures/stopButton.png");
-            textureLibrary->AddTexture("Assets/textures/texture.jpg");
+            textureLibrary->AddTexture(Assets::ImagesPath + "circle.png");
+            textureLibrary->AddTexture(Assets::ImagesPath + "circleOutline2.png");
+            textureLibrary->AddTexture(Assets::ImagesPath + "dog.png");
+            textureLibrary->AddTexture(Assets::ImagesPath + "dogmodel.png");
+            textureLibrary->AddTexture(Assets::ImagesPath + "error.png");
+            textureLibrary->AddTexture(Assets::ImagesPath + "ErrorTexture.png");
+            textureLibrary->AddTexture(Assets::ImagesPath + "glslIcon.png");
+            textureLibrary->AddTexture(Assets::ImagesPath + "playButton.png");
+            textureLibrary->AddTexture(Assets::ImagesPath + "square.png");
+            textureLibrary->AddTexture(Assets::ImagesPath + "stopButton.png");
+            textureLibrary->AddTexture(Assets::ImagesPath + "texture.jpg");
+            textureLibrary->AddTexture(Assets::ImagesPath + "folderIcon.png");
         }
         else
         {
@@ -104,40 +106,31 @@ namespace Dog
         if (!modelLibrary)
         {
             modelLibrary = std::make_unique<ModelLibrary>(*device, *textureLibrary);
-            
-            modelLibrary->AddModel("Assets/models/cube.obj");
-            modelLibrary->AddModel("Assets/models/quad.obj");
-            //modelLibrary->AddModel("Assets/models/yena.fbx");
-            //animationLibrary->AddAnimation("Assets/models/yena.fbx", modelLibrary->GetModel("yena"));
-            //modelLibrary->AddModel("Assets/models/FuwawaAbyssgard.pmx");
-            //modelLibrary->AddModel("Assets/models/TaylorDancing.glb");
-            //animationLibrary->AddAnimation("Assets/models/TaylorDancing.glb", modelLibrary->GetModel("Assets/models/TaylorDancing.glb"));
-            //modelLibrary->AddModel("Assets/models/jack_samba.glb");
-            //animationLibrary->AddAnimation("Assets/models/jack_samba.glb", modelLibrary->GetModel("jack_samba"));
-            //modelLibrary->AddModel("Assets/models/travisFloppin.glb");
-            //animationLibrary->AddAnimation("Assets/models/travisFloppin.glb", modelLibrary->GetModel("travisFloppin"));
-            modelLibrary->AddModel("Assets/models/TravisLocomotion/TravisLocomotion.fbx");
-            modelLibrary->AddModel("Assets/models/jack_samba.glb");
-            
-            //modelLibrary->AddModel("Assets/models/okayu.pmx");
-            //modelLibrary->AddModel("Assets/models/AlisaMikhailovna.fbx");
+
+            modelLibrary->AddModel(Assets::ModelsPath + "cube.obj");
+            modelLibrary->AddModel(Assets::ModelsPath + "quad.obj");
+            modelLibrary->AddModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx");
+            modelLibrary->AddModel(Assets::ModelsPath + "jack_samba.glb");
+
+            //modelLibrary->AddModel("Assets/Models/okayu.pmx");
+            //modelLibrary->AddModel("Assets/Models/AlisaMikhailovna.fbx");
         }
 
         if (!animationLibrary)
         {
             animationLibrary = std::make_unique<AnimationLibrary>();
-            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/idle.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/idle.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/jump.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left strafe walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left strafe.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left turn 90.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right strafe walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right strafe.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right turn 90.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/standard run.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation("Assets/models/jack_samba.glb", modelLibrary->GetModel("Assets/models/jack_samba.glb"));
+            animationLibrary->AddAnimation("Assets/Models/TravisLocomotion/idle.fbx", modelLibrary->GetModel("Assets/Models/TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation("Assets/Models/TravisLocomotion/idle.fbx", modelLibrary->GetModel("Assets/Models/TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation("Assets/Models/TravisLocomotion/jump.fbx", modelLibrary->GetModel("Assets/Models/TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation("Assets/Models/TravisLocomotion/left strafe walking.fbx", modelLibrary->GetModel("Assets/Models/TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation("Assets/Models/TravisLocomotion/left strafe.fbx", modelLibrary->GetModel("Assets/Models/TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation("Assets/Models/TravisLocomotion/left turn 90.fbx", modelLibrary->GetModel("Assets/Models/TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation("Assets/Models/TravisLocomotion/right strafe walking.fbx", modelLibrary->GetModel("Assets/Models/TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation("Assets/Models/TravisLocomotion/right strafe.fbx", modelLibrary->GetModel("Assets/Models/TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation("Assets/Models/TravisLocomotion/right turn 90.fbx", modelLibrary->GetModel("Assets/Models/TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation("Assets/Models/TravisLocomotion/standard run.fbx", modelLibrary->GetModel("Assets/Models/TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation("Assets/Models/TravisLocomotion/walking.fbx", modelLibrary->GetModel("Assets/Models/TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation("Assets/Models/jack_samba.glb", modelLibrary->GetModel("Assets/Models/jack_samba.glb"));
         }
 
         // Recreation if needed

@@ -352,7 +352,7 @@ namespace Dog
         if (componentRemoved)
         {
             // Avoid removal of Tag and Transform
-            if constexpr (!std::is_same_v<T, TagComponent> && !std::is_same_v<T, TransformComponent>)
+            if constexpr (!std::is_same_v<T, TagComponent>/* && !std::is_same_v<T, TransformComponent>*/)
             {
                 entity.RemoveComponent<T>();
             }
@@ -478,7 +478,7 @@ namespace Dog
         DrawComponentUI<ModelComponent>("Model", selectedEnt, [&](ModelComponent& component)
         {
             const std::vector<std::string> modelExtensions = { ".fbx", ".glb", ".obj" };
-            std::vector<std::string> modelFiles = GetFilesWithExtensions("assets/models/", modelExtensions);
+            std::vector<std::string> modelFiles = GetFilesWithExtensions("Assets/Models/", modelExtensions);
             modelFiles.push_back("Assets/Models/TravisLocomotion/TravisLocomotion.fbx"); // Extra
 
             auto rr = ecs->GetResource<RenderingResource>();
