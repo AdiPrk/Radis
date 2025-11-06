@@ -92,6 +92,8 @@ namespace Dog
         g_vkGetAccelerationStructureDeviceAddressKHR = (PFN_vkGetAccelerationStructureDeviceAddressKHR)vkGetDeviceProcAddr(device_, "vkGetAccelerationStructureDeviceAddressKHR");
         g_vkDestroyAccelerationStructureKHR = (PFN_vkDestroyAccelerationStructureKHR)vkGetDeviceProcAddr(device_, "vkDestroyAccelerationStructureKHR");
         g_vkSetDebugUtilsObjectNameEXT = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(instance, "vkSetDebugUtilsObjectNameEXT");
+        g_vkCreateRayTracingPipelinesKHR = (PFN_vkCreateRayTracingPipelinesKHR)vkGetDeviceProcAddr(device_, "vkCreateRayTracingPipelinesKHR");
+        g_vkGetRayTracingShaderGroupHandlesKHR = (PFN_vkGetRayTracingShaderGroupHandlesKHR)vkGetDeviceProcAddr(device_, "vkGetRayTracingShaderGroupHandlesKHR");
     }
 
     Device::~Device() 

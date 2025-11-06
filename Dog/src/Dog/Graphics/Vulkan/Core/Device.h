@@ -82,6 +82,8 @@ namespace Dog {
         PFN_vkGetAccelerationStructureDeviceAddressKHR g_vkGetAccelerationStructureDeviceAddressKHR;
         PFN_vkDestroyAccelerationStructureKHR g_vkDestroyAccelerationStructureKHR;
         PFN_vkSetDebugUtilsObjectNameEXT g_vkSetDebugUtilsObjectNameEXT;
+        PFN_vkCreateRayTracingPipelinesKHR g_vkCreateRayTracingPipelinesKHR;
+        PFN_vkGetRayTracingShaderGroupHandlesKHR g_vkGetRayTracingShaderGroupHandlesKHR;
 
         bool SupportsVulkan() const { return mSupportsVulkan; }
 
