@@ -175,6 +175,7 @@
     <ClInclude Include="src\Dog\ECS\Systems\Editor\Windows\EntitiesWindow.h" />
     <ClInclude Include="src\Dog\Assets\CaseInsensitiveHash.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Pipeline\RaytracingPipeline.h" />
+    <ClInclude Include="Assets\Shaders\includes\glvkDefines.glsl" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="Assets\Shaders\*.*" />
@@ -239,5 +240,7 @@
     <None Include="Assets\Shaders\raytrace.rgen" />
     <None Include="Assets\Shaders\raytrace.rchit" />
     <None Include="Assets\Shaders\raytrace.rmiss" />
+    <None Include="Assets\Shaders\includes\uniformSet.glsl" />
+    <None Include="Assets\Shaders\includes\constants.glsl" />
   </ItemGroup>
 </Project>

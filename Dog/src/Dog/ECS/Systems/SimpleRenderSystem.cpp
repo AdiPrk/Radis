@@ -180,11 +180,16 @@ namespace Dog
 
                     glm::vec3 cameraTarget = cameraPos + forwardDir;
                     camData.view = glm::lookAt(cameraPos, cameraTarget, upDir);
+                    camData.cameraPos = glm::vec4(tc.Translation, 1.0f);
+                    camData.lightDir = glm::vec4(glm::normalize(glm::vec3(-1.0f, -1.0f, -1.0f)), 0.0f);
+                    camData.lightColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+                    camData.lightIntensity = 1.0f;
                 }
 
                 camData.projection = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 100.0f);
                 camData.projection[1][1] *= -1;
                 camData.projectionView = camData.projection * camData.view;
+
                 rr->cameraUniform->SetUniformData(camData, 0, rr->currentFrameIndex);
             }
 
@@ -242,7 +247,6 @@ namespace Dog
         VkPipelineLayout pipelineLayout = rr->renderWireframe ? rr->wireframePipeline->GetLayout() : rr->pipeline->GetLayout();
 
         rr->cameraUniform->Bind(cmd, pipelineLayout, rr->currentFrameIndex);
-        //rr->instanceUniform->Bind(cmd, pipelineLayout, rr->currentFrameIndex);
 
         VkViewport viewport{};
         viewport.width = static_cast<float>(rr->swapChain->GetSwapChainExtent().width);
@@ -290,7 +294,7 @@ namespace Dog
                 InstanceUniforms& data = instanceData.emplace_back();
                 if (boneOffset == AnimationLibrary::INVALID_ANIMATION_INDEX)
                 {
-                    data.model = tc.GetTransform()/* * model->GetNormalizationMatrix()*/;
+                    data.model = tc.GetTransform() * model->GetNormalizationMatrix();
                 }
                 else
                 {
