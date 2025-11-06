@@ -79,8 +79,8 @@ namespace Dog
 
         createCommandPool();
 
-        allocator = std::make_unique<Allocator>(*this);
-
+        Allocator::Init(this);
+        
         VkPhysicalDeviceProperties2 prop2{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 };
         mRtProperties.pNext = &mAsProperties;
         prop2.pNext = &mRtProperties;
@@ -96,7 +96,7 @@ namespace Dog
 
     Device::~Device() 
     {
-        allocator.reset();
+        Allocator::Destroy();
 
         // Destroy device-level objects first
         if (device_ != VK_NULL_HANDLE)
@@ -674,29 +674,6 @@ namespace Dog
         throw std::runtime_error("failed to find suitable memory type!");
     }
 
-    void Device::CreateBuffer(
-        VkDeviceSize size,
-        VkBufferUsageFlags usage,
-        VmaMemoryUsage memoryUsage,
-        VkBuffer& buffer,
-        VmaAllocation& bufferAllocation)
-    {
-        VkBufferCreateInfo bufferInfo{};
-        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        bufferInfo.size = size;
-        bufferInfo.usage = usage;
-        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-        // Allocation description for VMA
-        VmaAllocationCreateInfo allocInfo{};
-        allocInfo.usage = memoryUsage;
-
-        // Create the buffer and allocate memory using VMA
-        if (vmaCreateBuffer(GetVmaAllocator(), &bufferInfo, &allocInfo, &buffer, &bufferAllocation, nullptr) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create and allocate buffer using VMA!");
-        }
-    }
-
     VkCommandBuffer Device::BeginSingleTimeCommands()
     {
         // Allocate the command buffer
@@ -764,7 +741,7 @@ namespace Dog
         allocInfo.usage = memoryUsage;
 
         // Create the image and allocate memory using VMA
-        if (vmaCreateImage(GetVmaAllocator(), &imageInfo, &allocInfo, &image, &imageAllocation, nullptr) != VK_SUCCESS) {
+        if (vmaCreateImage(Allocator::GetAllocator(), &imageInfo, &allocInfo, &image, &imageAllocation, nullptr) != VK_SUCCESS) {
             throw std::runtime_error("failed to create image with VMA!");
         }
     }

@@ -70,6 +70,9 @@ namespace Dog
         Buffer& GetUniformBuffer(int binding, int frameIndex) { return mBuffersPerBinding[binding][frameIndex]; }
         std::unique_ptr<DescriptorPool>& GetDescriptorPool() { return mUniformPool; }
 
+        std::vector<VkDescriptorSetLayoutBinding>& GetRasterBindings() { return rasterBindings; }
+        std::vector<VkDescriptorSetLayoutBinding>& GetRayTracingBindings() { return rayTracingBindings; }
+
     private:
         std::unordered_map<int, std::vector<Buffer>> mBuffersPerBinding;
         std::vector<VkDescriptorSet> mUniformDescriptorSets;
@@ -77,6 +80,9 @@ namespace Dog
         std::unique_ptr<DescriptorSetLayout> mUniformDescriptorLayout;
         unsigned int mPipelineBindingIndex = std::numeric_limits<unsigned int>::max();
         Device& mDevice;
+
+        std::vector<VkDescriptorSetLayoutBinding> rasterBindings;
+        std::vector<VkDescriptorSetLayoutBinding> rayTracingBindings;
     };
 
 } // namespace Dog

@@ -24,19 +24,25 @@ namespace Dog
 
         // -- Create staging buffer (CPU-visible) --
         Buffer staging{};
-        device->GetAllocator()->CreateBuffer(
+        Allocator::CreateBuffer(
             staging,
             bufferSize,
             VK_BUFFER_USAGE_2_TRANSFER_SRC_BIT_KHR,
             VMA_MEMORY_USAGE_AUTO,
             VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT
         );
+        Allocator::SetAllocationName(staging.allocation, "Vertex Buffer Staging");
 
         // Copy vertex data to staging buffer
+        if (!staging.mapping)
+        {
+            DOG_CRITICAL("Failed to map vertex buffer staging memory!");
+            return;
+        }
         memcpy(staging.mapping, mVertices.data(), static_cast<size_t>(bufferSize));
 
         // -- Create device-local vertex buffer --
-        device->GetAllocator()->CreateBuffer(
+        Allocator::CreateBuffer(
             mVertexBuffer,
             bufferSize,
             VK_BUFFER_USAGE_2_VERTEX_BUFFER_BIT_KHR |
@@ -45,12 +51,13 @@ namespace Dog
             VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT_KHR,
             VMA_MEMORY_USAGE_GPU_ONLY
         );
+        Allocator::SetAllocationName(mVertexBuffer.allocation, "Vertex Buffer");
 
         // Copy from staging to GPU buffer
         device->CopyBuffer(staging.buffer, mVertexBuffer.buffer, bufferSize);
 
         // Optional: destroy staging buffer immediately
-        device->GetAllocator()->DestroyBuffer(staging);
+        Allocator::DestroyBuffer(staging);
     }
 
     void VKMesh::CreateIndexBuffers(Device* device)
@@ -65,18 +72,24 @@ namespace Dog
 
         // -- Create staging buffer (CPU-visible) --
         Buffer staging{};
-        device->GetAllocator()->CreateBuffer(
+        Allocator::CreateBuffer(
             staging,
             bufferSize,
             VK_BUFFER_USAGE_2_TRANSFER_SRC_BIT_KHR,
             VMA_MEMORY_USAGE_AUTO,
             VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT
         );
+        Allocator::SetAllocationName(staging.allocation, "Index Buffer Staging");
 
+        if (!staging.mapping)
+        {
+            DOG_CRITICAL("Failed to map index buffer staging memory!");
+            return;
+        }
         memcpy(staging.mapping, mIndices.data(), static_cast<size_t>(bufferSize));
 
         // -- Create device-local index buffer --
-        device->GetAllocator()->CreateBuffer(
+        Allocator::CreateBuffer(
             mIndexBuffer,
             bufferSize,
             VK_BUFFER_USAGE_2_INDEX_BUFFER_BIT_KHR |
@@ -85,17 +98,21 @@ namespace Dog
             VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT_KHR,
             VMA_MEMORY_USAGE_GPU_ONLY
         );
+        Allocator::SetAllocationName(mIndexBuffer.allocation, "Index Buffer");
 
         // Copy staging ¨ GPU
         device->CopyBuffer(staging.buffer, mIndexBuffer.buffer, bufferSize);
 
-        device->GetAllocator()->DestroyBuffer(staging);
+        Allocator::DestroyBuffer(staging);
     }
 
     void VKMesh::Cleanup()
     {
-        // cleanup
-
+        Allocator::DestroyBuffer(mVertexBuffer);
+        if (mHasIndexBuffer)
+        {
+            Allocator::DestroyBuffer(mIndexBuffer);
+        }
     }
 
     void VKMesh::Bind(VkCommandBuffer commandBuffer, VkBuffer instBuffer)

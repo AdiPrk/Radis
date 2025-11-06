@@ -64,5 +64,11 @@ namespace Dog
             bindings.push_back({ { nextBinding++, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, descriptorCount, stageFlags }, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, 0, descriptorCount, false });
             return *this;
         }
+
+        UniformSettings& AddASBinding(VkShaderStageFlags stageFlags, uint32_t descriptorCount = 1)
+        {
+            bindings.push_back({ { nextBinding++, VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR, descriptorCount, stageFlags }, 0, 0, descriptorCount, false, false });
+            return *this;
+        }
     };
 }

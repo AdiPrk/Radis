@@ -27,14 +27,29 @@ namespace Dog
 
         for (const auto& bindingInfo : settings.bindings)
         {
+            if (bindingInfo.layoutBinding.stageFlags & (VK_SHADER_STAGE_RAYGEN_BIT_KHR |
+                VK_SHADER_STAGE_ANY_HIT_BIT_KHR |
+                VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR |
+                VK_SHADER_STAGE_MISS_BIT_KHR |
+                VK_SHADER_STAGE_INTERSECTION_BIT_KHR |
+                VK_SHADER_STAGE_CALLABLE_BIT_KHR))
+            {
+                rayTracingBindings.push_back(bindingInfo.layoutBinding);
+            }
+            else
+            {
+                rasterBindings.push_back(bindingInfo.layoutBinding);
+            }
+
             std::vector<Buffer> buffers;
 
             for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex)
             {
-                // No buffer needed for image samplers
-                if (bindingInfo.layoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
+                if (bindingInfo.layoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ||
+                    bindingInfo.layoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_IMAGE ||
+                    bindingInfo.layoutBinding.descriptorType == VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR)
                 {
-                    continue;
+                    continue; // No buffer needed
                 }
 
                 Buffer buffer{};
@@ -44,13 +59,14 @@ namespace Dog
                     bindingInfo.bufferUsage | VK_BUFFER_USAGE_2_UNIFORM_BUFFER_BIT_KHR
                 );
 
-                device.GetAllocator()->CreateBuffer(
+                Allocator::CreateBuffer(
                     buffer,
                     bindingInfo.elementSize * bindingInfo.elementCount,
                     usage,
                     VMA_MEMORY_USAGE_AUTO,
                     VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT
                 );
+                Allocator::SetAllocationName(buffer.allocation, "Uniform Buffer (Dog)");
 
                 buffers.push_back(std::move(buffer));
 
@@ -91,7 +107,7 @@ namespace Dog
             {
                 if (buffer.buffer)
                 {
-                    vmaDestroyBuffer(mDevice.GetVmaAllocator(), buffer.buffer, buffer.allocation);
+                    vmaDestroyBuffer(Allocator::GetAllocator(), buffer.buffer, buffer.allocation);
                 }
             }
         }

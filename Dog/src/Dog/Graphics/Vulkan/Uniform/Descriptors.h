@@ -108,6 +108,7 @@ namespace Dog
 
         DescriptorWriter& WriteBuffer(uint32_t binding, VkDescriptorBufferInfo* bufferInfo, uint32_t count = 1);
         DescriptorWriter& WriteImage(uint32_t binding, VkDescriptorImageInfo* imageInfo, uint32_t imageCount = 1);
+        DescriptorWriter& WriteAccelerationStructure(uint32_t binding, VkWriteDescriptorSetAccelerationStructureKHR* asInfo);
 
         bool Build(VkDescriptorSet& set);
         void Overwrite(VkDescriptorSet& set);

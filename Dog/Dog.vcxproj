@@ -258,11 +258,12 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Dog\Graphics\Common\Animation\AnimationLibrary.cpp" />
     <ClCompile Include="src\Dog\Graphics\Common\Animation\Animator.cpp" />
     <ClCompile Include="src\Dog\Graphics\Common\Animation\Bone.cpp" />
+    <ClCompile Include="src\Dog\Graphics\Vulkan\Pipeline\RaytracingPipeline.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\VKMesh.cpp" />
     <ClCompile Include="src\Dog\Graphics\Common\ModelLibrary.cpp" />
     <ClCompile Include="src\Dog\Graphics\Common\UnifiedMesh.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Pipeline\Pipeline.cpp" />
-    <ClCompile Include="src\Dog\Graphics\Vulkan\Pipeline\Shader.cpp" />
+    <ClCompile Include="src\Dog\Graphics\Vulkan\Pipeline\VKShader.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\RenderGraph.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Texture\VKTexture.cpp" />
     <ClCompile Include="src\Dog\Graphics\Common\TextureLibrary.cpp" />
@@ -365,11 +366,12 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Dog\Graphics\Common\Animation\Bone.h" />
     <ClInclude Include="src\Dog\Graphics\Common\Animation\Skeleton.h" />
     <ClInclude Include="src\Dog\Graphics\Common\Animation\VQS.h" />
+    <ClInclude Include="src\Dog\Graphics\Vulkan\Pipeline\RaytracingPipeline.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\VKMesh.h" />
     <ClInclude Include="src\Dog\Graphics\Common\ModelLibrary.h" />
     <ClInclude Include="src\Dog\Graphics\Common\UnifiedMesh.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Pipeline\Pipeline.h" />
-    <ClInclude Include="src\Dog\Graphics\Vulkan\Pipeline\Shader.h" />
+    <ClInclude Include="src\Dog\Graphics\Vulkan\Pipeline\VKShader.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\RenderGraph.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Texture\VKTexture.h" />
     <ClInclude Include="src\Dog\Graphics\Common\TextureLibrary.h" />

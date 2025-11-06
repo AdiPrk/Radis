@@ -1,6 +1,6 @@
 #include <PCH/pch.h>
 #include "Pipeline.h"
-#include "Shader.h"
+#include "VKShader.h"
 
 #include "../Core/Device.h"
 #include "../VKMesh.h"

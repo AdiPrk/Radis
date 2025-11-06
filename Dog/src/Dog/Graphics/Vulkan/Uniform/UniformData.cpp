@@ -74,6 +74,32 @@ namespace Dog
         }
     }
 
+    void RTUniformInit(Uniform& uniform, RenderingResource& renderData)
+    {
+        uniform.GetDescriptorSets().resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
+
+        VkDescriptorImageInfo outImageInfo{};
+        outImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL; // storage image layout
+        outImageInfo.imageView = VK_NULL_HANDLE;// renderData.rayTracingOutput->GetImageView(); // VKImageView
+        outImageInfo.sampler = VK_NULL_HANDLE; // storage images donÅft use samplers
+
+        VkWriteDescriptorSetAccelerationStructureKHR asInfo{};
+        asInfo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
+        asInfo.accelerationStructureCount = 1;
+        asInfo.pAccelerationStructures = &renderData.tlasAccel.accel;
+
+        // Build descriptor sets for each frame with both buffer and texture data
+        for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex)
+        {
+            DescriptorWriter writer(*uniform.GetDescriptorLayout(), *uniform.GetDescriptorPool());
+
+            writer.WriteImage(0, &outImageInfo, 1);
+            // writer.WriteAccelerationStructure(1, &asInfo);
+
+            writer.Build(uniform.GetDescriptorSets()[frameIndex]);
+        }
+    }
+
     /*
     void InstanceUniformInit(Uniform& uniform, RenderingResource& renderData)
     {

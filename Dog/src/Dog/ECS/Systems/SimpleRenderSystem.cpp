@@ -43,15 +43,13 @@ namespace Dog
 
     void SimpleRenderSystem::Exit()
     {
-        auto& allocator = ecs->GetResource<RenderingResource>()->allocator;
-        if (!allocator)
-            return;
+        auto rr = ecs->GetResource<RenderingResource>();
 
-        for (auto& blas : mBlasAccel)
+        for (auto& blas : rr->blasAccel)
         {
-            allocator->DestroyAcceleration(blas);
+            Allocator::DestroyAcceleration(blas);
         }
-        allocator->DestroyAcceleration(mTlasAccel);
+        Allocator::DestroyAcceleration(rr->tlasAccel);
     }
 
     /*********************************************************************
@@ -98,13 +96,27 @@ namespace Dog
 
     void SimpleRenderSystem::FrameStart()
     {
-        // static bool createdAS = false;
-        // if (!createdAS && Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
-        // {
-        //     CreateBottomLevelAS();  // Set up BLAS infrastructure
-        //     CreateTopLevelAS();     // Set up TLAS infrastructure
-        //     createdAS = true;
-        // }
+        auto rr = ecs->GetResource<RenderingResource>();
+
+        static bool createdAS = true;
+        if (!createdAS && Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+        {
+            CreateBottomLevelAS();  // Set up BLAS infrastructure
+            CreateTopLevelAS();     // Set up TLAS infrastructure
+            
+            VkWriteDescriptorSetAccelerationStructureKHR asInfo{};
+            asInfo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
+            asInfo.accelerationStructureCount = 1;
+            asInfo.pAccelerationStructures = &rr->tlasAccel.accel;
+            for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex)
+            {
+                DescriptorWriter writer(*rr->rtUniform->GetDescriptorLayout(), *rr->rtUniform->GetDescriptorPool());
+                writer.WriteAccelerationStructure(1, &asInfo);
+                writer.Build(rr->rtUniform->GetDescriptorSets()[frameIndex]);
+            }
+        
+            createdAS = true;
+        }
 
         // Update textures!
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
@@ -516,7 +528,7 @@ namespace Dog
         // Create the scratch buffer to store the temporary data for the build
         Buffer scratchBuffer;
 
-        rr->allocator->CreateBuffer(
+        Allocator::CreateBuffer(
             scratchBuffer,
             scratchSize, 
             VK_BUFFER_USAGE_2_TRANSFER_DST_BIT |
@@ -527,6 +539,7 @@ namespace Dog
             {},
             asProps.minAccelerationStructureScratchOffsetAlignment
         );
+        Allocator::SetAllocationName(scratchBuffer.allocation, "AS Scratch Buffer");
 
         // Create the acceleration structure
         VkAccelerationStructureCreateInfoKHR createInfo{
@@ -534,7 +547,8 @@ namespace Dog
             .size = asBuildSize.accelerationStructureSize,  // The size of the acceleration structure
             .type = asType,  // The type of acceleration structure (BLAS or TLAS)
         };
-        rr->allocator->CreateAcceleration(accelStruct, createInfo);
+        Allocator::CreateAcceleration(accelStruct, createInfo);
+        Allocator::SetAllocationName(accelStruct.buffer.allocation, (asType & VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR) ? "Bottom Level AS" : "Top Level AS");
 
         // Build the acceleration structure
         {
@@ -551,14 +565,14 @@ namespace Dog
         }
 
         // Cleanup the scratch buffer
-        rr->allocator->DestroyBuffer(scratchBuffer);
+        Allocator::DestroyBuffer(scratchBuffer);
     }
 
     void SimpleRenderSystem::CreateBottomLevelAS()
     {
+        auto rr = ecs->GetResource<RenderingResource>();
         uint32_t numMeshes = 0;
 
-        auto rr = ecs->GetResource<RenderingResource>();
         const auto& ml = rr->modelLibrary;
         for (uint32_t i = 0; i < ml->GetModelCount(); ++i)
         {
@@ -567,7 +581,7 @@ namespace Dog
         }
 
         // Prepare geometry information for all meshes
-        mBlasAccel.resize(numMeshes);
+        rr->blasAccel.resize(numMeshes);
 
         // For now, just log that we're ready to build BLAS
         DOG_INFO("Ready to build {} bottom-level acceleration structures", numMeshes);
@@ -582,7 +596,7 @@ namespace Dog
 
                 // Convert the primitive information to acceleration structure geometry
                 PrimitiveToGeometry(*vkMesh, asGeometry, asBuildRangeInfo);
-                CreateAccelerationStructure(VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR, mBlasAccel[mesh->GetID()], asGeometry,
+                CreateAccelerationStructure(VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR, rr->blasAccel[mesh->GetID()], asGeometry,
                     asBuildRangeInfo, VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR);
             }
         }
@@ -590,6 +604,7 @@ namespace Dog
 
     void SimpleRenderSystem::CreateTopLevelAS()
     {
+        auto rr = ecs->GetResource<RenderingResource>();
         // VkTransformMatrixKHR is row-major 3x4, glm::mat4 is column-major; transpose before memcpy.
         auto toTransformMatrixKHR = [](const glm::mat4& m) {
             VkTransformMatrixKHR t;
@@ -601,7 +616,6 @@ namespace Dog
         std::vector<VkAccelerationStructureInstanceKHR> tlasInstances;
         tlasInstances.reserve(mConstStartingObjectCount);
 
-        auto rr = ecs->GetResource<RenderingResource>();
         auto& registry = ecs->GetRegistry();
         auto entityView = registry.view<ModelComponent, TransformComponent>();
         for (auto& entityHandle : entityView)
@@ -620,7 +634,7 @@ namespace Dog
 
                 // TODO: Fix the custom instance to match the one in BLAS
                 asInstance.instanceCustomIndex = mesh->GetID();                       // gl_InstanceCustomIndexEXT
-                asInstance.accelerationStructureReference = mBlasAccel[mesh->GetID()].address;
+                asInstance.accelerationStructureReference = rr->blasAccel[mesh->GetID()].address;
                 asInstance.instanceShaderBindingTableRecordOffset = 0;  // We will use the same hit group for all objects
                 asInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;  // No culling - double sided
                 asInstance.mask = 0xFF;
@@ -640,21 +654,22 @@ namespace Dog
             VkDeviceSize bufferSize = std::span<VkAccelerationStructureInstanceKHR const>(tlasInstances).size_bytes();
 
             // Create host-visible staging buffer
-            rr->allocator->CreateBuffer(
+            Allocator::CreateBuffer(
                 stagingBuffer,
                 bufferSize,
                 VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
                 VMA_MEMORY_USAGE_CPU_ONLY
             );
+            Allocator::SetAllocationName(stagingBuffer.allocation, "TLAS Instance Staging Buffer");
 
             // Upload instance data
             void* data;
-            vmaMapMemory(rr->allocator->GetAllocator(), stagingBuffer.allocation, &data);
+            vmaMapMemory(Allocator::GetAllocator(), stagingBuffer.allocation, &data);
             memcpy(data, tlasInstances.data(), bufferSize);
-            vmaUnmapMemory(rr->allocator->GetAllocator(), stagingBuffer.allocation);
+            vmaUnmapMemory(Allocator::GetAllocator(), stagingBuffer.allocation);
 
             // Create GPU-local buffer for TLAS build input
-            rr->allocator->CreateBuffer(
+            Allocator::CreateBuffer(
                 tlasInstancesBuffer,
                 bufferSize,
                 VK_BUFFER_USAGE_2_TRANSFER_DST_BIT |
@@ -662,6 +677,7 @@ namespace Dog
                 VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT,
                 VMA_MEMORY_USAGE_GPU_ONLY
             );
+            Allocator::SetAllocationName(tlasInstancesBuffer.allocation, "TLAS Instance Buffer");
 
             // Copy data from staging ¨ device-local buffer
             VkCommandBuffer cmd = rr->device->BeginSingleTimeCommands();
@@ -698,16 +714,17 @@ namespace Dog
 
             CreateAccelerationStructure(
                 VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR,
-                mTlasAccel,
+                rr->tlasAccel,
                 asGeometry,
                 asBuildRangeInfo, 
                 VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR
             );
+            Allocator::SetAllocationName(rr->tlasAccel.buffer.allocation, "Top Level AS");
 
             if (rr->device->g_vkSetDebugUtilsObjectNameEXT)
             {
                 // 1. Define your object and its desired name
-                VkAccelerationStructureKHR accelToName = mTlasAccel.accel;
+                VkAccelerationStructureKHR accelToName = rr->tlasAccel.accel;
                 const char* bufferName = "TLAS Accel"; // Your custom name
 
                 // 2. Fill the info struct
@@ -732,7 +749,7 @@ namespace Dog
         DOG_INFO("  Top-level acceleration structures built successfully\n");
 
         // Cleanup staging and instance buffers
-        rr->allocator->DestroyBuffer(stagingBuffer);
-        rr->allocator->DestroyBuffer(tlasInstancesBuffer);
+        Allocator::DestroyBuffer(stagingBuffer);
+        Allocator::DestroyBuffer(tlasInstancesBuffer);
     }
 }

@@ -6,6 +6,7 @@
 #include "Graphics/Vulkan/Core/SwapChain.h"
 #include "Graphics/Vulkan/Core/Synchronization.h"
 #include "Graphics/Vulkan/Pipeline/Pipeline.h"
+#include "Graphics/Vulkan/Pipeline/RaytracingPipeline.h"
 #include "Graphics/Vulkan/RenderGraph.h"
 
 #include "Graphics/Vulkan/VulkanWindow.h"
@@ -35,15 +36,7 @@ namespace Dog
 
     RenderingResource::~RenderingResource()
     {
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
-        {
-            vkFreeCommandBuffers(
-                device->GetDevice(),
-                device->GetCommandPool(),
-                static_cast<uint32_t>(commandBuffers.size()),
-                commandBuffers.data()
-            );
-        }
+        Cleanup(true);
     }
 
     void RenderingResource::Create(IWindow* window)
@@ -57,8 +50,6 @@ namespace Dog
                 Engine::ForceVulkanUnsupportedSwap();
                 return;
             }
-
-            allocator = std::make_unique<Allocator>(*device);
 
             RecreateSwapChain(window);
 
@@ -147,11 +138,16 @@ namespace Dog
 
 
             cameraUniform = std::make_unique<Uniform>(*device, *this, cameraUniformSettings);
+            rtUniform = std::make_unique<Uniform>(*device, *this, rayTracingUniformSettings);
             //instanceUniform = std::make_unique<Uniform>(*device, *this, instanceUniformSettings);
 
             std::vector<Uniform*> unis{
                 cameraUniform.get(),
                 //instanceUniform.get()
+            };
+            std::vector<Uniform*> rtunis{
+                cameraUniform.get(),
+                rtUniform.get()
             };
 
             pipeline = std::make_unique<Pipeline>(
@@ -169,10 +165,18 @@ namespace Dog
                 true,
                 "verysimple.vert", "verysimple.frag"
             );
+
+            raytracingPipeline = std::make_unique<RaytracingPipeline>(
+                *device,
+                rtunis
+                // "raytrace.rgen",
+                // "raytrace.rmiss",
+                // "raytrace.rchit"
+            );
         }
     }
 
-    void RenderingResource::Cleanup()
+    void RenderingResource::Cleanup(bool closingExe)
     {
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
         {
@@ -181,20 +185,38 @@ namespace Dog
                 vkDeviceWaitIdle(*device);
             }
 
+            vkFreeCommandBuffers(
+                device->GetDevice(),
+                device->GetCommandPool(),
+                static_cast<uint32_t>(commandBuffers.size()),
+                commandBuffers.data()
+            );
+
             CleanupSceneTexture();
             CleanupDepthBuffer();
-            //modelLibrary.reset();
-            //textureLibrary.reset();
-            if (modelLibrary) modelLibrary->ClearAllBuffers(device.get());
-            if (textureLibrary) textureLibrary->ClearAllBuffers(device.get());
-            //animationLibrary.reset();
+            if (!closingExe)
+            {
+                if (modelLibrary) modelLibrary->ClearAllBuffers(device.get());
+                if (textureLibrary) textureLibrary->ClearAllBuffers(device.get());
+            }
+            else
+            {
+                if (modelLibrary) modelLibrary->ClearAllBuffers(device.get());
+                if (textureLibrary) textureLibrary->ClearAllBuffers(device.get());
+                modelLibrary.reset();
+                textureLibrary.reset();
+                animationLibrary.reset();
+            }
             renderGraph.reset();
             cameraUniform.reset();
+            rtUniform.reset();
             //instanceUniform.reset();
             pipeline.reset();
             wireframePipeline.reset();
+            raytracingPipeline.reset();
             syncObjects.reset();
-            allocator.reset();
+
+            //allocator.reset();
             swapChain.reset();
             device.reset();
         }
@@ -314,11 +336,12 @@ namespace Dog
         VmaAllocationCreateInfo allocInfo{};
         allocInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
 
-        VkResult result = vmaCreateImage(allocator->GetAllocator(), &imageInfo, &allocInfo, &sceneImage, &sceneImageAllocation, nullptr);
+        VkResult result = vmaCreateImage(Allocator::GetAllocator(), &imageInfo, &allocInfo, &sceneImage, &sceneImageAllocation, nullptr);
         if (result != VK_SUCCESS)
         {
             DOG_CRITICAL("VMA failed to create scene image");
         }
+        Allocator::SetAllocationName(sceneImageAllocation, "Scene Texture Image");
 
         VkImageViewCreateInfo sampledViewInfo{};
         sampledViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -382,7 +405,7 @@ namespace Dog
 
         if (sceneImage != VK_NULL_HANDLE)
         {
-            vmaDestroyImage(allocator->GetAllocator(), sceneImage, sceneImageAllocation);
+            vmaDestroyImage(Allocator::GetAllocator(), sceneImage, sceneImageAllocation);
             sceneImage = VK_NULL_HANDLE;
             sceneImageAllocation = VK_NULL_HANDLE;
         }
@@ -415,7 +438,8 @@ namespace Dog
         VmaAllocationCreateInfo allocInfo{};
         allocInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
 
-        vmaCreateImage(allocator->GetAllocator(), &imageInfo, &allocInfo, &mDepthImage, &mDepthImageAllocation, nullptr);
+        vmaCreateImage(Allocator::GetAllocator(), &imageInfo, &allocInfo, &mDepthImage, &mDepthImageAllocation, nullptr);
+        Allocator::SetAllocationName(mDepthImageAllocation, "Depth Buffer Image");
 
         VkImageViewCreateInfo viewInfo{};
         viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -440,7 +464,7 @@ namespace Dog
         }
         if (mDepthImage != VK_NULL_HANDLE)
         {
-            vmaDestroyImage(allocator->GetAllocator(), mDepthImage, mDepthImageAllocation);
+            vmaDestroyImage(Allocator::GetAllocator(), mDepthImage, mDepthImageAllocation);
             mDepthImage = VK_NULL_HANDLE;
             mDepthImageAllocation = VK_NULL_HANDLE;
         }
