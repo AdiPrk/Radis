@@ -7,6 +7,10 @@ namespace Dog
         glm::mat4 projectionView;
         glm::mat4 projection;
         glm::mat4 view;
+        glm::vec3 cameraPos; uint32_t padding1;
+        glm::vec3 lightDir; uint32_t padding2;
+        glm::vec3 lightColor; uint32_t padding3;
+        float lightIntensity;
     };
 
     struct InstanceUniforms 

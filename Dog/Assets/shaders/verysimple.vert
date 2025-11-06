@@ -1,8 +1,7 @@
 #version 450
 
-#ifdef VULKAN
-    #extension GL_EXT_ray_tracing : require
-#endif
+#extension GL_GOOGLE_include_directive : enable
+#include "includes/uniformSet.glsl"
 
 // Per Vertex Inputs
 layout(location = 0) in vec3 position;
@@ -24,41 +23,19 @@ struct VQS {
     vec3 scale;       // Scale
 };
 
-#ifdef VULKAN
-    #define UBO_LAYOUT(s, b) layout(set = s, binding = b)
-    #define SSBO_LAYOUT(s, b) layout(set = s, binding = b)
-    #define INSTANCE_ID gl_InstanceIndex
-#else
-    #define UBO_LAYOUT(s, b) layout(std140, binding = b)
-    #define SSBO_LAYOUT(s, b) layout(std430, binding = b)
-    #define INSTANCE_ID gl_InstanceID
-#endif
-
-// Uniforms!
-UBO_LAYOUT(0, 0) uniform Uniforms
-{
-    mat4 projectionView;
-    mat4 projection;
-    mat4 view;
-} uniforms;
-
 SSBO_LAYOUT(0, 2) readonly buffer BoneBuffer
 {
     VQS finalBoneVQS[10000];
 } animationData;
 
-// #ifdef VULKAN
-//     layout(set = 0, binding = 4, rgba32f) uniform image2D outImage;
-//     layout(set = 0, binding = 5) uniform accelerationStructureEXT tlas;
-// #endif
-
 // Outputs -----------------------------------------
 layout(location = 0) out vec3 fragColor;
 layout(location = 1) out vec4 fragTint;
-layout(location = 2) out vec3 fragNormal;
+layout(location = 2) out vec3 fragWorldNormal;
 layout(location = 3) out vec2 fragTexCoord;
 layout(location = 4) flat out uint textureIndex;
 layout(location = 5) flat out uint instanceIndex;
+layout(location = 6) out vec3 fragWorldPos;
 // -------------------------------------------------
 
 // Helper Functions --------------------------------
@@ -105,12 +82,17 @@ void main()
         totalNormal = normal;
 	}
 
-    gl_Position = uniforms.projectionView * iModel * vec4(totalPosition.xyz, 1.0);
+    vec4 worldPos = iModel * vec4(totalPosition.xyz, 1.0);
+    mat3 normalMatrix = transpose(inverse(mat3(iModel)));
+    vec3 worldNormal = normalize(normalMatrix * normalize(totalNormal));
+
+    gl_Position = uniforms.projectionView * worldPos;
 
     fragColor = color;
     fragTint = iTint;
-    fragNormal = normalize(totalNormal);
     fragTexCoord = texCoord;
     textureIndex = iTextureIndex;
     instanceIndex = INSTANCE_ID;
+    fragWorldPos = worldPos.xyz;
+    fragWorldNormal = worldNormal;
 }

@@ -292,6 +292,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Assets\Shaders\includes\glvkDefines.glsl" />
     <ClInclude Include="Dependencies\imgui\backends\imgui_impl_glfw.h" />
     <ClInclude Include="Dependencies\imgui\backends\imgui_impl_opengl3.h" />
     <ClInclude Include="Dependencies\imgui\backends\imgui_impl_opengl3_loader.h" />
@@ -412,6 +413,8 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assets\Shaders\includes\constants.glsl" />
+    <None Include="Assets\Shaders\includes\uniformSet.glsl" />
     <None Include="Assets\Shaders\raytrace.rchit" />
     <None Include="Assets\Shaders\raytrace.rgen" />
     <None Include="Assets\Shaders\raytrace.rmiss" />

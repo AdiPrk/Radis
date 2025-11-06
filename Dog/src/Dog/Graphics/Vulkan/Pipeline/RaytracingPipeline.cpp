@@ -27,7 +27,6 @@ namespace Dog
         std::ifstream missSPVFile("Assets/Shaders/spv/raytrace.rmiss.spv", std::ios::binary);
         std::ifstream chitSPVFile("Assets/Shaders/spv/raytrace.rchit.spv", std::ios::binary);
 
-        VkShaderModule rgenShaderModule, missShaderModule, chitShaderModule;
         if (rgenSPVFile.is_open() && missSPVFile.is_open() && chitSPVFile.is_open())
         {
             // read spv files
@@ -52,9 +51,9 @@ namespace Dog
             chitSPVFile.read(reinterpret_cast<char*>(chitShaderSPV.data()), chitSPVFileSize);
             chitSPVFile.close();
 
-            Shader::CreateShaderModule(device, rgenShaderSPV, &rgenShaderModule);
-            Shader::CreateShaderModule(device, missShaderSPV, &missShaderModule);
-            Shader::CreateShaderModule(device, chitShaderSPV, &chitShaderModule);
+            Shader::CreateShaderModule(device, rgenShaderSPV, &mRgenShaderModule);
+            Shader::CreateShaderModule(device, missShaderSPV, &mMissShaderModule);
+            Shader::CreateShaderModule(device, chitShaderSPV, &mChitShaderModule);
         }
         else
         {
@@ -62,15 +61,15 @@ namespace Dog
             return;
         }
 
-        stages[eRaygen].module = rgenShaderModule;
+        stages[eRaygen].module = mRgenShaderModule;
         stages[eRaygen].pName = "main";
         stages[eRaygen].stage = VK_SHADER_STAGE_RAYGEN_BIT_KHR;
 
-        stages[eMiss].module = missShaderModule;
+        stages[eMiss].module = mMissShaderModule;
         stages[eMiss].pName = "main";
         stages[eMiss].stage = VK_SHADER_STAGE_MISS_BIT_KHR;
 
-        stages[eClosestHit].module = chitShaderModule;
+        stages[eClosestHit].module = mChitShaderModule;
         stages[eClosestHit].pName = "main";
         stages[eClosestHit].stage = VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
 
@@ -152,6 +151,22 @@ namespace Dog
         }
 
         Allocator::DestroyBuffer(mSbtBuffer);
+
+        if (mRgenShaderModule != VK_NULL_HANDLE)
+        {
+            vkDestroyShaderModule(device.GetDevice(), mRgenShaderModule, nullptr);
+            mRgenShaderModule = VK_NULL_HANDLE;
+        }
+        if (mMissShaderModule != VK_NULL_HANDLE)
+        {
+            vkDestroyShaderModule(device.GetDevice(), mMissShaderModule, nullptr);
+            mMissShaderModule = VK_NULL_HANDLE;
+        }
+        if (mChitShaderModule != VK_NULL_HANDLE)
+        {
+            vkDestroyShaderModule(device.GetDevice(), mChitShaderModule, nullptr);
+            mChitShaderModule = VK_NULL_HANDLE;
+        }
 	}
 
 	void RaytracingPipeline::Recreate()
