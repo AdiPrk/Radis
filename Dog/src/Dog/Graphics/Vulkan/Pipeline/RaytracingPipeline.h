@@ -23,5 +23,10 @@ namespace Dog
         Buffer mSbtBuffer;
         VkPipeline mRtPipeline;
         VkPipelineLayout mRtPipelineLayout;
+        std::vector<uint8_t> mShaderHandles;     // Storage for shader group handles
+        VkStridedDeviceAddressRegionKHR mRaygenRegion{};    // Ray generation shader region
+        VkStridedDeviceAddressRegionKHR mMissRegion{};      // Miss shader region
+        VkStridedDeviceAddressRegionKHR mHitRegion{};       // Hit shader region
+        VkStridedDeviceAddressRegionKHR mCallableRegion{};  // Callable shader region
     };
 }

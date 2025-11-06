@@ -4,6 +4,7 @@
 #include "../Core/Allocator.h"
 #include "../Uniform/Uniform.h"
 #include "../Uniform/Descriptors.h"
+#include "VKShader.h"
 
 namespace Dog
 {
@@ -11,7 +12,6 @@ namespace Dog
     {
         glm::mat3       normalMatrix;
         int            instanceIndex;              // Instance index for the current draw call
-        void* sceneInfoAddress;           // Address of the scene information buffer
         glm::vec2      metallicRoughnessOverride;  // Metallic and roughness override values
     };
 
@@ -30,9 +30,56 @@ namespace Dog
         for (auto& s : stages)
             s.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 
-        // TODO: In Phase 5, we'll add actual shader compilation
-        // For now, create empty stages to test pipeline creation
-        DOG_INFO("Creating ray tracing pipeline structure (shaders will be added in Phase 5)\n");
+        std::ifstream rgenSPVFile("Assets/Shaders/spv/raytrace.rgen.spv", std::ios::binary);
+        std::ifstream missSPVFile("Assets/Shaders/spv/raytrace.rmiss.spv", std::ios::binary);
+        std::ifstream chitSPVFile("Assets/Shaders/spv/raytrace.rchit.spv", std::ios::binary);
+
+        VkShaderModule rgenShaderModule, missShaderModule, chitShaderModule;
+        if (rgenSPVFile.is_open() && missSPVFile.is_open() && chitSPVFile.is_open())
+        {
+            // read spv files
+            rgenSPVFile.seekg(0, std::ios::end);
+            size_t rgenSPVFileSize = rgenSPVFile.tellg();
+            rgenSPVFile.seekg(0, std::ios::beg);
+            std::vector<uint32_t> rgenShaderSPV(rgenSPVFileSize / sizeof(uint32_t));
+            rgenSPVFile.read(reinterpret_cast<char*>(rgenShaderSPV.data()), rgenSPVFileSize);
+            rgenSPVFile.close();
+
+            missSPVFile.seekg(0, std::ios::end);
+            size_t missSPVFileSize = missSPVFile.tellg();
+            missSPVFile.seekg(0, std::ios::beg);
+            std::vector<uint32_t> missShaderSPV(missSPVFileSize / sizeof(uint32_t));
+            missSPVFile.read(reinterpret_cast<char*>(missShaderSPV.data()), missSPVFileSize);
+            missSPVFile.close();
+
+            chitSPVFile.seekg(0, std::ios::end);
+            size_t chitSPVFileSize = chitSPVFile.tellg();
+            chitSPVFile.seekg(0, std::ios::beg);
+            std::vector<uint32_t> chitShaderSPV(chitSPVFileSize / sizeof(uint32_t));
+            chitSPVFile.read(reinterpret_cast<char*>(chitShaderSPV.data()), chitSPVFileSize);
+            chitSPVFile.close();
+
+            Shader::CreateShaderModule(device, rgenShaderSPV, &rgenShaderModule);
+            Shader::CreateShaderModule(device, missShaderSPV, &missShaderModule);
+            Shader::CreateShaderModule(device, chitShaderSPV, &chitShaderModule);
+        }
+        else
+        {
+            DOG_CRITICAL("Failed to open ray tracing shader SPV files!");
+            return;
+        }
+
+        stages[eRaygen].module = rgenShaderModule;
+        stages[eRaygen].pName = "main";
+        stages[eRaygen].stage = VK_SHADER_STAGE_RAYGEN_BIT_KHR;
+
+        stages[eMiss].module = missShaderModule;
+        stages[eMiss].pName = "main";
+        stages[eMiss].stage = VK_SHADER_STAGE_MISS_BIT_KHR;
+
+        stages[eClosestHit].module = chitShaderModule;
+        stages[eClosestHit].pName = "main";
+        stages[eClosestHit].stage = VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
 
         // Shader groups
         VkRayTracingShaderGroupCreateInfoKHR group{ VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR };
@@ -78,10 +125,15 @@ namespace Dog
         vkCreatePipelineLayout(device.GetDevice(), &pipeline_layout_create_info, nullptr, &mRtPipelineLayout);
 
         VkRayTracingPipelineCreateInfoKHR rtPipelineInfo{ VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR };
+        rtPipelineInfo.stageCount = static_cast<uint32_t>(stages.size());
+        rtPipelineInfo.pStages = stages.data();
+        rtPipelineInfo.groupCount = static_cast<uint32_t>(shader_groups.size());
+        rtPipelineInfo.pGroups = shader_groups.data();
+        rtPipelineInfo.maxPipelineRayRecursionDepth = std::max(3U, device.GetRayTracingProperties().maxRayRecursionDepth);
+        rtPipelineInfo.layout = mRtPipelineLayout;
+        device.g_vkCreateRayTracingPipelinesKHR(device.GetDevice(), {}, {}, 1, &rtPipelineInfo, nullptr, &mRtPipeline);
 
-        // TODO: In Phase 5, we'll add actual shader stages and create the pipeline
-        // For now, just log that the pipeline layout is ready
-        DOG_INFO("Ray tracing pipeline layout created successfully\n");
+        DOG_INFO("Ray tracing pipeline layout created successfully");
 
         // Create the shader binding table for this pipeline
         CreateShaderBindingTable(rtPipelineInfo);
@@ -117,14 +169,62 @@ namespace Dog
 
     void RaytracingPipeline::CreateShaderBindingTable(const VkRayTracingPipelineCreateInfoKHR& rtPipelineInfo)
     {
-        // Calculate required SBT buffer size (will be populated in Phase 5)
-        size_t bufferSize = 1024; // Placeholder size
+        uint32_t handleSize = device.GetRayTracingProperties().shaderGroupHandleSize;
+        uint32_t handleAlignment = device.GetRayTracingProperties().shaderGroupHandleAlignment;
+        uint32_t baseAlignment = device.GetRayTracingProperties().shaderGroupBaseAlignment;
+        uint32_t groupCount = rtPipelineInfo.groupCount;
+
+        // Get shader group handles
+        size_t dataSize = handleSize * groupCount;
+        mShaderHandles.resize(dataSize);
+        device.g_vkGetRayTracingShaderGroupHandlesKHR(device.GetDevice(), mRtPipeline, 0, groupCount, dataSize, mShaderHandles.data());
+
+        // Calculate SBT buffer size with proper alignment
+        auto     alignUp = [](uint32_t size, uint32_t alignment) { return (size + alignment - 1) & ~(alignment - 1); };
+        uint32_t raygenSize = alignUp(handleSize, handleAlignment);
+        uint32_t missSize = alignUp(handleSize, handleAlignment);
+        uint32_t hitSize = alignUp(handleSize, handleAlignment);
+        uint32_t callableSize = 0;  // No callable shaders in this tutorial
+
+        // Ensure each region starts at a baseAlignment boundary
+        uint32_t raygenOffset = 0;
+        uint32_t missOffset = alignUp(raygenSize, baseAlignment);
+        uint32_t hitOffset = alignUp(missOffset + missSize, baseAlignment);
+        uint32_t callableOffset = alignUp(hitOffset + hitSize, baseAlignment);
+
+        size_t bufferSize = callableOffset + callableSize;
 
         // Create SBT buffer
         Allocator::CreateBuffer(mSbtBuffer, bufferSize, VK_BUFFER_USAGE_2_SHADER_BINDING_TABLE_BIT_KHR, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
             VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT);
-        Allocator::SetAllocationName(mSbtBuffer.allocation, "Ray Tracing Shader Binding Table");
-        
-        DOG_INFO("Shader binding table buffer created (will be populated in Phase 5)\n");
+        Allocator::SetAllocationName(mSbtBuffer.allocation, "Ray Tracing SBT Buffer");
+
+        // Populate SBT buffer
+        uint8_t* pData = static_cast<uint8_t*>(mSbtBuffer.mapping);
+
+        // Ray generation shader (group 0)
+        memcpy(pData + raygenOffset, mShaderHandles.data() + 0 * handleSize, handleSize);
+        mRaygenRegion.deviceAddress = mSbtBuffer.address + raygenOffset;
+        mRaygenRegion.stride = raygenSize;
+        mRaygenRegion.size = raygenSize;
+
+        // Miss shader (group 1)
+        memcpy(pData + missOffset, mShaderHandles.data() + 1 * handleSize, handleSize);
+        mMissRegion.deviceAddress = mSbtBuffer.address + missOffset;
+        mMissRegion.stride = missSize;
+        mMissRegion.size = missSize;
+
+        // Hit shader (group 2)
+        memcpy(pData + hitOffset, mShaderHandles.data() + 2 * handleSize, handleSize);
+        mHitRegion.deviceAddress = mSbtBuffer.address + hitOffset;
+        mHitRegion.stride = hitSize;
+        mHitRegion.size = hitSize;
+
+        // Callable shaders (none in this tutorial)
+        mCallableRegion.deviceAddress = 0;
+        mCallableRegion.stride = 0;
+        mCallableRegion.size = 0;
+
+        DOG_INFO("Shader binding table created and populated");
     }
 }

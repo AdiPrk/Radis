@@ -236,5 +236,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="src\Dog\Graphics\Vulkan\Uniform\Uniform.inl" />
+    <None Include="Assets\Shaders\raytrace.rgen" />
+    <None Include="Assets\Shaders\raytrace.rchit" />
+    <None Include="Assets\Shaders\raytrace.rmiss" />
   </ItemGroup>
 </Project>

@@ -20,10 +20,10 @@ namespace Dog
                                         VK_SHADER_STAGE_CALLABLE_BIT_KHR;
 
     const UniformSettings cameraUniformSettings = UniformSettings(CameraUniformInit)
-        .AddUBBinding(VK_SHADER_STAGE_VERTEX_BIT, sizeof(CameraUniforms))
+        .AddUBBinding(VK_SHADER_STAGE_VERTEX_BIT | rtFlags, sizeof(CameraUniforms))
         .AddVertexBinding(VK_SHADER_STAGE_VERTEX_BIT, sizeof(InstanceUniforms), InstanceUniforms::MAX_INSTANCES)
         .AddSSBOBinding(VK_SHADER_STAGE_VERTEX_BIT, sizeof(VQS), 10000)
-        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, TextureLibrary::MAX_TEXTURE_COUNT);
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags, TextureLibrary::MAX_TEXTURE_COUNT);
 
     const UniformSettings rayTracingUniformSettings = UniformSettings(RTUniformInit)
         .AddSSBIBinding(rtFlags, 1) // for outImage

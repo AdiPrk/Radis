@@ -7,8 +7,7 @@ namespace Dog
         VkBuffer        buffer{};
         VkDeviceSize    bufferSize{};
         VkDeviceAddress address{};
-        uint8_t* mapping{};
+        uint8_t*        mapping{};
         VmaAllocation   allocation{};
     };
-
 }

@@ -412,6 +412,9 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assets\Shaders\raytrace.rchit" />
+    <None Include="Assets\Shaders\raytrace.rgen" />
+    <None Include="Assets\Shaders\raytrace.rmiss" />
     <None Include="src\Dog\Graphics\Vulkan\Uniform\Uniform.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

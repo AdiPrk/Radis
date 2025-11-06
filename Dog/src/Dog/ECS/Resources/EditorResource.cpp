@@ -182,4 +182,3 @@ namespace Dog
 		io.Fonts->AddFontFromFileTTF(std::string(Assets::FontsPath + "Inter_24pt-Regular.ttf").c_str(), fontSize, &config);
 	}
 }
-
