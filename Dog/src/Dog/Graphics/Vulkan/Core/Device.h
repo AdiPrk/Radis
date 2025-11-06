@@ -56,8 +56,7 @@ namespace Dog {
         uint32_t GetPresentFamily() const { return presentFamily_; }
 
         // Buffer Helper Functions
-        void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage, VkBuffer& buffer, VmaAllocation& bufferAllocation);
-
+        
         VkCommandBuffer BeginSingleTimeCommands();
         void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
         void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
@@ -67,9 +66,6 @@ namespace Dog {
             VmaMemoryUsage memoryUsage,
             VkImage& image,
             VmaAllocation& imageAllocation);
-
-        std::unique_ptr<Allocator>& GetAllocator() { return allocator; }
-        VmaAllocator GetVmaAllocator() { return allocator->GetAllocator(); }
 
         VkPhysicalDeviceProperties properties;
 
@@ -121,8 +117,6 @@ namespace Dog {
 
         uint32_t graphicsFamily_ = 0;
         uint32_t presentFamily_ = 0;
-
-        std::unique_ptr<Allocator> allocator;
 
         VkFormat mSrgbFormat;
         VkFormat mLinearFormat;

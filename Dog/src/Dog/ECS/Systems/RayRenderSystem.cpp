@@ -34,7 +34,6 @@ namespace Dog
     {
         auto rr = ecs->GetResource<RenderingResource>();
 
-        VmaAllocator allocator = rr->allocator->GetAllocator();
         mIndirectBuffers.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
         mIndirectBufferAllocations.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
 
@@ -48,7 +47,7 @@ namespace Dog
             indirectAllocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU; // This usage allows the CPU to write commands
 
             // Create the buffers using VMA
-            if (vmaCreateBuffer(allocator, &indirectBufferInfo, &indirectAllocInfo, &mIndirectBuffers[i], &mIndirectBufferAllocations[i], nullptr) != VK_SUCCESS) 
+            if (vmaCreateBuffer(Allocator::GetAllocator(), &indirectBufferInfo, &indirectAllocInfo, &mIndirectBuffers[i], &mIndirectBufferAllocations[i], nullptr) != VK_SUCCESS)
             {
                 throw std::runtime_error("Failed to create solid indirect command buffer!");
             }
@@ -124,7 +123,7 @@ namespace Dog
         auto rr = ecs->GetResource<RenderingResource>();
         
         for (int i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i) {
-            vmaDestroyBuffer(rr->allocator->GetAllocator(), mIndirectBuffers[i], mIndirectBufferAllocations[i]);
+            vmaDestroyBuffer(Allocator::GetAllocator(), mIndirectBuffers[i], mIndirectBufferAllocations[i]);
         }
     }
 
@@ -157,7 +156,7 @@ namespace Dog
         VKMesh& uMesh = unifiedMesh->GetUnifiedMesh();
 
         VkDrawIndexedIndirectCommand* indirectDrawPtr;
-        vmaMapMemory(rr->allocator->GetAllocator(), mIndirectBufferAllocations[rr->currentFrameIndex], (void**)&indirectDrawPtr);
+        vmaMapMemory(Allocator::GetAllocator(), mIndirectBufferAllocations[rr->currentFrameIndex], (void**)&indirectDrawPtr);
 
         int instanceBaseIndex = 0, drawCount = 0;
         mNumInstancesRendered = 0;
@@ -262,7 +261,7 @@ namespace Dog
             }
         }
 
-        vmaUnmapMemory(rr->allocator->GetAllocator(), mIndirectBufferAllocations[rr->currentFrameIndex]);
+        vmaUnmapMemory(Allocator::GetAllocator(), mIndirectBufferAllocations[rr->currentFrameIndex]);
 
 
         //rr->instanceUniform->SetUniformData(instanceData, 1, rr->currentFrameIndex);
@@ -360,7 +359,7 @@ namespace Dog
         // Create the scratch buffer to store the temporary data for the build
         Buffer scratchBuffer;
         
-        rr->allocator->CreateBuffer(scratchBuffer, scratchSize, VK_BUFFER_USAGE_2_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT
+        Allocator::CreateBuffer(scratchBuffer, scratchSize, VK_BUFFER_USAGE_2_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_2_SHADER_DEVICE_ADDRESS_BIT
             | VK_BUFFER_USAGE_2_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR, VMA_MEMORY_USAGE_AUTO, asProps.minAccelerationStructureScratchOffsetAlignment);
 
         // Create the acceleration structure
@@ -369,7 +368,7 @@ namespace Dog
             .size = asBuildSize.accelerationStructureSize,  // The size of the acceleration structure
             .type = asType,  // The type of acceleration structure (BLAS or TLAS)
         };
-        rr->allocator->CreateAcceleration(accelStruct, createInfo);
+        Allocator::CreateAcceleration(accelStruct, createInfo);
 
         // Build the acceleration structure
         {
@@ -386,7 +385,7 @@ namespace Dog
         }
 
         // Cleanup the scratch buffer
-        rr->allocator->DestroyBuffer(scratchBuffer);
+        Allocator::DestroyBuffer(scratchBuffer);
     }
 
     void RayRenderSystem::CreateBottomLevelAS()

@@ -66,7 +66,7 @@ namespace Dog
 
 		if (mTextureImage)
 		{
-			vmaDestroyImage(mDevice.GetVmaAllocator(), mTextureImage, mTextureImageAllocation);
+			vmaDestroyImage(Allocator::GetAllocator(), mTextureImage, mTextureImageAllocation);
 			mTextureImage = VK_NULL_HANDLE;
 			mTextureImageAllocation = VK_NULL_HANDLE;
 		}
@@ -79,13 +79,14 @@ namespace Dog
 
 		// Create a staging buffer to load texture data
 		Buffer stagingBuffer{};
-		mDevice.GetAllocator()->CreateBuffer(
+		Allocator::CreateBuffer(
 			stagingBuffer,
 			mImageSize,
 			VK_BUFFER_USAGE_2_TRANSFER_SRC_BIT_KHR,  // Note: new flag type (VkBufferUsageFlags2KHR)
 			VMA_MEMORY_USAGE_AUTO,                   // auto-select memory type
 			VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT // ensures host-visible, coherent memory
 		);
+        Allocator::SetAllocationName(stagingBuffer.allocation, "Texture Staging Buffer");
 
 		// Copy pixel data to staging buffer (mapping is stored in ABuffer.mapping)
 		if (stagingBuffer.mapping)
@@ -114,7 +115,7 @@ namespace Dog
 		CopyBufferToImage(stagingBuffer.buffer, mTextureImage, static_cast<uint32_t>(mWidth), static_cast<uint32_t>(mHeight), 1);
 
 		// Destroy the staging buffer
-		vmaDestroyBuffer(mDevice.GetVmaAllocator(), stagingBuffer.buffer, stagingBuffer.allocation);
+		vmaDestroyBuffer(Allocator::GetAllocator(), stagingBuffer.buffer, stagingBuffer.allocation);
 
 		// Generate mipmaps
 		GenerateMipmaps();
@@ -252,7 +253,7 @@ namespace Dog
 		allocInfo.usage = memoryUsage;
 
 		// Use VMA to create image and allocate memory in one step
-		if (vmaCreateImage(mDevice.GetVmaAllocator(), &imageInfo, &allocInfo, &mTextureImage, &mTextureImageAllocation, nullptr) != VK_SUCCESS)
+		if (vmaCreateImage(Allocator::GetAllocator(), &imageInfo, &allocInfo, &mTextureImage, &mTextureImageAllocation, nullptr) != VK_SUCCESS)
 		{
             DOG_CRITICAL("Failed to create and allocate image using VMA!");
 		}

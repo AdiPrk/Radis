@@ -1,17 +1,21 @@
 #include <PCH/pch.h>
 #include "Allocator.h"
 
-#include "../Core/Device.h"
+#include "../Core/device.h"
 
-namespace Dog {
+namespace Dog 
+{
+    Device* Allocator::mDevice = nullptr;
+    VmaAllocator Allocator::mAllocator = nullptr;
 
-    Allocator::Allocator(Device& device)
-        : mDevice(device)
+    void Allocator::Init(Device* device)
     {
+        mDevice = device;
+
         VmaAllocatorCreateInfo allocatorInfo = {};
-        allocatorInfo.physicalDevice = device.GetPhysicalDevice();
-        allocatorInfo.device = device.GetDevice();
-        allocatorInfo.instance = device.GetInstance();
+        allocatorInfo.physicalDevice = mDevice->GetPhysicalDevice();
+        allocatorInfo.device = mDevice->GetDevice();
+        allocatorInfo.instance = mDevice->GetInstance();
         allocatorInfo.vulkanApiVersion = VK_API_VERSION_1_4;
         allocatorInfo.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
         allocatorInfo.flags |= VMA_ALLOCATOR_CREATE_KHR_MAINTENANCE4_BIT;
@@ -20,56 +24,11 @@ namespace Dog {
         vmaCreateAllocator(&allocatorInfo, &mAllocator);
     }
 
-    Allocator::~Allocator()
+    void Allocator::Destroy()
     {
         vmaDestroyAllocator(mAllocator);
-    }
-
-    void Allocator::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage, VkBuffer& buffer, VmaAllocation& bufferAllocation, VkDeviceSize minAlignment)
-    {
-        // Buffer info
-        VkBufferCreateInfo bufferInfo{};
-        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        bufferInfo.size = size;
-        bufferInfo.usage = usage;
-        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-        // Allocation info
-        VmaAllocationCreateInfo allocInfo{};
-        allocInfo.usage = memoryUsage;
-        allocInfo.flags = 0;
-
-        VkResult result = vmaCreateBufferWithAlignment(mAllocator, &bufferInfo, &allocInfo, minAlignment, &buffer, &bufferAllocation, nullptr);
-
-        if (result != VK_SUCCESS)
-        {
-            const char* errorStr = "";
-            switch (result)
-            {
-                case VK_ERROR_OUT_OF_HOST_MEMORY: errorStr = "VK_ERROR_OUT_OF_HOST_MEMORY"; break;
-                case VK_ERROR_OUT_OF_DEVICE_MEMORY: errorStr = "VK_ERROR_OUT_OF_DEVICE_MEMORY"; break;
-                case VK_ERROR_INITIALIZATION_FAILED: errorStr = "VK_ERROR_INITIALIZATION_FAILED"; break;
-                case VK_ERROR_MEMORY_MAP_FAILED: errorStr = "VK_ERROR_MEMORY_MAP_FAILED"; break;
-                case VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS: errorStr = "VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS"; break;
-                default: errorStr = "Unknown VkResult error"; break;
-            }
-
-            printf("Failed to create buffer using VMA!\n");
-            printf("  VkResult: %d (%s)\n", result, errorStr);
-            printf("  Size: %llu bytes\n", static_cast<unsigned long long>(size));
-            printf("  Usage: 0x%X\n", usage);
-            printf("  MemoryUsage: %d\n", memoryUsage);
-            printf("  MinAlignment: %llu\n", static_cast<unsigned long long>(minAlignment));
-        }
-
-        // get bda
-        // const VkBufferDeviceAddressInfo info = { .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO, .buffer = buffer };
-        // VkDeviceAddress address = vkGetBufferDeviceAddress(mDevice.GetDevice(), &info);
-
-        // if (address == 0)
-        // {
-        //     DOG_ERROR("Failed to get buffer device address!");
-        // }
+        mAllocator = nullptr;
+        mDevice = nullptr;
     }
 
     VkResult Allocator::CreateBuffer(Buffer& buffer, VkDeviceSize size, VkBufferUsageFlags2KHR usage, VmaMemoryUsage memoryUsage, VmaAllocationCreateFlags flags, VkDeviceSize minAlignment)
@@ -92,7 +51,7 @@ namespace Dog {
         return CreateBuffer(buffer, bufferInfo, allocInfo, minAlignment);
     }
 
-    VkResult Allocator::CreateBuffer(Buffer& buffer, const VkBufferCreateInfo& bufferInfo, const VmaAllocationCreateInfo& allocInfo, VkDeviceSize minAlignment) const
+    VkResult Allocator::CreateBuffer(Buffer& buffer, const VkBufferCreateInfo& bufferInfo, const VmaAllocationCreateInfo& allocInfo, VkDeviceSize minAlignment)
     {
         buffer = {};
 
@@ -121,7 +80,7 @@ namespace Dog {
                 .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
                 .buffer = buffer.buffer
             };
-            buffer.address = vkGetBufferDeviceAddress(mDevice.GetDevice(), &addrInfo);
+            buffer.address = vkGetBufferDeviceAddress(mDevice->GetDevice(), &addrInfo);
         }
         else
         {
@@ -138,20 +97,20 @@ namespace Dog {
         bufferAllocation = VK_NULL_HANDLE;
     }
 
-    void Allocator::DestroyBuffer(Buffer& buffer) const
+    void Allocator::DestroyBuffer(Buffer& buffer)
     {
         vmaDestroyBuffer(mAllocator, buffer.buffer, buffer.allocation);
         buffer = {};
     }
 
-    VkResult Allocator::CreateAcceleration(AccelerationStructure& accel, const VkAccelerationStructureCreateInfoKHR& accInfo) const
+    VkResult Allocator::CreateAcceleration(AccelerationStructure& accel, const VkAccelerationStructureCreateInfoKHR& accInfo)
     {
         const VmaAllocationCreateInfo allocInfo{ .usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE };
 
         return CreateAcceleration(accel, accInfo, allocInfo);
     }
 
-    VkResult Allocator::CreateAcceleration(AccelerationStructure& accel, const VkAccelerationStructureCreateInfoKHR& accInfo, const VmaAllocationCreateInfo& vmaInfo, std::span<const uint32_t> queueFamilies) const
+    VkResult Allocator::CreateAcceleration(AccelerationStructure& accel, const VkAccelerationStructureCreateInfoKHR& accInfo, const VmaAllocationCreateInfo& vmaInfo, std::span<const uint32_t> queueFamilies)
     {
         accel = {};
         VkAccelerationStructureCreateInfoKHR accelStruct = accInfo;
@@ -181,7 +140,7 @@ namespace Dog {
 
         // Step 2: Create the acceleration structure with the buffer
         accelStruct.buffer = accel.buffer.buffer;
-        result = mDevice.g_vkCreateAccelerationStructureKHR(mDevice.GetDevice(), &accelStruct, nullptr, &accel.accel);
+        result = mDevice->g_vkCreateAccelerationStructureKHR(mDevice->GetDevice(), &accelStruct, nullptr, &accel.accel);
 
         if (result != VK_SUCCESS)
         {
@@ -193,16 +152,16 @@ namespace Dog {
         {
             VkAccelerationStructureDeviceAddressInfoKHR info{ .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR,
                                                              .accelerationStructure = accel.accel };
-            accel.address = mDevice.g_vkGetAccelerationStructureDeviceAddressKHR(mDevice.GetDevice(), &info);
+            accel.address = mDevice->g_vkGetAccelerationStructureDeviceAddressKHR(mDevice->GetDevice(), &info);
         }
 
         return result;
     }
 
-    void Allocator::DestroyAcceleration(AccelerationStructure& accel) const
+    void Allocator::DestroyAcceleration(AccelerationStructure& accel)
     {
         DestroyBuffer(accel.buffer);
-        mDevice.g_vkDestroyAccelerationStructureKHR(mDevice, accel.accel, nullptr);
+        mDevice->g_vkDestroyAccelerationStructureKHR(mDevice->GetDevice(), accel.accel, nullptr);
         accel = {};
     }
 
@@ -220,6 +179,14 @@ namespace Dog {
         if (vmaCreateImage(mAllocator, &imageInfo, &allocInfo, &image, &imageAllocation, nullptr) != VK_SUCCESS)
         {
             DOG_CRITICAL("failed to create image with VMA!");
+        }
+    }
+
+    void Allocator::SetAllocationName(VmaAllocation allocation, const char* pName)
+    {
+        if (mAllocator && allocation && pName)
+        {
+            vmaSetAllocationName(mAllocator, allocation, pName);
         }
     }
 }

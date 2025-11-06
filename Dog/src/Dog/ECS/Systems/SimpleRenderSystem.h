@@ -30,8 +30,6 @@ namespace Dog
         void CreateTopLevelAS();
 
     private:
-        std::vector<AccelerationStructure> mBlasAccel; // Bottom Level Acceleration Structures
-        AccelerationStructure mTlasAccel;              // Top Level Acceleration Structure
         uint32_t mNumObjectsRendered = 0;
         const uint32_t mConstStartingObjectCount = 1;
 

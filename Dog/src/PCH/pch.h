@@ -66,6 +66,13 @@
 #include <ranges>
 #include <stack>
 
+#define VMA_ASSERT_LEAK(leaked)
+#define VMA_LEAK_LOG_FORMAT(format, ...) \
+    do { \
+        printf(format, __VA_ARGS__); \
+        printf("\n"); \
+    } while(false)
+
 #include "vma/vk_mem_alloc.h"
 
 #define AI_SBBC_DEFAULT_MAX_BONES 500

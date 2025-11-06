@@ -1,5 +1,9 @@
 #version 450
 
+#ifdef VULKAN
+    #extension GL_EXT_ray_tracing : require
+#endif
+
 // Per Vertex Inputs
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 color;
@@ -42,6 +46,11 @@ SSBO_LAYOUT(0, 2) readonly buffer BoneBuffer
 {
     VQS finalBoneVQS[10000];
 } animationData;
+
+// #ifdef VULKAN
+//     layout(set = 0, binding = 4, rgba32f) uniform image2D outImage;
+//     layout(set = 0, binding = 5) uniform accelerationStructureEXT tlas;
+// #endif
 
 // Outputs -----------------------------------------
 layout(location = 0) out vec3 fragColor;

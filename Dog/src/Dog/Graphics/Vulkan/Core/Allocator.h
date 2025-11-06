@@ -8,43 +8,37 @@ namespace Dog
 
 	class Allocator {
 	public:
-		Allocator(Device& device);
-		~Allocator();
+		Allocator() = default;
+		~Allocator() = default;
 
-		VmaAllocator GetAllocator() { return mAllocator; }
+		static void Init(Device* device);
+		static void Destroy();
+
+		static VmaAllocator GetAllocator() { return mAllocator; }
 
         // Creates buffer of given size
-        //[[deprecated("Use CreateBuffer with Buffer instead")]]
-		void CreateBuffer(
-			VkDeviceSize size,
-			VkBufferUsageFlags usage,
-			VmaMemoryUsage memoryUsage,
-			VkBuffer& buffer,
-			VmaAllocation& bufferAllocation,
-			VkDeviceSize minAlignment = 0);
-
-		VkResult CreateBuffer(Buffer& buffer,
+		static VkResult CreateBuffer(Buffer& buffer,
 							  VkDeviceSize size,
 							  VkBufferUsageFlags2KHR usage,
 							  VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_AUTO,
 							  VmaAllocationCreateFlags flags = {},
 							  VkDeviceSize minAlignment = 0);
 
-		VkResult CreateBuffer(Buffer& buffer,
+		static VkResult CreateBuffer(Buffer& buffer,
 			                  const VkBufferCreateInfo& bufferInfo,
 			                  const VmaAllocationCreateInfo& allocInfo,
-			                  VkDeviceSize                   minAlignment = 0) const;
+			                  VkDeviceSize                   minAlignment = 0);
 
-		void DestroyBuffer(VkBuffer buffer, VmaAllocation bufferAllocation);
-		void DestroyBuffer(Buffer& buffer) const;
+		static void DestroyBuffer(VkBuffer buffer, VmaAllocation bufferAllocation);
+		static void DestroyBuffer(Buffer& buffer);
 
-		VkResult CreateAcceleration(AccelerationStructure& accel, const VkAccelerationStructureCreateInfoKHR& accInfo) const;
-		VkResult CreateAcceleration(AccelerationStructure& accel,
+		static VkResult CreateAcceleration(AccelerationStructure& accel, const VkAccelerationStructureCreateInfoKHR& accInfo);
+		static VkResult CreateAcceleration(AccelerationStructure& accel,
 			const VkAccelerationStructureCreateInfoKHR& accInfo,
 			const VmaAllocationCreateInfo& vmaInfo,
-			std::span<const uint32_t>                   queueFamilies = {}) const;
+			std::span<const uint32_t>                   queueFamilies = {});
 
-		void DestroyAcceleration(AccelerationStructure& accel) const;
+		static void DestroyAcceleration(AccelerationStructure& accel);
 
 		/*********************************************************************
 	 * param:  imageInfo: Create info for image to create
@@ -58,11 +52,13 @@ namespace Dog
 	 *         and the image memory will be set in passed references.
 	 *         Throws errors if any creation or allocation failed.
 	 *********************************************************************/
-		void CreateImageWithInfo(const VkImageCreateInfo& imageInfo, VmaMemoryUsage memoryUsage, VkImage& image, VmaAllocation& imageAllocation);
+		static void CreateImageWithInfo(const VkImageCreateInfo& imageInfo, VmaMemoryUsage memoryUsage, VkImage& image, VmaAllocation& imageAllocation);
+
+		static void SetAllocationName(VmaAllocation allocation, const char* pName);
 
 	private:
-		VmaAllocator mAllocator;
-        Device& mDevice;
+		static VmaAllocator mAllocator;
+        static Device* mDevice;
 	};
 
 }
