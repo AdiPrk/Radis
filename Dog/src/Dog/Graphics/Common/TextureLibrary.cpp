@@ -93,6 +93,24 @@ namespace Dog
         return newIndex;
     }
 
+    uint32_t TextureLibrary::CreateImage(const std::string& imageName, uint32_t width, uint32_t height, VkFormat imageFormat, VkImageUsageFlags usage, VkImageLayout finalLayout)
+    {
+        if (Engine::GetGraphicsAPI() != GraphicsAPI::Vulkan)
+        {
+            DOG_ERROR("CreateImage called for non-Vulkan API");
+            return INVALID_TEXTURE_INDEX;
+        }
+
+        std::unique_ptr<ITexture> newTexture;
+        newTexture = std::make_unique<VKTexture>(*device, width, height, imageFormat, usage, finalLayout);
+
+        uint32_t newIndex = static_cast<uint32_t>(mTextures.size());
+        mTextures.push_back(std::move(newTexture));
+        mTextureMap[imageName] = newIndex;
+        CreateDescriptorSet(static_cast<VKTexture*>(mTextures.back().get()), finalLayout);
+        return newIndex;
+    }
+
     ITexture* TextureLibrary::GetTexture(uint32_t index)
     {
         if (index < mTextures.size()) {
@@ -207,7 +225,7 @@ namespace Dog
         }
     }
 
-    void TextureLibrary::CreateDescriptorSet(VKTexture* texture)
+    void TextureLibrary::CreateDescriptorSet(VKTexture* texture, VkImageLayout layout)
     {
         VkDescriptorSetAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -222,7 +240,7 @@ namespace Dog
 
         // 1. Populate the image info struct
         VkDescriptorImageInfo imageInfo{};
-        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; // Layout the image will be in when sampled
+        imageInfo.imageLayout = layout; // Layout the image will be in when sampled
         imageInfo.imageView = texture->GetImageView(); // Your VkImageView handle
         imageInfo.sampler = mTextureSampler;     // Your VkSampler handle
 

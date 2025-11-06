@@ -63,6 +63,7 @@ namespace Dog
 
         ImGui::Begin("Debug");
         ImGui::Checkbox("Wireframe", &ecs->GetResource<RenderingResource>()->renderWireframe);
+        ImGui::Checkbox("Raytracing", &ecs->GetResource<RenderingResource>()->useRaytracing);
         
         if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
         {

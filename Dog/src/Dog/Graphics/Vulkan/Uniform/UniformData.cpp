@@ -76,26 +76,40 @@ namespace Dog
 
     void RTUniformInit(Uniform& uniform, RenderingResource& renderData)
     {
+        uint32_t width = renderData.swapChain->GetSwapChainExtent().width;
+        uint32_t height = renderData.swapChain->GetSwapChainExtent().height;
+        VkFormat format = VK_FORMAT_R32G32B32A32_SFLOAT;
+        VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT |
+            VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
+            VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+        VkImageLayout layout = VK_IMAGE_LAYOUT_GENERAL;
+
+        // Create a vector to hold the pointers to our new textures
+        std::vector<VKTexture*> rtTextures(SwapChain::MAX_FRAMES_IN_FLIGHT);
+
+        // Loop and create one texture for each frame
+        for (int i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i)
+        {
+            // Give each texture a unique name
+            std::string texName = "RayTracingOutput_" + std::to_string(i);
+            uint32_t rtInd = renderData.textureLibrary->CreateImage(texName, width, height, format, usage, layout);
+            rtTextures[i] = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture(rtInd));
+        }
+
         uniform.GetDescriptorSets().resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
 
+        // This info struct will be updated inside the loop
         VkDescriptorImageInfo outImageInfo{};
         outImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL; // storage image layout
-        outImageInfo.imageView = VK_NULL_HANDLE;// renderData.rayTracingOutput->GetImageView(); // VKImageView
         outImageInfo.sampler = VK_NULL_HANDLE; // storage images donÅft use samplers
 
-        VkWriteDescriptorSetAccelerationStructureKHR asInfo{};
-        asInfo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
-        asInfo.accelerationStructureCount = 1;
-        asInfo.pAccelerationStructures = &renderData.tlasAccel.accel;
-
-        // Build descriptor sets for each frame with both buffer and texture data
+        // Build descriptor sets for each frame
         for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex)
         {
+            outImageInfo.imageView = rtTextures[frameIndex]->GetImageView();
+
             DescriptorWriter writer(*uniform.GetDescriptorLayout(), *uniform.GetDescriptorPool());
-
             writer.WriteImage(0, &outImageInfo, 1);
-            // writer.WriteAccelerationStructure(1, &asInfo);
-
             writer.Build(uniform.GetDescriptorSets()[frameIndex]);
         }
     }

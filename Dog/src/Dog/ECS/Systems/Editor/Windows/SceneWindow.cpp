@@ -1,6 +1,7 @@
 #include <PCH/pch.h>
 #include "SceneWindow.h"
 
+#include "Graphics/Common/TextureLibrary.h"
 #include "Graphics/OpenGL/GLFrameBuffer.h"
 
 #include "ECS/Resources/RenderingResource.h"
@@ -17,11 +18,21 @@ namespace Dog
             auto rr = ecs->GetResource<RenderingResource>();
             auto er = ecs->GetResource<EditorResource>();
             if (!rr || !er) return;
+            auto tl = rr->textureLibrary.get();
+            if (!tl) return;
 
             void* sceneTexturePtr;
             if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
             {
-                sceneTexturePtr = reinterpret_cast<void*>(rr->sceneTextureDescriptorSet);
+                if (rr->useRaytracing)
+                {
+                    uint32_t frameIndex = rr->currentFrameIndex;
+                    sceneTexturePtr = tl->GetTexture("RayTracingOutput_" + std::to_string(frameIndex))->GetTextureID();
+                }
+                else
+                {
+                    sceneTexturePtr = reinterpret_cast<void*>(rr->sceneTextureDescriptorSet);
+                }
             }
             else
             {

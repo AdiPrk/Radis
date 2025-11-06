@@ -56,6 +56,24 @@ namespace Dog
         CreateTextureImageView();
 	}
 
+	VKTexture::VKTexture(Device& device, uint32_t width, uint32_t height, VkFormat imageFormat, VkImageUsageFlags usage, VkImageLayout finalLayout)
+        : ITexture()
+		, mDevice(device)
+        , mImageFormat(imageFormat)
+	{
+		mWidth = width;
+		mHeight = height;
+		mChannels = 4; // Assumed for formats like rgba32f
+		mMipLevels = 1; // Storage images don't have mipmaps
+		mImageSize = 0; // No pixel data loaded from CPU
+		mPixels = nullptr; // No pixel data
+
+		// Create the image
+		CreateImage(mWidth, mHeight, mImageFormat, VK_IMAGE_TILING_OPTIMAL, usage, VMA_MEMORY_USAGE_GPU_ONLY);
+		TransitionImageLayout(mDevice, mTextureImage, mImageFormat, VK_IMAGE_LAYOUT_UNDEFINED, finalLayout, mMipLevels);
+		CreateTextureImageView();
+	}
+
 	VKTexture::~VKTexture()
 	{
 		if (mTextureImageView)
@@ -174,6 +192,13 @@ namespace Dog
 
 			sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 			destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+		}
+		else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_GENERAL) {
+			barrier.srcAccessMask = 0;
+			barrier.dstAccessMask = VK_ACCESS_SHADER_WRITE_BIT; // We will write to it from the shader
+
+			sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+			destinationStage = VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR; // Use the ray tracing stage
 		}
 		else {
 			throw std::invalid_argument("Unsupported layout transition!");

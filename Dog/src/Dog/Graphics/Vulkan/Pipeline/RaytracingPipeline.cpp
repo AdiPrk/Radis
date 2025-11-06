@@ -8,13 +8,6 @@
 
 namespace Dog
 {
-    struct TutoPushConstant
-    {
-        glm::mat3       normalMatrix;
-        int            instanceIndex;              // Instance index for the current draw call
-        glm::vec2      metallicRoughnessOverride;  // Metallic and roughness override values
-    };
-
 	RaytracingPipeline::RaytracingPipeline(Device& device, const std::vector<Uniform*>& uniforms)
 		: device(device)
 	{
@@ -195,7 +188,7 @@ namespace Dog
         size_t bufferSize = callableOffset + callableSize;
 
         // Create SBT buffer
-        Allocator::CreateBuffer(mSbtBuffer, bufferSize, VK_BUFFER_USAGE_2_SHADER_BINDING_TABLE_BIT_KHR, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
+        Allocator::CreateBuffer(mSbtBuffer, bufferSize, VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_2_SHADER_BINDING_TABLE_BIT_KHR, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
             VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT);
         Allocator::SetAllocationName(mSbtBuffer.allocation, "Ray Tracing SBT Buffer");
 
@@ -226,5 +219,10 @@ namespace Dog
         mCallableRegion.size = 0;
 
         DOG_INFO("Shader binding table created and populated");
+    }
+
+    void RaytracingPipeline::Bind(VkCommandBuffer cmd)
+    {
+
     }
 }

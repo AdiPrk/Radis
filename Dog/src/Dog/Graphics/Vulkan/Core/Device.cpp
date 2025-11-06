@@ -94,6 +94,9 @@ namespace Dog
         g_vkSetDebugUtilsObjectNameEXT = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(instance, "vkSetDebugUtilsObjectNameEXT");
         g_vkCreateRayTracingPipelinesKHR = (PFN_vkCreateRayTracingPipelinesKHR)vkGetDeviceProcAddr(device_, "vkCreateRayTracingPipelinesKHR");
         g_vkGetRayTracingShaderGroupHandlesKHR = (PFN_vkGetRayTracingShaderGroupHandlesKHR)vkGetDeviceProcAddr(device_, "vkGetRayTracingShaderGroupHandlesKHR");
+        g_vkCmdBeginDebugUtilsLabelEXT = (PFN_vkCmdBeginDebugUtilsLabelEXT)vkGetDeviceProcAddr(device_, "vkCmdBeginDebugUtilsLabelEXT");
+        g_vkCmdEndDebugUtilsLabelEXT = (PFN_vkCmdEndDebugUtilsLabelEXT)vkGetDeviceProcAddr(device_, "vkCmdEndDebugUtilsLabelEXT");
+        g_vkCmdTraceRaysKHR = (PFN_vkCmdTraceRaysKHR)vkGetDeviceProcAddr(device_, "vkCmdTraceRaysKHR");
     }
 
     Device::~Device() 
@@ -328,6 +331,7 @@ namespace Dog
         vulkan13Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
         REQUEST_FEATURE(vulkan13Features, supported13, shaderDemoteToHelperInvocation);
         REQUEST_FEATURE(vulkan13Features, supported13, dynamicRendering);
+        REQUEST_FEATURE(vulkan13Features, supported13, synchronization2);
 
         VkPhysicalDeviceVulkan12Features vulkan12Features = {};
         vulkan12Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
