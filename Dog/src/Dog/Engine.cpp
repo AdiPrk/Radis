@@ -111,13 +111,8 @@ namespace Dog
             float dt = frameRateController.WaitForNextFrame();
 
             mEcs.FrameStart();
-            if (InputSystem::isKeyTriggered(Key::D))
-            {
-                printf("Delete Entity 21!");
-            }
             mEcs.Update(dt);
             mEcs.FrameEnd();
-
         }
 
         return Exit();

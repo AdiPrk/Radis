@@ -28,11 +28,11 @@ namespace Dog
         void CreateAccelerationStructure(VkAccelerationStructureTypeKHR asType, AccelerationStructure& accelStruct, VkAccelerationStructureGeometryKHR& asGeometry, VkAccelerationStructureBuildRangeInfoKHR& asBuildRangeInfo, VkBuildAccelerationStructureFlagsKHR flags);
         void CreateBottomLevelAS();
         void CreateTopLevelAS();
+        void RaytraceScene(VkCommandBuffer cmd);
 
     private:
         uint32_t mNumObjectsRendered = 0;
-        const uint32_t mConstStartingObjectCount = 1;
-
+        uint32_t mConstStartingObjectCount = 0;
     };
 }
 

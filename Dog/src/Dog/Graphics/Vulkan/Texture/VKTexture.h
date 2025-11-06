@@ -9,9 +9,13 @@ namespace Dog
 	class VKTexture : public ITexture
 	{
 	public:
+		// From file/data
 		VKTexture(Device& device, const std::string& path, VkFormat imageFormat = VK_FORMAT_R8G8B8A8_SRGB);
 		VKTexture(Device& device, const std::string& name, const unsigned char* textureData, uint32_t textureSize, VkFormat imageFormat = VK_FORMAT_R8G8B8A8_SRGB);
 		VKTexture(Device& device, const UncompressedPixelData& data, VkFormat imageFormat = VK_FORMAT_R8G8B8A8_SRGB);
+
+		// Storage texture
+		VKTexture(Device& device, uint32_t width, uint32_t height, VkFormat imageFormat, VkImageUsageFlags usage, VkImageLayout finalLayout = VK_IMAGE_LAYOUT_GENERAL);
 
 		~VKTexture();
 
