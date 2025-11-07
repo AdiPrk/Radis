@@ -11,7 +11,7 @@ namespace Dog {
     float GLShader::iTime = 0.0f;
     GLuint GLShader::uboMatrices = 0;
     GLuint GLShader::uboMatricesBindingPoint = 0;
-    GLuint GLShader::instanceVBO = 0;
+    GLuint GLShader::instanceSSBO = 0;
     GLuint GLShader::animationSSBO = 0;
     GLuint GLShader::textureSSBO = 0;
 
@@ -270,15 +270,15 @@ namespace Dog {
         return Uniforms.find(name) != Uniforms.end();
     }
 
-    void GLShader::SetupInstanceVBO() 
+    void GLShader::SetupInstanceSSBO()
     {
-        if (instanceVBO != 0) return;
+        if (instanceSSBO != 0) return;
 
-        glGenBuffers(1, &instanceVBO);
-        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+        glGenBuffers(1, &instanceSSBO);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, instanceSSBO);
         uint32_t maxInstances = InstanceUniforms::MAX_INSTANCES;
-        glBufferData(GL_ARRAY_BUFFER, maxInstances * sizeof(InstanceUniforms), nullptr, GL_DYNAMIC_DRAW);
-
+        glBufferData(GL_SHADER_STORAGE_BUFFER, maxInstances * sizeof(InstanceUniforms), nullptr, GL_DYNAMIC_DRAW);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, instanceSSBO);
     }
 
     void GLShader::SetupAnimationSSBO()
@@ -377,11 +377,11 @@ namespace Dog {
     void GLShader::CleanupUBO()
     {
         glDeleteBuffers(1, &uboMatrices);
-        glDeleteBuffers(1, &instanceVBO);
+        glDeleteBuffers(1, &instanceSSBO);
         glDeleteBuffers(1, &animationSSBO);
         glDeleteBuffers(1, &textureSSBO);
         uboMatrices = 0;
-        instanceVBO = 0;
+        instanceSSBO = 0;
         animationSSBO = 0;
         textureSSBO = 0;
 

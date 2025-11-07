@@ -103,6 +103,8 @@ namespace Dog
             modelLibrary->AddModel(Assets::ModelsPath + "quad.obj");
             modelLibrary->AddModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx");
             modelLibrary->AddModel(Assets::ModelsPath + "jack_samba.glb");
+            modelLibrary->AddModel(Assets::ModelsPath + "DragonAttenuation.glb");
+            modelLibrary->AddModel(Assets::ModelsPath + "Sponza.gltf");
 
             //modelLibrary->AddModel("Assets/Models/okayu.pmx");
             //modelLibrary->AddModel("Assets/Models/AlisaMikhailovna.fbx");
@@ -111,18 +113,18 @@ namespace Dog
         if (!animationLibrary)
         {
             animationLibrary = std::make_unique<AnimationLibrary>();
-            animationLibrary->AddAnimation("Assets/Models/TravisLocomotion/idle.fbx", modelLibrary->GetModel("Assets/Models/TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation("Assets/Models/TravisLocomotion/idle.fbx", modelLibrary->GetModel("Assets/Models/TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation("Assets/Models/TravisLocomotion/jump.fbx", modelLibrary->GetModel("Assets/Models/TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation("Assets/Models/TravisLocomotion/left strafe walking.fbx", modelLibrary->GetModel("Assets/Models/TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation("Assets/Models/TravisLocomotion/left strafe.fbx", modelLibrary->GetModel("Assets/Models/TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation("Assets/Models/TravisLocomotion/left turn 90.fbx", modelLibrary->GetModel("Assets/Models/TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation("Assets/Models/TravisLocomotion/right strafe walking.fbx", modelLibrary->GetModel("Assets/Models/TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation("Assets/Models/TravisLocomotion/right strafe.fbx", modelLibrary->GetModel("Assets/Models/TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation("Assets/Models/TravisLocomotion/right turn 90.fbx", modelLibrary->GetModel("Assets/Models/TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation("Assets/Models/TravisLocomotion/standard run.fbx", modelLibrary->GetModel("Assets/Models/TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation("Assets/Models/TravisLocomotion/walking.fbx", modelLibrary->GetModel("Assets/Models/TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation("Assets/Models/jack_samba.glb", modelLibrary->GetModel("Assets/Models/jack_samba.glb"));
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/idle.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/idle.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/jump.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/left strafe walking.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/left strafe.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/left turn 90.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/right strafe walking.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/right strafe.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/right turn 90.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/standard run.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/walking.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation(Assets::ModelsPath + "jack_samba.glb", modelLibrary->GetModel(Assets::ModelsPath + "jack_samba.glb"));
         }
 
         // Recreation if needed
@@ -215,6 +217,15 @@ namespace Dog
             wireframePipeline.reset();
             raytracingPipeline.reset();
             syncObjects.reset();
+
+            for (auto& blas : blasAccel)
+            {
+                Allocator::DestroyAcceleration(blas);
+            }
+            blasAccel.clear();
+            if (tlasAccel.accel != VK_NULL_HANDLE) {
+                Allocator::DestroyAcceleration(tlasAccel);
+            }
 
             //allocator.reset();
             swapChain.reset();

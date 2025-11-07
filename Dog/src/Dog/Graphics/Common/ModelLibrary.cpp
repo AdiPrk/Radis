@@ -129,22 +129,32 @@ namespace Dog
             if (model->mAddedTexture) continue;
             model->mAddedTexture = true;
 
+            auto LoadOrGetTexture = [&](uint32_t& currentIndex, const std::string& path, std::unique_ptr<unsigned char[]>& data, uint32_t& dataSize, const std::string& embeddedName)
+            {
+                if (currentIndex != TextureLibrary::INVALID_TEXTURE_INDEX) return;
+                
+                if (!path.empty()) currentIndex = mTextureLibrary.AddTexture(path);
+                else if (data != nullptr && dataSize > 0)
+                {
+                    currentIndex = mTextureLibrary.AddTexture(data.get(), dataSize, embeddedName);
+                    data.reset();
+                    dataSize = 0;
+                }
+            };
+
+            // --- Process all meshes in the model ---
             for (auto& mesh : model->mMeshes)
             {
-                if (mesh->diffuseTexturePath.empty())
-                {
-                    if ((mesh->mTextureData == nullptr || mesh->mTextureSize == 0) && mesh->diffuseTextureIndex == TextureLibrary::INVALID_TEXTURE_INDEX) continue;
+                // Create a unique base name for embedded textures for this mesh
+                std::string embeddedBaseName = "Embedded_" + model->mModelName + "_" + std::to_string(mesh->mMeshID);
 
-                    uint32_t ind = mTextureLibrary.AddTexture(mesh->mTextureData.get(), mesh->mTextureSize, "EmbeddedTexture_" + std::to_string(mesh->mMeshID));
-                    mesh->diffuseTextureIndex = ind;
-                    mesh->mTextureData.reset();
-                    mesh->mTextureSize = 0;
-                }
-                else 
-                {
-                    uint32_t ind = mTextureLibrary.AddTexture(mesh->diffuseTexturePath);
-                    mesh->diffuseTextureIndex = ind;
-                }
+                // Call the helper for every texture type
+                LoadOrGetTexture(mesh->albedoTextureIndex, mesh->albedoTexturePath, mesh->mAlbedoTextureData, mesh->mAlbedoTextureSize, embeddedBaseName + "_Albedo");
+                LoadOrGetTexture(mesh->normalTextureIndex, mesh->normalTexturePath, mesh->mNormalTextureData, mesh->mNormalTextureSize, embeddedBaseName + "_Normal");
+                LoadOrGetTexture(mesh->metalnessTextureIndex, mesh->metalnessTexturePath, mesh->mMetalnessTextureData, mesh->mMetalnessTextureSize, embeddedBaseName + "_Metalness");
+                LoadOrGetTexture(mesh->roughnessTextureIndex, mesh->roughnessTexturePath, mesh->mRoughnessTextureData, mesh->mRoughnessTextureSize, embeddedBaseName + "_Roughness");
+                LoadOrGetTexture(mesh->occlusionTextureIndex, mesh->occlusionTexturePath, mesh->mOcclusionTextureData, mesh->mOcclusionTextureSize, embeddedBaseName + "_Occlusion");
+                LoadOrGetTexture(mesh->emissiveTextureIndex, mesh->emissiveTexturePath, mesh->mEmissiveTextureData, mesh->mEmissiveTextureSize, embeddedBaseName + "_Emissive");
             }
         }
     }
@@ -180,7 +190,7 @@ namespace Dog
                 std::vector<Vertex> oldVertices = mesh->mVertices;
                 std::vector<uint32_t> oldIndices = mesh->mIndices;
                 uint32_t oldMeshID = mesh->GetID();
-                uint32_t oldDiffuseTextureIndex = mesh->diffuseTextureIndex;
+                uint32_t oldDiffuseTextureIndex = mesh->albedoTextureIndex;
 
                 mesh.reset();
 
@@ -196,7 +206,7 @@ namespace Dog
                 mesh->mMeshID = oldMeshID;
                 mesh->mVertices = oldVertices;
                 mesh->mIndices = oldIndices;
-                mesh->diffuseTextureIndex = oldDiffuseTextureIndex;
+                mesh->albedoTextureIndex = oldDiffuseTextureIndex;
 
                 mesh->CreateVertexBuffers(device);
                 mesh->CreateIndexBuffers(device);

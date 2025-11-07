@@ -128,6 +128,8 @@ namespace Dog {
         , NumSprites(1)
         , ID(0)
     {
+        mPath = filePath;
+
         unsigned int id;
         glGenTextures(1, &id);
         this->ID = id;
@@ -183,10 +185,6 @@ namespace Dog {
         , NumSprites(1)
         , ID(0)
     {
-        unsigned int id;
-        glGenTextures(1, &id);
-        this->ID = id;
-
         mUncompressedData = data;
 
         Internal_Format = GL_SRGB8_ALPHA8;
@@ -200,6 +198,19 @@ namespace Dog {
         Index = 0;
         IsSpriteSheet = columns != 1 || rows != 1;
         mPath = data.path;
+        mWidth = data.width;
+        mHeight = data.height;
+
+        // no need for opengl to do if vk storage image;
+        if (data.isStorageImage)
+        {
+            mStorageImage = true;
+            return;
+        }
+
+        unsigned int id;
+        glGenTextures(1, &id);
+        this->ID = id;
         
         Generate(data.width, data.height, data.data.data(), rows * columns);
     }

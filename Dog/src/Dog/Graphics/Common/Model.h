@@ -46,9 +46,15 @@ namespace Dog
         void ProcessNode(aiNode* node, const glm::mat4& parentTransform = glm::mat4(1.f));
         IMesh& ProcessMesh(aiMesh* mesh, const glm::mat4& transform);
 
+        // Checks for textures in order of types to try
+        std::string ResolveTexturePath(aiMaterial* material, const std::vector<aiTextureType>& typesToTry, std::unique_ptr<unsigned char[]>& outEmbeddedData, uint32_t& outEmbeddedDataSize);
+
         void ProcessMaterials(aiMesh* mesh, IMesh& newMesh);
-        void ProcessBaseColor(const aiScene* scene, aiMaterial* material, IMesh& newMesh);
-        void ProcessDiffuseTexture(const aiScene* scene, aiMaterial* material, IMesh& newMesh);
+        void ProcessVertexColor(aiMaterial* material, IMesh& newMesh);
+        void ProcessBaseColor(aiMaterial* material, IMesh& newMesh);
+        void ProcessNormalMap(aiMaterial* material, IMesh& newMesh);
+        void ProcessPBRMaps(aiMaterial* material, IMesh& newMesh);
+        void ProcessEmissive(aiMaterial* material, IMesh& newMesh);
 
         void NormalizeModel();
 

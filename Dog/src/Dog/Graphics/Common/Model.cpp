@@ -3,6 +3,7 @@
 #include "../Vulkan/Core/Buffer.h"
 #include "../Vulkan/VKMesh.h"
 #include "../OpenGL/GLMesh.h"
+#include "Assets/Assets.h"
 
 #include "Graphics/RHI/RHI.h"
 
@@ -165,55 +166,6 @@ namespace Dog
         mAnimationTransform = glm::vec4(center, invScale);
     }
 
-    void Model::ProcessMaterials(aiMesh* mesh, IMesh& newMesh)
-    {
-        if (!mScene->HasMaterials()) return;
-
-        aiMaterial* material = mScene->mMaterials[mesh->mMaterialIndex];
-        ProcessBaseColor(mScene, material, newMesh);
-        ProcessDiffuseTexture(mScene, material, newMesh);
-    }
-
-    void Model::ProcessBaseColor(const aiScene* mScene, aiMaterial* material, IMesh& newMesh)
-    {
-        aiColor4D baseColor;
-
-        if (material->Get(AI_MATKEY_BASE_COLOR, baseColor) == AI_SUCCESS ||
-            material->Get(AI_MATKEY_COLOR_DIFFUSE, baseColor) == AI_SUCCESS)
-        {
-            for (Vertex& vertex : newMesh.mVertices)
-            {
-                vertex.color *= glm::vec3(baseColor.r, baseColor.g, baseColor.b);
-            }
-        }
-    }
-
-    void Model::ProcessDiffuseTexture(const aiScene* mScene, aiMaterial* material, IMesh& newMesh)
-    {
-        aiString texturePath;
-        if (material->GetTexture(aiTextureType_DIFFUSE, 0, &texturePath) != AI_SUCCESS) return;
-
-        const aiTexture* embeddedTexture = mScene->GetEmbeddedTexture(texturePath.C_Str());
-        if (!embeddedTexture)
-        {
-            std::filesystem::path path(texturePath.C_Str());
-            std::string filename = path.filename().string();
-
-            newMesh.diffuseTexturePath = mDirectory + "ModelTextures/" + mModelName + "/" + filename;
-        }
-        else if (embeddedTexture->mHeight == 0)
-        {
-            newMesh.mTextureSize = static_cast<uint32_t>(embeddedTexture->mWidth);
-            newMesh.mTextureData = std::make_unique<unsigned char[]>(newMesh.mTextureSize);
-
-            std::memcpy(newMesh.mTextureData.get(), embeddedTexture->pcData, static_cast<size_t>(embeddedTexture->mWidth));
-        }
-        else
-        {
-            DOG_CRITICAL("How are we here");
-        }
-    }
-
     void Model::ExtractBoneWeights(std::vector<Vertex>& vertices, aiMesh* mesh)
     {
         // Iterate over all bones in the aiMesh
@@ -231,5 +183,163 @@ namespace Dog
                 vertices[weightData.mVertexId].SetBoneData(boneID, weightData.mWeight);
             }
         }
+    }
+
+    std::string Model::ResolveTexturePath(aiMaterial* material, const std::vector<aiTextureType>& typesToTry, std::unique_ptr<unsigned char[]>& outEmbeddedData, uint32_t& outEmbeddedDataSize)
+    {
+        aiString texturePath;
+        aiReturn result = AI_FAILURE;
+
+        for (aiTextureType type : typesToTry)
+        {
+            // Assimp materials can have multiple textures of the same type.
+            // For PBR, we almost always only care about the first one (index 0).
+            if (material->GetTexture(type, 0, &texturePath) == AI_SUCCESS)
+            {
+                result = AI_SUCCESS;
+                break;
+            }
+        }
+
+        if (result != AI_SUCCESS)
+        {
+            return "";
+        }
+
+        // --- We found a texture, now resolve its path ---
+
+        const aiTexture* embeddedTexture = mScene->GetEmbeddedTexture(texturePath.C_Str());
+        bool embedded = false;
+        if (!embeddedTexture)
+        {
+            // Not an embedded texture. This is an external file.
+            std::filesystem::path path(texturePath.C_Str());
+            std::string filename = path.filename().string();
+
+            return Assets::ModelTexturesPath + mModelName + "/" + filename;
+        }
+        else if (embeddedTexture->mHeight == 0)
+        {
+            // This is compressed, "non-pixel" data (e.g., JPEG, PNG buffer)
+            embedded = true;
+            outEmbeddedDataSize = static_cast<uint32_t>(embeddedTexture->mWidth);
+            outEmbeddedData = std::make_unique<unsigned char[]>(outEmbeddedDataSize);
+            std::memcpy(outEmbeddedData.get(), embeddedTexture->pcData, outEmbeddedDataSize);
+        }
+        else
+        {
+            DOG_CRITICAL("Model has weird embedded texture data (?)?(?) what does this even mean");
+            return "";
+        }
+
+        return embedded ? "" : texturePath.C_Str();
+    }
+
+    void Model::ProcessMaterials(aiMesh* mesh, IMesh& newMesh)
+    {
+        if (!mScene->HasMaterials()) return;
+
+        aiMaterial* material = mScene->mMaterials[mesh->mMaterialIndex];
+        //ProcessVertexColor(material, newMesh);
+        ProcessBaseColor(material, newMesh);
+        ProcessNormalMap(material, newMesh);
+        ProcessPBRMaps(material, newMesh);
+        ProcessEmissive(material, newMesh);
+    }
+
+    void Model::ProcessVertexColor(aiMaterial* material, IMesh& newMesh)
+    {
+
+        aiColor4D baseColor;
+
+        if (material->Get(AI_MATKEY_BASE_COLOR, baseColor) == AI_SUCCESS ||
+            material->Get(AI_MATKEY_COLOR_DIFFUSE, baseColor) == AI_SUCCESS)
+        {
+            for (Vertex& vertex : newMesh.mVertices)
+            {
+                vertex.color *= glm::vec3(baseColor.r, baseColor.g, baseColor.b);
+            }
+        }
+    }
+
+    void Model::ProcessBaseColor(aiMaterial* material, IMesh& newMesh)
+    {
+        aiColor4D color;
+
+        if (material->Get(AI_MATKEY_BASE_COLOR, color) == AI_SUCCESS)
+        {
+            newMesh.baseColorFactor = glm::vec4(color.r, color.g, color.b, color.a);
+        }
+        else if (material->Get(AI_MATKEY_COLOR_DIFFUSE, color) == AI_SUCCESS)
+        {
+            newMesh.baseColorFactor = glm::vec4(color.r, color.g, color.b, color.a);
+        }
+
+        newMesh.albedoTexturePath = ResolveTexturePath(
+            material,
+            { aiTextureType_BASE_COLOR, aiTextureType_DIFFUSE },
+            newMesh.mAlbedoTextureData,
+            newMesh.mAlbedoTextureSize
+        );
+    }
+
+    void Model::ProcessNormalMap(aiMaterial* material, IMesh& newMesh)
+    {
+        newMesh.normalTexturePath = ResolveTexturePath(
+            material,
+            { aiTextureType_NORMAL_CAMERA, aiTextureType_NORMALS },
+            newMesh.mNormalTextureData,
+            newMesh.mNormalTextureSize
+        );
+    }
+
+    void Model::ProcessPBRMaps(aiMaterial* material, IMesh& newMesh)
+    {
+        material->Get(AI_MATKEY_METALLIC_FACTOR, newMesh.metallicFactor);
+        material->Get(AI_MATKEY_ROUGHNESS_FACTOR, newMesh.roughnessFactor);
+
+        newMesh.metalnessTexturePath = ResolveTexturePath(
+            material,
+            { aiTextureType_METALNESS },
+            newMesh.mMetalnessTextureData,
+            newMesh.mMetalnessTextureSize
+        );
+
+        newMesh.roughnessTexturePath = ResolveTexturePath(
+            material,
+            { aiTextureType_DIFFUSE_ROUGHNESS },
+            newMesh.mRoughnessTextureData,
+            newMesh.mRoughnessTextureSize
+        );
+
+        newMesh.occlusionTexturePath = ResolveTexturePath(
+            material,
+            { aiTextureType_AMBIENT_OCCLUSION, aiTextureType_LIGHTMAP },
+            newMesh.mOcclusionTextureData,
+            newMesh.mOcclusionTextureSize
+        );
+
+        // Your *engine* can now check the paths
+        if (!newMesh.metalnessTexturePath.empty() && newMesh.metalnessTexturePath == newMesh.roughnessTexturePath)
+        {
+            // The paths are identical!
+            // This could be an ORM texture (Occlusion-Roughness-Metalness) if glTF
+        }
+    }
+        
+    void Model::ProcessEmissive(aiMaterial* material, IMesh& newMesh)
+    {
+        aiColor3D color(0.0f, 0.0f, 0.0f);
+        if (material->Get(AI_MATKEY_COLOR_EMISSIVE, color) == AI_SUCCESS)
+        {
+            newMesh.emissiveFactor = glm::vec4(glm::vec3(color.r, color.g, color.b), 0.f);
+        }
+
+        newMesh.emissiveTexturePath = ResolveTexturePath(
+            material,
+            { aiTextureType_EMISSION_COLOR, aiTextureType_EMISSIVE },
+            newMesh.mEmissiveTextureData,
+            newMesh.mEmissiveTextureSize
+        );
     }
 }

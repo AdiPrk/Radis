@@ -54,8 +54,8 @@ namespace Dog {
         static void SetShader(GLShader& shader) { activeShader = shader.Use(); }
         static GLShader& GetActiveShader() { return activeShader; }
 
-        static GLuint GetInstanceVBO() { return instanceVBO; }
-        static void SetupInstanceVBO();
+        static GLuint GetInstanceSSBO() { return instanceSSBO; }
+        static void SetupInstanceSSBO();
         static GLuint GetAnimationSSBO() { return animationSSBO; }
         static void SetupAnimationSSBO();
         static GLuint GetTextureSSBO() { return textureSSBO; }
@@ -67,7 +67,7 @@ namespace Dog {
         bool loadShaderFromFile(const std::string& shaderFile);
 
         static GLShader activeShader;
-        static GLuint instanceVBO;
+        static GLuint instanceSSBO;
         static GLuint animationSSBO;
         static GLuint textureSSBO;
     };

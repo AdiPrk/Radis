@@ -41,32 +41,60 @@ namespace Dog
 		: ITexture()
 		, mDevice(device)
         , mImageFormat(imageFormat)
+		, mUsage(data.usage)
+		, mFinalLayout(data.finalLayout)
 	{
-        mPixels = new unsigned char[data.data.size()];
-        memcpy(mPixels, data.data.data(), data.data.size());
+		mUncompressedData = data;
 
-        mPath = data.path;
-        mWidth = data.width;
-        mHeight = data.height;
-        mChannels = data.channels;
-        mImageSize = data.data.size();
-        mUncompressedData = data;
+		if (data.isStorageImage)
+		{
+			mImageFormat = data.imageFormat;
+			mWidth = data.width;
+			mHeight = data.height;
+			mChannels = 4; // Assumed for formats like rgba32f
+			mMipLevels = 1; // Storage images don't have mipmaps
+			mImageSize = 0; // No pixel data loaded from CPU
+			mPixels = nullptr; // No pixel data
 
-        CreateTextureImage();
-        CreateTextureImageView();
+			// Create the image
+			CreateImage(mWidth, mHeight, data.imageFormat, VK_IMAGE_TILING_OPTIMAL, mUsage, VMA_MEMORY_USAGE_GPU_ONLY);
+			TransitionImageLayout(mDevice, mTextureImage, data.imageFormat, VK_IMAGE_LAYOUT_UNDEFINED, mFinalLayout, mMipLevels);
+			CreateTextureImageView();
+		}
+		else
+		{
+			mPixels = new unsigned char[data.data.size()];
+			memcpy(mPixels, data.data.data(), data.data.size());
+
+			mPath = data.path;
+			mWidth = data.width;
+			mHeight = data.height;
+			mChannels = data.channels;
+			mImageSize = data.data.size();
+
+			CreateTextureImage();
+			CreateTextureImageView();
+		}
 	}
 
 	VKTexture::VKTexture(Device& device, uint32_t width, uint32_t height, VkFormat imageFormat, VkImageUsageFlags usage, VkImageLayout finalLayout)
         : ITexture()
 		, mDevice(device)
         , mImageFormat(imageFormat)
+		, mUsage(usage)
+		, mFinalLayout(finalLayout)
 	{
+		mStorageImage = true;
 		mWidth = width;
 		mHeight = height;
 		mChannels = 4; // Assumed for formats like rgba32f
 		mMipLevels = 1; // Storage images don't have mipmaps
 		mImageSize = 0; // No pixel data loaded from CPU
 		mPixels = nullptr; // No pixel data
+		mUncompressedData.isStorageImage = true;
+		mUncompressedData.imageFormat = imageFormat;
+		mUncompressedData.usage = usage;
+		mUncompressedData.finalLayout = finalLayout;
 
 		// Create the image
 		CreateImage(mWidth, mHeight, mImageFormat, VK_IMAGE_TILING_OPTIMAL, usage, VMA_MEMORY_USAGE_GPU_ONLY);

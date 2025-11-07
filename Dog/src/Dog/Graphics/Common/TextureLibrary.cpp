@@ -10,7 +10,7 @@
 
 namespace Dog
 {
-    const uint32_t TextureLibrary::MAX_TEXTURE_COUNT = 50;
+    const uint32_t TextureLibrary::MAX_TEXTURE_COUNT = 500;
     const uint32_t TextureLibrary::INVALID_TEXTURE_INDEX = 10001;
 
     TextureLibrary::TextureLibrary(Device* device)
@@ -62,6 +62,8 @@ namespace Dog
         uint32_t newIndex = static_cast<uint32_t>(mTextures.size());
         mTextures.push_back(std::move(newTexture));
         mTextureMap[filePath] = newIndex;
+
+        DOG_INFO("Loaded texture: {0} (Index: {1})", filePath, newIndex);
         
         return newIndex;
     }
@@ -90,6 +92,8 @@ namespace Dog
         mTextures.push_back(std::move(newTexture));
         mTextureMap[texturePath] = newIndex;
 
+        DOG_INFO("Loaded texture from memory: {0} (Index: {1})", texturePath, newIndex);
+
         return newIndex;
     }
 
@@ -99,6 +103,13 @@ namespace Dog
         {
             DOG_ERROR("CreateImage called for non-Vulkan API");
             return INVALID_TEXTURE_INDEX;
+        }
+
+        // check if exists
+        auto it = mTextureMap.find(imageName);
+        if (it != mTextureMap.end())
+        {
+            return it->second;
         }
 
         std::unique_ptr<ITexture> newTexture;
@@ -270,6 +281,11 @@ namespace Dog
             pixelData.height = itex->mHeight;
             pixelData.channels = itex->mChannels;
             pixelData.path = itex->mPath;
+
+            pixelData.isStorageImage = itex->mUncompressedData.isStorageImage;
+            pixelData.imageFormat = itex->mUncompressedData.imageFormat;
+            pixelData.usage = itex->mUncompressedData.usage;
+            pixelData.finalLayout = itex->mUncompressedData.finalLayout;
         }
 
         if (mTextureSampler && device)

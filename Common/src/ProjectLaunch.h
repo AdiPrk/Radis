@@ -1,6 +1,5 @@
 #pragma once
 #include <string>
-#include <vector>
 #include "json.hpp"
 #include "GraphicsAPIs.h"
 #include "Common.h"

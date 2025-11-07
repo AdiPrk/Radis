@@ -51,6 +51,9 @@ namespace Dog
 		
 		unsigned char* mPixels;
 
-		VkFormat mImageFormat;
+		friend class TextureLibrary;
+		VkFormat mImageFormat;		
+		VkImageUsageFlags mUsage;
+		VkImageLayout mFinalLayout;
 	};
 }
