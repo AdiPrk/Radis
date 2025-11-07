@@ -21,7 +21,7 @@ namespace Dog
 
     const UniformSettings cameraUniformSettings = UniformSettings(CameraUniformInit)
         .AddUBBinding(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags, sizeof(CameraUniforms))
-        .AddVertexBinding(VK_SHADER_STAGE_VERTEX_BIT, sizeof(InstanceUniforms), InstanceUniforms::MAX_INSTANCES)
+        .AddSSBOBinding(VK_SHADER_STAGE_VERTEX_BIT, sizeof(InstanceUniforms), InstanceUniforms::MAX_INSTANCES)
         .AddSSBOBinding(VK_SHADER_STAGE_VERTEX_BIT, sizeof(VQS), 10000)
         .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags, TextureLibrary::MAX_TEXTURE_COUNT);
 

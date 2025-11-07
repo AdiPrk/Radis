@@ -1,10 +1,4 @@
-#version 450
-
-#extension GL_GOOGLE_include_directive : enable
-#include "includes/uniformSet.glsl"
-#include "includes/constants.glsl"
-
-// VK Extensions
+#version 460
 #ifdef VULKAN
 	#extension GL_EXT_nonuniform_qualifier : require
 #else
@@ -15,11 +9,37 @@ layout(location = 0) in vec3 fragColor;
 layout(location = 1) in vec4 fragTint;
 layout(location = 2) in vec3 fragWorldNormal;
 layout(location = 3) in vec2 fragTexCoord;
-layout(location = 4) flat in uint textureIndex;
-layout(location = 5) flat in uint instanceIndex;
-layout(location = 6) in vec3 fragWorldPos;
+layout(location = 4) flat in uvec4 textureIndicies;
+layout(location = 5) flat in uvec4 textureIndicies2;
+layout(location = 6) flat in vec4 baseColorFactor;
+layout(location = 7) flat in vec4 metallicRoughnessFactor;
+layout(location = 8) flat in vec4 emissiveFactor;
+layout(location = 9) flat in uint instanceIndex;
+layout(location = 10) in vec3 fragWorldPos;
 
 layout(location = 0) out vec4 outColor;
+
+const float PI = 3.14159265359;
+const uint INVALID_TEXTURE_INDEX = 10001;
+
+#ifdef VULKAN
+    #define UBO_LAYOUT(s, b) layout(set = s, binding = b)
+    #define SSBO_LAYOUT(s, b) layout(set = s, binding = b)
+#else
+    #define UBO_LAYOUT(s, b) layout(std140, binding = b)
+    #define SSBO_LAYOUT(s, b) layout(std430, binding = b)
+#endif
+
+UBO_LAYOUT(0, 0) uniform Uniforms
+{
+    mat4 projectionView;
+    mat4 projection;
+    mat4 view;
+    vec3 cameraPos;
+    vec3 lightDir;
+    vec3 lightColor;
+    float lightIntensity;
+} uniforms;
 
 #ifdef VULKAN
 	layout(set = 0, binding = 3) uniform sampler2D uTextures[];
@@ -105,18 +125,27 @@ void main()
 	// --- 1. Get Base Color (Albedo) ---
 	vec4 baseColor = vec4(fragColor * fragTint.rgb, fragTint.a);
 
-	if (textureIndex != INVALID_TEXTURE_INDEX)
+	if (textureIndicies.x != INVALID_TEXTURE_INDEX)
 	{
 #ifdef VULKAN
-		baseColor = texture(uTextures[textureIndex], fragTexCoord) * fragTint;
+		baseColor = texture(uTextures[textureIndicies.x], fragTexCoord) * fragTint;
 #else
-		uvec2 colorH = texHandles.colorHandle[textureIndex];
+		uvec2 colorH = texHandles.colorHandle[textureIndicies.x];
 		if (colorH != uvec2(0,0)) 
 		{
 			baseColor = texture(sampler2D(colorH), fragTexCoord) * fragTint;
 		}
 #endif
 	}
+
+    outColor = baseColor;
+
+    if (outColor.a < 0.1)
+	{
+		discard;
+	}
+
+    /*
 
     vec3 albedo = baseColor.rgb;
     float metallic = 0.1;
@@ -144,9 +173,11 @@ void main()
     // Gamma correction (sRGB)
     color = pow(color, vec3(1.0/2.2)); 
 
-	outColor = vec4(color, baseColor.a);
+	//outColor = vec4(color, baseColor.a);
+	outColor = baseColor;
     if (outColor .a < 0.1)
 	{
 		discard;
 	}
+    */
 }

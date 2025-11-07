@@ -125,7 +125,8 @@ namespace Dog
 
         VkBuffer buffers[] = { mVertexBuffer.buffer, instBuffer };
         VkDeviceSize offsets[] = { 0, 0 };
-        vkCmdBindVertexBuffers(commandBuffer, 0, 2, buffers, offsets);
+        // only use 1, the instbuffer is not used here anymore;
+        vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
         vkCmdBindIndexBuffer(commandBuffer, mIndexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
     }
 
@@ -142,16 +143,16 @@ namespace Dog
 
     std::vector<VkVertexInputBindingDescription> Vertex::GetBindingDescriptions()
     {
-        std::vector<VkVertexInputBindingDescription> bindingDescriptions(2);
+        std::vector<VkVertexInputBindingDescription> bindingDescriptions(1);
 
         //Set bind description data
         bindingDescriptions[0].binding = 0;                             
         bindingDescriptions[0].stride = sizeof(Vertex);                 
         bindingDescriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX; 
 
-        bindingDescriptions[1].binding = 1;
-        bindingDescriptions[1].stride = sizeof(InstanceUniforms);
-        bindingDescriptions[1].inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
+        //bindingDescriptions[1].binding = 1;
+        //bindingDescriptions[1].stride = sizeof(InstanceUniforms);
+        //bindingDescriptions[1].inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
 
         //Return description
         return bindingDescriptions;
@@ -171,13 +172,17 @@ namespace Dog
         attributeDescriptions.push_back({ 5, 0, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(Vertex, weights) });
 
         // Per instance
-        attributeDescriptions.push_back({ 6,  1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, model)});
-        attributeDescriptions.push_back({ 7,  1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, model) + sizeof(float) * 4 });
-        attributeDescriptions.push_back({ 8,  1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, model) + sizeof(float) * 8 });
-        attributeDescriptions.push_back({ 9,  1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, model) + sizeof(float) * 12 });
-        attributeDescriptions.push_back({ 10, 1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, tint) });
-        attributeDescriptions.push_back({ 11, 1, VK_FORMAT_R32_UINT, offsetof(InstanceUniforms, textureIndex) });
-        attributeDescriptions.push_back({ 12, 1, VK_FORMAT_R32_UINT, offsetof(InstanceUniforms, boneOffset) });
+        // attributeDescriptions.push_back({ 6,  1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, model)});
+        // attributeDescriptions.push_back({ 7,  1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, model) + sizeof(float) * 4 });
+        // attributeDescriptions.push_back({ 8,  1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, model) + sizeof(float) * 8 });
+        // attributeDescriptions.push_back({ 9,  1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, model) + sizeof(float) * 12 });
+        // attributeDescriptions.push_back({ 10, 1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, tint) });
+        // attributeDescriptions.push_back({ 11, 1, VK_FORMAT_R32G32B32A32_UINT, offsetof(InstanceUniforms, textureIndicies) });
+        // attributeDescriptions.push_back({ 12, 1, VK_FORMAT_R32G32B32A32_UINT, offsetof(InstanceUniforms, textureIndicies2) });
+        // attributeDescriptions.push_back({ 13, 1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, baseColorFactor) });
+        // attributeDescriptions.push_back({ 14, 1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, metallicRoughnessFactor) });
+        // attributeDescriptions.push_back({ 15, 1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, emissiveFactor) });
+        // attributeDescriptions.push_back({ 16, 1, VK_FORMAT_R32_UINT, offsetof(InstanceUniforms, boneOffset) });
 
         //Return description
         return attributeDescriptions;

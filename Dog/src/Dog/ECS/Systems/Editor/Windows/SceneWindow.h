@@ -2,8 +2,6 @@
 
 namespace Dog
 {
-    struct RenderingResource;
-    struct EditorResource;
     class ECS;
 
     namespace EditorWindows

@@ -225,6 +225,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Dog\ECS\Systems\Editor\Windows\AssetsWindow.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\Editor\Windows\EntitiesWindow.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\Editor\Windows\SceneWindow.cpp" />
+    <ClCompile Include="src\Dog\ECS\Systems\Editor\Windows\TextureBrowserWindow.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\InputSystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\ISystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\PresentSystem.cpp" />
@@ -292,7 +293,6 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Assets\Shaders\includes\glvkDefines.glsl" />
     <ClInclude Include="Dependencies\imgui\backends\imgui_impl_glfw.h" />
     <ClInclude Include="Dependencies\imgui\backends\imgui_impl_opengl3.h" />
     <ClInclude Include="Dependencies\imgui\backends\imgui_impl_opengl3_loader.h" />
@@ -331,6 +331,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Dog\ECS\Systems\Editor\Windows\AssetsWindow.h" />
     <ClInclude Include="src\Dog\ECS\Systems\Editor\Windows\EntitiesWindow.h" />
     <ClInclude Include="src\Dog\ECS\Systems\Editor\Windows\SceneWindow.h" />
+    <ClInclude Include="src\Dog\ECS\Systems\Editor\Windows\TextureBrowserWindow.h" />
     <ClInclude Include="src\Dog\ECS\Systems\InputSystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\ISystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\PresentSystem.h" />
@@ -413,11 +414,6 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Assets\Shaders\includes\constants.glsl" />
-    <None Include="Assets\Shaders\includes\uniformSet.glsl" />
-    <None Include="Assets\Shaders\raytrace.rchit" />
-    <None Include="Assets\Shaders\raytrace.rgen" />
-    <None Include="Assets\Shaders\raytrace.rmiss" />
     <None Include="src\Dog\Graphics\Vulkan\Uniform\Uniform.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

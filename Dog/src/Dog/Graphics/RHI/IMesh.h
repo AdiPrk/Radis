@@ -59,13 +59,39 @@ namespace Dog
         uint32_t mMeshID = 0;
 
         // Tex data if from memory
-        std::unique_ptr<unsigned char[]> mTextureData = nullptr;
-        uint32_t mTextureSize = 0;
+        std::unique_ptr<unsigned char[]> mAlbedoTextureData = nullptr;
+        std::unique_ptr<unsigned char[]> mNormalTextureData = nullptr;
+        std::unique_ptr<unsigned char[]> mMetalnessTextureData = nullptr;
+        std::unique_ptr<unsigned char[]> mRoughnessTextureData = nullptr;
+        std::unique_ptr<unsigned char[]> mOcclusionTextureData = nullptr;
+        std::unique_ptr<unsigned char[]> mEmissiveTextureData = nullptr;
+        uint32_t mAlbedoTextureSize = 0;
+        uint32_t mNormalTextureSize = 0;
+        uint32_t mMetalnessTextureSize = 0;
+        uint32_t mRoughnessTextureSize = 0;
+        uint32_t mOcclusionTextureSize = 0;
+        uint32_t mEmissiveTextureSize = 0;
 
-        // Path to textures
+        // Otherwise path to textures
         bool loadedTextures = false;
-        std::string diffuseTexturePath = "";
-        uint32_t diffuseTextureIndex = 10001;
+        std::string albedoTexturePath{};
+        std::string normalTexturePath{};
+        std::string metalnessTexturePath{};
+        std::string roughnessTexturePath{};
+        std::string occlusionTexturePath{};
+        std::string emissiveTexturePath{};
+        uint32_t albedoTextureIndex = 10001;
+        uint32_t normalTextureIndex = 10001;
+        uint32_t metalnessTextureIndex = 10001;
+        uint32_t roughnessTextureIndex = 10001;
+        uint32_t occlusionTextureIndex = 10001;
+        uint32_t emissiveTextureIndex = 10001;
+
+        // Color 'factors'
+        glm::vec4 baseColorFactor{ 1.f };
+        float metallicFactor{ 0.f };
+        float roughnessFactor{ 0.f };
+        glm::vec4 emissiveFactor{ 0.f };
 
     private:
         static int GetTotalMeshCount() { return uniqueMeshIndex; }

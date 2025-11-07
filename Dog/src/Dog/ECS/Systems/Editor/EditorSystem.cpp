@@ -25,6 +25,7 @@
 #include "Windows/AssetsWindow.h"
 #include "Windows/SceneWindow.h"
 #include "Windows/EntitiesWindow.h"
+#include "Windows/TextureBrowserWindow.h"
 
 #include "Assets/Assets.h"
 #include "Utils/Utils.h"
@@ -56,6 +57,7 @@ namespace Dog
 
         EditorWindows::RenderSceneWindow(ecs);
         EditorWindows::RenderEntitiesWindow(ecs);
+        EditorWindows::RenderTextureBrowser(ecs);
         RenderInspectorWindow();
 
         auto& tl = ecs->GetResource<RenderingResource>()->textureLibrary;
@@ -359,7 +361,7 @@ namespace Dog
 
         DrawComponentUI<ModelComponent>("Model", selectedEnt, [&](ModelComponent& component)
         {
-            const std::vector<std::string> modelExtensions = { ".fbx", ".glb", ".obj" };
+            const std::vector<std::string> modelExtensions = { ".fbx", ".glb", ".obj", ".gltf" };
             std::vector<std::string> modelFiles = GetFilesWithExtensions("Assets/Models/", modelExtensions);
             modelFiles.push_back("Assets/Models/TravisLocomotion/TravisLocomotion.fbx"); // Extra
 

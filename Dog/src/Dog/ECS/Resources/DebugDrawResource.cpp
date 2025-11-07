@@ -116,7 +116,8 @@ namespace Dog
             }
 
             instance.tint = line.color;
-            instance.textureIndex = TextureLibrary::INVALID_TEXTURE_INDEX;
+            instance.textureIndicies = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
+            instance.textureIndicies2 = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
         }
 
         for (const auto& rect : rects)
@@ -127,7 +128,8 @@ namespace Dog
             instance.model = glm::translate(instance.model, rect.center);
             instance.model = glm::scale(instance.model, glm::vec3(rect.size.x * 0.5f, 0.02f, rect.size.y * 0.5f));
             instance.tint = rect.color;
-            instance.textureIndex = TextureLibrary::INVALID_TEXTURE_INDEX;
+            instance.textureIndicies = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
+            instance.textureIndicies2 = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
         }
 
         for (const auto& cube : cubes)
@@ -137,7 +139,8 @@ namespace Dog
             instance.model = glm::translate(instance.model, cube.center);
             instance.model = glm::scale(instance.model, glm::vec3(cube.size * 0.5f));
             instance.tint = cube.color, 1.0f;
-            instance.textureIndex = TextureLibrary::INVALID_TEXTURE_INDEX;
+            instance.textureIndicies = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
+            instance.textureIndicies2 = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
         }
 
         for (const auto& circle : circles)
@@ -149,7 +152,8 @@ namespace Dog
             instance.model = glm::translate(instance.model, circle.center);
             instance.model = glm::scale(instance.model, glm::vec3(circle.radius * 0.5f, 0.02f, circle.radius * 0.5f));
             instance.tint = circle.color;
-            instance.textureIndex = textureIndex;
+            instance.textureIndicies = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
+            instance.textureIndicies2 = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
         }
 
         return instanceData;

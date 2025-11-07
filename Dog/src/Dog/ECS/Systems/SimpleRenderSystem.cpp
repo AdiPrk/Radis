@@ -44,13 +44,6 @@ namespace Dog
 
     void SimpleRenderSystem::Exit()
     {
-        auto rr = ecs->GetResource<RenderingResource>();
-
-        for (auto& blas : rr->blasAccel)
-        {
-            Allocator::DestroyAcceleration(blas);
-        }
-        Allocator::DestroyAcceleration(rr->tlasAccel);
     }
 
     /*********************************************************************
@@ -99,11 +92,22 @@ namespace Dog
     {
         auto rr = ecs->GetResource<RenderingResource>();
 
-        static bool createdAS = false;
-        if (!createdAS && Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan && !rr->tlasAccel.accel && rr->blasAccel.empty())
         {
             // get num entities with model component
-            mConstStartingObjectCount = static_cast<uint32_t>(ecs->GetRegistry().view<ModelComponent>().size());
+            mConstStartingObjectCount = 0;
+            auto view = ecs->GetRegistry().view<ModelComponent>();
+            ecs->GetRegistry().view<ModelComponent>().each([&](auto entity, ModelComponent& mc) 
+            {
+                auto model = rr->modelLibrary->GetModel(mc.ModelPath);
+                if (model)
+                {
+                    for (auto& mesh : model->mMeshes)
+                    {
+                        mConstStartingObjectCount++;
+                    }
+                }
+            });
 
             CreateBottomLevelAS();  // Set up BLAS infrastructure
             CreateTopLevelAS();     // Set up TLAS infrastructure
@@ -117,9 +121,7 @@ namespace Dog
                 DescriptorWriter writer(*rr->rtUniform->GetDescriptorLayout(), *rr->rtUniform->GetDescriptorPool());
                 writer.WriteAccelerationStructure(1, &asInfo);
                 writer.Overwrite(rr->rtUniform->GetDescriptorSets()[frameIndex]);
-            }
-        
-            createdAS = true;
+            }        
         }
 
         // Update textures!
@@ -139,7 +141,7 @@ namespace Dog
 
         // Heh
         // static int si = 0;
-        // if (si++ % 2 == 0) 
+        // if (si++ % 30 == 0) 
         // {
         //     auto sr = ecs->GetResource<SwapRendererBackendResource>();
         //     sr->RequestSwap();
@@ -181,9 +183,10 @@ namespace Dog
                     glm::vec3 cameraTarget = cameraPos + forwardDir;
                     camData.view = glm::lookAt(cameraPos, cameraTarget, upDir);
                     camData.cameraPos = glm::vec4(tc.Translation, 1.0f);
+
                     camData.lightDir = glm::vec4(glm::normalize(glm::vec3(-1.0f, -1.0f, -1.0f)), 0.0f);
-                    camData.lightColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-                    camData.lightIntensity = 1.0f;
+                    camData.lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+                    camData.lightIntensity = 2.0f;
                 }
 
                 camData.projection = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 100.0f);
@@ -302,8 +305,10 @@ namespace Dog
                 }
 
                 data.tint = mc.tintColor;
-                data.textureIndex = mesh->diffuseTextureIndex;
+                data.textureIndicies = glm::uvec4(mesh->albedoTextureIndex, 10001, 10001, 10001);
+                data.textureIndicies2 = glm::uvec4(10001, 10001, 10001, 10001);
                 data.boneOffset = boneOffset;
+                //data.emissiveFactor.w = boneOffset;
             }
         }
 
@@ -317,7 +322,7 @@ namespace Dog
             auto& mesh = cubeModel->mMeshes[0];
             mesh->Bind(cmd, instBuffer);
             mesh->Draw(cmd, baseIndex++);
-
+        
             ++mNumObjectsRendered;
         }
 
@@ -397,8 +402,10 @@ namespace Dog
                 }
 
                 data.tint = mc.tintColor;
-                data.textureIndex = mesh->diffuseTextureIndex;
+                data.textureIndicies = glm::uvec4(mesh->albedoTextureIndex, 10001, 10001, 10001);
+                data.textureIndicies2 = glm::uvec4(10001, 10001, 10001, 10001);
                 data.boneOffset = boneOffset;
+                data._padding = glm::vec3(777.0f);
             }
         }
 
@@ -430,12 +437,6 @@ namespace Dog
         }
 
         uint32_t instanceCount = static_cast<uint32_t>(instanceData.size());
-        
-        GLuint iVBO = GLShader::GetInstanceVBO();
-        glBindBuffer(GL_ARRAY_BUFFER, iVBO);
-        glBufferData(GL_ARRAY_BUFFER, instanceCount * sizeof(InstanceUniforms), instanceData.data(), GL_DYNAMIC_DRAW);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-
         for (uint32_t i = 0; i < rr->textureLibrary->GetTextureCount(); ++i)
         {
             auto itex = rr->textureLibrary->GetTextureByIndex(i);
@@ -445,8 +446,15 @@ namespace Dog
                 textureData.push_back(gltex->textureHandle);
             }
         }
-        
+
+        GLShader::SetupInstanceSSBO();
         GLShader::SetupTextureSSBO();
+
+        GLuint iSSBO = GLShader::GetInstanceSSBO();
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, iSSBO);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, instanceCount * sizeof(InstanceUniforms), instanceData.data(), GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+        
         GLuint textureSSBO = GLShader::GetTextureSSBO();
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, textureSSBO);
         glBufferData(GL_SHADER_STORAGE_BUFFER, textureData.size() * sizeof(uint64_t), textureData.data(), GL_DYNAMIC_DRAW);
@@ -459,7 +467,7 @@ namespace Dog
             auto& mesh = cubeModel->mMeshes[0];
             mesh->Bind(nullptr, nullptr);
             mesh->Draw(nullptr, baseIndex++);
-
+        
             ++mNumObjectsRendered;
         }
 
@@ -478,6 +486,8 @@ namespace Dog
                 ++mNumObjectsRendered;
             }
         }
+
+        DOG_INFO("Base instance index: {}", baseIndex);
 
         rr->sceneFrameBuffer->Unbind();
     }

@@ -1,2 +1,0 @@
-const float PI = 3.14159265359;
-const uint INVALID_TEXTURE_INDEX = 10001;
