@@ -150,51 +150,53 @@ namespace Dog
 
     void SimpleRenderSystem::Update(float dt)
     {
+        auto rr = ecs->GetResource<RenderingResource>();
+        float aspectRatio = 1.f;
+        if (Engine::GetEditorEnabled())
+        {
+            auto editorResource = ecs->GetResource<EditorResource>();
+            aspectRatio = editorResource->sceneWindowWidth / editorResource->sceneWindowHeight;
+        }
+        else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
+        {
+            aspectRatio = static_cast<float>(rr->swapChain->GetWidth()) / static_cast<float>(rr->swapChain->GetHeight());
+        }
+
         mNumObjectsRendered = 0;
+
+        CameraUniforms camData{};
+        camData.view = glm::mat4(1.0f);
+
+        // get camera entity
+        Entity cameraEntity = ecs->GetEntity("Camera");
+        if (cameraEntity)
+        {
+            TransformComponent& tc = cameraEntity.GetComponent<TransformComponent>();
+            CameraComponent& cc = cameraEntity.GetComponent<CameraComponent>();
+
+            // Get the position directly
+            glm::vec3 cameraPos = tc.Translation;
+            glm::vec3 forwardDir = glm::normalize(cc.Forward);
+            glm::vec3 upDir = glm::normalize(cc.Up);
+
+            glm::vec3 cameraTarget = cameraPos + forwardDir;
+            camData.view = glm::lookAt(cameraPos, cameraTarget, upDir);
+
+            camData.cameraPos = glm::vec4(tc.Translation, 1.0f);
+            camData.padding1 = 777;
+            camData.lightDir = rr->lightDir;
+            camData.padding2 = 777;
+            camData.lightColor = glm::vec4(rr->lightColor, rr->lightIntensity);
+        }
+
+        camData.projection = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 100.0f);
+        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan) camData.projection[1][1] *= -1;
+        camData.projectionView = camData.projection * camData.view;
 
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
         {
-            auto rr = ecs->GetResource<RenderingResource>();
-            float aspectRatio = static_cast<float>(rr->swapChain->GetWidth()) / static_cast<float>(rr->swapChain->GetHeight());
-            if (Engine::GetEditorEnabled())
-            {
-                auto editorResource = ecs->GetResource<EditorResource>();
-                aspectRatio = editorResource->sceneWindowWidth / editorResource->sceneWindowHeight;
-            }
             auto& rg = rr->renderGraph;
-
-            // Set camera uniform!
-            {
-                CameraUniforms camData{};
-                camData.view = glm::mat4(1.0f);
-
-                // get camera entity
-                Entity cameraEntity = ecs->GetEntity("Camera");
-                if (cameraEntity)
-                {
-                    TransformComponent& tc = cameraEntity.GetComponent<TransformComponent>();
-                    CameraComponent& cc = cameraEntity.GetComponent<CameraComponent>();
-
-                    // Get the position directly
-                    glm::vec3 cameraPos = tc.Translation;
-                    glm::vec3 forwardDir = glm::normalize(cc.Forward);
-                    glm::vec3 upDir = glm::normalize(cc.Up);
-
-                    glm::vec3 cameraTarget = cameraPos + forwardDir;
-                    camData.view = glm::lookAt(cameraPos, cameraTarget, upDir);
-                    camData.cameraPos = glm::vec4(tc.Translation, 1.0f);
-
-                    camData.lightDir = glm::vec4(glm::normalize(glm::vec3(-1.0f, -1.0f, -1.0f)), 0.0f);
-                    camData.lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-                    camData.lightIntensity = 2.0f;
-                }
-
-                camData.projection = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 100.0f);
-                camData.projection[1][1] *= -1;
-                camData.projectionView = camData.projection * camData.view;
-
-                rr->cameraUniform->SetUniformData(camData, 0, rr->currentFrameIndex);
-            }
+            rr->cameraUniform->SetUniformData(camData, 0, rr->currentFrameIndex);
 
             // Add the scene render pass
             if (Engine::GetEditorEnabled()) 
@@ -234,6 +236,9 @@ namespace Dog
         }
         else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
         {
+            //rr->shader->SetViewAndProjectionView(camData.view, camData.projectionView);
+            rr->shader->SetCameraUBO(camData);
+
             RenderSceneGL();
         }
     }
@@ -305,10 +310,13 @@ namespace Dog
                 }
 
                 data.tint = mc.tintColor;
-                data.textureIndicies = glm::uvec4(mesh->albedoTextureIndex, 10001, 10001, 10001);
-                data.textureIndicies2 = glm::uvec4(10001, 10001, 10001, 10001);
+                data.textureIndicies = glm::uvec4(mesh->albedoTextureIndex, mesh->normalTextureIndex, mesh->metalnessTextureIndex, mesh->roughnessTextureIndex);
+                data.textureIndicies2 = glm::uvec4(mesh->occlusionTextureIndex, mesh->emissiveTextureIndex, 10001, 10001);
                 data.boneOffset = boneOffset;
-                //data.emissiveFactor.w = boneOffset;
+                data.baseColorFactor = mesh->baseColorFactor;
+                data.metallicRoughnessFactor = glm::vec4(mesh->metallicFactor, mesh->roughnessFactor, 0.f, 0.f);
+                data.emissiveFactor = mesh->emissiveFactor;
+                data._padding = glm::vec3(777.0f);
             }
         }
 
@@ -402,38 +410,14 @@ namespace Dog
                 }
 
                 data.tint = mc.tintColor;
-                data.textureIndicies = glm::uvec4(mesh->albedoTextureIndex, 10001, 10001, 10001);
-                data.textureIndicies2 = glm::uvec4(10001, 10001, 10001, 10001);
+                data.textureIndicies = glm::uvec4(mesh->albedoTextureIndex, mesh->normalTextureIndex, mesh->metalnessTextureIndex, mesh->roughnessTextureIndex);
+                data.textureIndicies2 = glm::uvec4(mesh->occlusionTextureIndex, mesh->emissiveTextureIndex, 10001, 10001);
                 data.boneOffset = boneOffset;
+                data.baseColorFactor = mesh->baseColorFactor;
+                data.metallicRoughnessFactor = glm::vec4(mesh->metallicFactor, mesh->roughnessFactor, 0.f, 0.f);
+                data.emissiveFactor = mesh->emissiveFactor;
                 data._padding = glm::vec3(777.0f);
             }
-        }
-
-        // Set camera uniform!
-        {
-            CameraUniforms camData{};
-            camData.view = glm::mat4(1.0f);
-
-            // get camera entity
-            Entity cameraEntity = ecs->GetEntity("Camera");
-            if (cameraEntity)
-            {
-                TransformComponent& tc = cameraEntity.GetComponent<TransformComponent>();
-                CameraComponent& cc = cameraEntity.GetComponent<CameraComponent>();
-
-                // Get the position directly
-                glm::vec3 cameraPos = tc.Translation;
-                glm::vec3 forwardDir = glm::normalize(cc.Forward);
-                glm::vec3 upDir = glm::normalize(cc.Up);
-
-                glm::vec3 cameraTarget = cameraPos + forwardDir;
-                camData.view = glm::lookAt(cameraPos, cameraTarget, upDir);
-            }
-
-            camData.projection = glm::perspective(glm::radians(45.0f), er->sceneWindowWidth / er->sceneWindowHeight, 0.1f, 100.0f);
-            camData.projectionView = camData.projection * camData.view;
-
-            rr->shader->SetViewAndProjectionView(camData.view, camData.projectionView);
         }
 
         uint32_t instanceCount = static_cast<uint32_t>(instanceData.size());

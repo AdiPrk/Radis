@@ -103,6 +103,7 @@ namespace Dog
             modelLibrary->AddModel(Assets::ModelsPath + "quad.obj");
             modelLibrary->AddModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx");
             modelLibrary->AddModel(Assets::ModelsPath + "jack_samba.glb");
+            modelLibrary->AddModel(Assets::ModelsPath + "SteampunkRobot.gltf");
             modelLibrary->AddModel(Assets::ModelsPath + "DragonAttenuation.glb");
             modelLibrary->AddModel(Assets::ModelsPath + "Sponza.gltf");
 

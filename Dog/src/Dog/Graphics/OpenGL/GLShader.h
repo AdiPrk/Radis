@@ -47,6 +47,7 @@ namespace Dog {
         static void SetViewUBO(const glm::mat4& view);
         static void SetProjectionViewUBO(const glm::mat4& projectionView);
         static void SetViewAndProjectionView(const glm::mat4& view, const glm::mat4& projectionView);
+        static void SetCameraUBO(const struct CameraUniforms& uniformData);
         static void CleanupUBO();
         void BindUBO(const std::string& blockName, unsigned int bindingPoint);
 
