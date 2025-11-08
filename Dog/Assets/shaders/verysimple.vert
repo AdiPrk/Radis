@@ -48,8 +48,7 @@ UBO_LAYOUT(0, 0) uniform Uniforms
     mat4 view;
     vec3 cameraPos;
     vec3 lightDir;
-    vec3 lightColor;
-    float lightIntensity;
+    vec4 lightColor; // w = intensity
 } uniforms;
 
 struct Instance

@@ -37,8 +37,7 @@ UBO_LAYOUT(0, 0) uniform Uniforms
     mat4 view;
     vec3 cameraPos;
     vec3 lightDir;
-    vec3 lightColor;
-    float lightIntensity;
+    vec4 lightColor; // w is lightIntensity
 } uniforms;
 
 #ifdef VULKAN
@@ -48,6 +47,23 @@ UBO_LAYOUT(0, 0) uniform Uniforms
 		uvec2 colorHandle[];
 	} texHandles;
 #endif
+
+struct Light {
+    vec3 position;
+    float radius;      // For point/spot attenuation
+    vec3 color;
+    float intensity;
+    vec3 direction;
+    float innerCone;   // for spot
+    float outerCone;   // for spot
+    int type;          // 0=dir, 1=point, 2=spot
+};
+
+#define MAX_LIGHTS 1000
+SSBO_LAYOUT(0, 4) uniform LightData {
+    Light lights[1000];
+    uint lightCount;
+} lightData;
 
 // --- PBR Implementation ---
 
@@ -119,65 +135,127 @@ vec3 pbrMetallicRoughness(vec3 albedo, float metallic, float roughness,
 }
 
 // -------------------------
+vec4 SampleTexture(uint texIndex, vec2 uv)
+{
+#ifdef VULKAN
+    return texture(uTextures[texIndex], uv);
+#else
+    uvec2 handle = texHandles.colorHandle[texIndex];
+    if (handle == uvec2(0, 0))
+    {
+        return vec4(1.0);
+    }
+
+    return texture(sampler2D(handle), uv);
+#endif
+}
+
+// Helper to compute TBN per-fragment from dFdx/dFdy
+mat3 computeTBN(vec3 N, vec2 uv, vec3 P)
+{
+    // derivatives of position and UV
+    vec3 dp1 = dFdx(P);
+    vec3 dp2 = dFdy(P);
+    vec2 duv1 = dFdx(uv);
+    vec2 duv2 = dFdy(uv);
+
+    // Compute tangent
+    float denom = duv1.x * duv2.y - duv2.x * duv1.y;
+    // if denom is zero, fallback to a stable basis
+    if (abs(denom) < 1e-6)
+    {
+        // fallback: build arbitrary tangent
+        vec3 tangent = normalize(cross(vec3(0.0, 1.0, 0.0), N));
+        if (length(tangent) < 1e-3) tangent = normalize(cross(vec3(1.0, 0.0, 0.0), N));
+        vec3 bitangent = normalize(cross(N, tangent));
+        return mat3(tangent, bitangent, N);
+    }
+
+    vec3 tangent = normalize((dp1 * duv2.y - dp2 * duv1.y) / denom);
+    vec3 bitangent = normalize(cross(N, tangent));
+
+    return mat3(tangent, bitangent, N);
+}
 
 void main()
 {
-	// --- 1. Get Base Color (Albedo) ---
-	vec4 baseColor = vec4(fragColor * fragTint.rgb, fragTint.a);
-
+	// Base Color
+	vec4 baseColor = vec4(fragColor * fragTint.rgb, fragTint.a) * baseColorFactor;
 	if (textureIndicies.x != INVALID_TEXTURE_INDEX)
 	{
-#ifdef VULKAN
-		baseColor = texture(uTextures[textureIndicies.x], fragTexCoord) * fragTint;
-#else
-		uvec2 colorH = texHandles.colorHandle[textureIndicies.x];
-		if (colorH != uvec2(0,0)) 
-		{
-			baseColor = texture(sampler2D(colorH), fragTexCoord) * fragTint;
-		}
-#endif
+        baseColor = SampleTexture(textureIndicies.x, fragTexCoord) * fragTint * baseColorFactor;
 	}
+    vec3 albedo = baseColor.rgb;
 
-    outColor = baseColor;
+    // Metallic
+    float metallic = metallicRoughnessFactor.x;
+    if (textureIndicies.z != INVALID_TEXTURE_INDEX)
+    {
+        metallic = SampleTexture(textureIndicies.z, fragTexCoord).b;
+    }
+
+    // Roughness
+    float roughness = metallicRoughnessFactor.y;
+    if (textureIndicies.w != INVALID_TEXTURE_INDEX)
+    {
+        roughness = SampleTexture(textureIndicies.w, fragTexCoord).g;
+        roughness = clamp(roughness, 0.04, 1.0);
+    }
+
+    // Normal mapping
+    vec3 N = normalize(fragWorldNormal);
+    if (textureIndicies.y != INVALID_TEXTURE_INDEX)
+    {
+        vec3 mapN = SampleTexture(textureIndicies.y, fragTexCoord).xyz * 2.0 - 1.0;
+        N = normalize(computeTBN(N, fragTexCoord, fragWorldPos) * mapN);
+    }
+
+    // Ambient Occlusion
+    float ao = 1.0;
+    if (textureIndicies2.x != INVALID_TEXTURE_INDEX)
+    {
+        ao = clamp(SampleTexture(textureIndicies2.x, fragTexCoord).r, 0.0, 1.0);        
+    }
+
+    // Emissive
+    vec3 emissive = emissiveFactor.rgb;
+    if (textureIndicies2.y != INVALID_TEXTURE_INDEX)
+    {
+        emissive *= SampleTexture(textureIndicies2.y, fragTexCoord).rgb;
+    }
+
+    // Lighting
+    vec3 V = normalize(uniforms.cameraPos - fragWorldPos);
+    vec3 L = normalize(-uniforms.lightDir); // Direction to the light
+   
+    // Get direct lighting
+    vec3 Lo = pbrMetallicRoughness(albedo, metallic, roughness, N, V, L, uniforms.lightColor.rgb, uniforms.lightColor.a);
+    
+    // Apply ambient occlusion to direct lighting
+    Lo *= ao;
+
+    // Add simple ambient light
+    vec3 ambient = vec3(0.05) * albedo * ao;
+    
+    // Combine lighting + emissive
+    vec3 color = Lo + ambient + emissive;
+
+    // Tonemapping & Gamma
+    color = color / (color + vec3(1.0)); // Reinhard
+    color = pow(color, vec3(1.0/2.2));   // gamma
+    
+    // Way to toggle pbr on and off
+    if (uniforms.lightColor.a > 0.0) 
+    {
+	    outColor = vec4(color, baseColor.a);
+    }
+    else 
+    {
+        outColor = baseColor;
+    }
 
     if (outColor.a < 0.1)
 	{
 		discard;
 	}
-
-    /*
-
-    vec3 albedo = baseColor.rgb;
-    float metallic = 0.1;
-    float roughness = 0.5;
-
-    vec3 N = normalize(fragWorldNormal);
-    vec3 V = normalize(uniforms.cameraPos - fragWorldPos);
-    vec3 L = normalize(-uniforms.lightDir); // Direction *to* the light
-   
-    // Get direct lighting
-    vec3 Lo = pbrMetallicRoughness(albedo, metallic, roughness, N, V, L, 
-                                 uniforms.lightColor, uniforms.lightIntensity);
-    
-    // Add simple ambient light
-    vec3 ambient = vec3(0.05) * albedo;
-    
-    vec3 color = Lo + ambient;
-
-    // --- 5. Post-processing (Tonemapping & Gamma) ---
-    // PBR lighting is HDR, so we must map it back to LDR
-    
-    // Reinhard tonemapping
-    color = color / (color + vec3(1.0));
-    
-    // Gamma correction (sRGB)
-    color = pow(color, vec3(1.0/2.2)); 
-
-	//outColor = vec4(color, baseColor.a);
-	outColor = baseColor;
-    if (outColor .a < 0.1)
-	{
-		discard;
-	}
-    */
 }

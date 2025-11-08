@@ -345,8 +345,8 @@ namespace Dog {
     {
         glGenBuffers(1, &uboMatrices);
         glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
-        glBufferData(GL_UNIFORM_BUFFER, 3 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
-        glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboMatrices, 0, 3 * sizeof(glm::mat4));
+        glBufferData(GL_UNIFORM_BUFFER, sizeof(CameraUniforms), NULL, GL_STATIC_DRAW);
+        glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboMatrices, 0, sizeof(CameraUniforms));
     }
 
     void GLShader::SetProjectionUBO(const glm::mat4& projection)
@@ -372,6 +372,12 @@ namespace Dog {
         glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
         glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projectionView));
         glBufferSubData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
+    }
+
+    void GLShader::SetCameraUBO(const CameraUniforms& uniformData)
+    {
+        glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
+        glBufferData(GL_UNIFORM_BUFFER, sizeof(CameraUniforms), &uniformData, GL_STATIC_DRAW);
     }
 
     void GLShader::CleanupUBO()

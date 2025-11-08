@@ -155,6 +155,7 @@ namespace Dog
         vkResetFences(rr->device->GetDevice(), 1, &rr->syncObjects->GetCommandBufferInFlightFence());
         if (vkQueueSubmit(rr->device->GetGraphicsQueue(), 1, &submitInfo, rr->syncObjects->GetCommandBufferInFlightFence()) != VK_SUCCESS)
         {
+            DOG_CRITICAL("Failed to submit draw command buffer!");
             throw std::runtime_error("failed to submit draw command buffer!");
         }
 

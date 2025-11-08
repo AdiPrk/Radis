@@ -9,8 +9,7 @@ namespace Dog
         glm::mat4 view;
         glm::vec3 cameraPos; uint32_t padding1;
         glm::vec3 lightDir; uint32_t padding2;
-        glm::vec3 lightColor; uint32_t padding3;
-        float lightIntensity; glm::vec3 padding4;
+        glm::vec4 lightColor; // w is intensity
     };
 
     struct InstanceUniforms 
@@ -24,7 +23,6 @@ namespace Dog
         glm::vec4 emissiveFactor; // w is boneOffset
         uint32_t boneOffset = 10001;
         glm::vec3 _padding;
-        //glm::vec3 _padding;
 
         const static uint32_t MAX_INSTANCES = 10000;
     };

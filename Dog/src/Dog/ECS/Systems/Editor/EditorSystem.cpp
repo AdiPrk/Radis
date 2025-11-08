@@ -64,15 +64,19 @@ namespace Dog
         EditorWindows::UpdateAssetsWindow(tl.get());
 
         ImGui::Begin("Debug");
+        ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
         ImGui::Checkbox("Wireframe", &ecs->GetResource<RenderingResource>()->renderWireframe);
-        ImGui::Checkbox("Raytracing", &ecs->GetResource<RenderingResource>()->useRaytracing);
-        
         if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
         {
             glPolygonMode(GL_FRONT_AND_BACK, ecs->GetResource<RenderingResource>()->renderWireframe ? GL_LINE : GL_FILL);
         }
+        
+        ImGui::Checkbox("Raytracing", &ecs->GetResource<RenderingResource>()->useRaytracing);
+        
+        ImGui::DragFloat3("Light Direction", &rr->lightDir.x, 0.1f);
+        ImGui::ColorEdit3("Light Color", &rr->lightColor.x);
+        ImGui::DragFloat("Light Intensity", &rr->lightIntensity, 0.1f, 0.0f, 100.0f);
 
-        ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
         ImGui::End();
 
         // Handle mouse lock for ImGui windows (excluding "Viewport")

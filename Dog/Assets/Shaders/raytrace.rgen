@@ -52,15 +52,15 @@ void main()
     payload.depth = 0;
 
     traceRayEXT(
-        topLevelAS,                 // acceleration structure
-        gl_RayFlagsNoneEXT,         // ray flags
-        0xFF,                       // cull mask
-        0, 0, 0,                    // SBT record offsets
-        origin,                     // ray origin
-        0.001,                      // tmin
-        direction,                  // ray direction
-        1e38,                       // tmax
-        0                           // payload location
+        topLevelAS,         // acceleration structure
+        gl_RayFlagsNoneEXT, // ray flags
+        0xFF,               // cull mask
+        0, 0, 0,            // SBT record offsets
+        origin,             // ray origin
+        0.001,              // tmin
+        direction,          // ray direction
+        1e38,               // tmax
+        0                   // payload location
     );
 
     imageStore(outImage, ivec2(launchID.xy), vec4(payload.color, 1.0));
