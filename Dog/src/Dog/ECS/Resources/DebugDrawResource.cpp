@@ -33,6 +33,45 @@ namespace Dog
         circles.emplace_back(center, radius, color); 
     }
 
+    std::vector<InstanceUniforms> DebugDrawResource::CreateDebugLightTest()
+    {
+        uint32_t gridSize = 7;
+        std::vector<InstanceUniforms> instanceData;
+        instanceData.reserve(gridSize * gridSize);
+
+        float spacing = 1.0f;
+
+        for (uint32_t y = 0; y < gridSize; ++y)
+        {
+            for (uint32_t x = 0; x < gridSize; ++x)
+            {
+                InstanceUniforms& instance = instanceData.emplace_back();
+                instance.model = glm::mat4(1.0f);
+                instance.model = glm::translate(instance.model, glm::vec3(
+                    (x - gridSize / 2.0f) * spacing,
+                    (y - gridSize / 2.0f) * spacing,
+                    0.0f
+                ));
+                instance.model = glm::scale(instance.model, glm::vec3(0.4f));
+
+                instance.tint = glm::vec4(1.0f, 0.f, 0.f, 1.f);
+                instance.textureIndicies = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
+                instance.textureIndicies2 = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
+
+                // Roughness: left ¨ right (X)
+                // Metalness: bottom ¨ top (Y)
+                float roughness = static_cast<float>(x) / static_cast<float>(gridSize - 1);
+                float metalness = static_cast<float>(y) / static_cast<float>(gridSize - 1);
+
+                instance.metallicRoughnessFactor = glm::vec4(metalness, roughness, 0.0f, 0.0f);
+                instance.baseColorFactor = glm::vec4(1.0f);
+            }
+        }
+
+
+        return instanceData;
+    }
+
     void DebugDrawResource::Clear()
     {
         lines.clear();
@@ -118,6 +157,7 @@ namespace Dog
             instance.tint = line.color;
             instance.textureIndicies = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
             instance.textureIndicies2 = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
+            instance.baseColorFactor = glm::vec4(1.0f);
         }
 
         for (const auto& rect : rects)
@@ -130,6 +170,7 @@ namespace Dog
             instance.tint = rect.color;
             instance.textureIndicies = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
             instance.textureIndicies2 = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
+            instance.baseColorFactor = glm::vec4(1.0f);
         }
 
         for (const auto& cube : cubes)
@@ -141,6 +182,7 @@ namespace Dog
             instance.tint = cube.color, 1.0f;
             instance.textureIndicies = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
             instance.textureIndicies2 = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
+            instance.baseColorFactor = glm::vec4(1.0f);
         }
 
         for (const auto& circle : circles)
@@ -154,6 +196,7 @@ namespace Dog
             instance.tint = circle.color;
             instance.textureIndicies = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
             instance.textureIndicies2 = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
+            instance.baseColorFactor = glm::vec4(1.0f);
         }
 
         return instanceData;

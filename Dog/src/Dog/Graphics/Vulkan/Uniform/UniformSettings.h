@@ -34,7 +34,7 @@ namespace Dog
         }
 
         // Add a storage buffer binding
-        UniformSettings& AddSSBOBinding(VkShaderStageFlags stageFlags, size_t elementSize, size_t elementCount, bool buffered = true, bool doubleBuffered = true)
+        UniformSettings& AddSSBOBinding(VkShaderStageFlags stageFlags, size_t elementSize, size_t elementCount = 1, bool buffered = true, bool doubleBuffered = true)
         {
             bindings.push_back({ { nextBinding++, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, stageFlags }, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, elementSize, elementCount, buffered, doubleBuffered });
             return *this;

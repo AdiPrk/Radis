@@ -72,11 +72,6 @@ namespace Dog
         }
         
         ImGui::Checkbox("Raytracing", &ecs->GetResource<RenderingResource>()->useRaytracing);
-        
-        ImGui::DragFloat3("Light Direction", &rr->lightDir.x, 0.1f);
-        ImGui::ColorEdit3("Light Color", &rr->lightColor.x);
-        ImGui::DragFloat("Light Intensity", &rr->lightIntensity, 0.1f, 0.0f, 100.0f);
-
         ImGui::End();
 
         // Handle mouse lock for ImGui windows (excluding "Viewport")
@@ -482,6 +477,22 @@ namespace Dog
             ImGui::DragFloat("Animation Time", &component.AnimationTime, 0.05f, 0.0f, FLT_MAX);
         });
         
+        DrawComponentUI<LightComponent>("Light", selectedEnt, [](LightComponent& component)
+        {
+            ImGui::ColorEdit3("Light Color", glm::value_ptr(component.Color));
+            ImGui::DragFloat("Light Intensity", &component.Intensity, 0.1f, 0.0f, 100.0f);
+            ImGui::DragFloat3("Light Direction", glm::value_ptr(component.Direction), 0.1f);
+            ImGui::DragFloat("Light Radius", &component.Radius, 0.1f, 0.0f, 100.0f);
+            ImGui::DragFloat("Inner Cone", &component.InnerCone, 0.01f, 0.0f, glm::pi<float>());
+            ImGui::DragFloat("Outer Cone", &component.OuterCone, 0.01f, 0.0f, glm::pi<float>());
+            const char* lightTypes[] = { "DIRECTIONAL", "POINT", "SPOT" };
+            int currentType = static_cast<int>(component.Type);
+            if (ImGui::Combo("Light Type", &currentType, lightTypes, IM_ARRAYSIZE(lightTypes)))
+            {
+                component.Type = static_cast<LightComponent::LightType>(currentType);
+            }
+        });
+
         ImGui::EndChild(); // End of ComponentsRegion
 
         // --- Fixed Footer Region ---
@@ -497,6 +508,7 @@ namespace Dog
         {
             DisplayAddComponentEntry<ModelComponent>("Model", selectedEnt);
             DisplayAddComponentEntry<AnimationComponent>("Animation", selectedEnt);
+            DisplayAddComponentEntry<LightComponent>("Light", selectedEnt);
             // Add more component types here!
             ImGui::EndPopup();
         }

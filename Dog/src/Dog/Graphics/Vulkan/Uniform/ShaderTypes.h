@@ -7,9 +7,7 @@ namespace Dog
         glm::mat4 projectionView;
         glm::mat4 projection;
         glm::mat4 view;
-        glm::vec3 cameraPos; uint32_t padding1;
-        glm::vec3 lightDir; uint32_t padding2;
-        glm::vec4 lightColor; // w is intensity
+        glm::vec3 cameraPos;
     };
 
     struct InstanceUniforms 
@@ -39,5 +37,17 @@ namespace Dog
         VQS boneVQS;
 
         const static uint32_t MAX_BONES = 10000;
+    };
+
+    struct LightUniform {
+        glm::vec3 position;
+        float radius;        // For point/spot attenuation
+        glm::vec3 color;
+        float intensity;
+        glm::vec3 direction;
+        float innerCone;     // for spot
+        float outerCone;     // for spot
+        int type;            // 0=dir, 1=point, 2=spot
+        uint32_t _padding[2]; 
     };
 }

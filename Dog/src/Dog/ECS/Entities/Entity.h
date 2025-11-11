@@ -35,6 +35,11 @@ namespace Dog {
         }
 
         template<typename T>
+        T* TryGetComponent() {
+            return entities->try_get<T>(handle);
+        }
+
+        template<typename T>
         void RemoveComponent() {
             entities->remove<T>(handle);
         }

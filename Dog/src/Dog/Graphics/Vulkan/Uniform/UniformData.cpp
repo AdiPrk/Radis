@@ -49,6 +49,7 @@ namespace Dog
             const Buffer& ubuf0 = uniform.GetUniformBuffer(0, frameIndex);
             const Buffer& ubuf1 = uniform.GetUniformBuffer(1, frameIndex);
             const Buffer& ubuf2 = uniform.GetUniformBuffer(2, frameIndex);
+            const Buffer& ubuf4 = uniform.GetUniformBuffer(4, frameIndex);
 
             VkDescriptorBufferInfo bufferInfo0{
                 .buffer = ubuf0.buffer,
@@ -62,13 +63,16 @@ namespace Dog
                 .buffer = ubuf2.buffer,
                 .range = ubuf2.bufferSize
             };
+            VkDescriptorBufferInfo bufferInfo4{
+                .buffer = ubuf4.buffer,
+                .range = ubuf4.bufferSize
+            };
 
             writer.WriteBuffer(0, &bufferInfo0);
             writer.WriteBuffer(1, &bufferInfo1);
             writer.WriteBuffer(2, &bufferInfo2);
-
-            // Texture descriptors unchanged
             writer.WriteImage(3, imageInfos.data(), static_cast<uint32_t>(imageInfos.size()));
+            writer.WriteBuffer(4, &bufferInfo4);
 
             writer.Build(uniform.GetDescriptorSets()[frameIndex]);
         }
