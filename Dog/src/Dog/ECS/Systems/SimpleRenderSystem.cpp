@@ -181,12 +181,7 @@ namespace Dog
 
             glm::vec3 cameraTarget = cameraPos + forwardDir;
             camData.view = glm::lookAt(cameraPos, cameraTarget, upDir);
-
             camData.cameraPos = glm::vec4(tc.Translation, 1.0f);
-            camData.padding1 = 777;
-            camData.lightDir = rr->lightDir;
-            camData.padding2 = 777;
-            camData.lightColor = glm::vec4(rr->lightColor, rr->lightIntensity);
         }
 
         camData.projection = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 100.0f);
@@ -267,7 +262,11 @@ namespace Dog
         vkCmdSetScissor(cmd, 0, 1, &scissor);
 
         std::vector<InstanceUniforms> instanceData{};
-        const auto& debugData = DebugDrawResource::GetInstanceData();
+        std::vector<LightUniform> lightData{};
+        auto debugData = DebugDrawResource::GetInstanceData();
+        //auto lightTestData = DebugDrawResource::CreateDebugLightTest();
+        //debugData.insert(debugData.end(), lightTestData.begin(), lightTestData.end());
+
         if (instanceData.size() + debugData.size() >= InstanceUniforms::MAX_INSTANCES)
         {
             DOG_WARN("Too many instances for debug draw render!");
@@ -281,6 +280,26 @@ namespace Dog
         ModelLibrary* ml = rr->modelLibrary.get();
 
         auto& registry = ecs->GetRegistry();
+
+        ecs->GetRegistry().view<LightComponent>().each([&](auto entity, LightComponent& lc)
+        {
+            Entity lightEntity(&registry, entity);
+            TransformComponent& tc = lightEntity.GetComponent<TransformComponent>();
+
+            LightUniform lu{};
+            lu.position = glm::vec4(tc.Translation, 1.0f);
+            lu.radius = lc.Radius;
+            lu.color = lc.Color;
+            lu.intensity = lc.Intensity;
+            lu.direction = glm::normalize(lc.Direction);
+            lu.innerCone = lc.InnerCone;
+            lu.outerCone = lc.OuterCone;
+            lu.type = static_cast<int>(lc.Type);
+            lu._padding[0] = 777; 
+            lu._padding[1] = 777;
+            lightData.push_back(lu);
+        });
+
         auto entityView = registry.view<ModelComponent, TransformComponent>();
         for (auto& entityHandle : entityView)
         {
@@ -288,7 +307,7 @@ namespace Dog
             ModelComponent& mc = entity.GetComponent<ModelComponent>();
             TransformComponent& tc = entity.GetComponent<TransformComponent>();
             Model* model = rr->modelLibrary->TryAddGetModel(mc.ModelPath);
-            AnimationComponent* ac = entity.HasComponent<AnimationComponent>() ? &entity.GetComponent<AnimationComponent>() : nullptr;
+            AnimationComponent* ac = entity.TryGetComponent<AnimationComponent>();
             if (!model) continue;
 
             uint32_t boneOffset = AnimationLibrary::INVALID_ANIMATION_INDEX;
@@ -322,11 +341,24 @@ namespace Dog
 
         rr->cameraUniform->SetUniformData(instanceData, 1, rr->currentFrameIndex);
 
+
+        struct Header {
+            uint32_t lightCount;
+            uint32_t _pad[3];
+        };
+
+        Header header = { static_cast<uint32_t>(lightData.size()), {0,0,0} };
+
+        std::vector<uint8_t> gpuBuffer(sizeof(Header) + sizeof(LightUniform) * lightData.size());
+        memcpy(gpuBuffer.data(), &header, sizeof(Header));
+        memcpy(gpuBuffer.data() + sizeof(Header), lightData.data(), sizeof(LightUniform) * lightData.size());
+        rr->cameraUniform->SetUniformData(gpuBuffer, 4, rr->currentFrameIndex);
+
         VkBuffer instBuffer = rr->cameraUniform->GetUniformBuffer(1, rr->currentFrameIndex).buffer;
         int baseIndex = 0;
         for (auto& data : debugData)
         {
-            Model* cubeModel = ml->GetModel("Assets/Models/cube.obj");
+            Model* cubeModel = ml->GetModel("Assets/Models/sphere.glb");
             auto& mesh = cubeModel->mMeshes[0];
             mesh->Bind(cmd, instBuffer);
             mesh->Draw(cmd, baseIndex++);

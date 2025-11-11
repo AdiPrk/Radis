@@ -75,15 +75,10 @@ namespace Dog
         // RT
         std::vector<AccelerationStructure> blasAccel; // Bottom Level Acceleration Structures
         AccelerationStructure tlasAccel;              // Top Level Acceleration Structure
-
-        // Light
-        glm::vec4 lightDir = glm::vec4(glm::normalize(glm::vec3(-1.0f, -1.0f, -1.0f)), 0.0f);
-        glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
-        float lightIntensity = 1.0f;
         // --
 
         bool renderWireframe = false;
-        bool useRaytracing = true;
+        bool useRaytracing = false;
 
         // Texture update
         void UpdateTextureUniform();

@@ -36,8 +36,6 @@ UBO_LAYOUT(0, 0) uniform Uniforms
     mat4 projection;
     mat4 view;
     vec3 cameraPos;
-    vec3 lightDir;
-    vec4 lightColor; // w is lightIntensity
 } uniforms;
 
 #ifdef VULKAN
@@ -59,10 +57,10 @@ struct Light {
     int type;          // 0=dir, 1=point, 2=spot
 };
 
-#define MAX_LIGHTS 1000
-SSBO_LAYOUT(0, 4) uniform LightData {
-    Light lights[1000];
+#define MAX_LIGHTS 10000
+SSBO_LAYOUT(0, 4) readonly buffer LightData {
     uint lightCount;
+    Light lights[MAX_LIGHTS];
 } lightData;
 
 // --- PBR Implementation ---
@@ -104,8 +102,7 @@ vec3 FresnelSchlick(float cosTheta, vec3 F0)
 }
 
 // Main PBR function
-vec3 pbrMetallicRoughness(vec3 albedo, float metallic, float roughness, 
-                          vec3 N, vec3 V, vec3 L, vec3 lightColor, float lightIntensity)
+vec3 computePBRLight(vec3 albedo, float metallic, float roughness, vec3 N, vec3 V, vec3 L, vec3 lightColor)
 {
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
     vec3 H = normalize(V + L);
@@ -116,22 +113,16 @@ vec3 pbrMetallicRoughness(vec3 albedo, float metallic, float roughness,
     float NdotH = max(dot(N, H), 0.0);
     float VdotH = max(dot(V, H), 0.0);
 
-    // Specular
     float D = DistributionGGX(NdotH, roughness);
     float G = GeometrySmith(NdotV, NdotL, roughness);
     vec3 F = FresnelSchlick(VdotH, F0);
     
-    vec3 numSpecular = D * G * F;
-    float denSpecular = 4.0 * NdotV * NdotL + 0.0001; // Epsilon
-    vec3 specular = numSpecular / denSpecular;
-
-    // Diffuse
-    vec3 kD = (1.0 - metallic) * (1.0 - F); // Use F for energy conservation
+    vec3 specular = (D * G * F) / (4.0 * NdotV * NdotL + 1e-4);
+    vec3 kD = (1.0 - F) * (1.0 - metallic);
     vec3 diffuse = kD * albedo / PI;
 
     // Final radiance
-    vec3 Lo = (diffuse + specular) * NdotL * lightColor * lightIntensity;
-    return Lo;
+    return (diffuse + specular) * NdotL * lightColor;
 }
 
 // -------------------------
@@ -204,11 +195,11 @@ void main()
 
     // Normal mapping
     vec3 N = normalize(fragWorldNormal);
-    if (textureIndicies.y != INVALID_TEXTURE_INDEX)
-    {
-        vec3 mapN = SampleTexture(textureIndicies.y, fragTexCoord).xyz * 2.0 - 1.0;
-        N = normalize(computeTBN(N, fragTexCoord, fragWorldPos) * mapN);
-    }
+    // if (textureIndicies.y != INVALID_TEXTURE_INDEX)
+    // {
+    //     vec3 mapN = SampleTexture(textureIndicies.y, fragTexCoord).xyz * 2.0 - 1.0;
+    //     N = normalize(computeTBN(N, fragTexCoord, fragWorldPos) * mapN);
+    // }
 
     // Ambient Occlusion
     float ao = 1.0;
@@ -226,36 +217,52 @@ void main()
 
     // Lighting
     vec3 V = normalize(uniforms.cameraPos - fragWorldPos);
-    vec3 L = normalize(-uniforms.lightDir); // Direction to the light
-   
-    // Get direct lighting
-    vec3 Lo = pbrMetallicRoughness(albedo, metallic, roughness, N, V, L, uniforms.lightColor.rgb, uniforms.lightColor.a);
-    
-    // Apply ambient occlusion to direct lighting
-    Lo *= ao;
+    vec3 Lo = vec3(0.0);
 
-    // Add simple ambient light
-    vec3 ambient = vec3(0.05) * albedo * ao;
-    
-    // Combine lighting + emissive
-    vec3 color = Lo + ambient + emissive;
+    for (uint i = 0; i < lightData.lightCount; ++i)
+    {
+        Light light = lightData.lights[i];
+        vec3 L;
+        float attenuation = 1.0;
 
-    // Tonemapping & Gamma
-    color = color / (color + vec3(1.0)); // Reinhard
-    color = pow(color, vec3(1.0/2.2));   // gamma
+        if (light.type == 0) {
+            // Directional light
+            L = normalize(-light.direction);
+        }
+        else {
+            // Point / Spot
+            vec3 toLight = light.position - fragWorldPos;
+            float dist = length(toLight);
+            L = normalize(toLight);
+            attenuation = clamp(1.0 - dist / light.radius, 0.0, 1.0);
+            attenuation *= attenuation; // smoother
+        }
+
+        if (light.type == 2) {
+            // Spot light cone
+            float spotFactor = dot(L, -light.direction);
+            float smoothS = smoothstep(light.outerCone, light.innerCone, spotFactor);
+            attenuation *= smoothS;
+        }
+
+        vec3 lightCol = light.color * light.intensity * attenuation;
+        Lo += computePBRLight(albedo, metallic, roughness, N, V, L, lightCol);
+    }
+
+    // Apply ambient & AO
+    ao = 1.0;
+    vec3 ambient = vec3(0.03) * albedo * ao;
+    vec3 color = (Lo * ao) + ambient + emissive;
+
+    // Tone map + gamma
+    color = color / (color + vec3(1.0));
+    color = pow(color, vec3(1.0 / 2.2));
     
-    // Way to toggle pbr on and off
-    if (uniforms.lightColor.a > 0.0) 
-    {
-	    outColor = vec4(color, baseColor.a);
-    }
-    else 
-    {
-        outColor = baseColor;
-    }
+    outColor = vec4(color, baseColor.a);
+    //outColor = baseColor;
 
     if (outColor.a < 0.1)
-	{
+	{   
 		discard;
 	}
 }

@@ -24,6 +24,7 @@ layout(location = 10) out vec3 fragWorldPos;
 
 const float PI = 3.14159265359;
 const uint INVALID_TEXTURE_INDEX = 10001;
+const int INVALID_BONE_ID = -1;
 
 struct VQS {
     vec4 rotation;    // Quat
@@ -47,8 +48,6 @@ UBO_LAYOUT(0, 0) uniform Uniforms
     mat4 projection;
     mat4 view;
     vec3 cameraPos;
-    vec3 lightDir;
-    vec4 lightColor; // w = intensity
 } uniforms;
 
 struct Instance
@@ -89,12 +88,11 @@ void main()
     Instance instance = instances[INSTANCE_ID];
 
     bool validBoneFound = false;
-    if (instance.boneOffset != 10001)
+    if (instance.boneOffset != INVALID_TEXTURE_INDEX)
     {
-        for (uint i = 0; i < 4 ; i++)
+        for (int i = 0; i < 4 ; i++)
         {
-            if(boneIds[i] == -1) continue;
-        
+            if(boneIds[i] == INVALID_BONE_ID) continue;
             VQS transform = animationData.finalBoneVQS[instance.boneOffset + boneIds[i]];
         
             // --- Position Transformation ---
@@ -113,7 +111,7 @@ void main()
 
     }
     
-    if (!validBoneFound || totalPosition == vec4(0.0))
+    if (!validBoneFound)
     {
 		totalPosition = vec4(position, 1.0);
         totalNormal = normal;

@@ -1,8 +1,8 @@
 ﻿#include <PCH/pch.h>
 #include "Engine.h"
 
-int main(int argc, char* argv[])
-{   
+extern "C" __declspec(dllexport) int RunProgram(int argc, char* argv[])
+{
     /* These values are only used if project not launched with DogLauncher! */
     DogLaunch::EngineSpec すぺくっす;
     すぺくっす.name = L"ワンワン";
@@ -11,9 +11,9 @@ int main(int argc, char* argv[])
     すぺくっす.fps = 0;
     すぺくっす.serverAddress = "localhost";
     すぺくっす.serverPort = 7777;
-    すぺくっす.graphicsAPI = Dog::GraphicsAPI::OpenGL;
+    すぺくっす.graphicsAPI = Dog::GraphicsAPI::Vulkan;
     //すぺくっす.launchWithEditor = false;
-    
+
     Dog::Engine Engine(すぺくっす, argc, argv);
     return Engine.Run("scene");
 }

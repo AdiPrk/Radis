@@ -23,7 +23,8 @@ namespace Dog
         .AddUBBinding(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags, sizeof(CameraUniforms))
         .AddSSBOBinding(VK_SHADER_STAGE_VERTEX_BIT, sizeof(InstanceUniforms), InstanceUniforms::MAX_INSTANCES)
         .AddSSBOBinding(VK_SHADER_STAGE_VERTEX_BIT, sizeof(VQS), 10000)
-        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags, TextureLibrary::MAX_TEXTURE_COUNT);
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags, TextureLibrary::MAX_TEXTURE_COUNT)
+        .AddSSBOBinding(VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(LightUniform) * 10000 + sizeof(uint32_t));
 
     const UniformSettings rayTracingUniformSettings = UniformSettings(RTUniformInit)
         .AddSSBIBinding(rtFlags, 1) // for outImage
