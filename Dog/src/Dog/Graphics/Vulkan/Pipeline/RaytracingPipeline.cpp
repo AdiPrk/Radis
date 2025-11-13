@@ -16,6 +16,7 @@ namespace Dog
         {
             eRaygen,
             eMiss,
+            eShadowMiss,
             eClosestHit,
             eShaderGroupCount
         };
@@ -25,6 +26,7 @@ namespace Dog
 
         std::ifstream rgenSPVFile("Assets/Shaders/spv/raytrace.rgen.spv", std::ios::binary);
         std::ifstream missSPVFile("Assets/Shaders/spv/raytrace.rmiss.spv", std::ios::binary);
+        std::ifstream shadowMissSPVFile("Assets/Shaders/spv/shadow.rmiss.spv", std::ios::binary);
         std::ifstream chitSPVFile("Assets/Shaders/spv/raytrace.rchit.spv", std::ios::binary);
 
         if (rgenSPVFile.is_open() && missSPVFile.is_open() && chitSPVFile.is_open())
@@ -44,6 +46,13 @@ namespace Dog
             missSPVFile.read(reinterpret_cast<char*>(missShaderSPV.data()), missSPVFileSize);
             missSPVFile.close();
 
+            shadowMissSPVFile.seekg(0, std::ios::end);
+            size_t shadowMissSPVFileSize = shadowMissSPVFile.tellg();
+            shadowMissSPVFile.seekg(0, std::ios::beg);
+            std::vector<uint32_t> shadowMissShaderSPV(shadowMissSPVFileSize / sizeof(uint32_t));
+            shadowMissSPVFile.read(reinterpret_cast<char*>(shadowMissShaderSPV.data()), shadowMissSPVFileSize);
+            shadowMissSPVFile.close();
+
             chitSPVFile.seekg(0, std::ios::end);
             size_t chitSPVFileSize = chitSPVFile.tellg();
             chitSPVFile.seekg(0, std::ios::beg);
@@ -53,6 +62,7 @@ namespace Dog
 
             Shader::CreateShaderModule(device, rgenShaderSPV, &mRgenShaderModule);
             Shader::CreateShaderModule(device, missShaderSPV, &mMissShaderModule);
+            Shader::CreateShaderModule(device, shadowMissShaderSPV, &mShadowMissShaderModule);
             Shader::CreateShaderModule(device, chitShaderSPV, &mChitShaderModule);
         }
         else
@@ -68,6 +78,10 @@ namespace Dog
         stages[eMiss].module = mMissShaderModule;
         stages[eMiss].pName = "main";
         stages[eMiss].stage = VK_SHADER_STAGE_MISS_BIT_KHR;
+
+        stages[eShadowMiss].module = mShadowMissShaderModule;
+        stages[eShadowMiss].pName = "main";
+        stages[eShadowMiss].stage = VK_SHADER_STAGE_MISS_BIT_KHR;
 
         stages[eClosestHit].module = mChitShaderModule;
         stages[eClosestHit].pName = "main";
@@ -89,6 +103,11 @@ namespace Dog
         // Miss
         group.type = VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR;
         group.generalShader = eMiss;
+        shader_groups.push_back(group);
+
+        // Group 2: Miss (Shadow)
+        group.type = VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR;
+        group.generalShader = eShadowMiss;
         shader_groups.push_back(group);
 
         // closest hit shader
@@ -162,6 +181,11 @@ namespace Dog
             vkDestroyShaderModule(device.GetDevice(), mMissShaderModule, nullptr);
             mMissShaderModule = VK_NULL_HANDLE;
         }
+        if (mShadowMissShaderModule != VK_NULL_HANDLE)
+        {
+            vkDestroyShaderModule(device.GetDevice(), mShadowMissShaderModule, nullptr);
+            mShadowMissShaderModule = VK_NULL_HANDLE;
+        }
         if (mChitShaderModule != VK_NULL_HANDLE)
         {
             vkDestroyShaderModule(device.GetDevice(), mChitShaderModule, nullptr);
@@ -189,9 +213,10 @@ namespace Dog
 
         // Calculate SBT buffer size with proper alignment
         auto     alignUp = [](uint32_t size, uint32_t alignment) { return (size + alignment - 1) & ~(alignment - 1); };
-        uint32_t raygenSize = alignUp(handleSize, handleAlignment);
-        uint32_t missSize = alignUp(handleSize, handleAlignment);
-        uint32_t hitSize = alignUp(handleSize, handleAlignment);
+        uint32_t handleSizeAligned = alignUp(handleSize, handleAlignment);
+        uint32_t raygenSize = handleSizeAligned;
+        uint32_t missSize = handleSizeAligned * 2; // Two miss shaders
+        uint32_t hitSize = handleSizeAligned;
         uint32_t callableSize = 0;  // No callable shaders in this tutorial
 
         // Ensure each region starts at a baseAlignment boundary
@@ -218,12 +243,13 @@ namespace Dog
 
         // Miss shader (group 1)
         memcpy(pData + missOffset, mShaderHandles.data() + 1 * handleSize, handleSize);
+        memcpy(pData + missOffset + handleSizeAligned, mShaderHandles.data() + 2 * handleSize, handleSize);
         mMissRegion.deviceAddress = mSbtBuffer.address + missOffset;
-        mMissRegion.stride = missSize;
-        mMissRegion.size = missSize;
+        mMissRegion.stride = handleSizeAligned; // Stride is the size of ONE record
+        mMissRegion.size = missSize;            // Size is TOTAL size (2 records)
 
         // Hit shader (group 2)
-        memcpy(pData + hitOffset, mShaderHandles.data() + 2 * handleSize, handleSize);
+        memcpy(pData + hitOffset, mShaderHandles.data() + 3 * handleSize, handleSize);
         mHitRegion.deviceAddress = mSbtBuffer.address + hitOffset;
         mHitRegion.stride = hitSize;
         mHitRegion.size = hitSize;

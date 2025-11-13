@@ -44,5 +44,6 @@ namespace Dog
         VkStridedDeviceAddressRegionKHR mHitRegion{};       // Hit shader region
         VkStridedDeviceAddressRegionKHR mCallableRegion{};  // Callable shader region
         VkShaderModule mRgenShaderModule, mMissShaderModule, mChitShaderModule; // Shader modules
+        VkShaderModule mShadowMissShaderModule{ VK_NULL_HANDLE };
     };
 }

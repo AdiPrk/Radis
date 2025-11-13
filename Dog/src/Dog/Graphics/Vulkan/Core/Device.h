@@ -22,7 +22,7 @@ namespace Dog {
 
     class Device {
     public:
-#ifdef NDEBUG
+#ifdef _SHIP
         bool enableValidationLayers = false;
 #else
         bool enableValidationLayers = true;
