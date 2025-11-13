@@ -97,6 +97,8 @@ namespace Dog
             // get num entities with model component
             mConstStartingObjectCount = 0;
             auto view = ecs->GetRegistry().view<ModelComponent>();
+            mRTMeshData.clear();
+            mRTMeshIndices.clear();
             ecs->GetRegistry().view<ModelComponent>().each([&](auto entity, ModelComponent& mc) 
             {
                 auto model = rr->modelLibrary->GetModel(mc.ModelPath);
@@ -105,6 +107,23 @@ namespace Dog
                     for (auto& mesh : model->mMeshes)
                     {
                         mConstStartingObjectCount++;
+
+                        MeshDataUniform vertexData;
+                        for (auto& v : mesh->mVertices)
+                        {
+                            vertexData.position = v.position;
+                            vertexData.color = v.color;
+                            vertexData.normal = v.normal;
+                            vertexData.texCoord = v.uv;
+                            vertexData.boneIds = glm::ivec4(v.boneIDs[0], v.boneIDs[1], v.boneIDs[2], v.boneIDs[3]);
+                            vertexData.weights = glm::vec4(v.weights[0], v.weights[1], v.weights[2], v.weights[3]);
+                            mRTMeshData.push_back(vertexData);
+                        }
+
+                        for (auto& index : mesh->mIndices)
+                        {
+                            mRTMeshIndices.push_back(index);
+                        }
                     }
                 }
             });
@@ -121,7 +140,12 @@ namespace Dog
                 DescriptorWriter writer(*rr->rtUniform->GetDescriptorLayout(), *rr->rtUniform->GetDescriptorPool());
                 writer.WriteAccelerationStructure(1, &asInfo);
                 writer.Overwrite(rr->rtUniform->GetDescriptorSets()[frameIndex]);
-            }        
+            }
+
+            rr->rtUniform->SetUniformData(mRTMeshData, 2, 0);
+            rr->rtUniform->SetUniformData(mRTMeshData, 2, 1);
+            rr->rtUniform->SetUniformData(mRTMeshIndices, 3, 0);
+            rr->rtUniform->SetUniformData(mRTMeshIndices, 3, 1);
         }
 
         // Update textures!
@@ -166,6 +190,7 @@ namespace Dog
 
         CameraUniforms camData{};
         camData.view = glm::mat4(1.0f);
+        camData.projection = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 100.0f); 
 
         // get camera entity
         Entity cameraEntity = ecs->GetEntity("Camera");
@@ -182,9 +207,9 @@ namespace Dog
             glm::vec3 cameraTarget = cameraPos + forwardDir;
             camData.view = glm::lookAt(cameraPos, cameraTarget, upDir);
             camData.cameraPos = glm::vec4(tc.Translation, 1.0f);
+            camData.projection = glm::perspective(glm::radians(cc.FOV), aspectRatio, cc.Near, cc.Far);
         }
 
-        camData.projection = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 100.0f);
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan) camData.projection[1][1] *= -1;
         camData.projectionView = camData.projection * camData.view;
 
@@ -273,7 +298,7 @@ namespace Dog
         }
         else
         {
-            instanceData.insert(instanceData.end(), debugData.begin(), debugData.end());            
+            //instanceData.insert(instanceData.end(), debugData.begin(), debugData.end());            
         }
 
         AnimationLibrary* al = rr->animationLibrary.get();
@@ -301,6 +326,8 @@ namespace Dog
         });
 
         auto entityView = registry.view<ModelComponent, TransformComponent>();
+        uint32_t indexOffset = 0;
+        uint32_t vertexOffset = 0;
         for (auto& entityHandle : entityView)
         {
             Entity entity(&registry, entityHandle);
@@ -335,7 +362,13 @@ namespace Dog
                 data.baseColorFactor = mesh->baseColorFactor;
                 data.metallicRoughnessFactor = glm::vec4(mesh->metallicFactor, mesh->roughnessFactor, 0.f, 0.f);
                 data.emissiveFactor = mesh->emissiveFactor;
-                data._padding = glm::vec3(777.0f);
+
+                data.indexOffset = indexOffset;
+                data.vertexOffset = vertexOffset;
+                indexOffset += static_cast<uint32_t>(mesh->mIndices.size());
+                vertexOffset += static_cast<uint32_t>(mesh->mVertices.size());
+
+                data._padding = 777;
             }
         }
 
@@ -356,15 +389,15 @@ namespace Dog
 
         VkBuffer instBuffer = rr->cameraUniform->GetUniformBuffer(1, rr->currentFrameIndex).buffer;
         int baseIndex = 0;
-        for (auto& data : debugData)
-        {
-            Model* cubeModel = ml->GetModel("Assets/Models/sphere.glb");
-            auto& mesh = cubeModel->mMeshes[0];
-            mesh->Bind(cmd, instBuffer);
-            mesh->Draw(cmd, baseIndex++);
-        
-            ++mNumObjectsRendered;
-        }
+        //for (auto& data : debugData)
+        //{
+        //    Model* cubeModel = ml->TryAddGetModel("Assets/Models/cube.obj");
+        //    auto& mesh = cubeModel->mMeshes[0];
+        //    mesh->Bind(cmd, instBuffer);
+        //    mesh->Draw(cmd, baseIndex++);
+        //
+        //    ++mNumObjectsRendered;
+        //}
 
         for (auto& entityHandle : entityView)
         {
@@ -448,7 +481,7 @@ namespace Dog
                 data.baseColorFactor = mesh->baseColorFactor;
                 data.metallicRoughnessFactor = glm::vec4(mesh->metallicFactor, mesh->roughnessFactor, 0.f, 0.f);
                 data.emissiveFactor = mesh->emissiveFactor;
-                data._padding = glm::vec3(777.0f);
+                data._padding = 777.0f;
             }
         }
 
@@ -664,6 +697,7 @@ namespace Dog
 
         auto& registry = ecs->GetRegistry();
         auto entityView = registry.view<ModelComponent, TransformComponent>();
+        int instanceIndex = 0;
         for (auto& entityHandle : entityView)
         {
             Entity entity(&registry, entityHandle);
@@ -679,7 +713,7 @@ namespace Dog
                 asInstance.transform = toTransformMatrixKHR(tc.GetTransform() * model->GetNormalizationMatrix());  // Position of the instance
 
                 // TODO: Fix the custom instance to match the one in BLAS
-                asInstance.instanceCustomIndex = mesh->GetID();                       // gl_InstanceCustomIndexEXT
+                asInstance.instanceCustomIndex = instanceIndex++;//mesh->GetID();                       // gl_InstanceCustomIndexEXT
                 asInstance.accelerationStructureReference = rr->blasAccel[mesh->GetID()].address;
                 asInstance.instanceShaderBindingTableRecordOffset = 0;  // We will use the same hit group for all objects
                 asInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;  // No culling - double sided
@@ -698,6 +732,11 @@ namespace Dog
 
         {
             VkDeviceSize bufferSize = std::span<VkAccelerationStructureInstanceKHR const>(tlasInstances).size_bytes();
+            if (bufferSize == 0)
+            {
+                DOG_WARN("No TLAS instances to build!");
+                return;
+            }
 
             // Create host-visible staging buffer
             Allocator::CreateBuffer(

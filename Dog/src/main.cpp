@@ -1,7 +1,7 @@
 ﻿#include <PCH/pch.h>
 #include "Engine.h"
 
-extern "C" __declspec(dllexport) int RunProgram(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
     /* These values are only used if project not launched with DogLauncher! */
     DogLaunch::EngineSpec すぺくっす;
