@@ -60,6 +60,8 @@ struct Instance
     vec4 metallicRoughnessFactor;
     vec4 emissiveFactor;
     uint boneOffset;
+    uint indexOffset;
+    uint vertexOffset;
 };
 
 SSBO_LAYOUT(0, 1) readonly buffer InstanceData

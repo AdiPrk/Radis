@@ -116,7 +116,7 @@ namespace Dog
 }
 
 // Macros: unchanged call-sites — macros inject function & line automatically.
-#ifdef _DEBUG
+#ifndef _SHIP
 #define DOG_ASSERT(x, ...) { if(!(x)) { DOG_CRITICAL(__FUNCTION__, __LINE__, "Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }
 #define DOG_STATIC_ASSERT(x, ...) static_assert(x, __VA_ARGS__)
 

@@ -113,7 +113,22 @@ namespace Dog
             outImageInfo.imageView = rtTextures[frameIndex]->GetImageView();
 
             DescriptorWriter writer(*uniform.GetDescriptorLayout(), *uniform.GetDescriptorPool());
+
+            const Buffer& ubuf2 = uniform.GetUniformBuffer(2, frameIndex);
+            const Buffer& ubuf3 = uniform.GetUniformBuffer(3, frameIndex);
+            VkDescriptorBufferInfo bufferInfo2{
+                .buffer = ubuf2.buffer,
+                .range = ubuf2.bufferSize
+            };
+            VkDescriptorBufferInfo bufferInfo3{
+                .buffer = ubuf3.buffer,
+                .range = ubuf3.bufferSize
+            };
+
             writer.WriteImage(0, &outImageInfo, 1);
+            writer.WriteBuffer(2, &bufferInfo2);
+            writer.WriteBuffer(3, &bufferInfo3);
+
             writer.Build(uniform.GetDescriptorSets()[frameIndex]);
         }
     }

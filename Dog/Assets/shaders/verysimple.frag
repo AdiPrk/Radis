@@ -141,33 +141,6 @@ vec4 SampleTexture(uint texIndex, vec2 uv)
 #endif
 }
 
-// Helper to compute TBN per-fragment from dFdx/dFdy
-mat3 computeTBN(vec3 N, vec2 uv, vec3 P)
-{
-    // derivatives of position and UV
-    vec3 dp1 = dFdx(P);
-    vec3 dp2 = dFdy(P);
-    vec2 duv1 = dFdx(uv);
-    vec2 duv2 = dFdy(uv);
-
-    // Compute tangent
-    float denom = duv1.x * duv2.y - duv2.x * duv1.y;
-    // if denom is zero, fallback to a stable basis
-    if (abs(denom) < 1e-6)
-    {
-        // fallback: build arbitrary tangent
-        vec3 tangent = normalize(cross(vec3(0.0, 1.0, 0.0), N));
-        if (length(tangent) < 1e-3) tangent = normalize(cross(vec3(1.0, 0.0, 0.0), N));
-        vec3 bitangent = normalize(cross(N, tangent));
-        return mat3(tangent, bitangent, N);
-    }
-
-    vec3 tangent = normalize((dp1 * duv2.y - dp2 * duv1.y) / denom);
-    vec3 bitangent = normalize(cross(N, tangent));
-
-    return mat3(tangent, bitangent, N);
-}
-
 void main()
 {
 	// Base Color
@@ -193,13 +166,8 @@ void main()
         roughness = clamp(roughness, 0.04, 1.0);
     }
 
-    // Normal mapping
+    // Normal mapping (unused, tbd later)
     vec3 N = normalize(fragWorldNormal);
-    // if (textureIndicies.y != INVALID_TEXTURE_INDEX)
-    // {
-    //     vec3 mapN = SampleTexture(textureIndicies.y, fragTexCoord).xyz * 2.0 - 1.0;
-    //     N = normalize(computeTBN(N, fragTexCoord, fragWorldPos) * mapN);
-    // }
 
     // Ambient Occlusion
     float ao = 1.0;
@@ -259,8 +227,6 @@ void main()
     color = pow(color, vec3(1.0 / 2.2));
     
     outColor = vec4(color, baseColor.a);
-    //outColor = baseColor;
-
     if (outColor.a < 0.1)
 	{   
 		discard;

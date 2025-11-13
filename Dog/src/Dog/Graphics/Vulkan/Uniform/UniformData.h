@@ -21,14 +21,16 @@ namespace Dog
 
     const UniformSettings cameraUniformSettings = UniformSettings(CameraUniformInit)
         .AddUBBinding(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags, sizeof(CameraUniforms))
-        .AddSSBOBinding(VK_SHADER_STAGE_VERTEX_BIT, sizeof(InstanceUniforms), InstanceUniforms::MAX_INSTANCES)
+        .AddSSBOBinding(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags, sizeof(InstanceUniforms), InstanceUniforms::MAX_INSTANCES)
         .AddSSBOBinding(VK_SHADER_STAGE_VERTEX_BIT, sizeof(VQS), 10000)
         .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags, TextureLibrary::MAX_TEXTURE_COUNT)
-        .AddSSBOBinding(VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(LightUniform) * 10000 + sizeof(uint32_t));
+        .AddSSBOBinding(VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags, sizeof(LightUniform) * 10000 + sizeof(uint32_t));
 
     const UniformSettings rayTracingUniformSettings = UniformSettings(RTUniformInit)
         .AddSSBIBinding(rtFlags, 1) // for outImage
-        .AddASBinding(rtFlags, 1);  // TLAS handled separately
+        .AddASBinding(rtFlags, 1)  // TLAS handled separately
+        .AddSSBOBinding(rtFlags, sizeof(MeshDataUniform), 10000000) // 10 million verts
+        .AddSSBOBinding(rtFlags, sizeof(uint32_t), 10000000); // 10 million indicies
 
     //const UniformSettings instanceUniformSettings = UniformSettings(InstanceUniformInit)
     //    .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, TextureLibrary::MAX_TEXTURE_COUNT)

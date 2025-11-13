@@ -52,7 +52,7 @@ namespace Dog
                     (y - gridSize / 2.0f) * spacing,
                     0.0f
                 ));
-                instance.model = glm::scale(instance.model, glm::vec3(0.4f));
+                instance.model = glm::scale(instance.model, glm::vec3(0.2f));
 
                 instance.tint = glm::vec4(1.0f, 0.f, 0.f, 1.f);
                 instance.textureIndicies = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
