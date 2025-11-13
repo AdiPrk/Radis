@@ -117,11 +117,11 @@ namespace Dog
         shader_groups.push_back(group);
 
         // Push constant: we want to be able to update constants used by the shaders
-        const VkPushConstantRange push_constant{ VK_SHADER_STAGE_ALL, 0, sizeof(TutoPushConstant) };
-
+        // const VkPushConstantRange push_constant{ VK_SHADER_STAGE_ALL, 0, sizeof(TutoPushConstant) };
+        // 
         VkPipelineLayoutCreateInfo pipeline_layout_create_info{ VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
-        pipeline_layout_create_info.pushConstantRangeCount = 1;
-        pipeline_layout_create_info.pPushConstantRanges = &push_constant;
+        // pipeline_layout_create_info.pushConstantRangeCount = 1;
+        // pipeline_layout_create_info.pPushConstantRanges = &push_constant;
 
         // Descriptor sets: one specific to ray tracing, and one shared with the rasterization pipeline
         std::vector<VkDescriptorSetLayout> layouts;
