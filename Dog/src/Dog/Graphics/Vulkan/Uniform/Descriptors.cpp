@@ -241,6 +241,36 @@ namespace Dog
         return *this;
     }
 
+    DescriptorWriter& DescriptorWriter::WriteAccelerationStructure(uint32_t binding, VkWriteDescriptorSetAccelerationStructureKHR* asInfo)
+    {
+        // Make sure this binding index exists
+        if (mSetLayout.mBindings.count(binding) != 1)
+        {
+            DOG_CRITICAL("Layout does not contain specified binding");
+        }
+
+        VkDescriptorSetLayoutBinding& bindingDescription = mSetLayout.mBindings[binding];
+
+        // Make sure descriptor type matches
+        if (bindingDescription.descriptorType != VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR)
+        {
+            DOG_CRITICAL("Binding is not an acceleration structure type");
+        }
+
+        // Fill a VkWriteDescriptorSet that points to the AS struct
+        VkWriteDescriptorSet write{};
+        write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write.pNext = asInfo; // Pointer to the acceleration structure info
+        write.dstBinding = binding;
+        write.descriptorCount = 1;
+        write.descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
+
+        mWritesToPreform.push_back(write);
+
+        return *this;
+    }
+
+
     bool DescriptorWriter::Build(VkDescriptorSet& set)
     {
         //Allocate a descritor set

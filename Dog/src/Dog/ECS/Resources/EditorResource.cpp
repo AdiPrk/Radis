@@ -10,28 +10,29 @@
 #include "Graphics/Vulkan/Core/SwapChain.h"
 #include "Graphics/Vulkan/RenderGraph.h"
 
+#include "Assets/Assets.h"
 #include "Engine.h"
 
 namespace Dog
 {
-    EditorResource::EditorResource(Device* device, SwapChain* swapChain, GLFWwindow* glfwWindow)
+    EditorResource::EditorResource(Device* device, SwapChain* swapChain, GLFWwindow* glfwWindow, float dpiScale)
     {
 		if (!device || !swapChain || !glfwWindow)
 			return;
 
-        Create(device, swapChain, glfwWindow);
+        Create(device, swapChain, glfwWindow, dpiScale);
 		
     }
 
-	EditorResource::EditorResource(GLFWwindow* glfwWindow)
+	EditorResource::EditorResource(GLFWwindow* glfwWindow, float dpiScale)
 	{
 		if (!glfwWindow) 
 			return;
 
-        Create(glfwWindow);
+        Create(glfwWindow, dpiScale);
 	}
 
-	void EditorResource::Create(Device* device, SwapChain* swapChain, GLFWwindow* glfwWindow)
+	void EditorResource::Create(Device* device, SwapChain* swapChain, GLFWwindow* glfwWindow, float dpiScale)
 	{
 		isInitialized = true;
 
@@ -108,9 +109,11 @@ namespace Dog
 		ImGui_ImplVulkan_Init(&init_info);
 
 		ImGui::StyleColorsDark();
+
+		SetupFonts(dpiScale);
 	}
 
-	void EditorResource::Create(GLFWwindow* glfwWindow)
+	void EditorResource::Create(GLFWwindow* glfwWindow, float dpiScale)
 	{
 		isInitialized = true;
 
@@ -126,6 +129,8 @@ namespace Dog
 		ImGui_ImplOpenGL3_Init();
 
 		ImGui::StyleColorsDark();
+
+		SetupFonts(dpiScale);
 	}
 
 	void EditorResource::Cleanup(Device* device)
@@ -168,5 +173,12 @@ namespace Dog
         rr->CleanupSceneTexture();
 		rr->CleanupDepthBuffer();
 	}
-}
 
+	void EditorResource::SetupFonts(float dpiScale)
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		ImFontConfig config;
+		float fontSize = std::roundf(24.f * dpiScale);
+		io.Fonts->AddFontFromFileTTF(std::string(Assets::FontsPath + "Inter_24pt-Regular.ttf").c_str(), fontSize, &config);
+	}
+}

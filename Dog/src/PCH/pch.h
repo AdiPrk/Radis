@@ -24,6 +24,7 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
 #include <backends/imgui_impl_opengl3.h>
+#include "ImGuizmo.h"
 
 // vulkan
 #include "Graphics/Vulkan/Core/VulkanFunctions.h"
@@ -65,7 +66,14 @@
 #include <ranges>
 #include <stack>
 
-#include "vk_mem_alloc.h"
+#define VMA_ASSERT_LEAK(leaked)
+#define VMA_LEAK_LOG_FORMAT(format, ...) \
+    do { \
+        printf(format, __VA_ARGS__); \
+        printf("\n"); \
+    } while(false)
+
+#include "vma/vk_mem_alloc.h"
 
 #define AI_SBBC_DEFAULT_MAX_BONES 500
 #include "assimp/Importer.hpp"
@@ -83,7 +91,6 @@
 #include "Events/Event.h"
 #include "Graphics/Common/AssimpGlmHelper.h"
 #include "Graphics/Common/Animation/VQS.h"
-#include "Graphics/GraphicsAPIs.h"
 
 // Shared files
 #include "../../Common/src/Core.h"

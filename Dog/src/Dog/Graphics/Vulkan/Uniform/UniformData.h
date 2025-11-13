@@ -8,14 +8,29 @@
 namespace Dog
 {
     void CameraUniformInit(Uniform& uniform, RenderingResource& renderData);
+    void RTUniformInit(Uniform& uniform, RenderingResource& renderData);
     //void InstanceUniformInit(Uniform& uniform, RenderingResource& renderData);
 
     // Called camera uniform but it's just everything until rhi is better set up
+    inline VkShaderStageFlags rtFlags = VK_SHADER_STAGE_RAYGEN_BIT_KHR |
+                                        VK_SHADER_STAGE_ANY_HIT_BIT_KHR |
+                                        VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR |
+                                        VK_SHADER_STAGE_MISS_BIT_KHR |
+                                        VK_SHADER_STAGE_INTERSECTION_BIT_KHR |
+                                        VK_SHADER_STAGE_CALLABLE_BIT_KHR;
+
     const UniformSettings cameraUniformSettings = UniformSettings(CameraUniformInit)
-        .AddUBBinding(VK_SHADER_STAGE_VERTEX_BIT, sizeof(CameraUniforms))
-        .AddVertexBinding(VK_SHADER_STAGE_VERTEX_BIT, sizeof(InstanceUniforms), InstanceUniforms::MAX_INSTANCES)
-        .AddSSBOBinding(VK_SHADER_STAGE_VERTEX_BIT, sizeof(InstanceUniforms), 10000)
-        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, TextureLibrary::MAX_TEXTURE_COUNT);
+        .AddUBBinding(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags, sizeof(CameraUniforms))
+        .AddSSBOBinding(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags, sizeof(InstanceUniforms), InstanceUniforms::MAX_INSTANCES)
+        .AddSSBOBinding(VK_SHADER_STAGE_VERTEX_BIT, sizeof(VQS), 10000)
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags, TextureLibrary::MAX_TEXTURE_COUNT)
+        .AddSSBOBinding(VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags, sizeof(LightUniform) * 10000 + sizeof(uint32_t));
+
+    const UniformSettings rayTracingUniformSettings = UniformSettings(RTUniformInit)
+        .AddSSBIBinding(rtFlags, 1) // for outImage
+        .AddASBinding(rtFlags, 1)  // TLAS handled separately
+        .AddSSBOBinding(rtFlags, sizeof(MeshDataUniform), 10000000) // 10 million verts
+        .AddSSBOBinding(rtFlags, sizeof(uint32_t), 10000000); // 10 million indicies
 
     //const UniformSettings instanceUniformSettings = UniformSettings(InstanceUniformInit)
     //    .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, TextureLibrary::MAX_TEXTURE_COUNT)

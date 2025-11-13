@@ -11,15 +11,25 @@
 #include "backends/imgui_impl_opengl3.h"
 #include "ImGuizmo.h"
 
+#include "json.hpp"
+
 #include <iostream>
 #include <vector>
 #include <string>
+#include <fstream>
 #include <filesystem>
 #include <algorithm>
+#include <map>
+
+// Shared files
+#include "../../Common/src/Core.h"
 
 // --- Forward Declarations & Placeholder Functions ---
+bool IsValidProjectName(const std::string& name);
 void RefreshProjectList(std::vector<std::string>& projectNames);
-void LaunchApplication(const std::string& projectName);
+void LaunchApplication(const std::string& projectName, std::map<std::string, HANDLE>& runningProcesses);
+std::string WStringToUTF8(const std::wstring& wstr);
+std::wstring UTF8ToWString(const std::string& str);
 
 // --- Main Application Function ---
 void RunImGuiApplication()
@@ -76,7 +86,7 @@ void RunImGuiApplication()
     static std::vector<std::string> projectNames;
     static int selectedProject = -1;
     static bool showCreateProject = false;
-
+    static std::map<std::string, HANDLE> runningProcesses;
 
     // 2. MAIN LOOP
     // ------------------------------------------------
@@ -89,6 +99,24 @@ void RunImGuiApplication()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
         ImGuizmo::BeginFrame();
+
+        for (auto it = runningProcesses.begin(); it != runningProcesses.end(); /* no increment */)
+        {
+            // Check the process handle with a 0ms timeout (non-blocking)
+            DWORD result = WaitForSingleObject(it->second, 0);
+
+            if (result == WAIT_OBJECT_0)
+            {
+                // Process has terminated
+                CloseHandle(it->second); // Clean up the handle
+                it = runningProcesses.erase(it); // Remove from map and advance iterator
+            }
+            else 
+            {
+                // Process is still running (WAIT_TIMEOUT) or an error occurred
+                ++it; // Advance iterator
+            }
+        }
 
         ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
 
@@ -131,8 +159,38 @@ void RunImGuiApplication()
                 ImGui::Separator();
                 ImGui::Text("Details for Project: %s", projectNames[selectedProject].c_str());
                 ImGui::Spacing();
+
+                // --- MODIFY THIS BLOCK ---
+                std::string& currentProjectName = projectNames[selectedProject];
+                bool isRunning = runningProcesses.count(currentProjectName);
+                
+                if (isRunning) {
+                    ImGui::BeginDisabled(); // Disable the button
+                }
+
                 if (ImGui::Button("Load Project", ImVec2(200, 40))) {
-                    LaunchApplication(projectNames[selectedProject]);
+                    // Pass the map to the function
+                    LaunchApplication(currentProjectName, runningProcesses); 
+                }
+
+                if (isRunning) {
+                    ImGui::EndDisabled();
+                    ImGui::SameLine();
+                    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "(Running)");
+
+                    // --- "Terminate" Button ---
+                    ImGui::SameLine();
+                    // Style the button red to indicate a destructive action
+                    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.1f, 0.15f, 1.0f));
+                    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.9f, 0.2f, 0.2f, 1.0f));
+                    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.7f, 0.1f, 0.1f, 1.0f));
+
+                    if (ImGui::Button("Terminate")) {
+                        // Get the handle and forcefully terminate the process
+                        HANDLE processHandle = runningProcesses[currentProjectName];
+                        TerminateProcess(processHandle, 0); // 0 is a dummy exit code
+                    }
+                    ImGui::PopStyleColor(3); // Pop the 3 colors we pushed
                 }
             }
             else {
@@ -152,7 +210,7 @@ void RunImGuiApplication()
             static bool invalidProjectName = false, projectAlreadyExists = false, reservedProjectName = false;
 
             ImGui::InputText("Project Name", newProjectName, IM_ARRAYSIZE(newProjectName));
-            if (invalidProjectName) ImGui::TextColored({ 1.0f, 0.0f, 0.0f, 1.0f }, "Project name cannot be empty!");
+            if (invalidProjectName) ImGui::TextColored({ 1.0f, 0.0f, 0.0f, 1.0f }, "Invalid name! Avoid spaces or characters: < > : \" / \\ | ? *");
             if (reservedProjectName) ImGui::TextColored({ 1.0f, 0.0f, 0.0f, 1.0f }, "Project name 'base' or 'dev' is reserved!");
             if (projectAlreadyExists) ImGui::TextColored({ 1.0f, 0.0f, 0.0f, 1.0f }, "A project with this name already exists!");
 
@@ -165,14 +223,14 @@ void RunImGuiApplication()
                 std::string pNameLower = pNameStr;
                 std::transform(pNameLower.begin(), pNameLower.end(), pNameLower.begin(), ::tolower);
 
-                if (strlen(newProjectName) == 0) invalidProjectName = true;
+                if (!IsValidProjectName(pNameStr))                    invalidProjectName = true;
                 else if (pNameLower == "base" || pNameLower == "dev") reservedProjectName = true;
-                else if (std::filesystem::exists(projectPath)) projectAlreadyExists = true;
+                else if (std::filesystem::exists(projectPath))        projectAlreadyExists = true;
                 else {
                     try {
                         std::filesystem::create_directory(projectPath);
                         std::filesystem::copy("Base", projectPath, std::filesystem::copy_options::recursive);
-                        LaunchApplication(pNameStr);
+                        LaunchApplication(pNameStr, runningProcesses);
                         ImGui::CloseCurrentPopup();
                     }
                     catch (const std::filesystem::filesystem_error& e) {
@@ -206,6 +264,11 @@ void RunImGuiApplication()
 
     // 3. CLEANUP
     // ------------------------------------------------
+    for (auto const& [name, handle] : runningProcesses)
+    {
+        CloseHandle(handle);
+    }
+
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
@@ -232,6 +295,23 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 }
 
 // --- Placeholder Function Implementations ---
+bool IsValidProjectName(const std::string& name)
+{
+    if (name.empty()) return false;
+
+    const std::string invalidChars = R"(<>:"/\|?*)";
+    if (name.find(' ') != std::string::npos) return false; // no spaces
+
+    for (char c : name)
+    {
+        if (invalidChars.find(c) != std::string::npos)
+            return false;
+    }
+
+    return true;
+}
+
+
 void RefreshProjectList(std::vector<std::string>& projectNames) 
 {
     projectNames.clear();
@@ -250,27 +330,57 @@ void RefreshProjectList(std::vector<std::string>& projectNames)
     }
 }
 
-void LaunchApplication(const std::string& projectName)
+void LaunchApplication(const std::string& projectName, std::map<std::string, HANDLE>& runningProcesses) 
 {
+    if (runningProcesses.count(projectName))
+    {
+        MessageBoxA(nullptr, "This project is already running.", "Project Running", MB_OK | MB_ICONINFORMATION);
+        return;
+    }
+
     std::string clientDir = "../Client/";
     std::string exeName = "Dog.exe";
 
-    // Convert clientDir to an absolute path.
+    // Get absolute paths
     std::filesystem::path absoluteClientDir = std::filesystem::absolute(clientDir);
-    // Form the full path to the executable.
+    std::filesystem::path projectDir = absoluteClientDir / projectName;
     std::filesystem::path exePath = absoluteClientDir / exeName;
+    std::filesystem::path configFilePath = projectDir / "launch.json";
+    
+    // Populate engine spec
+    DogLaunch::EngineSpec engineSpec;
+    engineSpec.name = UTF8ToWString(projectName);
+    engineSpec.width = 1280;
+    engineSpec.height = 720;
+    engineSpec.fps = 120;
+    engineSpec.serverAddress = Dog::SERVER_IP;
+    engineSpec.serverPort = 7777;
+    engineSpec.graphicsAPI = Dog::GraphicsAPI::Vulkan;
+    engineSpec.workingDirectory = projectDir.string();
+    engineSpec.launchWithEditor = true;
+
+    // Serialize to JSON and write to launch.json
+    try {
+        nlohmann::json j = engineSpec;
+        std::ofstream configFile(configFilePath);
+        configFile << j.dump();
+        configFile.close();
+    }
+    catch (const std::exception& e)
+    {
+        MessageBoxA(nullptr, ("Failed to write launch configuration: " + std::string(e.what())).c_str(), "Error", MB_OK | MB_ICONERROR);
+        return;
+    }
 
     // Create the command line for Dog.exe.
-    std::string command = "\"" + exePath.string() + "\" -projectdir " + projectName;
+    std::string command = "\"" + exePath.string() + "\" -config \"" + configFilePath.string() + "\"";
+    //std::string command = "\"" + exePath.string() + "\" -projectdir " + projectName;
     
-    // Convert the command line to a wide string for CreateProcessW.
-    std::wstring wideCommand(command.begin(), command.end());
-
-    // Also convert the client directory (which is where the exe resides) to a wide string.
+    std::wstring wideCommand = UTF8ToWString(command);
     std::wstring wideWorkingDir = absoluteClientDir.wstring();
 
     STARTUPINFOW si = { sizeof(si) };
-    PROCESS_INFORMATION pi;
+    PROCESS_INFORMATION pi = { 0 };
 
     // Launch Dog.exe in a separate process, using the client directory as the working directory.
     if (CreateProcessW(
@@ -286,8 +396,7 @@ void LaunchApplication(const std::string& projectName)
         &pi                                     // Pointer to PROCESS_INFORMATION structure
     ))
     {
-        // Close process and thread handles (we don't need them)
-        CloseHandle(pi.hProcess);
+        runningProcesses[projectName] = pi.hProcess; // Store the handle!
         CloseHandle(pi.hThread);
     }
     else
@@ -296,4 +405,54 @@ void LaunchApplication(const std::string& projectName)
     }
 
     //MessageBoxA(nullptr, "The project has been loaded. Please close the launcher.", "Project Loaded", MB_OK | MB_ICONINFORMATION);
+}
+
+std::string WStringToUTF8(const std::wstring& wstr) {
+    if (wstr.empty()) return {};
+
+    // First, get the required buffer size
+    int size_needed = WideCharToMultiByte(
+        CP_UTF8,             // convert to UTF-8
+        0,                   // no special flags
+        wstr.data(),         // source string
+        static_cast<int>(wstr.size()), // length of source
+        nullptr,             // no output yet
+        0,                   // calculate required size
+        nullptr, nullptr     // default handling for invalid chars
+    );
+
+    std::string result(size_needed, 0);
+
+    // Do the actual conversion
+    WideCharToMultiByte(
+        CP_UTF8,
+        0,
+        wstr.data(),
+        static_cast<int>(wstr.size()),
+        result.data(),
+        size_needed,
+        nullptr, nullptr
+    );
+
+    return result;
+}
+
+std::wstring UTF8ToWString(const std::string& str) {
+    if (str.empty()) return {};
+
+    int size_needed = MultiByteToWideChar(
+        CP_UTF8, 0,
+        str.data(), static_cast<int>(str.size()),
+        nullptr, 0
+    );
+
+    std::wstring wstr(size_needed, 0);
+
+    MultiByteToWideChar(
+        CP_UTF8, 0,
+        str.data(), static_cast<int>(str.size()),
+        wstr.data(), size_needed
+    );
+
+    return wstr;
 }

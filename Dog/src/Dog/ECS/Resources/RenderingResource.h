@@ -1,7 +1,7 @@
 #pragma once
 
 #include "IResource.h"
-
+#include "Graphics/Vulkan/Core/AccelerationStructures.h"
 #include "Graphics/OpenGL/GLShader.h"
 
 namespace Dog
@@ -11,9 +11,9 @@ namespace Dog
     class SwapChain;
     class Synchronizer;
     class Pipeline;
+    class RaytracingPipeline;
     class Renderer;
     class RenderGraph;
-    class Allocator;
     class Uniform;
     class ModelLibrary;
     class TextureLibrary;
@@ -27,12 +27,11 @@ namespace Dog
         ~RenderingResource();
 
         void Create(IWindow* window);
-        void Cleanup();
+        void Cleanup(bool closingExe = false);
 
         std::unique_ptr<Device> device;
         std::unique_ptr<SwapChain> swapChain;
         std::unique_ptr<Synchronizer> syncObjects;
-        std::unique_ptr<Allocator> allocator;
 
         std::unique_ptr<ModelLibrary> modelLibrary;
         std::unique_ptr<TextureLibrary> textureLibrary;
@@ -41,6 +40,7 @@ namespace Dog
         
         // Uniforms ----------------
         std::unique_ptr<Uniform> cameraUniform;
+        std::unique_ptr<Uniform> rtUniform;
         //std::unique_ptr<Uniform> instanceUniform;
         // -------------------------
 
@@ -64,6 +64,7 @@ namespace Dog
         // Pipelines
         std::unique_ptr<Pipeline> pipeline;
         std::unique_ptr<Pipeline> wireframePipeline;
+        std::unique_ptr<RaytracingPipeline> raytracingPipeline;
         // -----------
 
         // OPENGL STUFFS
@@ -71,7 +72,13 @@ namespace Dog
         std::unique_ptr<GLFrameBuffer> sceneFrameBuffer;
         // --------------------------------
 
+        // RT
+        std::vector<AccelerationStructure> blasAccel; // Bottom Level Acceleration Structures
+        AccelerationStructure tlasAccel;              // Top Level Acceleration Structure
+        // --
+
         bool renderWireframe = false;
+        bool useRaytracing = false;
 
         // Texture update
         void UpdateTextureUniform();

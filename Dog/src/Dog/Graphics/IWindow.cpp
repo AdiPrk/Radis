@@ -6,6 +6,7 @@ namespace Dog
 {
     int IWindow::mWidth = 800;
     int IWindow::mHeight = 600;
+    float IWindow::mDpiScale = 1.0f;
     int IWindow::xPos = -1;
     int IWindow::yPos = -1;
 
@@ -78,6 +79,7 @@ namespace Dog
 
         glfwSetWindowUserPointer(mWindow, this);
         glfwSetFramebufferSizeCallback(mWindow, FramebufferResizeCallback);
+        glfwSetWindowContentScaleCallback(mWindow, ContentScaleCallback);
 
         if (xPos != -1 && yPos != -1)
         {
@@ -85,6 +87,11 @@ namespace Dog
         }
 
         glfwSetWindowSizeLimits(mWindow, 100, 50, GLFW_DONT_CARE, GLFW_DONT_CARE);
+
+        // Initial DPI scale calculation
+        float xscale, yscale;
+        glfwGetWindowContentScale(mWindow, &xscale, &yscale);
+        ContentScaleCallback(mWindow, xscale, yscale);
     }
     
     void IWindow::FramebufferResizeCallback(GLFWwindow* window, int width, int height)
@@ -94,6 +101,18 @@ namespace Dog
         
         IWindow::mWidth = width;
         IWindow::mHeight = height;
+    }
+
+    void IWindow::ContentScaleCallback(GLFWwindow* window, float xscale, float yscale)
+    {
+        const float BASE_HEIGHT = 1080.0f;
+
+        int width, height;
+        glfwGetFramebufferSize(window, &width, &height);
+
+        float osScale = (xscale + yscale) * 0.5f;
+        float resolutionScale = height / BASE_HEIGHT;
+        IWindow::mDpiScale = osScale * resolutionScale;
     }
 
     const char** IWindow::GetRequiredVulkanExtensions(uint32_t* count) const

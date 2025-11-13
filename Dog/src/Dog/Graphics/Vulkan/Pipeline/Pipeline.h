@@ -79,13 +79,13 @@ namespace Dog
 		void DefaultPipelineConfigInfo(PipelineConfigInfo& configInfo);
 		void CreateGraphicsPipeline(const PipelineConfigInfo& configInfo);
 		
-		Device& device;				     
+		Device& device;
 		VkPipeline mGraphicsPipeline;		         
 		VkShaderModule mVertShaderModule;            
 		VkShaderModule mFragShaderModule;            
 		VkShaderModule mTessCtrlShaderModule = NULL; 
 		VkShaderModule mTessEvalShaderModule = NULL; 
-		VkPipelineLayout mPipelineLayout;            
+		VkPipelineLayout mPipelineLayout;  
 		bool isWireframe;
 
 		// Shader paths

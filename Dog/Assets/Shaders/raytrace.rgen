@@ -1,0 +1,56 @@
+#version 460
+#extension GL_EXT_ray_tracing : require
+#extension GL_EXT_scalar_block_layout : enable
+
+layout(set = 0, binding = 0) uniform Uniforms
+{
+    mat4 projectionView;
+    mat4 projection;
+    mat4 view;
+} uniforms;
+layout(set = 0, binding = 3) uniform sampler2D uTextures[];
+
+layout(set = 1, binding = 0, rgba32f) uniform image2D outImage;
+layout(set = 1, binding = 1) uniform accelerationStructureEXT topLevelAS;
+
+layout(location = 0) rayPayloadEXT HitPayload {
+    vec3 color;
+    float weight;
+    int depth;
+} payload;
+
+void main() 
+{
+    // Get dispatch indices
+    uvec3 launchID = gl_LaunchIDEXT;
+    uvec3 launchSize = gl_LaunchSizeEXT;
+
+    vec2 uv = (vec2(launchID.xy) + 0.5) / vec2(launchSize.xy);
+    vec2 clipCoords = uv * 2.0 - 1.0;
+
+    // Compute ray origin and direction
+    vec4 viewCoords = inverse(uniforms.projection) * vec4(clipCoords, 1.0, 1.0);
+    viewCoords /= viewCoords.w;
+
+    vec3 origin = (inverse(uniforms.view) * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+    vec3 direction = normalize((inverse(uniforms.view) * vec4(viewCoords.xyz, 0.0)).xyz);
+
+    // Initialize payload
+    payload.color = vec3(0.0);
+    payload.weight = 1.0;
+    payload.depth = 0;
+
+    traceRayEXT(
+        topLevelAS,         // acceleration structure
+        gl_RayFlagsNoneEXT, // ray flags
+        0xFF,               // cull mask
+        0, 0, 0,            // SBT record offsets
+        origin,             // ray origin
+        0.001,              // tmin
+        direction,          // ray direction
+        1e38,               // tmax
+        0                   // payload location
+    );
+
+    imageStore(outImage, ivec2(launchID.xy), vec4(payload.color, 1.0));
+}

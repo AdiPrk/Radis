@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Graphics/Common/Animation/AnimationLibrary.h" // For AnimationLibrary::INVALID_ANIMATION_INDEX
+
 namespace Dog {
 
 	struct TagComponent
@@ -34,11 +36,14 @@ namespace Dog {
 	struct AnimationComponent
 	{
         bool IsPlaying = true;
-        uint32_t AnimationIndex = 10001; // AnimationLibrary::INVALID_ANIMATION_INDEX
+		uint32_t AnimationIndex = AnimationLibrary::INVALID_ANIMATION_INDEX;
         float AnimationTime = 0.0f;
 		bool inPlace = false;
 
-        uint32_t BoneOffset = 0; // Used internally
+		// Used internally:
+        float PrevAnimationTime = AnimationTime;
+        bool prevInPlace = inPlace;
+        uint32_t BoneOffset = 0;
 	};
 
 	struct CameraComponent
@@ -52,7 +57,7 @@ namespace Dog {
 
 		float Yaw{ 0.0f };
 		float Pitch{ 0.0f };
-		float MouseSensitivity{ 1.f };
+		float MouseSensitivity{ 0.2f };
 		bool InvertY{ true };
 		float MoveSpeed{ 10.f };
 
@@ -75,5 +80,24 @@ namespace Dog {
 		float RotationSmoothness = 18.0f; // higher -> faster rotation follow (less smoothing)
 		float PositionSmoothness = 12.0f; // higher -> faster position follow (less smoothing)
 		bool isInitialized{ false };
+	};
+
+	struct LightComponent 
+	{
+		enum LightType
+		{
+			DIRECTIONAL = 0,
+			POINT = 1,
+			SPOT = 2
+		};
+	
+		glm::vec3 Position{};
+		float Radius{ 1.f };        // For point/spot attenuation
+		glm::vec3 Color{ 1.f, 1.f, 1.f };
+		float Intensity{ 1.f };
+		glm::vec3 Direction{ 0.f, 0.f, -1.f };
+		float InnerCone{ glm::radians(30.f) }; // for spot
+		float OuterCone{ glm::radians(60.f) }; // for spot
+		LightType Type{ POINT };
 	};
 }

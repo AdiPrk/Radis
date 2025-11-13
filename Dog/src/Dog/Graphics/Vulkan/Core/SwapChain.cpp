@@ -44,7 +44,7 @@ namespace Dog
         //Cleanup depth data
         for (size_t i = 0; i < mDepthImages.size(); i++) {
             vkDestroyImageView(mDevice.GetDevice(), mDepthImageViews[i], nullptr);
-            vmaDestroyImage(mDevice.GetVmaAllocator(), mDepthImages[i], mDepthImageMemorys[i]);
+            vmaDestroyImage(Allocator::GetAllocator(), mDepthImages[i], mDepthImageMemorys[i]);
         }
 
         //Delete all framebuffers
@@ -382,11 +382,12 @@ namespace Dog
             // NLE::LOG_ERROR << "Swapchain Depth format: " << depthFormat;
 
             //Create image and set up matching image memory, use device local bit so the image is created on gpu memory
-            mDevice.GetAllocator()->CreateImageWithInfo(
+            Allocator::CreateImageWithInfo(
                 imageInfo,
                 VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
                 mDepthImages[i],
                 mDepthImageMemorys[i]);
+            Allocator::SetAllocationName(mDepthImageMemorys[i], "Depth Image Memory");
 
             //Create info for an image view
             VkImageViewCreateInfo viewInfo{};

@@ -11,7 +11,7 @@ namespace Dog
     {
         auto wr = ecs->GetResource<WindowResource>();
         if (!wr || !wr->window) return;
-        wr->window->PollEvents();
+        // wr->window->PollEvents();
     }
 
     void WindowSystem::FrameEnd()

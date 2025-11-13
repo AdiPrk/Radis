@@ -7,23 +7,9 @@
 
 namespace Dog 
 {
-	struct EngineSpec
-	{
-		std::wstring name = L"Dog Engine";             // The name of the window.
-		unsigned width = 1280;                         // The width of the window.
-		unsigned height = 720;                         // The height of the window.
-		unsigned fps = 120;			                   // The target frames per second.
-        std::string serverAddress = SERVER_IP;         // The address of the server. Defaults to online VPS server.
-        uint16_t serverPort = 7777;                    // The port of the server.
-        GraphicsAPI graphicsAPI = GraphicsAPI::Vulkan; // The graphics API to use.
-	};
-
 	class Engine {
 	public:
-		static constexpr int WIDTH = 1600;
-		static constexpr int HEIGHT = 900;
-
-		Engine(const EngineSpec& specs, int argc, char* argv[]);
+		Engine(const DogLaunch::EngineSpec& specs, int argc, char* argv[]);
 		~Engine();
 
 		Engine(const Engine&) = delete;
@@ -44,10 +30,11 @@ namespace Dog
 		static void SetGraphicsAPI(GraphicsAPI api) { mGraphicsAPI = api; }
 		static void ForceVulkanUnsupportedSwap() { mVulkanSupported = false; }
         static bool GetVulkanSupported() { return mVulkanSupported; }
+        static bool GetEditorEnabled() { return mEditorEnabled; }
 
 	private:
 		// Engine Specs
-		EngineSpec mSpecs;
+		DogLaunch::EngineSpec mSpecs;
 
 		// Is the engine running?
 		bool mRunning = true;
@@ -59,6 +46,7 @@ namespace Dog
         static bool mDevBuild;
 		static GraphicsAPI mGraphicsAPI;
 		static bool mVulkanSupported;
+		static bool mEditorEnabled;
 	};
 
 } // namespace Dog

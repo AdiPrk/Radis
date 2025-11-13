@@ -22,7 +22,7 @@ namespace Dog {
 
     class Device {
     public:
-#ifdef NDEBUG
+#ifdef _SHIP
         bool enableValidationLayers = false;
 #else
         bool enableValidationLayers = true;
@@ -56,8 +56,7 @@ namespace Dog {
         uint32_t GetPresentFamily() const { return presentFamily_; }
 
         // Buffer Helper Functions
-        void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage, VkBuffer& buffer, VmaAllocation& bufferAllocation);
-
+        
         VkCommandBuffer BeginSingleTimeCommands();
         void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
         void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
@@ -67,9 +66,6 @@ namespace Dog {
             VmaMemoryUsage memoryUsage,
             VkImage& image,
             VmaAllocation& imageAllocation);
-
-        std::unique_ptr<Allocator>& GetAllocator() { return allocator; }
-        VmaAllocator GetVmaAllocator() { return allocator->GetAllocator(); }
 
         VkPhysicalDeviceProperties properties;
 
@@ -84,6 +80,13 @@ namespace Dog {
         PFN_vkCmdBuildAccelerationStructuresKHR g_vkCmdBuildAccelerationStructuresKHR;
         PFN_vkGetAccelerationStructureBuildSizesKHR g_vkGetAccelerationStructureBuildSizesKHR;
         PFN_vkGetAccelerationStructureDeviceAddressKHR g_vkGetAccelerationStructureDeviceAddressKHR;
+        PFN_vkDestroyAccelerationStructureKHR g_vkDestroyAccelerationStructureKHR;
+        PFN_vkSetDebugUtilsObjectNameEXT g_vkSetDebugUtilsObjectNameEXT;
+        PFN_vkCreateRayTracingPipelinesKHR g_vkCreateRayTracingPipelinesKHR;
+        PFN_vkGetRayTracingShaderGroupHandlesKHR g_vkGetRayTracingShaderGroupHandlesKHR;
+        PFN_vkCmdBeginDebugUtilsLabelEXT g_vkCmdBeginDebugUtilsLabelEXT;
+        PFN_vkCmdEndDebugUtilsLabelEXT g_vkCmdEndDebugUtilsLabelEXT;
+        PFN_vkCmdTraceRaysKHR g_vkCmdTraceRaysKHR;
 
         bool SupportsVulkan() const { return mSupportsVulkan; }
 
@@ -120,8 +123,6 @@ namespace Dog {
         uint32_t graphicsFamily_ = 0;
         uint32_t presentFamily_ = 0;
 
-        std::unique_ptr<Allocator> allocator;
-
         VkFormat mSrgbFormat;
         VkFormat mLinearFormat;
 
@@ -131,9 +132,10 @@ namespace Dog {
             VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
             VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,
             VK_EXT_SHADER_OBJECT_EXTENSION_NAME,
-            //VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
-            //VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
-            //VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME
+            VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
+            VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
+            VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
+            VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME
         };
 
         VkPhysicalDeviceRayTracingPipelinePropertiesKHR mRtProperties{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR };

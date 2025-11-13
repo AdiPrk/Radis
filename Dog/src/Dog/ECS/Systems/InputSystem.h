@@ -60,6 +60,10 @@ namespace Dog
 		static void SetMouseInputLocked(bool locked);
         static bool IsKeyInputLocked() { return keyInputLocked; }
         static bool IsMouseInputLocked() { return mouseInputLocked; }
+		
+		static void WrapMouseOverScreen();
+		static void DisableCursor();
+		static void EnableCursor();
 
 		struct KeyStates
 		{
