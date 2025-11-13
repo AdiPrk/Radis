@@ -20,6 +20,7 @@ namespace Dog
 		glm::uvec2 GetExtent() const;
 		static int GetWidth() { return mWidth; }
 		static int GetHeight() { return mHeight; }
+        float GetDPIScale() { return mDpiScale; }
 
 		bool WasResized() const { return mFramebufferResized; }
 		void ResetResizeFlag() { mFramebufferResized = false; }
@@ -42,11 +43,12 @@ namespace Dog
 	protected:
 		void InitGLFWWindow();
 		static void FramebufferResizeCallback(GLFWwindow* window, int width, int height);
-
+        static void ContentScaleCallback(GLFWwindow* window, float xscale, float yscale);
 	protected:
 		friend struct WindowResource;
         static int mWidth;
         static int mHeight;
+        static float mDpiScale;
 		static int xPos;
         static int yPos;
 

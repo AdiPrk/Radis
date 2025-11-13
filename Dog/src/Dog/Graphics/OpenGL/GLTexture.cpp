@@ -35,12 +35,12 @@ namespace Dog {
         // Set the internal and image formats based on the number of channels
         if (nrChannels == 4)
         {
-            Internal_Format = GL_RGBA;
+            Internal_Format = GL_SRGB8_ALPHA8;
             Image_Format = GL_RGBA;
         }
         else if (nrChannels == 3)
         {
-            Internal_Format = GL_RGB;
+            Internal_Format = GL_SRGB8;
             Image_Format = GL_RGB;
         }
         else
@@ -86,7 +86,7 @@ namespace Dog {
         }
 
         // Set the internal and image formats based on the number of channels
-        Internal_Format = GL_RGBA;
+        Internal_Format = GL_SRGB8_ALPHA8;
         Image_Format = GL_RGBA;
 
         mUncompressedData.data.resize(width * height * nrChannels);
@@ -116,7 +116,7 @@ namespace Dog {
         , Columns(1)
         , Index(0)
         , IsSpriteSheet(false)
-        , Internal_Format(GL_RGB)
+        , Internal_Format(GL_SRGB8)
         , Image_Format(GL_RGB)
         , Wrap_S(GL_REPEAT)
         , Wrap_T(GL_REPEAT)
@@ -128,6 +128,8 @@ namespace Dog {
         , NumSprites(1)
         , ID(0)
     {
+        mPath = filePath;
+
         unsigned int id;
         glGenTextures(1, &id);
         this->ID = id;
@@ -141,7 +143,7 @@ namespace Dog {
         , Columns(1)
         , Index(0)
         , IsSpriteSheet(false)
-        , Internal_Format(GL_RGB)
+        , Internal_Format(GL_SRGB8)
         , Image_Format(GL_RGB)
         , Wrap_S(GL_REPEAT)
         , Wrap_T(GL_REPEAT)
@@ -171,7 +173,7 @@ namespace Dog {
         , Columns(1)
         , Index(0)
         , IsSpriteSheet(false)
-        , Internal_Format(GL_RGB)
+        , Internal_Format(GL_SRGB8)
         , Image_Format(GL_RGB)
         , Wrap_S(GL_REPEAT)
         , Wrap_T(GL_REPEAT)
@@ -183,25 +185,10 @@ namespace Dog {
         , NumSprites(1)
         , ID(0)
     {
-        unsigned int id;
-        glGenTextures(1, &id);
-        this->ID = id;
-
         mUncompressedData = data;
 
-        Internal_Format = GL_RGBA;
+        Internal_Format = GL_SRGB8_ALPHA8;
         Image_Format = GL_RGBA;
-
-        //if (data.channels == 4)
-        //{
-        //    Internal_Format = GL_RGBA;
-        //    Image_Format = GL_RGBA;
-        //}
-        //else
-        //{
-        //    Internal_Format = GL_RGB;
-        //    Image_Format = GL_RGB;
-        //}
 
         unsigned columns = 1, rows = 1;
         SpriteWidth = data.width / columns;
@@ -211,6 +198,19 @@ namespace Dog {
         Index = 0;
         IsSpriteSheet = columns != 1 || rows != 1;
         mPath = data.path;
+        mWidth = data.width;
+        mHeight = data.height;
+
+        // no need for opengl to do if vk storage image;
+        if (data.isStorageImage)
+        {
+            mStorageImage = true;
+            return;
+        }
+
+        unsigned int id;
+        glGenTextures(1, &id);
+        this->ID = id;
         
         Generate(data.width, data.height, data.data.data(), rows * columns);
     }
@@ -219,7 +219,7 @@ namespace Dog {
     {
         glDeleteTextures(1, &this->ID);
 
-        DOG_INFO("GLTexture destructor called.");
+        // DOG_INFO("GLTexture destructor called.");
     }
 
     void GLTexture::Generate(unsigned int width, unsigned int height, const unsigned char* data, unsigned int numSprites)

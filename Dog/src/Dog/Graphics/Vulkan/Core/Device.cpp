@@ -22,9 +22,9 @@ namespace Dog
             if (strcmp(pCallbackData->pMessage, message.c_str()) == 0) {
                 return VK_FALSE;
             }
-        }        
+        }
 
-        std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+        DOG_ERROR("validation layer: {}", pCallbackData->pMessage);
 
         return VK_FALSE;
     }
@@ -79,8 +79,8 @@ namespace Dog
 
         createCommandPool();
 
-        allocator = std::make_unique<Allocator>(*this);
-
+        Allocator::Init(this);
+        
         VkPhysicalDeviceProperties2 prop2{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 };
         mRtProperties.pNext = &mAsProperties;
         prop2.pNext = &mRtProperties;
@@ -90,11 +90,18 @@ namespace Dog
         g_vkCmdBuildAccelerationStructuresKHR = (PFN_vkCmdBuildAccelerationStructuresKHR)vkGetDeviceProcAddr(device_, "vkCmdBuildAccelerationStructuresKHR");
         g_vkGetAccelerationStructureBuildSizesKHR = (PFN_vkGetAccelerationStructureBuildSizesKHR)vkGetDeviceProcAddr(device_, "vkGetAccelerationStructureBuildSizesKHR");
         g_vkGetAccelerationStructureDeviceAddressKHR = (PFN_vkGetAccelerationStructureDeviceAddressKHR)vkGetDeviceProcAddr(device_, "vkGetAccelerationStructureDeviceAddressKHR");
+        g_vkDestroyAccelerationStructureKHR = (PFN_vkDestroyAccelerationStructureKHR)vkGetDeviceProcAddr(device_, "vkDestroyAccelerationStructureKHR");
+        g_vkSetDebugUtilsObjectNameEXT = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(instance, "vkSetDebugUtilsObjectNameEXT");
+        g_vkCreateRayTracingPipelinesKHR = (PFN_vkCreateRayTracingPipelinesKHR)vkGetDeviceProcAddr(device_, "vkCreateRayTracingPipelinesKHR");
+        g_vkGetRayTracingShaderGroupHandlesKHR = (PFN_vkGetRayTracingShaderGroupHandlesKHR)vkGetDeviceProcAddr(device_, "vkGetRayTracingShaderGroupHandlesKHR");
+        g_vkCmdBeginDebugUtilsLabelEXT = (PFN_vkCmdBeginDebugUtilsLabelEXT)vkGetDeviceProcAddr(device_, "vkCmdBeginDebugUtilsLabelEXT");
+        g_vkCmdEndDebugUtilsLabelEXT = (PFN_vkCmdEndDebugUtilsLabelEXT)vkGetDeviceProcAddr(device_, "vkCmdEndDebugUtilsLabelEXT");
+        g_vkCmdTraceRaysKHR = (PFN_vkCmdTraceRaysKHR)vkGetDeviceProcAddr(device_, "vkCmdTraceRaysKHR");
     }
 
     Device::~Device() 
     {
-        allocator.reset();
+        Allocator::Destroy();
 
         // Destroy device-level objects first
         if (device_ != VK_NULL_HANDLE)
@@ -145,6 +152,10 @@ namespace Dog
         createInfo.pApplicationInfo = &appInfo;
 
         auto extensions = getRequiredExtensions();
+        if (enableValidationLayers) {
+            extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+        }
+
         createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
         createInfo.ppEnabledExtensionNames = extensions.data();
 
@@ -274,15 +285,19 @@ namespace Dog
         // 4) Prepare requested features, but first query supported features (core and 1.2/1.3)
         VkPhysicalDeviceFeatures2 supportedFeatures2{};
         supportedFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-
         VkPhysicalDeviceVulkan12Features supported12{};
         supported12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
         VkPhysicalDeviceVulkan13Features supported13{};
         supported13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
-
         VkPhysicalDeviceRobustness2FeaturesKHR robustness2Supported{};
         robustness2Supported.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_KHR;
+        VkPhysicalDeviceAccelerationStructureFeaturesKHR supportedAs{};
+        supportedAs.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
+        VkPhysicalDeviceRayTracingPipelineFeaturesKHR supportedRtPipeline{};
+        supportedRtPipeline.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
 
+        supportedAs.pNext = &supportedRtPipeline;
+        robustness2Supported.pNext = &supportedAs;
         supported13.pNext = &robustness2Supported;
         supported12.pNext = &supported13;
         supportedFeatures2.pNext = &supported12;
@@ -316,6 +331,7 @@ namespace Dog
         vulkan13Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
         REQUEST_FEATURE(vulkan13Features, supported13, shaderDemoteToHelperInvocation);
         REQUEST_FEATURE(vulkan13Features, supported13, dynamicRendering);
+        REQUEST_FEATURE(vulkan13Features, supported13, synchronization2);
 
         VkPhysicalDeviceVulkan12Features vulkan12Features = {};
         vulkan12Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
@@ -325,6 +341,17 @@ namespace Dog
         REQUEST_FEATURE(vulkan12Features, supported12, descriptorBindingVariableDescriptorCount);
         REQUEST_FEATURE(vulkan12Features, supported12, runtimeDescriptorArray);
         REQUEST_FEATURE(vulkan12Features, supported12, bufferDeviceAddress);
+        REQUEST_FEATURE(vulkan12Features, supported12, bufferDeviceAddressCaptureReplay);
+
+        VkPhysicalDeviceAccelerationStructureFeaturesKHR accelFeature{};
+        accelFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
+        REQUEST_FEATURE(accelFeature, supportedAs, accelerationStructure);
+
+        VkPhysicalDeviceRayTracingPipelineFeaturesKHR rtPipelineFeature{};
+        rtPipelineFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
+        REQUEST_FEATURE(rtPipelineFeature, supportedRtPipeline, rayTracingPipeline);
+        REQUEST_FEATURE(rtPipelineFeature, supportedRtPipeline, rayTracingPipelineTraceRaysIndirect);
+        REQUEST_FEATURE(rtPipelineFeature, supportedRtPipeline, rayTraversalPrimitiveCulling);
 
 #undef REQUEST_FEATURE
 
@@ -334,25 +361,11 @@ namespace Dog
             return false;
         }
 
-        // VkPhysicalDeviceAccelerationStructureFeaturesKHR accelFeature
-        // {
-        //     .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR,
-        //     .accelerationStructure = VK_TRUE
-        // };
-        // 
-        // VkPhysicalDeviceRayTracingPipelineFeaturesKHR rtPipelineFeature
-        // {
-        //     .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR,
-        //     .rayTracingPipeline = VK_TRUE,
-        //     .rayTracingPipelineTraceRaysIndirect = VK_TRUE, // Prob gonna be unused for a bit
-        //     .rayTraversalPrimitiveCulling = VK_TRUE         // Prob gonna be unused for a bit
-        // };
-
         VkDeviceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         
-        //accelFeature.pNext = &rtPipelineFeature;
-        //robustness2Features.pNext = &accelFeature;
+        accelFeature.pNext = &rtPipelineFeature;
+        robustness2Features.pNext = &accelFeature;
         vulkan13Features.pNext = &robustness2Features;
         vulkan12Features.pNext = &vulkan13Features;
         createInfo.pNext = &vulkan12Features;
@@ -667,29 +680,6 @@ namespace Dog
         throw std::runtime_error("failed to find suitable memory type!");
     }
 
-    void Device::CreateBuffer(
-        VkDeviceSize size,
-        VkBufferUsageFlags usage,
-        VmaMemoryUsage memoryUsage,
-        VkBuffer& buffer,
-        VmaAllocation& bufferAllocation)
-    {
-        VkBufferCreateInfo bufferInfo{};
-        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        bufferInfo.size = size;
-        bufferInfo.usage = usage;
-        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-        // Allocation description for VMA
-        VmaAllocationCreateInfo allocInfo{};
-        allocInfo.usage = memoryUsage;
-
-        // Create the buffer and allocate memory using VMA
-        if (vmaCreateBuffer(GetVmaAllocator(), &bufferInfo, &allocInfo, &buffer, &bufferAllocation, nullptr) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create and allocate buffer using VMA!");
-        }
-    }
-
     VkCommandBuffer Device::BeginSingleTimeCommands()
     {
         // Allocate the command buffer
@@ -757,7 +747,7 @@ namespace Dog
         allocInfo.usage = memoryUsage;
 
         // Create the image and allocate memory using VMA
-        if (vmaCreateImage(GetVmaAllocator(), &imageInfo, &allocInfo, &image, &imageAllocation, nullptr) != VK_SUCCESS) {
+        if (vmaCreateImage(Allocator::GetAllocator(), &imageInfo, &allocInfo, &image, &imageAllocation, nullptr) != VK_SUCCESS) {
             throw std::runtime_error("failed to create image with VMA!");
         }
     }

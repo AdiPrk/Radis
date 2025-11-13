@@ -19,6 +19,11 @@ namespace Dog
 {
 	void PresentSystem::Init()
 	{
+        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+        {
+            auto rr = ecs->GetResource<RenderingResource>();
+            rr->RecreateAllSceneTextures();
+        }
 	}
 
 	void PresentSystem::FrameStart()
@@ -74,13 +79,16 @@ namespace Dog
         rg->Clear();
 
         // Import resources!
-        rg->ImportTexture(
-            "SceneColor",
-            rr->sceneImage,
-            rr->sceneImageView,
-            rr->swapChain->GetSwapChainExtent(),
-            rr->swapChain->GetImageFormat()
-        );
+        if (Engine::GetEditorEnabled()) 
+        {
+            rg->ImportTexture(
+                "SceneColor",
+                rr->sceneImage,
+                rr->sceneImageView,
+                rr->swapChain->GetSwapChainExtent(),
+                rr->swapChain->GetImageFormat()
+            );
+        }
 
         rg->ImportTexture(
             "SceneDepth",
@@ -147,6 +155,7 @@ namespace Dog
         vkResetFences(rr->device->GetDevice(), 1, &rr->syncObjects->GetCommandBufferInFlightFence());
         if (vkQueueSubmit(rr->device->GetGraphicsQueue(), 1, &submitInfo, rr->syncObjects->GetCommandBufferInFlightFence()) != VK_SUCCESS)
         {
+            DOG_CRITICAL("Failed to submit draw command buffer!");
             throw std::runtime_error("failed to submit draw command buffer!");
         }
 

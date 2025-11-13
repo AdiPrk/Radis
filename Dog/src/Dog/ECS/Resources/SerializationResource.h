@@ -9,10 +9,11 @@ namespace Dog
     struct ModelComponent;
     struct CameraComponent;
     struct AnimationComponent;
+    struct LightComponent;
 
     struct SerializationResource : public IResource
     {
-        entt::type_list<TagComponent, TransformComponent, ModelComponent, CameraComponent, AnimationComponent> types;
+        entt::type_list<TagComponent, TransformComponent, ModelComponent, CameraComponent, AnimationComponent, LightComponent> types;
 
         void Serialize(const std::string& filepath);
         void Deserialize(const std::string& filepath);

@@ -80,7 +80,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>PCH/pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.4.321.1\Include;$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glew\include;$(SolutionDir)Dependencies\assimp\include;$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\stb_image\stb;$(SolutionDir)Dependencies\tiny_obj_loader;$(SolutionDir)Dependencies\vk_extensions;$(SolutionDir)Dependencies\imgui;$(SolutionDir)Dependencies\glslang\include;$(SolutionDir)Dependencies\entt\include;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\yaml-cpp\include;$(SolutionDir)Dependencies\enet\include;$(SolutionDir)Dependencies\reflect-cpp\include;$(SolutionDir)Dependencies\nlohmann;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.4.321.1\Include;$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glew\include;$(SolutionDir)Dependencies\assimp\include;$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\stb_image\stb;$(SolutionDir)Dependencies\tiny_obj_loader;$(SolutionDir)Dependencies\imgui;$(SolutionDir)Dependencies\glslang\include;$(SolutionDir)Dependencies\entt\include;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\yaml-cpp\include;$(SolutionDir)Dependencies\enet\include;$(SolutionDir)Dependencies\reflect-cpp\include;$(SolutionDir)Dependencies\nlohmann;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
       <ShowIncludes>false</ShowIncludes>
@@ -89,7 +89,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.4.321.1\Lib;$(SolutionDir)Dependencies\glfw\lib;$(SolutionDir)Dependencies\glew\lib\;$(SolutionDir)Dependencies\assimp\lib;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\yaml-cpp\lib;$(SolutionDir)Dependencies\enet\lib;$(SolutionDir)Common\$(Platform)\$(Configuration)\;$(SolutionDir)Dependencies\imgui\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opengl32.lib;glew32s.lib;winmm.lib;meshoptimizerd.lib;ImGuiDebug.lib;Common.lib;enet64.lib;ws2_32.lib;vulkan-1.lib;glfw3d.lib;assimp-vc143-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Shell32.lib;opengl32.lib;glew32s.lib;winmm.lib;meshoptimizerd.lib;ImGuiDebug.lib;Common.lib;enet64.lib;ws2_32.lib;vulkan-1.lib;glfw3d.lib;assimp-vc143-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <DelayLoadDLLs>
       </DelayLoadDLLs>
       <AdditionalOptions>/ignore:4099</AdditionalOptions>
@@ -125,7 +125,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>PCH/pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.4.321.1\Include;$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glew\include;$(SolutionDir)Dependencies\assimp\include;$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\stb_image\stb;$(SolutionDir)Dependencies\tiny_obj_loader;$(SolutionDir)Dependencies\vk_extensions;$(SolutionDir)Dependencies\imgui;$(SolutionDir)Dependencies\glslang\include;$(SolutionDir)Dependencies\entt\include;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\yaml-cpp\include;$(SolutionDir)Common\Dependencies\enet\include;$(SolutionDir)Dependencies\reflect-cpp\include;$(SolutionDir)Dependencies\nlohmann;$(SolutionDir)Dependencies\enet\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.4.321.1\Include;$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glew\include;$(SolutionDir)Dependencies\assimp\include;$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\stb_image\stb;$(SolutionDir)Dependencies\tiny_obj_loader;$(SolutionDir)Dependencies\imgui;$(SolutionDir)Dependencies\glslang\include;$(SolutionDir)Dependencies\entt\include;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\yaml-cpp\include;$(SolutionDir)Common\Dependencies\enet\include;$(SolutionDir)Dependencies\reflect-cpp\include;$(SolutionDir)Dependencies\nlohmann;$(SolutionDir)Dependencies\enet\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
       <ShowIncludes>false</ShowIncludes>
@@ -136,7 +136,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.4.321.1\Lib;$(SolutionDir)Dependencies\glfw\lib;$(SolutionDir)Dependencies\glew\lib\;$(SolutionDir)Dependencies\assimp\lib;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\yaml-cpp\lib;$(SolutionDir)Dependencies\enet\lib;$(SolutionDir)Common\$(Platform)\$(Configuration)\;$(SolutionDir)Dependencies\imgui\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opengl32.lib;glew32s.lib;winmm.lib;meshoptimizer.lib;ImGui.lib;Common.lib;enet64.lib;ws2_32.lib;vulkan-1.lib;glfw3.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Shell32.lib;opengl32.lib;glew32s.lib;winmm.lib;meshoptimizer.lib;ImGui.lib;Common.lib;enet64.lib;ws2_32.lib;vulkan-1.lib;glfw3.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099</AdditionalOptions>
     </Link>
     <PreBuildEvent>
@@ -165,16 +165,16 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SHIP;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>PCH/pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.4.321.1\Include;$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glew\include;$(SolutionDir)Dependencies\assimp\include;$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\stb_image\stb;$(SolutionDir)Dependencies\tiny_obj_loader;$(SolutionDir)Dependencies\vk_extensions;$(SolutionDir)Dependencies\imgui;$(SolutionDir)Dependencies\glslang\include;$(SolutionDir)Dependencies\entt\include;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\yaml-cpp\include;$(SolutionDir)Common\Dependencies\enet\include;$(SolutionDir)Dependencies\reflect-cpp\include;$(SolutionDir)Dependencies\nlohmann;$(SolutionDir)Dependencies\enet\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.4.321.1\Include;$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glew\include;$(SolutionDir)Dependencies\assimp\include;$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\stb_image\stb;$(SolutionDir)Dependencies\tiny_obj_loader;$(SolutionDir)Dependencies\imgui;$(SolutionDir)Dependencies\glslang\include;$(SolutionDir)Dependencies\entt\include;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\yaml-cpp\include;$(SolutionDir)Common\Dependencies\enet\include;$(SolutionDir)Dependencies\reflect-cpp\include;$(SolutionDir)Dependencies\nlohmann;$(SolutionDir)Dependencies\enet\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp23</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
       <ShowIncludes>false</ShowIncludes>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <PreprocessToFile>true</PreprocessToFile>
+      <PreprocessToFile>false</PreprocessToFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -182,7 +182,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.4.321.1\Lib;$(SolutionDir)Dependencies\glfw\lib;$(SolutionDir)Dependencies\glew\lib\;$(SolutionDir)Dependencies\assimp\lib;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\enet\lib;$(SolutionDir)Common\$(Platform)\$(Configuration)\;$(SolutionDir)Dependencies\imgui\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opengl32.lib;glew32s.lib;winmm.lib;meshoptimizer.lib;ImGui.lib;Common.lib;enet64.lib;ws2_32.lib;vulkan-1.lib;glfw3.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Shell32.lib;opengl32.lib;glew32s.lib;winmm.lib;meshoptimizer.lib;ImGui.lib;Common.lib;enet64.lib;ws2_32.lib;vulkan-1.lib;glfw3.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099</AdditionalOptions>
     </Link>
     <PreBuildEvent>
@@ -206,6 +206,8 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Dog\Assets\Assets.cpp" />
+    <ClCompile Include="src\Dog\Assets\CaseInsensitiveHash.cpp" />
     <ClCompile Include="src\Dog\ECS\ECS.cpp" />
     <ClCompile Include="src\Dog\ECS\Entities\Components.cpp" />
     <ClCompile Include="src\Dog\ECS\Entities\Entity.cpp" />
@@ -219,7 +221,11 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Dog\ECS\Resources\WindowResource.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\AnimationSystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\CameraSystem.cpp" />
-    <ClCompile Include="src\Dog\ECS\Systems\EditorSystem.cpp" />
+    <ClCompile Include="src\Dog\ECS\Systems\Editor\EditorSystem.cpp" />
+    <ClCompile Include="src\Dog\ECS\Systems\Editor\Windows\AssetsWindow.cpp" />
+    <ClCompile Include="src\Dog\ECS\Systems\Editor\Windows\EntitiesWindow.cpp" />
+    <ClCompile Include="src\Dog\ECS\Systems\Editor\Windows\SceneWindow.cpp" />
+    <ClCompile Include="src\Dog\ECS\Systems\Editor\Windows\TextureBrowserWindow.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\InputSystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\ISystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\PresentSystem.cpp" />
@@ -253,13 +259,14 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Dog\Graphics\Common\Animation\AnimationLibrary.cpp" />
     <ClCompile Include="src\Dog\Graphics\Common\Animation\Animator.cpp" />
     <ClCompile Include="src\Dog\Graphics\Common\Animation\Bone.cpp" />
-    <ClCompile Include="src\Dog\Graphics\Vulkan\Model\Mesh.cpp" />
+    <ClCompile Include="src\Dog\Graphics\Vulkan\Pipeline\RaytracingPipeline.cpp" />
+    <ClCompile Include="src\Dog\Graphics\Vulkan\VKMesh.cpp" />
     <ClCompile Include="src\Dog\Graphics\Common\ModelLibrary.cpp" />
     <ClCompile Include="src\Dog\Graphics\Common\UnifiedMesh.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Pipeline\Pipeline.cpp" />
-    <ClCompile Include="src\Dog\Graphics\Vulkan\Pipeline\Shader.cpp" />
+    <ClCompile Include="src\Dog\Graphics\Vulkan\Pipeline\VKShader.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\RenderGraph.cpp" />
-    <ClCompile Include="src\Dog\Graphics\Vulkan\Texture\Texture.cpp" />
+    <ClCompile Include="src\Dog\Graphics\Vulkan\Texture\VKTexture.cpp" />
     <ClCompile Include="src\Dog\Graphics\Common\TextureLibrary.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Uniform\Descriptors.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Uniform\ShaderTypes.cpp" />
@@ -304,6 +311,8 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="Dependencies\imgui\imstb_truetype.h" />
     <ClInclude Include="Dependencies\imgui\ImZoomSlider.h" />
     <ClInclude Include="Dependencies\nlohmann\json.hpp" />
+    <ClInclude Include="src\Dog\Assets\Assets.h" />
+    <ClInclude Include="src\Dog\Assets\CaseInsensitiveHash.h" />
     <ClInclude Include="src\Dog\ECS\ECS.h" />
     <ClInclude Include="src\Dog\ECS\Entities\Components.h" />
     <ClInclude Include="src\Dog\ECS\Entities\Entity.h" />
@@ -318,7 +327,11 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Dog\ECS\Resources\WindowResource.h" />
     <ClInclude Include="src\Dog\ECS\Systems\AnimationSystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\CameraSystem.h" />
-    <ClInclude Include="src\Dog\ECS\Systems\EditorSystem.h" />
+    <ClInclude Include="src\Dog\ECS\Systems\Editor\EditorSystem.h" />
+    <ClInclude Include="src\Dog\ECS\Systems\Editor\Windows\AssetsWindow.h" />
+    <ClInclude Include="src\Dog\ECS\Systems\Editor\Windows\EntitiesWindow.h" />
+    <ClInclude Include="src\Dog\ECS\Systems\Editor\Windows\SceneWindow.h" />
+    <ClInclude Include="src\Dog\ECS\Systems\Editor\Windows\TextureBrowserWindow.h" />
     <ClInclude Include="src\Dog\ECS\Systems\InputSystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\ISystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\PresentSystem.h" />
@@ -334,7 +347,6 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Dog\Graphics\Common\Path\CubicSpline.h" />
     <ClInclude Include="src\Dog\Graphics\Common\Path\PathFollower.h" />
     <ClInclude Include="src\Dog\Graphics\Common\Path\SpeedControl.h" />
-    <ClInclude Include="src\Dog\Graphics\GraphicsAPIs.h" />
     <ClInclude Include="src\Dog\Graphics\OpenGL\GLFrameBuffer.h" />
     <ClInclude Include="src\Dog\Graphics\OpenGL\GLMesh.h" />
     <ClInclude Include="src\Dog\Graphics\OpenGL\GLShader.h" />
@@ -356,13 +368,14 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Dog\Graphics\Common\Animation\Bone.h" />
     <ClInclude Include="src\Dog\Graphics\Common\Animation\Skeleton.h" />
     <ClInclude Include="src\Dog\Graphics\Common\Animation\VQS.h" />
-    <ClInclude Include="src\Dog\Graphics\Vulkan\Model\Mesh.h" />
+    <ClInclude Include="src\Dog\Graphics\Vulkan\Pipeline\RaytracingPipeline.h" />
+    <ClInclude Include="src\Dog\Graphics\Vulkan\VKMesh.h" />
     <ClInclude Include="src\Dog\Graphics\Common\ModelLibrary.h" />
     <ClInclude Include="src\Dog\Graphics\Common\UnifiedMesh.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Pipeline\Pipeline.h" />
-    <ClInclude Include="src\Dog\Graphics\Vulkan\Pipeline\Shader.h" />
+    <ClInclude Include="src\Dog\Graphics\Vulkan\Pipeline\VKShader.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\RenderGraph.h" />
-    <ClInclude Include="src\Dog\Graphics\Vulkan\Texture\Texture.h" />
+    <ClInclude Include="src\Dog\Graphics\Vulkan\Texture\VKTexture.h" />
     <ClInclude Include="src\Dog\Graphics\Common\TextureLibrary.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Uniform\Descriptors.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Uniform\ShaderTypes.h" />
@@ -401,6 +414,9 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assets\Scenes\lighttest.json" />
+    <None Include="Assets\Scenes\sponza.json" />
+    <None Include="Assets\Shaders\shadow.rmiss" />
     <None Include="src\Dog\Graphics\Vulkan\Uniform\Uniform.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

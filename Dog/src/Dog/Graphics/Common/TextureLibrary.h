@@ -16,6 +16,7 @@ namespace Dog
 
 		uint32_t AddTexture(const std::string& texturePath);
 		uint32_t AddTexture(const unsigned char* textureData, uint32_t textureSize, const std::string& texturePath);
+		uint32_t CreateImage(const std::string& imageName, uint32_t width, uint32_t height, VkFormat imageFormat, VkImageUsageFlags usage, VkImageLayout finalLayout = VK_IMAGE_LAYOUT_GENERAL);
 
 		ITexture* GetTexture(uint32_t textureID);
 		ITexture* GetTexture(const std::string& texturePath);
@@ -25,11 +26,14 @@ namespace Dog
         VkSampler GetSampler() const { return mTextureSampler; }
 
 		const static uint32_t MAX_TEXTURE_COUNT;
+		const static uint32_t INVALID_TEXTURE_INDEX;
 
 		void ClearAllBuffers(class Device* device);
 		void RecreateAllBuffers(class Device* device);
 
-        void CreateTextureSampler();
+		void CreateTextureSampler();
+		void CreateDescriptors();
+		void CreateDescriptorSet(class VKTexture* texture, VkImageLayout layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         void SetDevice(Device* dev) { device = dev; }
 
 	private:
@@ -40,6 +44,8 @@ namespace Dog
 
 		Device* device;
 		VkSampler mTextureSampler;
+		VkDescriptorSetLayout mImageDescriptorSetLayout;
+		VkDescriptorPool mImageDescriptorPool;
 
 		std::vector<ITexture::UncompressedPixelData> mCpuPixelArrays;
 	};

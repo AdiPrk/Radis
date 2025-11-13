@@ -16,8 +16,8 @@ namespace Dog
 
     void UnifiedMeshes::AddMesh(Device& device, IMesh& mesh)
     {
-        unifiedMesh.mVertexBuffer.reset();
-        unifiedMesh.mIndexBuffer.reset();
+        // unifiedMesh.mVertexBuffer.reset();
+        // unifiedMesh.mIndexBuffer.reset();
 
         MeshInfo meshInfo;
         meshInfo.indexCount = static_cast<uint32_t>(mesh.mIndices.size());

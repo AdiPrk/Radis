@@ -76,12 +76,13 @@ namespace Dog {
         InitializeDebugCallbacks();
         DOG_INFO("OpenGL Version: {}", reinterpret_cast<const char*>(glGetString(GL_VERSION)));
 
-        // depth, msaa
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LEQUAL);
         glEnable(GL_MULTISAMPLE);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
         glfwSwapInterval(0); // No V-Sync
 
         SetTitle(std::wstring(name) + L" (GL)");

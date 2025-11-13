@@ -16,6 +16,7 @@ namespace Dog
         static void DrawCube(const glm::vec3& center, const glm::vec3& size, const glm::vec4& color = glm::vec4(1));
         static void DrawCircle(const glm::vec3& center, float radius, const glm::vec4& color = glm::vec4(1));
 
+        static std::vector<InstanceUniforms> CreateDebugLightTest();
         static std::vector<InstanceUniforms> GetInstanceData();
         static void Clear();
 

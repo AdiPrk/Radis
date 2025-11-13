@@ -6,6 +6,7 @@
 #include "Graphics/Vulkan/Core/SwapChain.h"
 #include "Graphics/Vulkan/Core/Synchronization.h"
 #include "Graphics/Vulkan/Pipeline/Pipeline.h"
+#include "Graphics/Vulkan/Pipeline/RaytracingPipeline.h"
 #include "Graphics/Vulkan/RenderGraph.h"
 
 #include "Graphics/Vulkan/VulkanWindow.h"
@@ -15,7 +16,7 @@
 
 #include "Graphics/Common/ModelLibrary.h"
 #include "Graphics/Common/TextureLibrary.h"
-#include "Graphics/Vulkan/Texture/Texture.h"
+#include "Graphics/Vulkan/Texture/VKTexture.h"
 #include "Graphics/Common/Animation/AnimationLibrary.h"
 #include "Graphics/Common/Animation/Animator.h"
 #include "Graphics/Common/Model.h"
@@ -23,6 +24,7 @@
 
 #include "Graphics/OpenGL/GLFrameBuffer.h"
 
+#include "Assets/Assets.h"
 #include "Engine.h"
 
 namespace Dog
@@ -34,15 +36,7 @@ namespace Dog
 
     RenderingResource::~RenderingResource()
     {
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
-        {
-            vkFreeCommandBuffers(
-                device->GetDevice(),
-                device->GetCommandPool(),
-                static_cast<uint32_t>(commandBuffers.size()),
-                commandBuffers.data()
-            );
-        }
+        Cleanup(true);
     }
 
     void RenderingResource::Create(IWindow* window)
@@ -56,8 +50,6 @@ namespace Dog
                 Engine::ForceVulkanUnsupportedSwap();
                 return;
             }
-
-            allocator = std::make_unique<Allocator>(*device);
 
             RecreateSwapChain(window);
 
@@ -84,7 +76,19 @@ namespace Dog
         if (!textureLibrary)
         {
             textureLibrary = std::make_unique<TextureLibrary>(device.get());
-            textureLibrary->AddTexture("Assets/textures/square.png");
+            textureLibrary->AddTexture(Assets::ImagesPath + "dog.png");
+            textureLibrary->AddTexture(Assets::ImagesPath + "circle.png");
+            textureLibrary->AddTexture(Assets::ImagesPath + "circleOutline2.png");
+            textureLibrary->AddTexture(Assets::ImagesPath + "dogmodel.png");
+            textureLibrary->AddTexture(Assets::ImagesPath + "error.png");
+            textureLibrary->AddTexture(Assets::ImagesPath + "ErrorTexture.png");
+            textureLibrary->AddTexture(Assets::ImagesPath + "glslIcon.png");
+            textureLibrary->AddTexture(Assets::ImagesPath + "playButton.png");
+            textureLibrary->AddTexture(Assets::ImagesPath + "square.png");
+            textureLibrary->AddTexture(Assets::ImagesPath + "stopButton.png");
+            textureLibrary->AddTexture(Assets::ImagesPath + "texture.jpg");
+            textureLibrary->AddTexture(Assets::ImagesPath + "folderIcon.png");
+            textureLibrary->AddTexture(Assets::ImagesPath + "unknownFileIcon.png");
         }
         else
         {
@@ -94,41 +98,40 @@ namespace Dog
         if (!modelLibrary)
         {
             modelLibrary = std::make_unique<ModelLibrary>(*device, *textureLibrary);
-            
-            //modelLibrary->AddModel("Assets/models/quad.obj");
-            modelLibrary->AddModel("Assets/models/cube.obj");
-            //modelLibrary->AddModel("Assets/models/yena.fbx");
-            //animationLibrary->AddAnimation("Assets/models/yena.fbx", modelLibrary->GetModel("yena"));
-            //modelLibrary->AddModel("Assets/models/FuwawaAbyssgard.pmx");
-            //modelLibrary->AddModel("Assets/models/TaylorDancing.glb");
-            //animationLibrary->AddAnimation("Assets/models/TaylorDancing.glb", modelLibrary->GetModel("Assets/models/TaylorDancing.glb"));
-            //modelLibrary->AddModel("Assets/models/jack_samba.glb");
-            //animationLibrary->AddAnimation("Assets/models/jack_samba.glb", modelLibrary->GetModel("jack_samba"));
-            //modelLibrary->AddModel("Assets/models/travisFloppin.glb");
-            //animationLibrary->AddAnimation("Assets/models/travisFloppin.glb", modelLibrary->GetModel("travisFloppin"));
-            modelLibrary->AddModel("Assets/models/TravisLocomotion/travis.fbx");
-            
-            //modelLibrary->AddModel("Assets/models/okayu.pmx");
-            //modelLibrary->AddModel("Assets/models/AlisaMikhailovna.fbx");
+
+            modelLibrary->AddModel(Assets::ModelsPath + "cube.obj");
+            modelLibrary->AddModel(Assets::ModelsPath + "quad.obj");
+            modelLibrary->AddModel(Assets::ModelsPath + "sphere.glb");
+            modelLibrary->AddModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx");
+            modelLibrary->AddModel(Assets::ModelsPath + "jack_samba.glb");
+            modelLibrary->AddModel(Assets::ModelsPath + "SteampunkRobot.gltf");
+            modelLibrary->AddModel(Assets::ModelsPath + "DragonAttenuation.glb");
+            modelLibrary->AddModel(Assets::ModelsPath + "Sponza.gltf");
+
+            //modelLibrary->AddModel("Assets/Models/okayu.pmx");
+            //modelLibrary->AddModel("Assets/Models/AlisaMikhailovna.fbx");
         }
 
         if (!animationLibrary)
         {
             animationLibrary = std::make_unique<AnimationLibrary>();
-            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/idle.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/jump.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left strafe walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left strafe.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/left turn 90.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right strafe walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right strafe.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/right turn 90.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/standard run.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
-            animationLibrary->AddAnimation("Assets/models/TravisLocomotion/walking.fbx", modelLibrary->GetModel("Assets/models/TravisLocomotion/travis.fbx"));
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/idle.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/idle.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/jump.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/left strafe walking.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/left strafe.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/left turn 90.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/right strafe walking.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/right strafe.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/right turn 90.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/standard run.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/walking.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
+            animationLibrary->AddAnimation(Assets::ModelsPath + "jack_samba.glb", modelLibrary->GetModel(Assets::ModelsPath + "jack_samba.glb"));
         }
 
         // Recreation if needed
         textureLibrary->CreateTextureSampler();
+        textureLibrary->CreateDescriptors();
         textureLibrary->RecreateAllBuffers(device.get());
         modelLibrary->LoadTextures();
         
@@ -139,11 +142,16 @@ namespace Dog
 
 
             cameraUniform = std::make_unique<Uniform>(*device, *this, cameraUniformSettings);
+            rtUniform = std::make_unique<Uniform>(*device, *this, rayTracingUniformSettings);
             //instanceUniform = std::make_unique<Uniform>(*device, *this, instanceUniformSettings);
 
             std::vector<Uniform*> unis{
                 cameraUniform.get(),
                 //instanceUniform.get()
+            };
+            std::vector<Uniform*> rtunis{
+                cameraUniform.get(),
+                rtUniform.get()
             };
 
             pipeline = std::make_unique<Pipeline>(
@@ -161,10 +169,18 @@ namespace Dog
                 true,
                 "verysimple.vert", "verysimple.frag"
             );
+
+            raytracingPipeline = std::make_unique<RaytracingPipeline>(
+                *device,
+                rtunis
+                // "raytrace.rgen",
+                // "raytrace.rmiss",
+                // "raytrace.rchit"
+            );
         }
     }
 
-    void RenderingResource::Cleanup()
+    void RenderingResource::Cleanup(bool closingExe)
     {
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
         {
@@ -173,20 +189,47 @@ namespace Dog
                 vkDeviceWaitIdle(*device);
             }
 
+            vkFreeCommandBuffers(
+                device->GetDevice(),
+                device->GetCommandPool(),
+                static_cast<uint32_t>(commandBuffers.size()),
+                commandBuffers.data()
+            );
+
             CleanupSceneTexture();
             CleanupDepthBuffer();
-            //modelLibrary.reset();
-            //textureLibrary.reset();
-            if (modelLibrary) modelLibrary->ClearAllBuffers(device.get());
-            if (textureLibrary) textureLibrary->ClearAllBuffers(device.get());
-            animationLibrary.reset();
+            if (!closingExe)
+            {
+                if (modelLibrary) modelLibrary->ClearAllBuffers(device.get());
+                if (textureLibrary) textureLibrary->ClearAllBuffers(device.get());
+            }
+            else
+            {
+                if (modelLibrary) modelLibrary->ClearAllBuffers(device.get());
+                if (textureLibrary) textureLibrary->ClearAllBuffers(device.get());
+                modelLibrary.reset();
+                textureLibrary.reset();
+                animationLibrary.reset();
+            }
             renderGraph.reset();
             cameraUniform.reset();
+            rtUniform.reset();
             //instanceUniform.reset();
             pipeline.reset();
             wireframePipeline.reset();
+            raytracingPipeline.reset();
             syncObjects.reset();
-            allocator.reset();
+
+            for (auto& blas : blasAccel)
+            {
+                Allocator::DestroyAcceleration(blas);
+            }
+            blasAccel.clear();
+            if (tlasAccel.accel != VK_NULL_HANDLE) {
+                Allocator::DestroyAcceleration(tlasAccel);
+            }
+
+            //allocator.reset();
             swapChain.reset();
             device.reset();
         }
@@ -306,11 +349,12 @@ namespace Dog
         VmaAllocationCreateInfo allocInfo{};
         allocInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
 
-        VkResult result = vmaCreateImage(allocator->GetAllocator(), &imageInfo, &allocInfo, &sceneImage, &sceneImageAllocation, nullptr);
+        VkResult result = vmaCreateImage(Allocator::GetAllocator(), &imageInfo, &allocInfo, &sceneImage, &sceneImageAllocation, nullptr);
         if (result != VK_SUCCESS)
         {
             DOG_CRITICAL("VMA failed to create scene image");
         }
+        Allocator::SetAllocationName(sceneImageAllocation, "Scene Texture Image");
 
         VkImageViewCreateInfo sampledViewInfo{};
         sampledViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -350,7 +394,10 @@ namespace Dog
             DOG_CRITICAL("Failed to create scene sampler");
         }
         
-        sceneTextureDescriptorSet = ImGui_ImplVulkan_AddTexture(sceneSampler, sceneImageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        if (Engine::GetEditorEnabled())
+        {
+            sceneTextureDescriptorSet = ImGui_ImplVulkan_AddTexture(sceneSampler, sceneImageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        }
     }
 
     void RenderingResource::CleanupSceneTexture()
@@ -371,7 +418,7 @@ namespace Dog
 
         if (sceneImage != VK_NULL_HANDLE)
         {
-            vmaDestroyImage(allocator->GetAllocator(), sceneImage, sceneImageAllocation);
+            vmaDestroyImage(Allocator::GetAllocator(), sceneImage, sceneImageAllocation);
             sceneImage = VK_NULL_HANDLE;
             sceneImageAllocation = VK_NULL_HANDLE;
         }
@@ -404,7 +451,8 @@ namespace Dog
         VmaAllocationCreateInfo allocInfo{};
         allocInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
 
-        vmaCreateImage(allocator->GetAllocator(), &imageInfo, &allocInfo, &mDepthImage, &mDepthImageAllocation, nullptr);
+        vmaCreateImage(Allocator::GetAllocator(), &imageInfo, &allocInfo, &mDepthImage, &mDepthImageAllocation, nullptr);
+        Allocator::SetAllocationName(mDepthImageAllocation, "Depth Buffer Image");
 
         VkImageViewCreateInfo viewInfo{};
         viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -429,7 +477,7 @@ namespace Dog
         }
         if (mDepthImage != VK_NULL_HANDLE)
         {
-            vmaDestroyImage(allocator->GetAllocator(), mDepthImage, mDepthImageAllocation);
+            vmaDestroyImage(Allocator::GetAllocator(), mDepthImage, mDepthImageAllocation);
             mDepthImage = VK_NULL_HANDLE;
             mDepthImageAllocation = VK_NULL_HANDLE;
         }
