@@ -835,7 +835,10 @@ namespace Dog
         auto rr = ecs->GetResource<RenderingResource>();
 
         VkDebugUtilsLabelEXT s{ VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT, nullptr, "Raytrace Scene", {1.0f, 1.0f, 1.0f, 1.0f}};
-        rr->device->g_vkCmdBeginDebugUtilsLabelEXT(cmd, &s);
+        if (rr->device->g_vkCmdBeginDebugUtilsLabelEXT) 
+        {
+            rr->device->g_vkCmdBeginDebugUtilsLabelEXT(cmd, &s);
+        }
         auto& rp = rr->raytracingPipeline;
         
         // Ray trace pipeline
@@ -879,6 +882,9 @@ namespace Dog
 
         vkCmdPipelineBarrier2(cmd, &dependencyInfo);
 
-        rr->device->g_vkCmdEndDebugUtilsLabelEXT(cmd);
+        if (rr->device->g_vkCmdEndDebugUtilsLabelEXT)
+        {
+            rr->device->g_vkCmdEndDebugUtilsLabelEXT(cmd);
+        }
     }
 }

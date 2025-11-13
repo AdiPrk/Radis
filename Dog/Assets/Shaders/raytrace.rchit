@@ -8,6 +8,8 @@ layout(location = 0) rayPayloadInEXT HitPayload {
     int depth;
 } payload;
 
+layout(location = 1) rayPayloadEXT bool isShadowed;
+
 hitAttributeEXT vec2 attribs;
 
 // --- Constants ---
@@ -89,6 +91,8 @@ layout(set = 1, binding = 3, std430) readonly buffer MeshIndexBuffer
     uint indices[];
 } indexBuffer;
 
+layout(set = 1, binding = 1) uniform accelerationStructureEXT topLevelAS;
+
 float DistributionGGX(float NdotH, float roughness)
 {
     float a = roughness * roughness;
@@ -146,6 +150,40 @@ vec3 computePBRLight(vec3 albedo, float metallic, float roughness, vec3 N, vec3 
 vec4 SampleTexture(uint texIndex, vec2 uv)
 {
     return texture(uTextures[texIndex], uv);
+}
+
+// Shadow Ray Function
+float fetchShadow(vec3 worldPos, vec3 normal, vec3 lightDir, float lightDist)
+{
+    // 1. Offset origin to avoid self-intersection (Shadow Acne)
+    vec3 origin = worldPos + normal * 0.01; 
+
+    // 2. Initialize payload to TRUE (Blocked). 
+    // If the ray misses, the Miss Shader (Index 1) will set this to FALSE.
+    isShadowed = true;
+
+    // 3. Trace Ray
+    // gl_RayFlagsTerminateOnFirstHitEXT: Performance opt. Stop as soon as we hit anything.
+    // gl_RayFlagsSkipClosestHitShaderEXT: We don't need the material color, just the hit.
+    // Note: We do NOT use Opaque flag, so the AnyHit shader still runs for alpha-tested leaves.
+    uint rayFlags = gl_RayFlagsTerminateOnFirstHitEXT | gl_RayFlagsSkipClosestHitShaderEXT;
+    
+    traceRayEXT(
+        topLevelAS, // Acceleration structure
+        rayFlags,   // Flags
+        0xFF,       // Cull mask
+        0,          // SBT record offset
+        0,          // SBT record stride
+        1,          // Miss Index (MUST match your Shadow Miss Shader index in C++)
+        origin,     // Origin
+        0.001,      // TMin
+        lightDir,   // Direction
+        lightDist,  // TMax
+        1           // Payload Location (Matches 'isShadowed')
+    );
+
+    // Return 0.0 if shadowed, 1.0 if lit
+    return isShadowed ? 0.0 : 1.0;
 }
 
 void main()
@@ -243,12 +281,15 @@ void main()
         Light light = lightData.lights[i];
         vec3 L;
         float attenuation = 1.0;
+        float lightDistance = 0.0;
 
         if (light.type == 0) { // Directional
             L = normalize(-light.direction);
+            lightDistance = 1e38; // Infinite distance for shadow ray
         }
         else { // Point / Spot
             vec3 toLight = light.position - fragWorldPos;
+            lightDistance = length(toLight);
             float dist = length(toLight);
             L = normalize(toLight);
             attenuation = clamp(1.0 - dist / light.radius, 0.0, 1.0);
@@ -261,11 +302,17 @@ void main()
             attenuation *= smoothS;
         }
 
-        vec3 lightCol = light.color * light.intensity * attenuation;
+        // Shadow
+        float NdotL = max(dot(N, L), 0.0);
+        float shadowFactor = 1.0;
         
-        // Shadow Ray Check (Optional but recommended for RT)
-        // For now, we assume unshadowed to match your fragment shader logic exactly.
-        
+        if (NdotL > 0.0 && attenuation > 0.0)
+        {
+             shadowFactor = fetchShadow(fragWorldPos, N, L, lightDistance);
+        }
+
+        vec3 lightCol = light.color * light.intensity * attenuation * shadowFactor;
+
         Lo += computePBRLight(albedo, metallic, roughness, N, V, L, lightCol);
     }
 
