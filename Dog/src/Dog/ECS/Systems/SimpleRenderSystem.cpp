@@ -164,6 +164,11 @@ namespace Dog
         }
 
         // Heh
+        if (InputSystem::isKeyTriggered(Key::T))
+        {
+            auto sr = ecs->GetResource<SwapRendererBackendResource>();
+            sr->RequestSwap();
+        }
         // static int si = 0;
         // if (si++ % 30 == 0) 
         // {
@@ -181,9 +186,11 @@ namespace Dog
             auto editorResource = ecs->GetResource<EditorResource>();
             aspectRatio = editorResource->sceneWindowWidth / editorResource->sceneWindowHeight;
         }
-        else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
+        else
         {
-            aspectRatio = static_cast<float>(rr->swapChain->GetWidth()) / static_cast<float>(rr->swapChain->GetHeight());
+            auto windowResource = ecs->GetResource<WindowResource>();
+            auto extant = windowResource->window->GetExtent();
+            aspectRatio = static_cast<float>(extant.x) / static_cast<float>(extant.y);
         }
 
         mNumObjectsRendered = 0;
@@ -247,8 +254,8 @@ namespace Dog
                 rg->AddPass(
                     "ScenePass",
                     [&](RGPassBuilder& builder) {
-                        //builder.writes("BackBuffer");
-                        //builder.writes("SceneDepth");
+                        builder.writes("BackBuffer");
+                        builder.writes("SceneDepth");
                     },
                     std::bind(&SimpleRenderSystem::RenderSceneVK, this, std::placeholders::_1)
                 );
@@ -847,15 +854,6 @@ namespace Dog
         // Bind the descriptor sets for the graphics pipeline (making textures available to the shaders)
         rr->cameraUniform->Bind(cmd, rp->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR);
         rr->rtUniform->Bind(cmd, rp->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR);
-
-        // Push constant information
-        TutoPushConstant pushValues{};
-        const VkPushConstantsInfo pushInfo{ .sType = VK_STRUCTURE_TYPE_PUSH_CONSTANTS_INFO,
-                                           .layout = rp->GetLayout(),
-                                           .stageFlags = VK_SHADER_STAGE_ALL,
-                                           .size = sizeof(TutoPushConstant),
-                                           .pValues = &pushValues };
-        vkCmdPushConstants2(cmd, &pushInfo);
 
         // Ray trace
         const VkExtent2D& size = rr->swapChain->GetSwapChainExtent();

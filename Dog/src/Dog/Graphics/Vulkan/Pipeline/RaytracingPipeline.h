@@ -7,13 +7,6 @@ namespace Dog
     class Device;
     class Uniform;
 
-    struct TutoPushConstant
-    {
-        glm::mat3       normalMatrix;
-        int            instanceIndex;              // Instance index for the current draw call
-        glm::vec2      metallicRoughnessOverride;  // Metallic and roughness override values
-    };
-
     class RaytracingPipeline
     {
     public:

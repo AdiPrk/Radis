@@ -219,7 +219,7 @@ namespace Dog {
     {
         glDeleteTextures(1, &this->ID);
 
-        DOG_INFO("GLTexture destructor called.");
+        // DOG_INFO("GLTexture destructor called.");
     }
 
     void GLTexture::Generate(unsigned int width, unsigned int height, const unsigned char* data, unsigned int numSprites)
