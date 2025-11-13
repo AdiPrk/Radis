@@ -174,7 +174,7 @@ float fetchShadow(vec3 worldPos, vec3 normal, vec3 lightDir, float lightDist)
         0xFF,       // Cull mask
         0,          // SBT record offset
         0,          // SBT record stride
-        1,          // Miss Index (MUST match your Shadow Miss Shader index in C++)
+        1,          // Miss Index (The second miss shader; hardcoded as shadow.rmiss)
         origin,     // Origin
         0.001,      // TMin
         lightDir,   // Direction
