@@ -569,8 +569,12 @@ namespace Dog
             .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR,
             .geometryType = VK_GEOMETRY_TYPE_TRIANGLES_KHR,
             .geometry = {.triangles = triangles},
-            .flags = VK_GEOMETRY_NO_DUPLICATE_ANY_HIT_INVOCATION_BIT_KHR | VK_GEOMETRY_OPAQUE_BIT_KHR,
+            .flags = VK_GEOMETRY_NO_DUPLICATE_ANY_HIT_INVOCATION_BIT_KHR,
         };
+
+        // @Todo: Future optimization: Check if the material has any transparency and set geometry flag accordingly
+        // to skip the any-hit shader
+
 
         rangeInfo = VkAccelerationStructureBuildRangeInfoKHR{ .primitiveCount = mesh.mTriangleCount };
     }

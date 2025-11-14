@@ -53,5 +53,5 @@ void main()
     vec3 sunLight = SUN_COLOR * glowIntensity;
 
     // --- FINAL COMPOSITION ---
-    payload.color = environment + sunLight;
+    payload.color += (environment + sunLight) * payload.weight;
 }

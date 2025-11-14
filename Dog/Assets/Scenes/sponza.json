@@ -1,18 +1,24 @@
 {
   "Entities": [
     {
-      "ModelComponent": [
+      "LightComponent": [
         {
-          "ModelPath": "assets/models/quad.obj",
-          "tintColor": [ 1.0, 1.0, 1.0, 1.0 ]
+          "Color": [ 1.0, 1.0, 1.0 ],
+          "Direction": [ 0.0, 0.0, -1.0 ],
+          "InnerCone": 0.5235987901687622,
+          "Intensity": 10.0,
+          "OuterCone": 1.0471975803375244,
+          "Position": [ 0.0, 0.0, 0.0 ],
+          "Radius": 2.0,
+          "Type": 1
         }
       ],
-      "TagComponent": [ { "Tag": "New Entity" } ],
+      "TagComponent": [ { "Tag": "PointLight" } ],
       "TransformComponent": [
         {
           "Rotation": [ 0.0, -0.0, 0.0 ],
           "Scale": [ 1.0, 1.0, 1.0 ],
-          "Translation": [ 0.0, -2.5291712284088135, -0.43996262550354004 ]
+          "Translation": [ -8.491000175476074, -3.5589964389801025, 0.0 ]
         }
       ]
     },
@@ -65,7 +71,7 @@
         {
           "FOV": 45.0,
           "Far": 1000.0,
-          "Forward": [ -0.97142493724823, -0.23624204099178314, 0.02287614904344082 ],
+          "Forward": [ -0.9891225099563599, -0.025226013734936714, 0.14491483569145203 ],
           "InvertY": true,
           "MouseSensitivity": 0.20000000298023224,
           "MouseSmoothness": 20.0,
@@ -74,14 +80,14 @@
           "Pitch": -0.3800048828125,
           "PositionSmoothness": 12.0,
           "RotationSmoothness": 18.0,
-          "SmoothedMouseDX": 0.0,
-          "SmoothedMouseDY": 0.0,
-          "SmoothedPitch": -13.664848327636719,
-          "SmoothedPosition": [ 1.448683500289917, -2.1053738594055176, -0.53471839427948 ],
-          "SmoothedYaw": -91.34901428222656,
-          "TargetPitch": -13.664848327636719,
-          "TargetYaw": -91.34901428222656,
-          "Up": [ -0.23617655038833618, 0.9716942310333252, 0.00556173687800765 ],
+          "SmoothedMouseDX": -3.534106678159907e-19,
+          "SmoothedMouseDY": 6.916657696072889e-22,
+          "SmoothedPitch": -1.4454975128173828,
+          "SmoothedPosition": [ 1.9250783920288086, -3.828001022338867, -0.049898065626621246 ],
+          "SmoothedYaw": -98.33502197265625,
+          "TargetPitch": -1.4454975128173828,
+          "TargetYaw": -98.33502197265625,
+          "Up": [ -0.024959560483694077, 0.9996817708015442, 0.003656787099316716 ],
           "Yaw": 31.973487854003906,
           "isInitialized": true
         }
@@ -89,9 +95,9 @@
       "TagComponent": [ { "Tag": "Camera" } ],
       "TransformComponent": [
         {
-          "Rotation": [ -13.664848327636719, -91.34901428222656, 0.0 ],
+          "Rotation": [ -1.4454975128173828, -98.33502197265625, 0.0 ],
           "Scale": [ 1.0, 1.0, 1.0 ],
-          "Translation": [ 1.448683500289917, -2.1053738594055176, -0.53471839427948 ]
+          "Translation": [ 1.9250783920288086, -3.828001022338867, -0.049898065626621246 ]
         }
       ]
     },
@@ -99,10 +105,10 @@
       "AnimationComponent": [
         {
           "AnimationIndex": 1,
-          "AnimationTime": 6.223402976989746,
+          "AnimationTime": 16.870031356811523,
           "BoneOffset": 0,
           "IsPlaying": true,
-          "PrevAnimationTime": 6.223402976989746,
+          "PrevAnimationTime": 16.870031356811523,
           "inPlace": false,
           "prevInPlace": false
         }
@@ -126,10 +132,10 @@
       "AnimationComponent": [
         {
           "AnimationIndex": 10,
-          "AnimationTime": 22242.28125,
+          "AnimationTime": 16464.060546875,
           "BoneOffset": 28,
           "IsPlaying": true,
-          "PrevAnimationTime": 22242.28125,
+          "PrevAnimationTime": 16464.060546875,
           "inPlace": false,
           "prevInPlace": false
         }
@@ -169,7 +175,7 @@
       "ModelComponent": [
         {
           "ModelPath": "assets/models/dragonattenuation.glb",
-          "tintColor": [ 1.0, 1.0, 1.0, 1.0 ]
+          "tintColor": [ 1.0, 1.0, 1.0, 0.3921568691730499 ]
         }
       ],
       "TagComponent": [ { "Tag": "Dragon" } ],
@@ -185,7 +191,7 @@
       "ModelComponent": [
         {
           "ModelPath": "assets/models/steampunkrobot.gltf",
-          "tintColor": [ 1.0, 1.0, 1.0, 1.0 ]
+          "tintColor": [ 1.0, 1.0, 1.0, 0.19607843458652496 ]
         }
       ],
       "TagComponent": [ { "Tag": "Robot" } ],
@@ -254,12 +260,12 @@
           "Type": 1
         }
       ],
-      "TagComponent": [ { "Tag": "PointLight" } ],
+      "TagComponent": [ { "Tag": "DragonLight" } ],
       "TransformComponent": [
         {
           "Rotation": [ 0.0, -0.0, 0.0 ],
           "Scale": [ 1.0, 1.0, 1.0 ],
-          "Translation": [ -8.491000175476074, -3.5589964389801025, 0.0 ]
+          "Translation": [ -4.268712997436523, -3.7420225143432617, 0.0 ]
         }
       ]
     }
