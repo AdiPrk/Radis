@@ -238,6 +238,92 @@ namespace Dog
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan) camData.projection[1][1] *= -1;
         camData.projectionView = camData.projection * camData.view;
 
+        mInstanceData.clear();
+        mLightData.clear();
+        auto debugData = DebugDrawResource::GetInstanceData();
+        //auto lightTestData = DebugDrawResource::CreateDebugLightTest();
+        //debugData.insert(debugData.end(), lightTestData.begin(), lightTestData.end());
+
+        if (mInstanceData.size() + debugData.size() >= InstanceUniforms::MAX_INSTANCES)
+        {
+            DOG_WARN("Too many instances for debug draw render!");
+        }
+        else
+        {
+            //mInstanceData.insert(mInstanceData.end(), debugData.begin(), debugData.end());
+        }
+
+        auto& registry = ecs->GetRegistry();
+
+        ecs->GetRegistry().view<LightComponent>().each([&](auto entity, LightComponent& lc)
+        {
+            Entity lightEntity(&registry, entity);
+            TransformComponent& tc = lightEntity.GetComponent<TransformComponent>();
+
+            LightUniform lu{};
+            lu.position = glm::vec4(tc.Translation, 1.0f);
+            lu.radius = lc.Radius;
+            lu.color = lc.Color;
+            lu.intensity = lc.Intensity;
+            lu.direction = glm::normalize(lc.Direction);
+            lu.innerCone = lc.InnerCone;
+            lu.outerCone = lc.OuterCone;
+            lu.type = static_cast<int>(lc.Type);
+            lu._padding[0] = 777;
+            lu._padding[1] = 777;
+            mLightData.push_back(lu);
+        });
+
+        AnimationLibrary* al = rr->animationLibrary.get();
+        ModelLibrary* ml = rr->modelLibrary.get();
+
+        auto entityView = registry.view<ModelComponent, TransformComponent>();
+        uint32_t indexOffset = 0;
+        uint32_t vertexOffset = 0;
+        for (auto& entityHandle : entityView)
+        {
+            Entity entity(&registry, entityHandle);
+            ModelComponent& mc = entity.GetComponent<ModelComponent>();
+            TransformComponent& tc = entity.GetComponent<TransformComponent>();
+            Model* model = rr->modelLibrary->TryAddGetModel(mc.ModelPath);
+            AnimationComponent* ac = entity.TryGetComponent<AnimationComponent>();
+            if (!model) continue;
+
+            uint32_t boneOffset = AnimationLibrary::INVALID_ANIMATION_INDEX;
+            if (ac && al->GetAnimation(ac->AnimationIndex) && al->GetAnimator(ac->AnimationIndex))
+            {
+                boneOffset = ac->BoneOffset;
+            }
+
+            for (auto& mesh : model->mMeshes)
+            {
+                InstanceUniforms& data = mInstanceData.emplace_back();
+                if (boneOffset == AnimationLibrary::INVALID_ANIMATION_INDEX)
+                {
+                    data.model = tc.GetTransform() * model->GetNormalizationMatrix();
+                }
+                else
+                {
+                    data.model = tc.GetTransform();
+                }
+
+                data.tint = mc.tintColor;
+                data.textureIndicies = glm::uvec4(mesh->albedoTextureIndex, mesh->normalTextureIndex, mesh->metalnessTextureIndex, mesh->roughnessTextureIndex);
+                data.textureIndicies2 = glm::uvec4(mesh->occlusionTextureIndex, mesh->emissiveTextureIndex, 10001, 10001);
+                data.boneOffset = boneOffset;
+                data.baseColorFactor = mesh->baseColorFactor;
+                data.metallicRoughnessFactor = glm::vec4(mesh->metallicFactor, mesh->roughnessFactor, 0.f, 0.f);
+                data.emissiveFactor = mesh->emissiveFactor;
+
+                data.indexOffset = indexOffset;
+                data.vertexOffset = vertexOffset;
+                indexOffset += static_cast<uint32_t>(mesh->mIndices.size());
+                vertexOffset += static_cast<uint32_t>(mesh->mVertices.size());
+
+                data._padding = 777;
+            }
+        }
+
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
         {
             auto& rg = rr->renderGraph;
@@ -311,119 +397,38 @@ namespace Dog
         VkRect2D scissor{ {0, 0}, rr->swapChain->GetSwapChainExtent() };
         vkCmdSetScissor(cmd, 0, 1, &scissor);
 
-        std::vector<InstanceUniforms> instanceData{};
-        std::vector<LightUniform> lightData{};
         auto debugData = DebugDrawResource::GetInstanceData();
-        //auto lightTestData = DebugDrawResource::CreateDebugLightTest();
-        //debugData.insert(debugData.end(), lightTestData.begin(), lightTestData.end());
-
-        if (instanceData.size() + debugData.size() >= InstanceUniforms::MAX_INSTANCES)
-        {
-            DOG_WARN("Too many instances for debug draw render!");
-        }
-        else
-        {
-            //instanceData.insert(instanceData.end(), debugData.begin(), debugData.end());            
-        }
-
+        
         AnimationLibrary* al = rr->animationLibrary.get();
         ModelLibrary* ml = rr->modelLibrary.get();
 
         auto& registry = ecs->GetRegistry();
-
-        ecs->GetRegistry().view<LightComponent>().each([&](auto entity, LightComponent& lc)
-        {
-            Entity lightEntity(&registry, entity);
-            TransformComponent& tc = lightEntity.GetComponent<TransformComponent>();
-
-            LightUniform lu{};
-            lu.position = glm::vec4(tc.Translation, 1.0f);
-            lu.radius = lc.Radius;
-            lu.color = lc.Color;
-            lu.intensity = lc.Intensity;
-            lu.direction = glm::normalize(lc.Direction);
-            lu.innerCone = lc.InnerCone;
-            lu.outerCone = lc.OuterCone;
-            lu.type = static_cast<int>(lc.Type);
-            lu._padding[0] = 777; 
-            lu._padding[1] = 777;
-            lightData.push_back(lu);
-        });
-
-        auto entityView = registry.view<ModelComponent, TransformComponent>();
-        uint32_t indexOffset = 0;
-        uint32_t vertexOffset = 0;
-        for (auto& entityHandle : entityView)
-        {
-            Entity entity(&registry, entityHandle);
-            ModelComponent& mc = entity.GetComponent<ModelComponent>();
-            TransformComponent& tc = entity.GetComponent<TransformComponent>();
-            Model* model = rr->modelLibrary->TryAddGetModel(mc.ModelPath);
-            AnimationComponent* ac = entity.TryGetComponent<AnimationComponent>();
-            if (!model) continue;
-
-            uint32_t boneOffset = AnimationLibrary::INVALID_ANIMATION_INDEX;
-            if (ac && al->GetAnimation(ac->AnimationIndex) && al->GetAnimator(ac->AnimationIndex))
-            {
-                boneOffset = ac->BoneOffset;
-            }
-
-            for (auto& mesh : model->mMeshes)
-            {
-                InstanceUniforms& data = instanceData.emplace_back();
-                if (boneOffset == AnimationLibrary::INVALID_ANIMATION_INDEX)
-                {
-                    data.model = tc.GetTransform() * model->GetNormalizationMatrix();
-                }
-                else
-                {
-                    data.model = tc.GetTransform();
-                }
-
-                data.tint = mc.tintColor;
-                data.textureIndicies = glm::uvec4(mesh->albedoTextureIndex, mesh->normalTextureIndex, mesh->metalnessTextureIndex, mesh->roughnessTextureIndex);
-                data.textureIndicies2 = glm::uvec4(mesh->occlusionTextureIndex, mesh->emissiveTextureIndex, 10001, 10001);
-                data.boneOffset = boneOffset;
-                data.baseColorFactor = mesh->baseColorFactor;
-                data.metallicRoughnessFactor = glm::vec4(mesh->metallicFactor, mesh->roughnessFactor, 0.f, 0.f);
-                data.emissiveFactor = mesh->emissiveFactor;
-
-                data.indexOffset = indexOffset;
-                data.vertexOffset = vertexOffset;
-                indexOffset += static_cast<uint32_t>(mesh->mIndices.size());
-                vertexOffset += static_cast<uint32_t>(mesh->mVertices.size());
-
-                data._padding = 777;
-            }
-        }
-
-        rr->cameraUniform->SetUniformData(instanceData, 1, rr->currentFrameIndex);
-
+        rr->cameraUniform->SetUniformData(mInstanceData, 1, rr->currentFrameIndex);
 
         struct Header {
             uint32_t lightCount;
             uint32_t _pad[3];
         };
 
-        Header header = { static_cast<uint32_t>(lightData.size()), {0,0,0} };
+        Header header = { static_cast<uint32_t>(mLightData.size()), {0,0,0} };
 
-        std::vector<uint8_t> gpuBuffer(sizeof(Header) + sizeof(LightUniform) * lightData.size());
+        std::vector<uint8_t> gpuBuffer(sizeof(Header) + sizeof(LightUniform) * mLightData.size());
         memcpy(gpuBuffer.data(), &header, sizeof(Header));
-        memcpy(gpuBuffer.data() + sizeof(Header), lightData.data(), sizeof(LightUniform) * lightData.size());
+        memcpy(gpuBuffer.data() + sizeof(Header), mLightData.data(), sizeof(LightUniform) * mLightData.size());
         rr->cameraUniform->SetUniformData(gpuBuffer, 4, rr->currentFrameIndex);
 
         VkBuffer instBuffer = rr->cameraUniform->GetUniformBuffer(1, rr->currentFrameIndex).buffer;
         int baseIndex = 0;
+        Model* cubeModel = ml->TryAddGetModel("Assets/Models/cube.obj");
+        auto& cubeMesh = cubeModel->mMeshes[0];
+        cubeMesh->Bind(cmd, instBuffer);
         //for (auto& data : debugData)
         //{
-        //    Model* cubeModel = ml->TryAddGetModel("Assets/Models/cube.obj");
-        //    auto& mesh = cubeModel->mMeshes[0];
-        //    mesh->Bind(cmd, instBuffer);
-        //    mesh->Draw(cmd, baseIndex++);
-        //
+        //    cubeMesh->Draw(cmd, baseIndex++);
         //    ++mNumObjectsRendered;
         //}
 
+        auto entityView = registry.view<ModelComponent, TransformComponent>();
         for (auto& entityHandle : entityView)
         {
             Entity entity(&registry, entityHandle);
@@ -435,7 +440,6 @@ namespace Dog
             {
                 mesh->Bind(cmd, instBuffer);
                 mesh->Draw(cmd, baseIndex++);
-
                 ++mNumObjectsRendered;
             }
         }
@@ -455,62 +459,14 @@ namespace Dog
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        std::vector<InstanceUniforms> instanceData{};
-        std::vector<uint64_t> textureData{};
-        const auto& debugData = DebugDrawResource::GetInstanceData();
-        if (instanceData.size() + debugData.size() >= InstanceUniforms::MAX_INSTANCES)
-        {
-            DOG_WARN("Too many instances for debug draw render!");
-        }
-        else
-        {
-            instanceData.insert(instanceData.end(), debugData.begin(), debugData.end());
-        }
-
         AnimationLibrary* al = rr->animationLibrary.get();
         ModelLibrary* ml = rr->modelLibrary.get();
 
         auto& registry = ecs->GetRegistry();
         auto entityView = registry.view<ModelComponent, TransformComponent>();
-        for (auto& entityHandle : entityView)
-        {
-            Entity entity(&registry, entityHandle);
-            ModelComponent& mc = entity.GetComponent<ModelComponent>();
-            TransformComponent& tc = entity.GetComponent<TransformComponent>();
-            Model* model = rr->modelLibrary->GetModel(mc.ModelPath);
-            AnimationComponent* ac = entity.HasComponent<AnimationComponent>() ? &entity.GetComponent<AnimationComponent>() : nullptr;
-            if (!model) continue;
 
-            uint32_t boneOffset = AnimationLibrary::INVALID_ANIMATION_INDEX;
-            if (ac && al->GetAnimation(ac->AnimationIndex) && al->GetAnimator(ac->AnimationIndex))
-            {
-                boneOffset = ac->BoneOffset;
-            }
-
-            for (auto& mesh : model->mMeshes)
-            {
-                InstanceUniforms& data = instanceData.emplace_back();
-                if (boneOffset == AnimationLibrary::INVALID_ANIMATION_INDEX)
-                {
-                    data.model = tc.GetTransform() * model->GetNormalizationMatrix();
-                }
-                else
-                {
-                    data.model = tc.GetTransform();
-                }
-
-                data.tint = mc.tintColor;
-                data.textureIndicies = glm::uvec4(mesh->albedoTextureIndex, mesh->normalTextureIndex, mesh->metalnessTextureIndex, mesh->roughnessTextureIndex);
-                data.textureIndicies2 = glm::uvec4(mesh->occlusionTextureIndex, mesh->emissiveTextureIndex, 10001, 10001);
-                data.boneOffset = boneOffset;
-                data.baseColorFactor = mesh->baseColorFactor;
-                data.metallicRoughnessFactor = glm::vec4(mesh->metallicFactor, mesh->roughnessFactor, 0.f, 0.f);
-                data.emissiveFactor = mesh->emissiveFactor;
-                data._padding = 777.0f;
-            }
-        }
-
-        uint32_t instanceCount = static_cast<uint32_t>(instanceData.size());
+        std::vector<uint64_t> textureData{};
+        uint32_t instanceCount = static_cast<uint32_t>(mInstanceData.size());
         for (uint32_t i = 0; i < rr->textureLibrary->GetTextureCount(); ++i)
         {
             auto itex = rr->textureLibrary->GetTextureByIndex(i);
@@ -526,7 +482,7 @@ namespace Dog
 
         GLuint iSSBO = GLShader::GetInstanceSSBO();
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, iSSBO);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, instanceCount * sizeof(InstanceUniforms), instanceData.data(), GL_DYNAMIC_DRAW);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, instanceCount * sizeof(InstanceUniforms), mInstanceData.data(), GL_DYNAMIC_DRAW);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
         
         GLuint textureSSBO = GLShader::GetTextureSSBO();
@@ -535,15 +491,14 @@ namespace Dog
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
         int baseIndex = 0;
-        for (auto& data : debugData)
-        {
-            Model* cubeModel = ml->GetModel("Assets/Models/cube.obj");
-            auto& mesh = cubeModel->mMeshes[0];
-            mesh->Bind(nullptr, nullptr);
-            mesh->Draw(nullptr, baseIndex++);
-        
-            ++mNumObjectsRendered;
-        }
+        Model* cubeModel = ml->GetModel("Assets/Models/cube.obj");
+        auto& cubeMesh = cubeModel->mMeshes[0];
+        cubeMesh->Bind(nullptr, nullptr);
+        // for (auto& data : debugData)
+        // {
+        //     cubeMesh->Draw(nullptr, baseIndex++);
+        //     ++mNumObjectsRendered;
+        // }
 
         for (auto& entityHandle : entityView)
         {
@@ -556,12 +511,9 @@ namespace Dog
             {
                 mesh->Bind(nullptr, nullptr);
                 mesh->Draw(nullptr, baseIndex++);
-
                 ++mNumObjectsRendered;
             }
         }
-
-        DOG_INFO("Base instance index: {}", baseIndex);
 
         rr->sceneFrameBuffer->Unbind();
     }
@@ -593,7 +545,6 @@ namespace Dog
         // @Todo: Future optimization: Check if the material has any transparency and set geometry flag accordingly
         // to skip the any-hit shader
 
-
         rangeInfo = VkAccelerationStructureBuildRangeInfoKHR{ .primitiveCount = mesh.mTriangleCount };
     }
 
@@ -606,7 +557,7 @@ namespace Dog
     {
         auto rr = ecs->GetResource<RenderingResource>();
         VkDevice device = rr->device->GetDevice();
-        auto asProps = rr->device->GetAccelerationStructureProperties();
+        const auto& asProps = rr->device->GetAccelerationStructureProperties();
 
         // Helper function to align a value to a given alignment
         auto alignUp = [](auto value, size_t alignment) noexcept { return ((value + alignment - 1) & ~(alignment - 1)); };
