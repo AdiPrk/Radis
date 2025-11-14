@@ -1,5 +1,5 @@
 #include <PCH/pch.h>
-#include "SimpleRenderSystem.h"
+#include "RenderSystem.h"
 
 #include "ECS/Resources/renderingResource.h"
 #include "ECS/Resources/EditorResource.h"
@@ -35,14 +35,14 @@
 
 namespace Dog
 {
-    SimpleRenderSystem::SimpleRenderSystem() : ISystem("SimpleRenderSystem") {}
-    SimpleRenderSystem::~SimpleRenderSystem() {}
+    RenderSystem::RenderSystem() : ISystem("RenderSystem") {}
+    RenderSystem::~RenderSystem() {}
 
-    void SimpleRenderSystem::Init()
+    void RenderSystem::Init()
     {
     }
 
-    void SimpleRenderSystem::Exit()
+    void RenderSystem::Exit()
     {
     }
 
@@ -88,12 +88,30 @@ namespace Dog
         }
     }
 
-    void SimpleRenderSystem::FrameStart()
+    void RenderSystem::FrameStart()
     {
         auto rr = ecs->GetResource<RenderingResource>();
 
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan && !rr->tlasAccel.accel && rr->blasAccel.empty())
         {
+            // setup test scene for raytracing with a cube of many entities
+            // for (int x = -25; x < 25; x += 1)
+            // {
+            //     for (int y = -25; y < 25; y += 1)
+            //     {
+            //         for (int z = -25; z < 25; z += 1)
+            //         {
+            //             float rX = float(x * y * z) * 0.1f;
+            //             float rY = float(x + y + z) * 0.2f;
+            //             float rZ = float(x - y + z) * 0.3f;
+            // 
+            //             Entity entity = ecs->AddEntity();
+            //             entity.AddComponent<TransformComponent>(glm::vec3(x, y, z), glm::vec3(rX, rY, rZ), glm::vec3(0.5f));
+            //             entity.AddComponent<ModelComponent>("Assets/Models/cube.obj");
+            //         }
+            //     }
+            // }
+
             // get num entities with model component
             mConstStartingObjectCount = 0;
             auto view = ecs->GetRegistry().view<ModelComponent>();
@@ -177,7 +195,7 @@ namespace Dog
         // }
     }
 
-    void SimpleRenderSystem::Update(float dt)
+    void RenderSystem::Update(float dt)
     {
         auto rr = ecs->GetResource<RenderingResource>();
         float aspectRatio = 1.f;
@@ -233,7 +251,7 @@ namespace Dog
                     rg->AddPass(
                         "ScenePass",
                         [&](RGPassBuilder& builder) {},
-                        std::bind(&SimpleRenderSystem::RaytraceScene, this, std::placeholders::_1)
+                        std::bind(&RenderSystem::RaytraceScene, this, std::placeholders::_1)
                     );
                 }
                 else
@@ -244,7 +262,7 @@ namespace Dog
                             builder.writes("SceneColor");
                             builder.writes("SceneDepth");
                         },
-                        std::bind(&SimpleRenderSystem::RenderSceneVK, this, std::placeholders::_1)
+                        std::bind(&RenderSystem::RenderSceneVK, this, std::placeholders::_1)
                     );
                 }
                 
@@ -257,7 +275,7 @@ namespace Dog
                         builder.writes("BackBuffer");
                         builder.writes("SceneDepth");
                     },
-                    std::bind(&SimpleRenderSystem::RenderSceneVK, this, std::placeholders::_1)
+                    std::bind(&RenderSystem::RenderSceneVK, this, std::placeholders::_1)
                 );
             }
         }
@@ -270,11 +288,11 @@ namespace Dog
         }
     }
 
-    void SimpleRenderSystem::FrameEnd()
+    void RenderSystem::FrameEnd()
     {
     }
 
-    void SimpleRenderSystem::RenderSceneVK(VkCommandBuffer cmd)
+    void RenderSystem::RenderSceneVK(VkCommandBuffer cmd)
     {
         auto rr = ecs->GetResource<RenderingResource>();
 
@@ -423,7 +441,7 @@ namespace Dog
         }
     }
 
-    void SimpleRenderSystem::RenderSceneGL()
+    void RenderSystem::RenderSceneGL()
     {
         auto rr = ecs->GetResource<RenderingResource>();
         auto er = ecs->GetResource<EditorResource>();
@@ -548,7 +566,7 @@ namespace Dog
         rr->sceneFrameBuffer->Unbind();
     }
 
-    void SimpleRenderSystem::PrimitiveToGeometry(VKMesh& mesh, VkAccelerationStructureGeometryKHR& geometry, VkAccelerationStructureBuildRangeInfoKHR& rangeInfo)
+    void RenderSystem::PrimitiveToGeometry(VKMesh& mesh, VkAccelerationStructureGeometryKHR& geometry, VkAccelerationStructureBuildRangeInfoKHR& rangeInfo)
     {
         VkDeviceAddress vertexAddress = mesh.mVertexBuffer.address;
         VkDeviceAddress indexAddress = mesh.mIndexBuffer.address;
@@ -579,7 +597,7 @@ namespace Dog
         rangeInfo = VkAccelerationStructureBuildRangeInfoKHR{ .primitiveCount = mesh.mTriangleCount };
     }
 
-    void SimpleRenderSystem::CreateAccelerationStructure(VkAccelerationStructureTypeKHR asType,  // The type of acceleration structure (BLAS or TLAS)
+    void RenderSystem::CreateAccelerationStructure(VkAccelerationStructureTypeKHR asType,  // The type of acceleration structure (BLAS or TLAS)
         AccelerationStructure& accelStruct,  // The acceleration structure to create
         VkAccelerationStructureGeometryKHR& asGeometry,  // The geometry to build the acceleration structure from
         VkAccelerationStructureBuildRangeInfoKHR& asBuildRangeInfo,  // The range info for building the acceleration structure
@@ -658,7 +676,7 @@ namespace Dog
         Allocator::DestroyBuffer(scratchBuffer);
     }
 
-    void SimpleRenderSystem::CreateBottomLevelAS()
+    void RenderSystem::CreateBottomLevelAS()
     {
         auto rr = ecs->GetResource<RenderingResource>();
         uint32_t numMeshes = 0;
@@ -692,7 +710,7 @@ namespace Dog
         }
     }
 
-    void SimpleRenderSystem::CreateTopLevelAS()
+    void RenderSystem::CreateTopLevelAS()
     {
         auto rr = ecs->GetResource<RenderingResource>();
         // VkTransformMatrixKHR is row-major 3x4, glm::mat4 is column-major; transpose before memcpy.
@@ -841,7 +859,7 @@ namespace Dog
         Allocator::DestroyBuffer(tlasInstancesBuffer);
     }
 
-    void SimpleRenderSystem::RaytraceScene(VkCommandBuffer cmd)
+    void RenderSystem::RaytraceScene(VkCommandBuffer cmd)
     {
         auto rr = ecs->GetResource<RenderingResource>();
 

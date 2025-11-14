@@ -2,6 +2,25 @@
 
 namespace Dog
 {
+    struct LowerCaseString {
+        std::string s;
+        LowerCaseString(std::string v) : s(v)
+        {
+            std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
+        }
+
+        bool operator==(LowerCaseString const& other) const noexcept 
+        {
+            return s == other.s;
+        }
+    };
+
+    struct LowerCaseHash {
+        size_t operator()(LowerCaseString const& x) const noexcept {
+            return std::hash<std::string>()(x.s);
+        }
+    };
+
     struct CaseInsensitiveHash {
         size_t operator()(const std::string& s) const 
         {

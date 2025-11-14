@@ -6,11 +6,11 @@
 
 namespace Dog
 {
-    class SimpleRenderSystem : public ISystem
+    class RenderSystem : public ISystem
     {
     public:
-        SimpleRenderSystem();
-        ~SimpleRenderSystem();
+        RenderSystem();
+        ~RenderSystem();
 
         void Init();
         void FrameStart();

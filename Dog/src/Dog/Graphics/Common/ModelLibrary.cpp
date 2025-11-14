@@ -76,12 +76,7 @@ namespace Dog
 
     Model* ModelLibrary::GetModel(uint32_t index)
     {
-        if (index == INVALID_MODEL_INDEX)
-        {
-            return nullptr;
-        }
-
-        if (index >= mModels.size())
+        if (index == INVALID_MODEL_INDEX || index >= mModels.size())
         {
             return nullptr;
         }
