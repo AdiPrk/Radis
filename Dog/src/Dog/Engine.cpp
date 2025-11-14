@@ -7,7 +7,7 @@
 #include "ECS/Systems/Editor/EditorSystem.h"
 #include "ECS/Systems/Graphics/PresentSystem.h"
 #include "ECS/Systems/CameraSystem.h"
-#include "ECS/Systems/Graphics/SimpleRenderSystem.h"
+#include "ECS/Systems/Graphics/RenderSystem.h"
 #include "ECS/Systems/Graphics/SwapRendererBackendSystem.h"
 
 #include "ECS/Resources/InputResource.h"
@@ -52,7 +52,7 @@ namespace Dog
         mEcs.AddSystem<SwapRendererBackendSystem>();
         mEcs.AddSystem<AnimationSystem>();
         mEcs.AddSystem<PresentSystem>();
-        mEcs.AddSystem<SimpleRenderSystem>();
+        mEcs.AddSystem<RenderSystem>();
         if (mEditorEnabled)
         {
             mEcs.AddSystem<EditorSystem>();
