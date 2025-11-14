@@ -6,7 +6,7 @@
 
 #include "ECS/Resources/RenderingResource.h"
 #include "ECS/Resources/EditorResource.h"
-#include "ECS/Entities/Components.h"
+#include "ECS/Components/Components.h"
 #include "Engine.h"
 
 namespace Dog

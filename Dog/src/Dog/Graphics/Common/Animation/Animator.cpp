@@ -4,7 +4,7 @@
 
 #include "ECS/Systems/InputSystem.h"
 #include "ECS/Resources/DebugDrawResource.h"
-#include "ECS/Entities/Components.h"
+#include "ECS/Components/Components.h"
 
 
 namespace Dog

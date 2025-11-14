@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ISystem.h"
+#include "../ISystem.h"
 #include "Graphics/Vulkan/Core/AccelerationStructures.h"
 #include "Graphics/Vulkan/Uniform/ShaderTypes.h"
 

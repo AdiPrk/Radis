@@ -1,11 +1,11 @@
 #include <PCH/pch.h>
 #include "SwapRendererBackendSystem.h"
 
-#include "../Resources/renderingResource.h"
-#include "../Resources/EditorResource.h"
-#include "../Resources/WindowResource.h"
-#include "../Resources/SwapRendererBackendResource.h"
-#include "InputSystem.h"
+#include "ECS/Resources/renderingResource.h"
+#include "ECS/Resources/EditorResource.h"
+#include "ECS/Resources/WindowResource.h"
+#include "ECS/Resources/SwapRendererBackendResource.h"
+#include "../InputSystem.h"
 #include "Engine.h"
 
 #include "Graphics/OpenGL/GLShader.h"

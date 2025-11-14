@@ -3,14 +3,12 @@
 
 #include "ECS/Systems/WindowSystem.h"
 #include "ECS/Systems/InputSystem.h"
-#include "ECS/Systems/AnimationSystem.h"
-#include "ECS/Systems/RenderSystem.h"
+#include "ECS/Systems/Graphics/AnimationSystem.h"
 #include "ECS/Systems/Editor/EditorSystem.h"
-#include "ECS/Systems/PresentSystem.h"
+#include "ECS/Systems/Graphics/PresentSystem.h"
 #include "ECS/Systems/CameraSystem.h"
-#include "ECS/Systems/RayRenderSystem.h"
-#include "ECS/Systems/SimpleRenderSystem.h"
-#include "ECS/Systems/SwapRendererBackendSystem.h"
+#include "ECS/Systems/Graphics/SimpleRenderSystem.h"
+#include "ECS/Systems/Graphics/SwapRendererBackendSystem.h"
 
 #include "ECS/Resources/InputResource.h"
 #include "ECS/Resources/WindowResource.h"

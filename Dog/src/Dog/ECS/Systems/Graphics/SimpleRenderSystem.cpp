@@ -1,13 +1,13 @@
 #include <PCH/pch.h>
 #include "SimpleRenderSystem.h"
 
-#include "../Resources/renderingResource.h"
-#include "../Resources/EditorResource.h"
-#include "../Resources/DebugDrawResource.h"
-#include "../Resources/WindowResource.h"
-#include "../Resources/SwapRendererBackendResource.h"
+#include "ECS/Resources/renderingResource.h"
+#include "ECS/Resources/EditorResource.h"
+#include "ECS/Resources/DebugDrawResource.h"
+#include "ECS/Resources/WindowResource.h"
+#include "ECS/Resources/SwapRendererBackendResource.h"
 
-#include "InputSystem.h"
+#include "../InputSystem.h"
 
 #include "Graphics/Vulkan/Core/Device.h"
 #include "Graphics/Vulkan/Core/SwapChain.h"
@@ -24,9 +24,9 @@
 #include "Graphics/Vulkan/Uniform/Descriptors.h"
 #include "Graphics/Common/UnifiedMesh.h"
 
-#include "../ECS.h"
+#include "ECS/ECS.h"
 #include "ECS/Entities/Entity.h"
-#include "ECS/Entities/Components.h"
+#include "ECS/Components/Components.h"
 
 #include "Engine.h"
 #include "Graphics/OpenGL/GLMesh.h"

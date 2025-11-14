@@ -3,7 +3,7 @@
 
 #include "Resources/IResource.h"
 #include "Entities/Entity.h"
-#include "Entities/Components.h"
+#include "Components/Components.h"
 
 namespace Dog
 {
