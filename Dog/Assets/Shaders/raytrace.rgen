@@ -52,5 +52,9 @@ void main()
         0                   // payload location
     );
 
+    // Tone map + gamma
+    payload.color = payload.color / (payload.color + vec3(1.0));
+    payload.color = pow(payload.color, vec3(1.0 / 2.2));
+
     imageStore(outImage, ivec2(launchID.xy), vec4(payload.color, 1.0));
 }

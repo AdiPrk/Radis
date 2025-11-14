@@ -237,11 +237,11 @@ void main()
     vec3 albedo = baseColor.rgb;
     
     // Alpha Test
-    if (baseColor.a < 0.1) 
-    {
-        payload.color = vec3(0.0); 
-        return;
-    }
+    // if (baseColor.a < 0.1) 
+    // {
+    //     payload.color = vec3(0.0); 
+    //     return;
+    // }
 
     // Metallic
     float metallic = instance.metallicRoughnessFactor.x;
@@ -321,10 +321,7 @@ void main()
     vec3 ambient = vec3(0.03) * albedo * ao;
     vec3 color = (Lo * ao) + ambient + emissive;
 
-    // Tone map + gamma
-    color = color / (color + vec3(1.0));
-    color = pow(color, vec3(1.0 / 2.2));
-
-    payload.color = color;
-    payload.weight = 1.0;
+    payload.color += color * payload.weight;
+    // payload.color = color;
+    // payload.weight = 1.0;
 }

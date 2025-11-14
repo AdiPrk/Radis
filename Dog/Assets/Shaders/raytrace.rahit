@@ -1,0 +1,116 @@
+#version 460
+#extension GL_EXT_ray_tracing : require
+#extension GL_EXT_nonuniform_qualifier : require
+
+layout(location = 0) rayPayloadInEXT HitPayload {
+    vec3 color;
+    float weight;
+    int depth;
+} payload;
+
+hitAttributeEXT vec2 attribs;
+
+// --- Constants ---
+const float PI = 3.14159265359;
+const uint INVALID_TEXTURE_INDEX = 10001;
+
+struct Instance
+{
+    mat4 model;
+    vec4 tint;
+    uvec4 textureIndicies;
+    uvec4 textureIndicies2;
+    vec4 baseColorFactor;
+    vec4 metallicRoughnessFactor;
+    vec4 emissiveFactor;
+    uint boneOffset;
+    uint indexOffset;
+    uint vertexOffset;
+};
+
+layout(set = 0, binding = 1) readonly buffer InstanceData
+{
+    Instance instances[10000];
+};
+
+layout(set = 0, binding = 3) uniform sampler2D uTextures[];
+
+struct Vertex
+{
+    vec3 position;
+    vec3 color;   
+    vec3 normal;  
+    vec2 texCoord;
+    ivec4 boneIds;
+    vec4 weights; 
+};
+
+struct Light {
+    vec3 position;
+    float radius;      // For point/spot attenuation
+    vec3 color;
+    float intensity;
+    vec3 direction;
+    float innerCone;   // for spot
+    float outerCone;   // for spot
+    int type;          // 0=dir, 1=point, 2=spot
+};
+
+#define MAX_LIGHTS 10000
+layout(set = 0, binding = 4) readonly buffer LightData {
+    uint lightCount;
+    Light lights[MAX_LIGHTS];
+} lightData;
+
+layout(set = 1, binding = 2, std430) readonly buffer MeshBuffer
+{
+    Vertex vertices[];
+} meshBuffer;
+
+layout(set = 1, binding = 3, std430) readonly buffer MeshIndexBuffer
+{
+    uint indices[];
+} indexBuffer;
+
+layout(set = 1, binding = 1) uniform accelerationStructureEXT topLevelAS;
+
+void main()
+{
+    Instance instance = instances[gl_InstanceCustomIndexEXT];
+    
+    // Calculate UVs
+    vec3 bary = vec3(1.0 - attribs.x - attribs.y, attribs.x, attribs.y);
+    uvec3 tri = uvec3(gl_PrimitiveID * 3u, gl_PrimitiveID * 3u + 1u, gl_PrimitiveID * 3u + 2u);
+    uint i0 = indexBuffer.indices[tri.x + instance.indexOffset];
+    uint i1 = indexBuffer.indices[tri.y + instance.indexOffset];
+    uint i2 = indexBuffer.indices[tri.z + instance.indexOffset];    
+    Vertex v0 = meshBuffer.vertices[i0 + instance.vertexOffset];
+    Vertex v1 = meshBuffer.vertices[i1 + instance.vertexOffset];
+    Vertex v2 = meshBuffer.vertices[i2 + instance.vertexOffset];
+    vec2 uv = v0.texCoord * bary.x + v1.texCoord * bary.y + v2.texCoord * bary.z;
+
+    // Calculate alpha
+    vec4 color = instance.baseColorFactor * instance.tint;
+    uint texIndex = instance.textureIndicies.x;
+    if (texIndex != 10001)
+    {
+        color *= texture(uTextures[texIndex], uv);
+    }
+    
+    // Cutout if alpha is too low
+    if (color.a < 0.1)
+    {
+        ignoreIntersectionEXT; 
+    }
+
+    // Accumulate color
+    // if (color.a < 0.9)
+    // {
+    //     // accumulate color & reduce weight
+    //     payload.color += color.rgb * payload.weight * color.a;
+    //     payload.weight *= (1.0 - color.a);
+    // 
+    //     // Continue Tracing
+    //     ignoreIntersectionEXT; 
+    // }
+}
