@@ -2,7 +2,7 @@
 #include "EntitiesWindow.h"
 
 #include "ECS/Resources/EditorResource.h"
-#include "ECS/Entities/Components.h"
+#include "ECS/Components/Components.h"
 #include "ECS/ECS.h"
 
 namespace Dog
