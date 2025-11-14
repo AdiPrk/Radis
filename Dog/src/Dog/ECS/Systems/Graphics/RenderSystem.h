@@ -36,6 +36,9 @@ namespace Dog
         uint32_t mConstStartingObjectCount = 0;
         std::vector<MeshDataUniform> mRTMeshData{};
         std::vector<uint32_t> mRTMeshIndices{};
+
+        std::vector<InstanceUniforms> mInstanceData{};
+        std::vector<LightUniform> mLightData{};
     };
 }
 
