@@ -3,7 +3,7 @@
 #include "InputSystem.h"
 
 #include "ECS/ECS.h"
-#include "ECS/Entities/Components.h"
+#include "ECS/Components/Components.h"
 
 namespace Dog
 {

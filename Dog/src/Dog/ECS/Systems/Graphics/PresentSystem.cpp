@@ -1,10 +1,10 @@
 #include <PCH/pch.h>
 #include "PresentSystem.h"
-#include "../ECS.h"
+#include "ECS/ECS.h"
 
-#include "../Resources/RenderingResource.h"
-#include "../Resources/WindowResource.h"
-#include "../Resources/EditorResource.h"
+#include "ECS/Resources/RenderingResource.h"
+#include "ECS/Resources/WindowResource.h"
+#include "ECS/Resources/EditorResource.h"
 
 #include "Graphics/Vulkan/Core/Device.h"
 #include "Graphics/Vulkan/Core/SwapChain.h"

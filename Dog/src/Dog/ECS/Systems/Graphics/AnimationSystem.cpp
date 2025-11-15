@@ -7,7 +7,7 @@
 #include "ECS/Resources/DebugDrawResource.h"
 
 #include "ECS/Entities/Entity.h"
-#include "ECS/Entities/Components.h"
+#include "ECS/Components/Components.h"
 
 #include "Graphics/Common/Animation/AnimationLibrary.h"
 #include "Graphics/Common/Animation/Animator.h"

@@ -6,7 +6,7 @@
 
 #include "ECS/Resources/RenderingResource.h"
 #include "ECS/Resources/EditorResource.h"
-#include "ECS/Entities/Components.h"
+#include "ECS/Components/Components.h"
 #include "Engine.h"
 
 namespace Dog
@@ -86,6 +86,7 @@ namespace Dog
             TransformComponent& transformComponent = er->selectedEntity.GetComponent<TransformComponent>();
 
             glm::mat4 view = glm::mat4(1.0f);
+            glm::mat4 projection = glm::perspective(glm::radians(45.0f), er->sceneWindowWidth / er->sceneWindowHeight, 0.1f, 100.0f);
 
             Entity cameraEntity = ecs->GetEntity("Camera");
             if (cameraEntity)
@@ -98,16 +99,15 @@ namespace Dog
                 glm::vec3 upDir = glm::normalize(cc.Up);
                 glm::vec3 cameraTarget = cameraPos + forwardDir;
                 view = glm::lookAt(cameraPos, cameraTarget, upDir);
+                projection = glm::perspective(glm::radians(cc.FOV), er->sceneWindowWidth / er->sceneWindowHeight, cc.Near, cc.Far);
             }
-
-            glm::mat4 projection = glm::perspective(glm::radians(45.0f), er->sceneWindowWidth / er->sceneWindowHeight, 0.1f, 100.0f);
 
             // Start setting up the guizmo
             ImGuizmo::SetOrthographic(false);
             ImGuizmo::SetDrawlist();
             ImGuizmo::SetRect(er->sceneWindowX, er->sceneWindowY, er->sceneWindowWidth, er->sceneWindowHeight);
 
-            ImGuizmo::OPERATION operation = ImGuizmo::OPERATION::UNIVERSAL;
+            ImGuizmo::OPERATION operation = ImGuizmo::OPERATION::ROTATE;
             glm::mat4 modelMatrix = transformComponent.GetTransform();
 
             if (ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(projection), operation, ImGuizmo::WORLD, glm::value_ptr(modelMatrix)))

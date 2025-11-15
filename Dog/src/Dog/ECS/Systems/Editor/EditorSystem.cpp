@@ -2,7 +2,7 @@
 #include "EditorSystem.h"
 #include "Engine.h"
 #include "ECS/ECS.h"
-#include "ECS/Entities/Components.h"
+#include "ECS/Components/Components.h"
 
 #include "ECS/Resources/RenderingResource.h"
 #include "ECS/Resources/WindowResource.h"

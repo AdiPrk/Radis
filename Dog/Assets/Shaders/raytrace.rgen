@@ -15,8 +15,12 @@ layout(set = 1, binding = 1) uniform accelerationStructureEXT topLevelAS;
 
 layout(location = 0) rayPayloadEXT HitPayload {
     vec3 color;
-    float weight;
+    vec3 attenuation;
     int depth;
+    vec3 nextRayOrigin;
+    vec3 nextRayDir;    
+    bool stop;    
+    uint seed;
 } payload;
 
 void main() 
@@ -37,20 +41,40 @@ void main()
 
     // Initialize payload
     payload.color = vec3(0.0);
-    payload.weight = 1.0;
+    payload.attenuation = vec3(1.0); // Start with full white throughput
+    payload.seed = gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x + 0/*frameCount*/; // Initialize seed
     payload.depth = 0;
+    payload.stop = false;
 
-    traceRayEXT(
-        topLevelAS,         // acceleration structure
-        gl_RayFlagsNoneEXT, // ray flags
-        0xFF,               // cull mask
-        0, 0, 0,            // SBT record offsets
-        origin,             // ray origin
-        0.001,              // tmin
-        direction,          // ray direction
-        1e38,               // tmax
-        0                   // payload location
-    );
+    const int MAX_DEPTH = 8;
+    for (int i = 0; i < MAX_DEPTH; ++i)
+    {
+        payload.depth = i;
+
+        traceRayEXT(
+            topLevelAS,         // acceleration structure
+            gl_RayFlagsNoneEXT, // ray flags
+            0xFF,               // cull mask
+            0, 0, 0,            // SBT record offsets
+            origin,             // ray origin
+            0.001,              // tmin
+            direction,          // ray direction
+            1e38,               // tmax
+            0                   // payload location
+        );
+
+        if (payload.stop /*|| payload.weight < 0.01*/)
+        {
+            break;
+        }
+
+        origin = payload.nextRayOrigin;
+        direction = payload.nextRayDir;
+    }
+
+    // Tone map + gamma
+    payload.color = payload.color / (payload.color + vec3(1.0));
+    payload.color = pow(payload.color, vec3(1.0 / 2.2));
 
     imageStore(outImage, ivec2(launchID.xy), vec4(payload.color, 1.0));
 }

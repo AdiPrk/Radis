@@ -18,6 +18,7 @@ namespace Dog
             eMiss,
             eShadowMiss,
             eClosestHit,
+            eAnyHit,
             eShaderGroupCount
         };
         std::array<VkPipelineShaderStageCreateInfo, eShaderGroupCount> stages{};
@@ -27,6 +28,7 @@ namespace Dog
         std::ifstream rgenSPVFile("Assets/Shaders/spv/raytrace.rgen.spv", std::ios::binary);
         std::ifstream missSPVFile("Assets/Shaders/spv/raytrace.rmiss.spv", std::ios::binary);
         std::ifstream shadowMissSPVFile("Assets/Shaders/spv/shadow.rmiss.spv", std::ios::binary);
+        std::ifstream anyHitSPVFile("Assets/Shaders/spv/raytrace.rahit.spv", std::ios::binary);
         std::ifstream chitSPVFile("Assets/Shaders/spv/raytrace.rchit.spv", std::ios::binary);
 
         if (rgenSPVFile.is_open() && missSPVFile.is_open() && chitSPVFile.is_open())
@@ -53,6 +55,13 @@ namespace Dog
             shadowMissSPVFile.read(reinterpret_cast<char*>(shadowMissShaderSPV.data()), shadowMissSPVFileSize);
             shadowMissSPVFile.close();
 
+            anyHitSPVFile.seekg(0, std::ios::end);
+            size_t anyHitSPVFileSize = anyHitSPVFile.tellg();
+            anyHitSPVFile.seekg(0, std::ios::beg);
+            std::vector<uint32_t> anyHitShaderSPV(anyHitSPVFileSize / sizeof(uint32_t));
+            anyHitSPVFile.read(reinterpret_cast<char*>(anyHitShaderSPV.data()), anyHitSPVFileSize);
+            anyHitSPVFile.close();
+
             chitSPVFile.seekg(0, std::ios::end);
             size_t chitSPVFileSize = chitSPVFile.tellg();
             chitSPVFile.seekg(0, std::ios::beg);
@@ -63,6 +72,7 @@ namespace Dog
             Shader::CreateShaderModule(device, rgenShaderSPV, &mRgenShaderModule);
             Shader::CreateShaderModule(device, missShaderSPV, &mMissShaderModule);
             Shader::CreateShaderModule(device, shadowMissShaderSPV, &mShadowMissShaderModule);
+            Shader::CreateShaderModule(device, anyHitShaderSPV, &mAnyHitShaderModule);
             Shader::CreateShaderModule(device, chitShaderSPV, &mChitShaderModule);
         }
         else
@@ -74,15 +84,15 @@ namespace Dog
         stages[eRaygen].module = mRgenShaderModule;
         stages[eRaygen].pName = "main";
         stages[eRaygen].stage = VK_SHADER_STAGE_RAYGEN_BIT_KHR;
-
         stages[eMiss].module = mMissShaderModule;
         stages[eMiss].pName = "main";
         stages[eMiss].stage = VK_SHADER_STAGE_MISS_BIT_KHR;
-
         stages[eShadowMiss].module = mShadowMissShaderModule;
         stages[eShadowMiss].pName = "main";
         stages[eShadowMiss].stage = VK_SHADER_STAGE_MISS_BIT_KHR;
-
+        stages[eAnyHit].module = mAnyHitShaderModule;
+        stages[eAnyHit].pName = "main";
+        stages[eAnyHit].stage = VK_SHADER_STAGE_ANY_HIT_BIT_KHR;
         stages[eClosestHit].module = mChitShaderModule;
         stages[eClosestHit].pName = "main";
         stages[eClosestHit].stage = VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
@@ -100,20 +110,21 @@ namespace Dog
         group.generalShader = eRaygen;
         shader_groups.push_back(group);
 
-        // Miss
+        // Miss (Sky)
         group.type = VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR;
         group.generalShader = eMiss;
         shader_groups.push_back(group);
 
-        // Group 2: Miss (Shadow)
+        // Miss (Shadow)
         group.type = VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR;
         group.generalShader = eShadowMiss;
         shader_groups.push_back(group);
 
-        // closest hit shader
+        // Hit (Closest + Any)
         group.type = VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR;
         group.generalShader = VK_SHADER_UNUSED_KHR;
         group.closestHitShader = eClosestHit;
+        group.anyHitShader = eAnyHit;
         shader_groups.push_back(group);
 
         // Push constant: we want to be able to update constants used by the shaders
@@ -186,6 +197,11 @@ namespace Dog
             vkDestroyShaderModule(device.GetDevice(), mShadowMissShaderModule, nullptr);
             mShadowMissShaderModule = VK_NULL_HANDLE;
         }
+        if (mAnyHitShaderModule != VK_NULL_HANDLE)
+        {
+            vkDestroyShaderModule(device.GetDevice(), mAnyHitShaderModule, nullptr);
+            mAnyHitShaderModule = VK_NULL_HANDLE;
+        }
         if (mChitShaderModule != VK_NULL_HANDLE)
         {
             vkDestroyShaderModule(device.GetDevice(), mChitShaderModule, nullptr);
@@ -217,7 +233,7 @@ namespace Dog
         uint32_t raygenSize = handleSizeAligned;
         uint32_t missSize = handleSizeAligned * 2; // Two miss shaders
         uint32_t hitSize = handleSizeAligned;
-        uint32_t callableSize = 0;  // No callable shaders in this tutorial
+        uint32_t callableSize = 0;  // No callable shaders
 
         // Ensure each region starts at a baseAlignment boundary
         uint32_t raygenOffset = 0;

@@ -64,7 +64,7 @@ namespace Dog
             return cachedResource;
         }
 
-        Entity AddEntity(const std::string& name);
+        Entity AddEntity(const std::string& name = "");
         Entity GetEntity(const std::string& name);
         Entity CloneEntity(const Entity& entity);
         void RemoveEntity(const std::string& name);
