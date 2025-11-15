@@ -266,10 +266,6 @@ void main()
     payload.color += (Lo * ao + ambient + emissive) * payload.attenuation;
 
     // --- NEXT RAY GENERATION (Reflections) ---
-    
-    // Initialize Seed for RNG using Launch ID or primitive ID
-    // Note: If you don't pass a seed in payload from RayGen, we derive one here.
-    // If 'payload.seed' is maintained in RayGen, use that. Otherwise:
     payload.stop = true;
     
     // Threshold for stopping weak rays
@@ -288,33 +284,20 @@ void main()
     // CASE B: REFLECTION
     else if (metallic > 0.01 && roughness < roughnessCutoff) // Only reflect if somewhat shiny
     {
+        // Fake roughness for reflection, Rougher = Darker Reflection.
         vec3 F0 = mix(vec3(0.04), albedo, metallic);
-        // vec3 F = FresnelSchlick(NdotV, F0);
         vec3 F = FresnelSchlickRoughness(NdotV, F0, roughness);
 
-        // Energy Compensation / Demodulation
-        // We are sampling a single sharp ray (Dirac delta) on a rough lobe.
-        // We must attenuate the energy to simulate the light spreading out.
-        // Formula: approximate inverse of the normalization factor of the GGX lobe.
-        // In simple terms: Rougher = Darker Reflection.
-        float energyConservation = 1.0 - roughness; 
-        
-        // Square it for a more visually pleasing falloff
+        float energyConservation = 1.0 - roughness;         
         energyConservation = energyConservation * energyConservation; 
         
-        // Apply to throughput
-        // Throughput = Fresnel * EnergyConservation
         throughput *= F * energyConservation;
 
-        // Perfectly sharp reflection (No random scattering = No Noise)
         payload.nextRayDir = reflect(gl_WorldRayDirectionEXT, N);
         payload.nextRayOrigin = fragWorldPos + N * 0.001;
 
-        // 5. Firefly Clamping (Prevent single bright pixels)
         // If the throughput is super bright, clamp it.
-        if (throughput.r > 1.0 || throughput.g > 1.0 || throughput.b > 1.0) {
-            throughput = normalize(throughput); 
-        }
+        throughput = min(throughput, vec3(1.0));
 
         // Only continue if there is visible reflection energy left
         if (max(throughput.r, max(throughput.g, throughput.b)) > THRESHOLD) {
