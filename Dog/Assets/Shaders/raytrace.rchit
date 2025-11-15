@@ -6,9 +6,6 @@ layout(location = 0) rayPayloadEXT HitPayload {
     vec3 color;         // Accumulated color
     float weight;       // Throughput (starts at 1.0, decreases on hits)
     int depth;          // Current bounce number
-    vec3 nextRayOrigin; // Origin for the next loop
-    vec3 nextRayDir;    // Direction for the next loop
-    bool stop;          // If true, terminate the loop
 } payload;
 
 layout(location = 1) rayPayloadEXT bool isShadowed;
@@ -240,11 +237,11 @@ void main()
     vec3 albedo = baseColor.rgb;
     
     // Alpha Test
-    // if (baseColor.a < 0.1) 
-    // {
-    //     payload.color = vec3(0.0); 
-    //     return;
-    // }
+    if (baseColor.a < 0.1) 
+    {
+        payload.color = vec3(0.0); 
+        return;
+    }
 
     // Metallic
     float metallic = instance.metallicRoughnessFactor.x;
@@ -324,7 +321,10 @@ void main()
     vec3 ambient = vec3(0.03) * albedo * ao;
     vec3 color = (Lo * ao) + ambient + emissive;
 
-    payload.color += color * payload.weight;
-    // payload.color = color;
-    // payload.weight = 1.0;
+    // Tone map + gamma
+    color = color / (color + vec3(1.0));
+    color = pow(color, vec3(1.0 / 2.2));
+
+    payload.color = color;
+    payload.weight = 1.0;
 }

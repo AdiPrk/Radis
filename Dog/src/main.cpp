@@ -1,8 +1,8 @@
-﻿#include <PCH/pch.h>
-#include "Engine.h"
+﻿%:include <PCH/pch.h>
+%:include "Engine.h"
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv<::>)
+<%
     /* These values are only used if project not launched with DogLauncher! */
     DogLaunch::EngineSpec すぺくっす;
     すぺくっす.name = L"ワンワン";
@@ -16,4 +16,4 @@ int main(int argc, char* argv[])
 
     Dog::Engine Engine(すぺくっす, argc, argv);
     return Engine.Run("scene");
-}
+%>

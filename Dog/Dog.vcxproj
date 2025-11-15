@@ -389,49 +389,30 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="src\PCH\pch.h" />
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="Assets\Shaders\raytrace.rahit">
-      <Command>
-        if not exist "C:\Code\Cat2\Dog\Assets\Shaders\spv" mkdir "C:\Code\Cat2\Dog\Assets\Shaders\spv"
-        echo ===============================================
-        echo Compiling shader: raytrace.rahit
-        echo -----------------------------------------------
-        "C:\Code\Cat2\Dependencies\glslc\glslangValidator.exe" ^
-          -V --target-env vulkan1.4 ^
-          -Od -g --spirv-val ^
-          "C:\Code\Cat2\Dog\Assets\Shaders\raytrace.rahit" -o "C:\Code\Cat2\Dog\Assets\Shaders\spv\raytrace.rahit.spv"
-        if %errorlevel% neq 0 (
-          echo *** Shader compilation failed: raytrace.rahit ***
-        ) else (
-          echo Shader compiled successfully: raytrace.rahit
-        )
-        echo ===============================================
-      </Command>
-      <Outputs>C:\Code\Cat2\Dog\Assets\Shaders\spv\raytrace.rahit.spv</Outputs>
-    </CustomBuild>
-    <CustomBuild Include="Assets\Shaders\shadow.rmiss">
-      <Command>
-        if not exist "C:\Code\Cat2\Dog\Assets\Shaders\spv" mkdir "C:\Code\Cat2\Dog\Assets\Shaders\spv"
-        echo ===============================================
-        echo Compiling shader: shadow.rmiss
-        echo -----------------------------------------------
-        "C:\Code\Cat2\Dependencies\glslc\glslangValidator.exe" ^
-          -V --target-env vulkan1.4 ^
-          -Od -g --spirv-val ^
-          "C:\Code\Cat2\Dog\Assets\Shaders\shadow.rmiss" -o "C:\Code\Cat2\Dog\Assets\Shaders\spv\shadow.rmiss.spv"
-        if %errorlevel% neq 0 (
-          echo *** Shader compilation failed: shadow.rmiss ***
-        ) else (
-          echo Shader compiled successfully: shadow.rmiss
-        )
-        echo ===============================================
-      </Command>
-      <Outputs>C:\Code\Cat2\Dog\Assets\Shaders\spv\shadow.rmiss.spv</Outputs>
-    </CustomBuild>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Assets\Scenes\lighttest.json" />
     <None Include="Assets\Scenes\sponza.json" />
     <None Include="src\Dog\Graphics\Vulkan\Uniform\Uniform.inl" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="Assets\Shaders\*.*" Exclude="Assets\Shaders\*.spv;Assets\Shaders\spv\*.*">
+      <Command>
+        if not exist "%(RootDir)%(Directory)spv" mkdir "%(RootDir)%(Directory)spv"
+        echo ===============================================
+        echo Compiling shader: %(Filename)%(Extension)
+        echo -----------------------------------------------
+        "$(SolutionDir)Dependencies\glslc\glslangValidator.exe" ^
+          -V --target-env vulkan1.4 ^
+          -Od -g --spirv-val ^
+          "%(FullPath)" -o "%(RootDir)%(Directory)spv\%(Filename)%(Extension).spv"
+        if %errorlevel% neq 0 (
+          echo *** Shader compilation failed: %(Filename)%(Extension) ***
+        ) else (
+          echo Shader compiled successfully: %(Filename)%(Extension)
+        )
+        echo ===============================================
+      </Command>
+      <Outputs>%(RootDir)%(Directory)spv\%(Filename)%(Extension).spv</Outputs>
+    </CustomBuild>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
