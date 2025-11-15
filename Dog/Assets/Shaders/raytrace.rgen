@@ -14,9 +14,12 @@ layout(set = 1, binding = 0, rgba32f) uniform image2D outImage;
 layout(set = 1, binding = 1) uniform accelerationStructureEXT topLevelAS;
 
 layout(location = 0) rayPayloadEXT HitPayload {
-    vec3 color;
-    float weight;
-    int depth;
+    vec3 color;         // Accumulated color
+    float weight;       // Throughput (starts at 1.0, decreases on hits)
+    int depth;          // Current bounce number
+    vec3 nextRayOrigin; // Origin for the next loop
+    vec3 nextRayDir;    // Direction for the next loop
+    bool stop;          // If true, terminate the loop
 } payload;
 
 void main() 
@@ -39,18 +42,33 @@ void main()
     payload.color = vec3(0.0);
     payload.weight = 1.0;
     payload.depth = 0;
+    payload.stop = false;
 
-    traceRayEXT(
-        topLevelAS,         // acceleration structure
-        gl_RayFlagsNoneEXT, // ray flags
-        0xFF,               // cull mask
-        0, 0, 0,            // SBT record offsets
-        origin,             // ray origin
-        0.001,              // tmin
-        direction,          // ray direction
-        1e38,               // tmax
-        0                   // payload location
-    );
+    const int MAX_DEPTH = 5;
+    for (int i = 0; i < MAX_DEPTH; ++i)
+    {
+        payload.depth = i;
+
+        traceRayEXT(
+            topLevelAS,         // acceleration structure
+            gl_RayFlagsNoneEXT, // ray flags
+            0xFF,               // cull mask
+            0, 0, 0,            // SBT record offsets
+            origin,             // ray origin
+            0.001,              // tmin
+            direction,          // ray direction
+            1e38,               // tmax
+            0                   // payload location
+        );
+
+        if (payload.stop || payload.weight < 0.01)
+        {
+            break;
+        }
+
+        origin = payload.nextRayOrigin;
+        direction = payload.nextRayDir;
+    }
 
     // Tone map + gamma
     payload.color = payload.color / (payload.color + vec3(1.0));

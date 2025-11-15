@@ -1,10 +1,13 @@
 #version 460
 #extension GL_EXT_ray_tracing : require
 
-layout(location = 0) rayPayloadInEXT HitPayload {
-    vec3 color;
-    float weight;
-    int depth;
+layout(location = 0) rayPayloadEXT HitPayload {
+    vec3 color;         // Accumulated color
+    float weight;       // Throughput (starts at 1.0, decreases on hits)
+    int depth;          // Current bounce number
+    vec3 nextRayOrigin; // Origin for the next loop
+    vec3 nextRayDir;    // Direction for the next loop
+    bool stop;          // If true, terminate the loop
 } payload;
 
 void main()
