@@ -6,6 +6,9 @@ layout(location = 0) rayPayloadEXT HitPayload {
     vec3 color;         // Accumulated color
     float weight;       // Throughput (starts at 1.0, decreases on hits)
     int depth;          // Current bounce number
+    vec3 nextRayOrigin;
+    vec3 nextRayDir;   
+    bool stop;   
 } payload;
 
 hitAttributeEXT vec2 attribs;
