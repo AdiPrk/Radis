@@ -3,11 +3,12 @@
 
 layout(location = 0) rayPayloadInEXT HitPayload {
     vec3 color;
-    float weight;
+    vec3 attenuation;
     int depth;
     vec3 nextRayOrigin;
-    vec3 nextRayDir;   
-    bool stop;         
+    vec3 nextRayDir;    
+    bool stop;    
+    uint seed;
 } payload;
 
 void main()
@@ -18,7 +19,8 @@ void main()
     const vec3  UP_VECTOR       = vec3(0.0, 1.0, 0.0);
     const vec3  SUN_DIRECTION   = normalize(vec3(0.3, 0.8, 0.4)); // High afternoon sun
     
-    const vec3  SKY_COLOR       = vec3(0.1, 0.4, 0.9);  // Deep Azure
+    //const vec3  SKY_COLOR       = vec3(0.1, 0.4, 0.9);  // Deep Azure
+    const vec3  SKY_COLOR       = vec3(0.05, 0.1, 0.2);
     const vec3  HORIZON_COLOR   = vec3(0.8, 0.85, 0.9); // Hazy white/blue
     const vec3  GROUND_COLOR    = vec3(0.15, 0.13, 0.1); // Dark earth
     const vec3  SUN_COLOR       = vec3(1.0, 0.98, 0.85); // Warm sun
@@ -56,6 +58,6 @@ void main()
     vec3 sunLight = SUN_COLOR * glowIntensity;
 
     // --- FINAL COMPOSITION ---
-    payload.color = environment + sunLight;
+    payload.color += environment + sunLight * payload.attenuation;
     payload.stop = true;
 }
