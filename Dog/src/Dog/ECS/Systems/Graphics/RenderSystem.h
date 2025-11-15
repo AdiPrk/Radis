@@ -1,16 +1,16 @@
 #pragma once
 
-#include "ISystem.h"
+#include "../ISystem.h"
 #include "Graphics/Vulkan/Core/AccelerationStructures.h"
 #include "Graphics/Vulkan/Uniform/ShaderTypes.h"
 
 namespace Dog
 {
-    class SimpleRenderSystem : public ISystem
+    class RenderSystem : public ISystem
     {
     public:
-        SimpleRenderSystem();
-        ~SimpleRenderSystem();
+        RenderSystem();
+        ~RenderSystem();
 
         void Init();
         void FrameStart();
@@ -36,6 +36,9 @@ namespace Dog
         uint32_t mConstStartingObjectCount = 0;
         std::vector<MeshDataUniform> mRTMeshData{};
         std::vector<uint32_t> mRTMeshIndices{};
+
+        std::vector<InstanceUniforms> mInstanceData{};
+        std::vector<LightUniform> mLightData{};
     };
 }
 

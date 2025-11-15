@@ -3,7 +3,7 @@
 
 #include "ECS/ECS.h"
 #include "ECS/Entities/Entity.h"
-#include "ECS/Entities/Components.h"
+#include "ECS/Components/Components.h"
 
 #include "rfl.hpp"
 #include "Utils/SerializationOperators.h"

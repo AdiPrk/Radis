@@ -46,7 +46,7 @@ namespace Dog
 		friend class Model;
 
 		std::vector<std::unique_ptr<Model>> mModels;
-		std::unordered_map<std::string, uint32_t, CaseInsensitiveHash, CaseInsensitiveEqual> mModelMap;
+		std::unordered_map<LowerCaseString, uint32_t, LowerCaseHash> mModelMap;
 
         std::unique_ptr<UnifiedMeshes> mUnifiedMesh;
 

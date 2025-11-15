@@ -1,13 +1,13 @@
 #include <PCH/pch.h>
-#include "SimpleRenderSystem.h"
+#include "RenderSystem.h"
 
-#include "../Resources/renderingResource.h"
-#include "../Resources/EditorResource.h"
-#include "../Resources/DebugDrawResource.h"
-#include "../Resources/WindowResource.h"
-#include "../Resources/SwapRendererBackendResource.h"
+#include "ECS/Resources/renderingResource.h"
+#include "ECS/Resources/EditorResource.h"
+#include "ECS/Resources/DebugDrawResource.h"
+#include "ECS/Resources/WindowResource.h"
+#include "ECS/Resources/SwapRendererBackendResource.h"
 
-#include "InputSystem.h"
+#include "../InputSystem.h"
 
 #include "Graphics/Vulkan/Core/Device.h"
 #include "Graphics/Vulkan/Core/SwapChain.h"
@@ -24,9 +24,9 @@
 #include "Graphics/Vulkan/Uniform/Descriptors.h"
 #include "Graphics/Common/UnifiedMesh.h"
 
-#include "../ECS.h"
+#include "ECS/ECS.h"
 #include "ECS/Entities/Entity.h"
-#include "ECS/Entities/Components.h"
+#include "ECS/Components/Components.h"
 
 #include "Engine.h"
 #include "Graphics/OpenGL/GLMesh.h"
@@ -35,14 +35,14 @@
 
 namespace Dog
 {
-    SimpleRenderSystem::SimpleRenderSystem() : ISystem("SimpleRenderSystem") {}
-    SimpleRenderSystem::~SimpleRenderSystem() {}
+    RenderSystem::RenderSystem() : ISystem("RenderSystem") {}
+    RenderSystem::~RenderSystem() {}
 
-    void SimpleRenderSystem::Init()
+    void RenderSystem::Init()
     {
     }
 
-    void SimpleRenderSystem::Exit()
+    void RenderSystem::Exit()
     {
     }
 
@@ -88,12 +88,85 @@ namespace Dog
         }
     }
 
-    void SimpleRenderSystem::FrameStart()
+    void CreateSphereCube(ECS* ecs,
+        int total = 20,
+        float worldSize = 10.0f,
+        int shellThickness = 5,
+        const char* sphereModel = "Assets/Models/sphere.obj")
+    {
+        if (total <= 0) return;
+        if (shellThickness <= 0) shellThickness = 1;
+        if (shellThickness * 2 >= total) shellThickness = total / 4; // ensure there is a hollow center
+
+        const int half = total / 2; // iterate from -half .. half-1 (total entries)
+        const float spacing = (worldSize / float(total)); // center-to-center spacing
+        // Optional: scale for the sphere model (adjust if your sphere.obj has a different default size)
+        const float sphereScale = spacing * 0.6f; // make sphere diameter slightly smaller than spacing
+
+        // compute the inclusive end of the left-side and the start of the right-side indices
+        // example: total=20, shellThickness=5 => indices -10..9
+        // leftEnd = -10 + 5 - 1 = -6  (left side covers -10..-6 inclusive)
+        // rightStart = 10 - 5 = 5     (right side covers 5..9 inclusive)
+        const int leftEnd = -half + shellThickness - 1;
+        const int rightStart = half - shellThickness;
+
+        for (int x = -half; x < half; ++x)
+        {
+            for (int y = -half; y < half; ++y)
+            {
+                for (int z = -half; z < half; ++z)
+                {
+                    // Determine if this (x,y,z) is inside the central hollow cube:
+                    // it's inside the hollow if x is strictly between leftEnd and rightStart-1,
+                    // and likewise for y and z. If all three are inside, skip placement.
+                    const bool xInCenter = (x > leftEnd && x < rightStart);
+                    const bool yInCenter = (y > leftEnd && y < rightStart);
+                    const bool zInCenter = (z > leftEnd && z < rightStart);
+
+                    // Skip points that are inside the central cubic void on all three axes
+                    if (xInCenter && yInCenter && zInCenter)
+                        continue;
+
+                    // position in world space (centered around origin)
+                    glm::vec3 position = glm::vec3(float(x) * spacing,
+                        float(y) * spacing,
+                        float(z) * spacing);
+
+                    // optional rotation (small deterministic rotation per-item)
+                    float rX = float(x * y * z) * 0.03f;    // tweak multipliers to taste
+                    float rY = float(x + y + z) * 0.05f;
+                    float rZ = float(x - y + z) * 0.04f;
+
+                    Entity entity = ecs->AddEntity();
+                    auto& tr = entity.GetComponent<TransformComponent>();
+                    tr.Translation = position;
+                    tr.Rotation = glm::vec3(rX, rY, rZ);
+                    tr.Scale = glm::vec3(sphereScale);
+
+                    auto& mc = entity.AddComponent<ModelComponent>(sphereModel);
+                    float nx = (float(x + half) / float(total)) * 255.0f;
+                    float ny = (float(y + half) / float(total)) * 255.0f;
+                    float nz = (float(z + half) / float(total)) * 255.0f;
+
+                    // Boost saturation by applying a non-linear curve
+                    nx = pow(nx, 0.6f);
+                    ny = pow(ny, 0.6f);
+                    nz = pow(nz, 0.6f);
+
+                    mc.tintColor = glm::vec4(255.0f, 0, 0, 255.0f);
+                }
+            }
+        }
+    }
+
+    void RenderSystem::FrameStart()
     {
         auto rr = ecs->GetResource<RenderingResource>();
 
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan && !rr->tlasAccel.accel && rr->blasAccel.empty())
         {
+            // CreateSphereCube(ecs, 10, 15.0f, 2);
+
             // get num entities with model component
             mConstStartingObjectCount = 0;
             auto view = ecs->GetRegistry().view<ModelComponent>();
@@ -177,7 +250,7 @@ namespace Dog
         // }
     }
 
-    void SimpleRenderSystem::Update(float dt)
+    void RenderSystem::Update(float dt)
     {
         auto rr = ecs->GetResource<RenderingResource>();
         float aspectRatio = 1.f;
@@ -220,96 +293,20 @@ namespace Dog
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan) camData.projection[1][1] *= -1;
         camData.projectionView = camData.projection * camData.view;
 
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
-        {
-            auto& rg = rr->renderGraph;
-            rr->cameraUniform->SetUniformData(camData, 0, rr->currentFrameIndex);
-
-            // Add the scene render pass
-            if (Engine::GetEditorEnabled()) 
-            {
-                if (rr->useRaytracing)
-                {
-                    rg->AddPass(
-                        "ScenePass",
-                        [&](RGPassBuilder& builder) {},
-                        std::bind(&SimpleRenderSystem::RaytraceScene, this, std::placeholders::_1)
-                    );
-                }
-                else
-                {
-                    rg->AddPass(
-                        "ScenePass",
-                        [&](RGPassBuilder& builder) {
-                            builder.writes("SceneColor");
-                            builder.writes("SceneDepth");
-                        },
-                        std::bind(&SimpleRenderSystem::RenderSceneVK, this, std::placeholders::_1)
-                    );
-                }
-                
-            }
-            else
-            {
-                rg->AddPass(
-                    "ScenePass",
-                    [&](RGPassBuilder& builder) {
-                        builder.writes("BackBuffer");
-                        builder.writes("SceneDepth");
-                    },
-                    std::bind(&SimpleRenderSystem::RenderSceneVK, this, std::placeholders::_1)
-                );
-            }
-        }
-        else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
-        {
-            //rr->shader->SetViewAndProjectionView(camData.view, camData.projectionView);
-            rr->shader->SetCameraUBO(camData);
-
-            RenderSceneGL();
-        }
-    }
-
-    void SimpleRenderSystem::FrameEnd()
-    {
-    }
-
-    void SimpleRenderSystem::RenderSceneVK(VkCommandBuffer cmd)
-    {
-        auto rr = ecs->GetResource<RenderingResource>();
-
-        rr->renderWireframe ? rr->wireframePipeline->Bind(cmd) : rr->pipeline->Bind(cmd);
-        VkPipelineLayout pipelineLayout = rr->renderWireframe ? rr->wireframePipeline->GetLayout() : rr->pipeline->GetLayout();
-
-        rr->cameraUniform->Bind(cmd, pipelineLayout, rr->currentFrameIndex);
-
-        VkViewport viewport{};
-        viewport.width = static_cast<float>(rr->swapChain->GetSwapChainExtent().width);
-        viewport.height = static_cast<float>(rr->swapChain->GetSwapChainExtent().height);
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
-        vkCmdSetViewport(cmd, 0, 1, &viewport);
-
-        VkRect2D scissor{ {0, 0}, rr->swapChain->GetSwapChainExtent() };
-        vkCmdSetScissor(cmd, 0, 1, &scissor);
-
-        std::vector<InstanceUniforms> instanceData{};
-        std::vector<LightUniform> lightData{};
+        mInstanceData.clear();
+        mLightData.clear();
         auto debugData = DebugDrawResource::GetInstanceData();
         //auto lightTestData = DebugDrawResource::CreateDebugLightTest();
         //debugData.insert(debugData.end(), lightTestData.begin(), lightTestData.end());
 
-        if (instanceData.size() + debugData.size() >= InstanceUniforms::MAX_INSTANCES)
+        if (mInstanceData.size() + debugData.size() >= InstanceUniforms::MAX_INSTANCES)
         {
             DOG_WARN("Too many instances for debug draw render!");
         }
         else
         {
-            //instanceData.insert(instanceData.end(), debugData.begin(), debugData.end());            
+            //mInstanceData.insert(mInstanceData.end(), debugData.begin(), debugData.end());
         }
-
-        AnimationLibrary* al = rr->animationLibrary.get();
-        ModelLibrary* ml = rr->modelLibrary.get();
 
         auto& registry = ecs->GetRegistry();
 
@@ -327,10 +324,13 @@ namespace Dog
             lu.innerCone = lc.InnerCone;
             lu.outerCone = lc.OuterCone;
             lu.type = static_cast<int>(lc.Type);
-            lu._padding[0] = 777; 
+            lu._padding[0] = 777;
             lu._padding[1] = 777;
-            lightData.push_back(lu);
+            mLightData.push_back(lu);
         });
+
+        AnimationLibrary* al = rr->animationLibrary.get();
+        ModelLibrary* ml = rr->modelLibrary.get();
 
         auto entityView = registry.view<ModelComponent, TransformComponent>();
         uint32_t indexOffset = 0;
@@ -352,7 +352,7 @@ namespace Dog
 
             for (auto& mesh : model->mMeshes)
             {
-                InstanceUniforms& data = instanceData.emplace_back();
+                InstanceUniforms& data = mInstanceData.emplace_back();
                 if (boneOffset == AnimationLibrary::INVALID_ANIMATION_INDEX)
                 {
                     data.model = tc.GetTransform() * model->GetNormalizationMatrix();
@@ -379,33 +379,112 @@ namespace Dog
             }
         }
 
-        rr->cameraUniform->SetUniformData(instanceData, 1, rr->currentFrameIndex);
+        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+        {
+            auto& rg = rr->renderGraph;
+            rr->cameraUniform->SetUniformData(camData, 0, rr->currentFrameIndex);
 
+            rr->cameraUniform->SetUniformData(mInstanceData, 1, rr->currentFrameIndex);
 
-        struct Header {
-            uint32_t lightCount;
-            uint32_t _pad[3];
-        };
+            struct Header {
+                uint32_t lightCount;
+                uint32_t _pad[3];
+            };
 
-        Header header = { static_cast<uint32_t>(lightData.size()), {0,0,0} };
+            Header header = { static_cast<uint32_t>(mLightData.size()), {0,0,0} };
 
-        std::vector<uint8_t> gpuBuffer(sizeof(Header) + sizeof(LightUniform) * lightData.size());
-        memcpy(gpuBuffer.data(), &header, sizeof(Header));
-        memcpy(gpuBuffer.data() + sizeof(Header), lightData.data(), sizeof(LightUniform) * lightData.size());
-        rr->cameraUniform->SetUniformData(gpuBuffer, 4, rr->currentFrameIndex);
+            std::vector<uint8_t> gpuBuffer(sizeof(Header) + sizeof(LightUniform) * mLightData.size());
+            memcpy(gpuBuffer.data(), &header, sizeof(Header));
+            memcpy(gpuBuffer.data() + sizeof(Header), mLightData.data(), sizeof(LightUniform)* mLightData.size());
+            rr->cameraUniform->SetUniformData(gpuBuffer, 4, rr->currentFrameIndex);
+
+            // Add the scene render pass
+            if (Engine::GetEditorEnabled()) 
+            {
+                if (rr->useRaytracing)
+                {
+                    rg->AddPass(
+                        "ScenePass",
+                        [&](RGPassBuilder& builder) {},
+                        std::bind(&RenderSystem::RaytraceScene, this, std::placeholders::_1)
+                    );
+                }
+                else
+                {
+                    rg->AddPass(
+                        "ScenePass",
+                        [&](RGPassBuilder& builder) {
+                            builder.writes("SceneColor");
+                            builder.writes("SceneDepth");
+                        },
+                        std::bind(&RenderSystem::RenderSceneVK, this, std::placeholders::_1)
+                    );
+                }
+                
+            }
+            else
+            {
+                rg->AddPass(
+                    "ScenePass",
+                    [&](RGPassBuilder& builder) {
+                        builder.writes("BackBuffer");
+                        builder.writes("SceneDepth");
+                    },
+                    std::bind(&RenderSystem::RenderSceneVK, this, std::placeholders::_1)
+                );
+            }
+        }
+        else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
+        {
+            //rr->shader->SetViewAndProjectionView(camData.view, camData.projectionView);
+            rr->shader->SetCameraUBO(camData);
+
+            RenderSceneGL();
+        }
+    }
+
+    void RenderSystem::FrameEnd()
+    {
+    }
+
+    void RenderSystem::RenderSceneVK(VkCommandBuffer cmd)
+    {
+        auto rr = ecs->GetResource<RenderingResource>();
+
+        rr->renderWireframe ? rr->wireframePipeline->Bind(cmd) : rr->pipeline->Bind(cmd);
+        VkPipelineLayout pipelineLayout = rr->renderWireframe ? rr->wireframePipeline->GetLayout() : rr->pipeline->GetLayout();
+
+        rr->cameraUniform->Bind(cmd, pipelineLayout, rr->currentFrameIndex);
+
+        VkViewport viewport{};
+        viewport.width = static_cast<float>(rr->swapChain->GetSwapChainExtent().width);
+        viewport.height = static_cast<float>(rr->swapChain->GetSwapChainExtent().height);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(cmd, 0, 1, &viewport);
+
+        VkRect2D scissor{ {0, 0}, rr->swapChain->GetSwapChainExtent() };
+        vkCmdSetScissor(cmd, 0, 1, &scissor);
+
+        auto debugData = DebugDrawResource::GetInstanceData();
+        
+        AnimationLibrary* al = rr->animationLibrary.get();
+        ModelLibrary* ml = rr->modelLibrary.get();
+
+        auto& registry = ecs->GetRegistry();
 
         VkBuffer instBuffer = rr->cameraUniform->GetUniformBuffer(1, rr->currentFrameIndex).buffer;
         int baseIndex = 0;
+        Model* cubeModel = ml->TryAddGetModel("Assets/Models/cube.obj");
+        auto& cubeMesh = cubeModel->mMeshes[0];
+        cubeMesh->Bind(cmd, instBuffer);
         //for (auto& data : debugData)
         //{
-        //    Model* cubeModel = ml->TryAddGetModel("Assets/Models/cube.obj");
-        //    auto& mesh = cubeModel->mMeshes[0];
-        //    mesh->Bind(cmd, instBuffer);
-        //    mesh->Draw(cmd, baseIndex++);
-        //
+        //    cubeMesh->Draw(cmd, baseIndex++);
         //    ++mNumObjectsRendered;
         //}
 
+        auto entityView = registry.view<ModelComponent, TransformComponent>();
         for (auto& entityHandle : entityView)
         {
             Entity entity(&registry, entityHandle);
@@ -417,13 +496,12 @@ namespace Dog
             {
                 mesh->Bind(cmd, instBuffer);
                 mesh->Draw(cmd, baseIndex++);
-
                 ++mNumObjectsRendered;
             }
         }
     }
 
-    void SimpleRenderSystem::RenderSceneGL()
+    void RenderSystem::RenderSceneGL()
     {
         auto rr = ecs->GetResource<RenderingResource>();
         auto er = ecs->GetResource<EditorResource>();
@@ -437,62 +515,14 @@ namespace Dog
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        std::vector<InstanceUniforms> instanceData{};
-        std::vector<uint64_t> textureData{};
-        const auto& debugData = DebugDrawResource::GetInstanceData();
-        if (instanceData.size() + debugData.size() >= InstanceUniforms::MAX_INSTANCES)
-        {
-            DOG_WARN("Too many instances for debug draw render!");
-        }
-        else
-        {
-            instanceData.insert(instanceData.end(), debugData.begin(), debugData.end());
-        }
-
         AnimationLibrary* al = rr->animationLibrary.get();
         ModelLibrary* ml = rr->modelLibrary.get();
 
         auto& registry = ecs->GetRegistry();
         auto entityView = registry.view<ModelComponent, TransformComponent>();
-        for (auto& entityHandle : entityView)
-        {
-            Entity entity(&registry, entityHandle);
-            ModelComponent& mc = entity.GetComponent<ModelComponent>();
-            TransformComponent& tc = entity.GetComponent<TransformComponent>();
-            Model* model = rr->modelLibrary->GetModel(mc.ModelPath);
-            AnimationComponent* ac = entity.HasComponent<AnimationComponent>() ? &entity.GetComponent<AnimationComponent>() : nullptr;
-            if (!model) continue;
 
-            uint32_t boneOffset = AnimationLibrary::INVALID_ANIMATION_INDEX;
-            if (ac && al->GetAnimation(ac->AnimationIndex) && al->GetAnimator(ac->AnimationIndex))
-            {
-                boneOffset = ac->BoneOffset;
-            }
-
-            for (auto& mesh : model->mMeshes)
-            {
-                InstanceUniforms& data = instanceData.emplace_back();
-                if (boneOffset == AnimationLibrary::INVALID_ANIMATION_INDEX)
-                {
-                    data.model = tc.GetTransform() * model->GetNormalizationMatrix();
-                }
-                else
-                {
-                    data.model = tc.GetTransform();
-                }
-
-                data.tint = mc.tintColor;
-                data.textureIndicies = glm::uvec4(mesh->albedoTextureIndex, mesh->normalTextureIndex, mesh->metalnessTextureIndex, mesh->roughnessTextureIndex);
-                data.textureIndicies2 = glm::uvec4(mesh->occlusionTextureIndex, mesh->emissiveTextureIndex, 10001, 10001);
-                data.boneOffset = boneOffset;
-                data.baseColorFactor = mesh->baseColorFactor;
-                data.metallicRoughnessFactor = glm::vec4(mesh->metallicFactor, mesh->roughnessFactor, 0.f, 0.f);
-                data.emissiveFactor = mesh->emissiveFactor;
-                data._padding = 777.0f;
-            }
-        }
-
-        uint32_t instanceCount = static_cast<uint32_t>(instanceData.size());
+        std::vector<uint64_t> textureData{};
+        uint32_t instanceCount = static_cast<uint32_t>(mInstanceData.size());
         for (uint32_t i = 0; i < rr->textureLibrary->GetTextureCount(); ++i)
         {
             auto itex = rr->textureLibrary->GetTextureByIndex(i);
@@ -508,7 +538,7 @@ namespace Dog
 
         GLuint iSSBO = GLShader::GetInstanceSSBO();
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, iSSBO);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, instanceCount * sizeof(InstanceUniforms), instanceData.data(), GL_DYNAMIC_DRAW);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, instanceCount * sizeof(InstanceUniforms), mInstanceData.data(), GL_DYNAMIC_DRAW);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
         
         GLuint textureSSBO = GLShader::GetTextureSSBO();
@@ -517,15 +547,14 @@ namespace Dog
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
         int baseIndex = 0;
-        for (auto& data : debugData)
-        {
-            Model* cubeModel = ml->GetModel("Assets/Models/cube.obj");
-            auto& mesh = cubeModel->mMeshes[0];
-            mesh->Bind(nullptr, nullptr);
-            mesh->Draw(nullptr, baseIndex++);
-        
-            ++mNumObjectsRendered;
-        }
+        Model* cubeModel = ml->GetModel("Assets/Models/cube.obj");
+        auto& cubeMesh = cubeModel->mMeshes[0];
+        cubeMesh->Bind(nullptr, nullptr);
+        // for (auto& data : debugData)
+        // {
+        //     cubeMesh->Draw(nullptr, baseIndex++);
+        //     ++mNumObjectsRendered;
+        // }
 
         for (auto& entityHandle : entityView)
         {
@@ -538,17 +567,14 @@ namespace Dog
             {
                 mesh->Bind(nullptr, nullptr);
                 mesh->Draw(nullptr, baseIndex++);
-
                 ++mNumObjectsRendered;
             }
         }
 
-        DOG_INFO("Base instance index: {}", baseIndex);
-
         rr->sceneFrameBuffer->Unbind();
     }
 
-    void SimpleRenderSystem::PrimitiveToGeometry(VKMesh& mesh, VkAccelerationStructureGeometryKHR& geometry, VkAccelerationStructureBuildRangeInfoKHR& rangeInfo)
+    void RenderSystem::PrimitiveToGeometry(VKMesh& mesh, VkAccelerationStructureGeometryKHR& geometry, VkAccelerationStructureBuildRangeInfoKHR& rangeInfo)
     {
         VkDeviceAddress vertexAddress = mesh.mVertexBuffer.address;
         VkDeviceAddress indexAddress = mesh.mIndexBuffer.address;
@@ -565,17 +591,20 @@ namespace Dog
         };
 
         // Identify the above data as containing opaque triangles.
+        // @Todo: Future optimization: Check if the material has any transparency and set VK_GEOMETRY_OPAQUE_BIT_KHR
+        // to skip the any-hit shader
         geometry = VkAccelerationStructureGeometryKHR{
             .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR,
             .geometryType = VK_GEOMETRY_TYPE_TRIANGLES_KHR,
             .geometry = {.triangles = triangles},
-            .flags = VK_GEOMETRY_NO_DUPLICATE_ANY_HIT_INVOCATION_BIT_KHR | VK_GEOMETRY_OPAQUE_BIT_KHR,
+            .flags = VK_GEOMETRY_NO_DUPLICATE_ANY_HIT_INVOCATION_BIT_KHR,
         };
+
 
         rangeInfo = VkAccelerationStructureBuildRangeInfoKHR{ .primitiveCount = mesh.mTriangleCount };
     }
 
-    void SimpleRenderSystem::CreateAccelerationStructure(VkAccelerationStructureTypeKHR asType,  // The type of acceleration structure (BLAS or TLAS)
+    void RenderSystem::CreateAccelerationStructure(VkAccelerationStructureTypeKHR asType,  // The type of acceleration structure (BLAS or TLAS)
         AccelerationStructure& accelStruct,  // The acceleration structure to create
         VkAccelerationStructureGeometryKHR& asGeometry,  // The geometry to build the acceleration structure from
         VkAccelerationStructureBuildRangeInfoKHR& asBuildRangeInfo,  // The range info for building the acceleration structure
@@ -584,7 +613,7 @@ namespace Dog
     {
         auto rr = ecs->GetResource<RenderingResource>();
         VkDevice device = rr->device->GetDevice();
-        auto asProps = rr->device->GetAccelerationStructureProperties();
+        const auto& asProps = rr->device->GetAccelerationStructureProperties();
 
         // Helper function to align a value to a given alignment
         auto alignUp = [](auto value, size_t alignment) noexcept { return ((value + alignment - 1) & ~(alignment - 1)); };
@@ -654,7 +683,7 @@ namespace Dog
         Allocator::DestroyBuffer(scratchBuffer);
     }
 
-    void SimpleRenderSystem::CreateBottomLevelAS()
+    void RenderSystem::CreateBottomLevelAS()
     {
         auto rr = ecs->GetResource<RenderingResource>();
         uint32_t numMeshes = 0;
@@ -688,7 +717,7 @@ namespace Dog
         }
     }
 
-    void SimpleRenderSystem::CreateTopLevelAS()
+    void RenderSystem::CreateTopLevelAS()
     {
         auto rr = ecs->GetResource<RenderingResource>();
         // VkTransformMatrixKHR is row-major 3x4, glm::mat4 is column-major; transpose before memcpy.
@@ -837,7 +866,7 @@ namespace Dog
         Allocator::DestroyBuffer(tlasInstancesBuffer);
     }
 
-    void SimpleRenderSystem::RaytraceScene(VkCommandBuffer cmd)
+    void RenderSystem::RaytraceScene(VkCommandBuffer cmd)
     {
         auto rr = ecs->GetResource<RenderingResource>();
 

@@ -81,7 +81,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>PCH/pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.4.321.1\Include;$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glew\include;$(SolutionDir)Dependencies\assimp\include;$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\stb_image\stb;$(SolutionDir)Dependencies\tiny_obj_loader;$(SolutionDir)Dependencies\imgui;$(SolutionDir)Dependencies\glslang\include;$(SolutionDir)Dependencies\entt\include;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\yaml-cpp\include;$(SolutionDir)Dependencies\enet\include;$(SolutionDir)Dependencies\reflect-cpp\include;$(SolutionDir)Dependencies\nlohmann;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpp23</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
       <ShowIncludes>false</ShowIncludes>
     </ClCompile>
@@ -126,7 +126,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>PCH/pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.4.321.1\Include;$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glew\include;$(SolutionDir)Dependencies\assimp\include;$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\stb_image\stb;$(SolutionDir)Dependencies\tiny_obj_loader;$(SolutionDir)Dependencies\imgui;$(SolutionDir)Dependencies\glslang\include;$(SolutionDir)Dependencies\entt\include;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\yaml-cpp\include;$(SolutionDir)Common\Dependencies\enet\include;$(SolutionDir)Dependencies\reflect-cpp\include;$(SolutionDir)Dependencies\nlohmann;$(SolutionDir)Dependencies\enet\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpp23</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
       <ShowIncludes>false</ShowIncludes>
     </ClCompile>
@@ -209,7 +209,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Dog\Assets\Assets.cpp" />
     <ClCompile Include="src\Dog\Assets\CaseInsensitiveHash.cpp" />
     <ClCompile Include="src\Dog\ECS\ECS.cpp" />
-    <ClCompile Include="src\Dog\ECS\Entities\Components.cpp" />
+    <ClCompile Include="src\Dog\ECS\Components\Components.cpp" />
     <ClCompile Include="src\Dog\ECS\Entities\Entity.cpp" />
     <ClCompile Include="src\Dog\ECS\Resources\AnimationResource.cpp" />
     <ClCompile Include="src\Dog\ECS\Resources\DebugDrawResource.cpp" />
@@ -219,7 +219,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Dog\ECS\Resources\SerializationResource.cpp" />
     <ClCompile Include="src\Dog\ECS\Resources\SwapRendererBackendResource.cpp" />
     <ClCompile Include="src\Dog\ECS\Resources\WindowResource.cpp" />
-    <ClCompile Include="src\Dog\ECS\Systems\AnimationSystem.cpp" />
+    <ClCompile Include="src\Dog\ECS\Systems\Graphics\AnimationSystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\CameraSystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\Editor\EditorSystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\Editor\Windows\AssetsWindow.cpp" />
@@ -228,11 +228,9 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Dog\ECS\Systems\Editor\Windows\TextureBrowserWindow.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\InputSystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\ISystem.cpp" />
-    <ClCompile Include="src\Dog\ECS\Systems\PresentSystem.cpp" />
-    <ClCompile Include="src\Dog\ECS\Systems\RayRenderSystem.cpp" />
-    <ClCompile Include="src\Dog\ECS\Systems\RenderSystem.cpp" />
-    <ClCompile Include="src\Dog\ECS\Systems\SimpleRenderSystem.cpp" />
-    <ClCompile Include="src\Dog\ECS\Systems\SwapRendererBackendSystem.cpp" />
+    <ClCompile Include="src\Dog\ECS\Systems\Graphics\PresentSystem.cpp" />
+    <ClCompile Include="src\Dog\ECS\Systems\Graphics\RenderSystem.cpp" />
+    <ClCompile Include="src\Dog\ECS\Systems\Graphics\SwapRendererBackendSystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\WindowSystem.cpp" />
     <ClCompile Include="src\Dog\Engine.cpp" />
     <ClCompile Include="src\Dog\Events\Event.cpp" />
@@ -314,7 +312,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Dog\Assets\Assets.h" />
     <ClInclude Include="src\Dog\Assets\CaseInsensitiveHash.h" />
     <ClInclude Include="src\Dog\ECS\ECS.h" />
-    <ClInclude Include="src\Dog\ECS\Entities\Components.h" />
+    <ClInclude Include="src\Dog\ECS\Components\Components.h" />
     <ClInclude Include="src\Dog\ECS\Entities\Entity.h" />
     <ClInclude Include="src\Dog\ECS\Resources\AnimationResource.h" />
     <ClInclude Include="src\Dog\ECS\Resources\DebugDrawResource.h" />
@@ -325,7 +323,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Dog\ECS\Resources\SerializationResource.h" />
     <ClInclude Include="src\Dog\ECS\Resources\SwapRendererBackendResource.h" />
     <ClInclude Include="src\Dog\ECS\Resources\WindowResource.h" />
-    <ClInclude Include="src\Dog\ECS\Systems\AnimationSystem.h" />
+    <ClInclude Include="src\Dog\ECS\Systems\Graphics\AnimationSystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\CameraSystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\Editor\EditorSystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\Editor\Windows\AssetsWindow.h" />
@@ -334,11 +332,9 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Dog\ECS\Systems\Editor\Windows\TextureBrowserWindow.h" />
     <ClInclude Include="src\Dog\ECS\Systems\InputSystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\ISystem.h" />
-    <ClInclude Include="src\Dog\ECS\Systems\PresentSystem.h" />
-    <ClInclude Include="src\Dog\ECS\Systems\RayRenderSystem.h" />
-    <ClInclude Include="src\Dog\ECS\Systems\RenderSystem.h" />
-    <ClInclude Include="src\Dog\ECS\Systems\SimpleRenderSystem.h" />
-    <ClInclude Include="src\Dog\ECS\Systems\SwapRendererBackendSystem.h" />
+    <ClInclude Include="src\Dog\ECS\Systems\Graphics\PresentSystem.h" />
+    <ClInclude Include="src\Dog\ECS\Systems\Graphics\RenderSystem.h" />
+    <ClInclude Include="src\Dog\ECS\Systems\Graphics\SwapRendererBackendSystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\WindowSystem.h" />
     <ClInclude Include="src\Dog\Engine.h" />
     <ClInclude Include="src\Dog\Events\Event.h" />
@@ -393,6 +389,11 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="src\PCH\pch.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assets\Scenes\lighttest.json" />
+    <None Include="Assets\Scenes\sponza.json" />
+    <None Include="src\Dog\Graphics\Vulkan\Uniform\Uniform.inl" />
+  </ItemGroup>
+  <ItemGroup>
     <CustomBuild Include="Assets\Shaders\*.*" Exclude="Assets\Shaders\*.spv;Assets\Shaders\spv\*.*">
       <Command>
         if not exist "%(RootDir)%(Directory)spv" mkdir "%(RootDir)%(Directory)spv"
@@ -412,12 +413,6 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
       </Command>
       <Outputs>%(RootDir)%(Directory)spv\%(Filename)%(Extension).spv</Outputs>
     </CustomBuild>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Assets\Scenes\lighttest.json" />
-    <None Include="Assets\Scenes\sponza.json" />
-    <None Include="Assets\Shaders\shadow.rmiss" />
-    <None Include="src\Dog\Graphics\Vulkan\Uniform\Uniform.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
