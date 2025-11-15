@@ -4,11 +4,11 @@
 
 layout(location = 0) rayPayloadInEXT HitPayload {
     vec3 color;
-    float weight;
+    vec3 attenuation;
     int depth;
     vec3 nextRayOrigin;
-    vec3 nextRayDir;   
-    bool stop;   
+    vec3 nextRayDir;    
+    bool stop;    
 } payload;
 
 layout(location = 1) rayPayloadEXT bool isShadowed;
@@ -18,23 +18,6 @@ hitAttributeEXT vec2 attribs;
 // --- Constants ---
 const float PI = 3.14159265359;
 const uint INVALID_TEXTURE_INDEX = 10001;
-
-// --- Helper functions to turn an ID into a color ---
-uint hash(uint x) {
-    x = ((x >> 16) ^ x) * 0x45d9f3b;
-    x = ((x >> 16) ^ x) * 0x45d9f3b;
-    x = (x >> 16) ^ x;
-    return x;
-}
-
-vec3 hashToColor(uint x) {
-    uint h = hash(x);
-    float r = float(h & 0xFF) / 255.0;
-    float g = float((h >> 8) & 0xFF) / 255.0;
-    float b = float((h >> 16) & 0xFF) / 255.0;
-    return vec3(r, g, b);
-}
-// --------------------------------------------------
 
 struct Instance
 {
@@ -128,6 +111,12 @@ vec3 FresnelSchlick(float cosTheta, vec3 F0)
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
+vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
+{
+    // Adjusted Fresnel: Rough surfaces have less "flash" at grazing angles
+    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+
 vec3 computePBRLight(vec3 albedo, float metallic, float roughness, vec3 N, vec3 V, vec3 L, vec3 lightColor)
 {
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
@@ -140,7 +129,8 @@ vec3 computePBRLight(vec3 albedo, float metallic, float roughness, vec3 N, vec3 
 
     float D = DistributionGGX(NdotH, roughness);
     float G = GeometrySmith(NdotV, NdotL, roughness);
-    vec3 F = FresnelSchlick(VdotH, F0);
+    // vec3 F = FresnelSchlick(VdotH, F0);
+    vec3 F = FresnelSchlickRoughness(VdotH, F0, roughness);
     
     vec3 specular = (D * G * F) / (4.0 * NdotV * NdotL + 1e-4);
     vec3 kD = (1.0 - F) * (1.0 - metallic);
@@ -158,80 +148,40 @@ vec4 SampleTexture(uint texIndex, vec2 uv)
 // Shadow Ray Function
 float fetchShadow(vec3 worldPos, vec3 normal, vec3 lightDir, float lightDist)
 {
-    // 1. Offset origin to avoid self-intersection (Shadow Acne)
     vec3 origin = worldPos + normal * 0.01; 
-
-    // 2. Initialize payload to TRUE (Blocked). 
-    // If the ray misses, the Miss Shader (Index 1) will set this to FALSE.
     isShadowed = true;
 
-    // 3. Trace Ray
-    // gl_RayFlagsTerminateOnFirstHitEXT: Performance opt. Stop as soon as we hit anything.
-    // gl_RayFlagsSkipClosestHitShaderEXT: We don't need the material color, just the hit.
-    // Note: We do NOT use Opaque flag, so the AnyHit shader still runs for alpha-tested leaves.
     uint rayFlags = gl_RayFlagsTerminateOnFirstHitEXT | gl_RayFlagsSkipClosestHitShaderEXT;
-    
-    traceRayEXT(
-        topLevelAS, // Acceleration structure
-        rayFlags,   // Flags
-        0xFF,       // Cull mask
-        0,          // SBT record offset
-        0,          // SBT record stride
-        1,          // Miss Index (The second miss shader; hardcoded as shadow.rmiss)
-        origin,     // Origin
-        0.001,      // TMin
-        lightDir,   // Direction
-        lightDist,  // TMax
-        1           // Payload Location (Matches 'isShadowed')
-    );
+    traceRayEXT(topLevelAS, rayFlags, 0xFF, 0, 0, 1, origin, 0.001, lightDir, lightDist, 1);
 
-    // Return 0.0 if shadowed, 1.0 if lit
     return isShadowed ? 0.0 : 1.0;
 }
 
 void main()
 {
-    // 1. Fetch Instance
     Instance instance = instances[gl_InstanceCustomIndexEXT];
 
-    // 2. Geometry Fetching
     vec3 bary = vec3(1.0 - attribs.x - attribs.y, attribs.x, attribs.y);
-
-    uvec3 tri = uvec3(
-        gl_PrimitiveID * 3u + 0u,
-        gl_PrimitiveID * 3u + 1u,
-        gl_PrimitiveID * 3u + 2u
-    );
-
-    // Apply Offsets
+    uvec3 tri = uvec3(gl_PrimitiveID * 3u + 0u, gl_PrimitiveID * 3u + 1u, gl_PrimitiveID * 3u + 2u);
     uint i0 = indexBuffer.indices[tri.x + instance.indexOffset];
     uint i1 = indexBuffer.indices[tri.y + instance.indexOffset];
     uint i2 = indexBuffer.indices[tri.z + instance.indexOffset];
-
     Vertex v0 = meshBuffer.vertices[i0 + instance.vertexOffset];
     Vertex v1 = meshBuffer.vertices[i1 + instance.vertexOffset];
     Vertex v2 = meshBuffer.vertices[i2 + instance.vertexOffset];
 
-    // 3. Interpolation
     vec2 uv = v0.texCoord * bary.x + v1.texCoord * bary.y + v2.texCoord * bary.z;
     vec3 normalLocal = v0.normal * bary.x + v1.normal * bary.y + v2.normal * bary.z;
-    vec3 vertexColor = v0.color * bary.x + v1.color * bary.y + v2.color * bary.z; // Interpolate vertex color too
+    vec3 vertexColor = v0.color * bary.x + v1.color * bary.y + v2.color * bary.z;
 
-    // 4. Calculate World Space Data
     // Position: Origin + (Direction * Distance)
     vec3 fragWorldPos = gl_WorldRayOriginEXT + gl_WorldRayDirectionEXT * gl_HitTEXT;
     
-    // Normal: Transform local normal to world using WorldToObject (Inverse Transpose logic)
-    // Note: gl_WorldToObjectEXT is the inverse of the current instance transform. 
-    // Multiplying a vector by it behaves like multiplying by the transpose of the inverse.
-    // vec3 N = normalize(vec3(normalLocal * gl_WorldToObjectEXT));
+    // Normal: Transform local normal to world
     mat3 normalMatrix = transpose(mat3(gl_WorldToObjectEXT));
     vec3 N = normalize(normalMatrix * normalLocal);
-
-    // View Vector: In RT, it's the opposite of the ray direction
     vec3 V = normalize(-gl_WorldRayDirectionEXT);
-
-    // 5. Material Data Gathering
+    float NdotV = max(dot(N, V), 0.0001); // Prevent divide by zero
     
     // Base Color
     vec4 baseColor = vec4(vertexColor, 1.0) * instance.tint * instance.baseColorFactor; // Included fragTint logic here
@@ -306,38 +256,71 @@ void main()
 
         if (NdotL > 0.0 && attenuation > 0.0)
         {
-             shadowFactor = fetchShadow(fragWorldPos, N, L, lightDistance);
+            shadowFactor = fetchShadow(fragWorldPos, N, L, lightDistance);
+            vec3 lightCol = light.color * light.intensity * attenuation * shadowFactor;
+            Lo += computePBRLight(albedo, metallic, roughness, N, V, L, lightCol);
         }
-        
-        vec3 lightCol = light.color * light.intensity * attenuation * shadowFactor;
-
-        Lo += computePBRLight(albedo, metallic, roughness, N, V, L, lightCol);
     }
 
-    // 7. Final Combine
-    ao = 1.0; // Reset per your original shader logic
     vec3 ambient = vec3(0.03) * albedo * ao;
-    vec3 color = (Lo * ao) + ambient + emissive;
+    payload.color += (Lo * ao + ambient + emissive) * payload.attenuation;
 
-    payload.color += color * payload.weight;
-
-    // Default to solid, stop the ray
+    // --- NEXT RAY GENERATION (Reflections) ---
+    
+    // Initialize Seed for RNG using Launch ID or primitive ID
+    // Note: If you don't pass a seed in payload from RayGen, we derive one here.
+    // If 'payload.seed' is maintained in RayGen, use that. Otherwise:
     payload.stop = true;
+    
+    // Threshold for stopping weak rays
+    const float THRESHOLD = 0.01;
+    vec3 throughput = payload.attenuation;
+    float roughnessCutoff = 0.65;
 
-    // CASE A: TRANSPARENT (Glass / Water)
-    if (baseColor.a < 0.95) 
-    {
-        payload.weight *= (1.0 - baseColor.a);
-        payload.nextRayDir = gl_WorldRayDirectionEXT;         
+    // CASE A: TRANSPARENT (Alpha handling)
+    if (baseColor.a < 0.99) {
+        // Simple transparency (no refraction)
+        throughput *= (1.0 - baseColor.a);
+        payload.nextRayDir = gl_WorldRayDirectionEXT;
         payload.nextRayOrigin = gl_WorldRayOriginEXT + gl_WorldRayDirectionEXT * (gl_HitTEXT + 0.001);
         payload.stop = false;
     }
-    // CASE B: MIRROR / METAL (Reflective)
-    else if (metallic > 0.1)
+    // CASE B: REFLECTION
+    else if (metallic > 0.01 && roughness < roughnessCutoff) // Only reflect if somewhat shiny
     {
-        payload.weight *= metallic;         
+        vec3 F0 = mix(vec3(0.04), albedo, metallic);
+        // vec3 F = FresnelSchlick(NdotV, F0);
+        vec3 F = FresnelSchlickRoughness(NdotV, F0, roughness);
+
+        // Energy Compensation / Demodulation
+        // We are sampling a single sharp ray (Dirac delta) on a rough lobe.
+        // We must attenuate the energy to simulate the light spreading out.
+        // Formula: approximate inverse of the normalization factor of the GGX lobe.
+        // In simple terms: Rougher = Darker Reflection.
+        float energyConservation = 1.0 - roughness; 
+        
+        // Square it for a more visually pleasing falloff
+        energyConservation = energyConservation * energyConservation; 
+        
+        // Apply to throughput
+        // Throughput = Fresnel * EnergyConservation
+        throughput *= F * energyConservation;
+
+        // Perfectly sharp reflection (No random scattering = No Noise)
         payload.nextRayDir = reflect(gl_WorldRayDirectionEXT, N);
         payload.nextRayOrigin = fragWorldPos + N * 0.001;
-        payload.stop = false;
+
+        // 5. Firefly Clamping (Prevent single bright pixels)
+        // If the throughput is super bright, clamp it.
+        if (throughput.r > 1.0 || throughput.g > 1.0 || throughput.b > 1.0) {
+            throughput = normalize(throughput); 
+        }
+
+        // Only continue if there is visible reflection energy left
+        if (max(throughput.r, max(throughput.g, throughput.b)) > THRESHOLD) {
+            payload.stop = false;
+        }
     }
+
+    payload.attenuation = throughput;
 }

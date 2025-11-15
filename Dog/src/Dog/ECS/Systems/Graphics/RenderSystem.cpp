@@ -384,6 +384,20 @@ namespace Dog
             auto& rg = rr->renderGraph;
             rr->cameraUniform->SetUniformData(camData, 0, rr->currentFrameIndex);
 
+            rr->cameraUniform->SetUniformData(mInstanceData, 1, rr->currentFrameIndex);
+
+            struct Header {
+                uint32_t lightCount;
+                uint32_t _pad[3];
+            };
+
+            Header header = { static_cast<uint32_t>(mLightData.size()), {0,0,0} };
+
+            std::vector<uint8_t> gpuBuffer(sizeof(Header) + sizeof(LightUniform) * mLightData.size());
+            memcpy(gpuBuffer.data(), &header, sizeof(Header));
+            memcpy(gpuBuffer.data() + sizeof(Header), mLightData.data(), sizeof(LightUniform)* mLightData.size());
+            rr->cameraUniform->SetUniformData(gpuBuffer, 4, rr->currentFrameIndex);
+
             // Add the scene render pass
             if (Engine::GetEditorEnabled()) 
             {
@@ -458,19 +472,6 @@ namespace Dog
         ModelLibrary* ml = rr->modelLibrary.get();
 
         auto& registry = ecs->GetRegistry();
-        rr->cameraUniform->SetUniformData(mInstanceData, 1, rr->currentFrameIndex);
-
-        struct Header {
-            uint32_t lightCount;
-            uint32_t _pad[3];
-        };
-
-        Header header = { static_cast<uint32_t>(mLightData.size()), {0,0,0} };
-
-        std::vector<uint8_t> gpuBuffer(sizeof(Header) + sizeof(LightUniform) * mLightData.size());
-        memcpy(gpuBuffer.data(), &header, sizeof(Header));
-        memcpy(gpuBuffer.data() + sizeof(Header), mLightData.data(), sizeof(LightUniform) * mLightData.size());
-        rr->cameraUniform->SetUniformData(gpuBuffer, 4, rr->currentFrameIndex);
 
         VkBuffer instBuffer = rr->cameraUniform->GetUniformBuffer(1, rr->currentFrameIndex).buffer;
         int baseIndex = 0;

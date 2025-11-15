@@ -15,11 +15,12 @@ layout(set = 1, binding = 1) uniform accelerationStructureEXT topLevelAS;
 
 layout(location = 0) rayPayloadEXT HitPayload {
     vec3 color;
-    float weight;
+    vec3 attenuation;
     int depth;
     vec3 nextRayOrigin;
-    vec3 nextRayDir;   
-    bool stop;   
+    vec3 nextRayDir;    
+    bool stop;    
+    uint seed;
 } payload;
 
 void main() 
@@ -40,7 +41,8 @@ void main()
 
     // Initialize payload
     payload.color = vec3(0.0);
-    payload.weight = 1.0;
+    payload.attenuation = vec3(1.0); // Start with full white throughput
+    payload.seed = gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x + 0/*frameCount*/; // Initialize seed
     payload.depth = 0;
     payload.stop = false;
 
@@ -61,7 +63,7 @@ void main()
             0                   // payload location
         );
 
-        if (payload.stop || payload.weight < 0.01)
+        if (payload.stop /*|| payload.weight < 0.01*/)
         {
             break;
         }
