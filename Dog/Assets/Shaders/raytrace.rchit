@@ -2,10 +2,13 @@
 #extension GL_EXT_ray_tracing : require
 #extension GL_EXT_nonuniform_qualifier : require
 
-layout(location = 0) rayPayloadEXT HitPayload {
-    vec3 color;         // Accumulated color
-    float weight;       // Throughput (starts at 1.0, decreases on hits)
-    int depth;          // Current bounce number
+layout(location = 0) rayPayloadInEXT HitPayload {
+    vec3 color;
+    float weight;
+    int depth;
+    vec3 nextRayOrigin;
+    vec3 nextRayDir;   
+    bool stop;   
 } payload;
 
 layout(location = 1) rayPayloadEXT bool isShadowed;
@@ -221,7 +224,9 @@ void main()
     // Normal: Transform local normal to world using WorldToObject (Inverse Transpose logic)
     // Note: gl_WorldToObjectEXT is the inverse of the current instance transform. 
     // Multiplying a vector by it behaves like multiplying by the transpose of the inverse.
-    vec3 N = normalize(vec3(normalLocal * gl_WorldToObjectEXT));
+    // vec3 N = normalize(vec3(normalLocal * gl_WorldToObjectEXT));
+    mat3 normalMatrix = transpose(mat3(gl_WorldToObjectEXT));
+    vec3 N = normalize(normalMatrix * normalLocal);
 
     // View Vector: In RT, it's the opposite of the ray direction
     vec3 V = normalize(-gl_WorldRayDirectionEXT);
@@ -235,13 +240,6 @@ void main()
         baseColor *= SampleTexture(instance.textureIndicies.x, uv);
     }
     vec3 albedo = baseColor.rgb;
-    
-    // Alpha Test
-    if (baseColor.a < 0.1) 
-    {
-        payload.color = vec3(0.0); 
-        return;
-    }
 
     // Metallic
     float metallic = instance.metallicRoughnessFactor.x;
@@ -305,12 +303,12 @@ void main()
         // Shadow
         float NdotL = max(dot(N, L), 0.0);
         float shadowFactor = 1.0;
-        
+
         if (NdotL > 0.0 && attenuation > 0.0)
         {
              shadowFactor = fetchShadow(fragWorldPos, N, L, lightDistance);
         }
-
+        
         vec3 lightCol = light.color * light.intensity * attenuation * shadowFactor;
 
         Lo += computePBRLight(albedo, metallic, roughness, N, V, L, lightCol);
@@ -321,10 +319,25 @@ void main()
     vec3 ambient = vec3(0.03) * albedo * ao;
     vec3 color = (Lo * ao) + ambient + emissive;
 
-    // Tone map + gamma
-    color = color / (color + vec3(1.0));
-    color = pow(color, vec3(1.0 / 2.2));
+    payload.color += color * payload.weight;
 
-    payload.color = color;
-    payload.weight = 1.0;
+    // Default to solid, stop the ray
+    payload.stop = true;
+
+    // CASE A: TRANSPARENT (Glass / Water)
+    if (baseColor.a < 0.95) 
+    {
+        payload.weight *= (1.0 - baseColor.a);
+        payload.nextRayDir = gl_WorldRayDirectionEXT;         
+        payload.nextRayOrigin = gl_WorldRayOriginEXT + gl_WorldRayDirectionEXT * (gl_HitTEXT + 0.001);
+        payload.stop = false;
+    }
+    // CASE B: MIRROR / METAL (Reflective)
+    else if (metallic > 0.1)
+    {
+        payload.weight *= metallic;         
+        payload.nextRayDir = reflect(gl_WorldRayDirectionEXT, N);
+        payload.nextRayOrigin = fragWorldPos + N * 0.001;
+        payload.stop = false;
+    }
 }

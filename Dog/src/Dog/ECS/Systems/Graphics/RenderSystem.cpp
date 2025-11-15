@@ -88,29 +88,84 @@ namespace Dog
         }
     }
 
+    void CreateSphereCube(ECS* ecs,
+        int total = 20,
+        float worldSize = 10.0f,
+        int shellThickness = 5,
+        const char* sphereModel = "Assets/Models/sphere.obj")
+    {
+        if (total <= 0) return;
+        if (shellThickness <= 0) shellThickness = 1;
+        if (shellThickness * 2 >= total) shellThickness = total / 4; // ensure there is a hollow center
+
+        const int half = total / 2; // iterate from -half .. half-1 (total entries)
+        const float spacing = (worldSize / float(total)); // center-to-center spacing
+        // Optional: scale for the sphere model (adjust if your sphere.obj has a different default size)
+        const float sphereScale = spacing * 0.6f; // make sphere diameter slightly smaller than spacing
+
+        // compute the inclusive end of the left-side and the start of the right-side indices
+        // example: total=20, shellThickness=5 => indices -10..9
+        // leftEnd = -10 + 5 - 1 = -6  (left side covers -10..-6 inclusive)
+        // rightStart = 10 - 5 = 5     (right side covers 5..9 inclusive)
+        const int leftEnd = -half + shellThickness - 1;
+        const int rightStart = half - shellThickness;
+
+        for (int x = -half; x < half; ++x)
+        {
+            for (int y = -half; y < half; ++y)
+            {
+                for (int z = -half; z < half; ++z)
+                {
+                    // Determine if this (x,y,z) is inside the central hollow cube:
+                    // it's inside the hollow if x is strictly between leftEnd and rightStart-1,
+                    // and likewise for y and z. If all three are inside, skip placement.
+                    const bool xInCenter = (x > leftEnd && x < rightStart);
+                    const bool yInCenter = (y > leftEnd && y < rightStart);
+                    const bool zInCenter = (z > leftEnd && z < rightStart);
+
+                    // Skip points that are inside the central cubic void on all three axes
+                    if (xInCenter && yInCenter && zInCenter)
+                        continue;
+
+                    // position in world space (centered around origin)
+                    glm::vec3 position = glm::vec3(float(x) * spacing,
+                        float(y) * spacing,
+                        float(z) * spacing);
+
+                    // optional rotation (small deterministic rotation per-item)
+                    float rX = float(x * y * z) * 0.03f;    // tweak multipliers to taste
+                    float rY = float(x + y + z) * 0.05f;
+                    float rZ = float(x - y + z) * 0.04f;
+
+                    Entity entity = ecs->AddEntity();
+                    auto& tr = entity.GetComponent<TransformComponent>();
+                    tr.Translation = position;
+                    tr.Rotation = glm::vec3(rX, rY, rZ);
+                    tr.Scale = glm::vec3(sphereScale);
+
+                    auto& mc = entity.AddComponent<ModelComponent>(sphereModel);
+                    float nx = (float(x + half) / float(total)) * 255.0f;
+                    float ny = (float(y + half) / float(total)) * 255.0f;
+                    float nz = (float(z + half) / float(total)) * 255.0f;
+
+                    // Boost saturation by applying a non-linear curve
+                    nx = pow(nx, 0.6f);
+                    ny = pow(ny, 0.6f);
+                    nz = pow(nz, 0.6f);
+
+                    mc.tintColor = glm::vec4(255.0f, 0, 0, 255.0f);
+                }
+            }
+        }
+    }
+
     void RenderSystem::FrameStart()
     {
         auto rr = ecs->GetResource<RenderingResource>();
 
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan && !rr->tlasAccel.accel && rr->blasAccel.empty())
         {
-            // setup test scene for raytracing with a cube of many entities
-            // for (int x = -25; x < 25; x += 1)
-            // {
-            //     for (int y = -25; y < 25; y += 1)
-            //     {
-            //         for (int z = -25; z < 25; z += 1)
-            //         {
-            //             float rX = float(x * y * z) * 0.1f;
-            //             float rY = float(x + y + z) * 0.2f;
-            //             float rZ = float(x - y + z) * 0.3f;
-            // 
-            //             Entity entity = ecs->AddEntity();
-            //             entity.AddComponent<TransformComponent>(glm::vec3(x, y, z), glm::vec3(rX, rY, rZ), glm::vec3(0.5f));
-            //             entity.AddComponent<ModelComponent>("Assets/Models/cube.obj");
-            //         }
-            //     }
-            // }
+            // CreateSphereCube(ecs, 10, 15.0f, 2);
 
             // get num entities with model component
             mConstStartingObjectCount = 0;

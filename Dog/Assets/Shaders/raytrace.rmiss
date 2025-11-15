@@ -1,10 +1,13 @@
 #version 460
 #extension GL_EXT_ray_tracing : require
 
-layout(location = 0) rayPayloadEXT HitPayload {
-    vec3 color;         // Accumulated color
-    float weight;       // Throughput (starts at 1.0, decreases on hits)
-    int depth;          // Current bounce number
+layout(location = 0) rayPayloadInEXT HitPayload {
+    vec3 color;
+    float weight;
+    int depth;
+    vec3 nextRayOrigin;
+    vec3 nextRayDir;   
+    bool stop;         
 } payload;
 
 void main()
@@ -53,5 +56,6 @@ void main()
     vec3 sunLight = SUN_COLOR * glowIntensity;
 
     // --- FINAL COMPOSITION ---
-    payload.color += (environment + sunLight) * payload.weight;
+    payload.color = environment + sunLight;
+    payload.stop = true;
 }
