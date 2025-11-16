@@ -23,6 +23,7 @@ namespace Dog
 
         std::unique_ptr<IMesh>& GetUnifiedMesh() { return mUnifiedMesh; }
         const MeshInfo& GetMeshInfo(uint32_t meshID) const { return mMeshInfos.at(meshID); }
+        uint32_t GetMeshCount() const { return static_cast<uint32_t>(mMeshInfos.size()); }
 
     private:
         std::unique_ptr<IMesh> mUnifiedMesh;

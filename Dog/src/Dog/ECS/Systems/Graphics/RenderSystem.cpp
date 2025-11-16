@@ -172,35 +172,27 @@ namespace Dog
             auto view = ecs->GetRegistry().view<ModelComponent>();
             mRTMeshData.clear();
             mRTMeshIndices.clear();
-            ecs->GetRegistry().view<ModelComponent>().each([&](auto entity, ModelComponent& mc) 
+            
+            auto uMeshes = rr->modelLibrary->GetUnifiedMesh();
+            if (uMeshes)
             {
-                auto model = rr->modelLibrary->GetModel(mc.ModelPath);
-                if (model)
+                mConstStartingObjectCount = uMeshes->GetMeshCount();
+
+                MeshDataUniform vertexData;
+                for (auto& v : uMeshes->GetUnifiedMesh()->mVertices)
                 {
-                    for (auto& mesh : model->mMeshes)
-                    {
-                        mConstStartingObjectCount++;
-
-                        MeshDataUniform vertexData;
-                        for (auto& v : mesh->mVertices)
-                        {
-                            vertexData.position = v.position;
-                            vertexData.color = v.color;
-                            vertexData.normal = v.normal;
-                            vertexData.texCoord = v.uv;
-                            vertexData.boneIds = glm::ivec4(v.boneIDs[0], v.boneIDs[1], v.boneIDs[2], v.boneIDs[3]);
-                            vertexData.weights = glm::vec4(v.weights[0], v.weights[1], v.weights[2], v.weights[3]);
-                            mRTMeshData.push_back(vertexData);
-                        }
-
-                        for (auto& index : mesh->mIndices)
-                        {
-                            mRTMeshIndices.push_back(index);
-                        }
-                    }
+                    vertexData.position = v.position;
+                    vertexData.color = v.color;
+                    vertexData.normal = v.normal;
+                    vertexData.texCoord = v.uv;
+                    vertexData.boneIds = glm::ivec4(v.boneIDs[0], v.boneIDs[1], v.boneIDs[2], v.boneIDs[3]);
+                    vertexData.weights = glm::vec4(v.weights[0], v.weights[1], v.weights[2], v.weights[3]);
+                    mRTMeshData.push_back(vertexData);
                 }
-            });
 
+                mRTMeshIndices = uMeshes->GetUnifiedMesh()->mIndices;
+            }
+            
             CreateBottomLevelAS();  // Set up BLAS infrastructure
             CreateTopLevelAS();     // Set up TLAS infrastructure
             
@@ -331,6 +323,7 @@ namespace Dog
 
         AnimationLibrary* al = rr->animationLibrary.get();
         ModelLibrary* ml = rr->modelLibrary.get();
+        UnifiedMeshes* uMeshes = ml->GetUnifiedMesh();
 
         auto entityView = registry.view<ModelComponent, TransformComponent>();
         uint32_t indexOffset = 0;
@@ -370,11 +363,9 @@ namespace Dog
                 data.metallicRoughnessFactor = glm::vec4(mesh->metallicFactor, mesh->roughnessFactor, 0.f, 0.f);
                 data.emissiveFactor = mesh->emissiveFactor;
 
-                data.indexOffset = indexOffset;
-                data.vertexOffset = vertexOffset;
-                indexOffset += static_cast<uint32_t>(mesh->mIndices.size());
-                vertexOffset += static_cast<uint32_t>(mesh->mVertices.size());
-
+                const MeshInfo& meshInfo = uMeshes->GetMeshInfo(mesh->GetID());
+                data.indexOffset = meshInfo.firstIndex;
+                data.vertexOffset = meshInfo.vertexOffset;
                 data._padding = 777;
             }
         }
@@ -786,9 +777,6 @@ namespace Dog
             }
         }
 
-        // For now, just log that we're ready to build TLAS
-        DOG_INFO("Ready to build top-level acceleration structure with {} instances", tlasInstances.size());
-
         // Then create the buffer with the instance data
         // --- Stage & Copy TLAS instance data ---
         Buffer stagingBuffer;
@@ -887,7 +875,7 @@ namespace Dog
             }
         }
 
-        DOG_INFO("  Top-level acceleration structures built successfully\n");
+        DOG_INFO("Top-level AS built with {} instances!", tlasInstances.size());
 
         // Cleanup staging and instance buffers
         Allocator::DestroyBuffer(stagingBuffer);
