@@ -11,6 +11,8 @@ namespace Dog
         IResource(const IResource&) = delete;
         IResource& operator=(const IResource&) = delete;
 
+        virtual void Shutdown() {}
+
     protected:
         friend class ECS;
         ECS* ecs = nullptr; // Reference to ECS

@@ -8,6 +8,11 @@ namespace Dog
 {
     WindowResource::WindowResource(int w, int h, std::wstring_view name)
     {
+        if (!glfwInit())
+        {
+            DOG_CRITICAL("Failed to initialize GLFW");
+        }
+
         Create(w, h, name);
     }
 
@@ -36,11 +41,18 @@ namespace Dog
     {
         if (window)
         {
+            // Store window location for the next window
             GLFWwindow* glfwWindow = window->GetGLFWwindow();
             glfwGetWindowPos(glfwWindow, &IWindow::xPos, &IWindow::yPos);
         }
 
         window.reset();
+    }
+
+    void WindowResource::Shutdown()
+    {
+        Cleanup();
+        glfwTerminate();
     }
 }
 
