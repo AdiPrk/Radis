@@ -106,7 +106,7 @@ namespace Dog
         Allocator::DestroyBuffer(staging);
     }
 
-    void VKMesh::Cleanup()
+    void VKMesh::DestroyBuffers()
     {
         Allocator::DestroyBuffer(mVertexBuffer);
         if (mHasIndexBuffer)

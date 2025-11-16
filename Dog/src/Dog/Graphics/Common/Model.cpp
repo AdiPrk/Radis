@@ -27,6 +27,8 @@ namespace Dog
         {
             mesh->CreateVertexBuffers(&device);
             mesh->CreateIndexBuffers(&device);
+
+            
         }
     }
 

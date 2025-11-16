@@ -13,7 +13,7 @@ namespace Dog
 
         void CreateVertexBuffers(Device* device) override;
         void CreateIndexBuffers(Device* device) override;
-        void Cleanup() override;
+        void DestroyBuffers() override;
 
         void Bind(VkCommandBuffer commandBuffer, VkBuffer instBuffer) override;
         void Draw(VkCommandBuffer commandBuffer, uint32_t baseIndex = 0) override;
