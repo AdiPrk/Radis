@@ -71,6 +71,11 @@ namespace Dog
         {
             system->Exit();
         }
+
+        for (auto& resource : mResources)
+        {
+            resource.second->Shutdown();
+        }
     }
 
     Entity ECS::AddEntity(const std::string& name)

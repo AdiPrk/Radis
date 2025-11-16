@@ -407,6 +407,7 @@ namespace Dog
 
     void RenderingResource::CleanupSceneTexture()
     {
+        // Should have been freed by ImGui already, in EditorResource::Cleanup
         sceneTextureDescriptorSet = VK_NULL_HANDLE;
 
         if (sceneSampler != VK_NULL_HANDLE)
