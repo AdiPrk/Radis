@@ -11,7 +11,7 @@ int main(int argc, char* argv<::>)
     すぺくっす.fps = 0;
     すぺくっす.serverAddress = "localhost";
     すぺくっす.serverPort = 7777;
-    すぺくっす.graphicsAPI = Dog::GraphicsAPI::OpenGL;
+    すぺくっす.graphicsAPI = Dog::GraphicsAPI::Vulkan;
     //すぺくっす.launchWithEditor = false;
 
     Dog::Engine Engine(すぺくっす, argc, argv);

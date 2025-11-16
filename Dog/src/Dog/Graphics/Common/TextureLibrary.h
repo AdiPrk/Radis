@@ -40,14 +40,13 @@ namespace Dog
 
 		friend class VKTexture;
 		std::vector<std::unique_ptr<ITexture>> mTextures;
+		std::vector<TextureData> mTexturesData;
 		std::unordered_map<std::string, uint32_t> mTextureMap;
 
 		Device* device;
 		VkSampler mTextureSampler;
 		VkDescriptorSetLayout mImageDescriptorSetLayout;
 		VkDescriptorPool mImageDescriptorPool;
-
-		std::vector<ITexture::UncompressedPixelData> mCpuPixelArrays;
 	};
 
 } // namespace Dog

@@ -240,6 +240,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Dog\Graphics\Common\Path\CubicSpline.cpp" />
     <ClCompile Include="src\Dog\Graphics\Common\Path\PathFollower.cpp" />
     <ClCompile Include="src\Dog\Graphics\Common\Path\SpeedControl.cpp" />
+    <ClCompile Include="src\Dog\Graphics\Common\TextureData.cpp" />
     <ClCompile Include="src\Dog\Graphics\OpenGL\GLFrameBuffer.cpp" />
     <ClCompile Include="src\Dog\Graphics\OpenGL\GLMesh.cpp" />
     <ClCompile Include="src\Dog\Graphics\OpenGL\GLShader.cpp" />
@@ -346,6 +347,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Dog\Graphics\Common\Path\CubicSpline.h" />
     <ClInclude Include="src\Dog\Graphics\Common\Path\PathFollower.h" />
     <ClInclude Include="src\Dog\Graphics\Common\Path\SpeedControl.h" />
+    <ClInclude Include="src\Dog\Graphics\Common\TextureData.h" />
     <ClInclude Include="src\Dog\Graphics\OpenGL\GLFrameBuffer.h" />
     <ClInclude Include="src\Dog\Graphics\OpenGL\GLMesh.h" />
     <ClInclude Include="src\Dog\Graphics\OpenGL\GLShader.h" />
