@@ -466,8 +466,6 @@ namespace Dog
         VkRect2D scissor{ {0, 0}, rr->swapChain->GetSwapChainExtent() };
         vkCmdSetScissor(cmd, 0, 1, &scissor);
 
-        auto debugData = DebugDrawResource::GetInstanceData();
-        
         AnimationLibrary* al = rr->animationLibrary.get();
         ModelLibrary* ml = rr->modelLibrary.get();
 
@@ -478,6 +476,8 @@ namespace Dog
         Model* cubeModel = ml->TryAddGetModel("Assets/Models/cube.obj");
         auto& cubeMesh = cubeModel->mMeshes[0];
         cubeMesh->Bind(cmd, instBuffer);
+        
+        auto debugData = DebugDrawResource::GetInstanceData();
         //for (auto& data : debugData)
         //{
         //    cubeMesh->Draw(cmd, baseIndex++);
@@ -509,11 +509,13 @@ namespace Dog
         rr->shader->Use();
 
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        rr->sceneFrameBuffer->Bind();
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        if (Engine::GetEditorEnabled()) {
+            rr->sceneFrameBuffer->Bind();
+            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        }
 
         AnimationLibrary* al = rr->animationLibrary.get();
         ModelLibrary* ml = rr->modelLibrary.get();
@@ -538,12 +540,12 @@ namespace Dog
 
         GLuint iSSBO = GLShader::GetInstanceSSBO();
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, iSSBO);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, instanceCount * sizeof(InstanceUniforms), mInstanceData.data(), GL_DYNAMIC_DRAW);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, mInstanceData.size() * sizeof(InstanceUniforms), mInstanceData.data());
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
         
         GLuint textureSSBO = GLShader::GetTextureSSBO();
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, textureSSBO);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, textureData.size() * sizeof(uint64_t), textureData.data(), GL_DYNAMIC_DRAW);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, textureData.size() * sizeof(uint64_t), textureData.data());
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
         int baseIndex = 0;
@@ -571,7 +573,10 @@ namespace Dog
             }
         }
 
-        rr->sceneFrameBuffer->Unbind();
+        if (Engine::GetEditorEnabled())
+        {
+            rr->sceneFrameBuffer->Unbind();
+        }
     }
 
     void RenderSystem::PrimitiveToGeometry(VKMesh& mesh, VkAccelerationStructureGeometryKHR& geometry, VkAccelerationStructureBuildRangeInfoKHR& rangeInfo)

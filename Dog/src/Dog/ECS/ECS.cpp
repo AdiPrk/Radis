@@ -4,6 +4,7 @@
 #include "Resources/IResource.h"
 #include "Entities/Entity.h"
 #include "Components/Components.h"
+#include "Profiler/Profiler.h"
 
 namespace Dog
 {
@@ -38,6 +39,8 @@ namespace Dog
     {
         for (auto& system : mSystems)
         {
+            std::string profileName = system->GetDebugName() + "::FrameStart";
+            PROFILE_SCOPE(profileName.c_str());
             system->FrameStart();
         }
     }
@@ -46,6 +49,8 @@ namespace Dog
     {
         for (auto& system : mSystems)
         {
+            std::string profileName = system->GetDebugName() + "::Update";
+            PROFILE_SCOPE(profileName.c_str());
             system->Update(dt);
         }
     }
@@ -54,6 +59,8 @@ namespace Dog
     {
         for (auto& system : mSystems | std::views::reverse)
         {
+            std::string profileName = system->GetDebugName() + "::FrameEnd";
+            PROFILE_SCOPE(profileName.c_str());
             system->FrameEnd();
         }
     }

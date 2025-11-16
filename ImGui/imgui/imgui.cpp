@@ -1,3 +1,9 @@
+#include "Profiler.h"
+#include "Profiler.h"
+#include "Profiler.h"
+#include "Profiler.h"
+#include "Profiler.h"
+#include "Profiler.h"
 // dear imgui, v1.91.3 WIP
 // (main code and documentation)
 
@@ -5809,6 +5815,30 @@ void ImGui::EndFrame()
     g.IO.InputQueueCharacters.resize(0);
 
     CallContextHooks(&g, ImGuiContextHookType_EndFramePost);
+}
+
+void Dog::Profiler::BeginScope(const char* name)
+{
+}
+
+void Dog::Profiler::EndScope(const char* name)
+{
+}
+
+void Dog::Profiler::BeginGPUScope(const char* name)
+{
+}
+
+void Dog::Profiler::EndGPUScope(const char* name)
+{
+}
+
+void Dog::Profiler::AddMemoryUsage(const char* category, size_t bytes)
+{
+}
+
+void Dog::Profiler::ReportFrame()
+{
 }
 
 // Prepare the data for rendering so you can call GetDrawData()
