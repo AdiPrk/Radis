@@ -146,7 +146,11 @@ namespace Dog
 		}
 
 		// Free the pixel data
-		stbi_image_free(mPixels);
+		if (mPixels) {
+			delete[] mPixels;
+			mPixels = nullptr;
+		}
+		// stbi_image_free(mPixels);
 
 		//Set the usage flags for the image
 		VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
@@ -250,6 +254,7 @@ namespace Dog
 
 		// Load in the pixel data
 		mPixels = stbi_load(filepath.c_str(), &mWidth, &mHeight, &mChannels, STBI_rgb_alpha);
+        mChannels = 4; // We forced RGBA
 
 		if (!mPixels) {
             DOG_CRITICAL("stbi_load failed from path: {0}", filepath);
@@ -269,6 +274,7 @@ namespace Dog
 
 		// Load in the pixel data
 		mPixels = stbi_load_from_memory(textureData, static_cast<int>(textureSize), &mWidth, &mHeight, &mChannels, STBI_rgb_alpha);
+        mChannels = 4; // We forced RGBA
 
 		if (!mPixels) {
             DOG_CRITICAL("stbi_load_from_memory failed");

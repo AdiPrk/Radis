@@ -484,6 +484,9 @@ namespace Dog
         //    ++mNumObjectsRendered;
         //}
 
+        UnifiedMeshes* uMeshes = rr->modelLibrary->GetUnifiedMesh();
+        uMeshes->GetUnifiedMesh()->Bind(cmd, instBuffer);
+
         auto entityView = registry.view<ModelComponent, TransformComponent>();
         for (auto& entityHandle : entityView)
         {
@@ -494,8 +497,12 @@ namespace Dog
 
             for (auto& mesh : model->mMeshes)
             {
-                mesh->Bind(cmd, instBuffer);
-                mesh->Draw(cmd, baseIndex++);
+                //mesh->Bind(cmd, instBuffer);
+                //mesh->Draw(cmd, baseIndex);
+                auto& meshData = uMeshes->GetMeshInfo(mesh->GetID());
+                vkCmdDrawIndexed(cmd, meshData.indexCount, 1, meshData.firstIndex, meshData.vertexOffset, baseIndex);
+
+                ++baseIndex;
                 ++mNumObjectsRendered;
             }
         }
@@ -558,6 +565,9 @@ namespace Dog
         //     ++mNumObjectsRendered;
         // }
 
+        UnifiedMeshes* uMeshes = rr->modelLibrary->GetUnifiedMesh();
+        uMeshes->GetUnifiedMesh()->Bind(nullptr, nullptr);
+
         for (auto& entityHandle : entityView)
         {
             Entity entity(&registry, entityHandle);
@@ -567,8 +577,21 @@ namespace Dog
 
             for (auto& mesh : model->mMeshes)
             {
-                mesh->Bind(nullptr, nullptr);
-                mesh->Draw(nullptr, baseIndex++);
+                // mesh->Bind(nullptr, nullptr);
+                // mesh->Draw(nullptr, baseIndex++);
+
+                auto& meshData = uMeshes->GetMeshInfo(mesh->GetID());
+                glDrawElementsInstancedBaseVertexBaseInstance(
+                    GL_TRIANGLES,
+                    static_cast<GLsizei>(meshData.indexCount),
+                    GL_UNSIGNED_INT,
+                    (void*)(sizeof(uint32_t) * meshData.firstIndex),
+                    1,
+                    meshData.vertexOffset,
+                    baseIndex
+                );
+
+                ++baseIndex;
                 ++mNumObjectsRendered;
             }
         }

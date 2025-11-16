@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Vulkan/VKMesh.h"
+#include "Graphics/RHI/IMesh.h"
 
 namespace Dog
 {
@@ -19,15 +19,13 @@ namespace Dog
         UnifiedMeshes();
         ~UnifiedMeshes();
 
-        void AddMesh(
-            Device& device,
-            IMesh& mesh);
+        void AddMesh(Device& device, IMesh& mesh);
 
-        VKMesh& GetUnifiedMesh() { return unifiedMesh; }
+        std::unique_ptr<IMesh>& GetUnifiedMesh() { return mUnifiedMesh; }
         const MeshInfo& GetMeshInfo(uint32_t meshID) const { return mMeshInfos.at(meshID); }
 
     private:
-        VKMesh unifiedMesh;
+        std::unique_ptr<IMesh> mUnifiedMesh;
         std::unordered_map<uint32_t, MeshInfo> mMeshInfos;
     };
 }

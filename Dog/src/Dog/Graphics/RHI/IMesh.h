@@ -33,7 +33,7 @@ namespace Dog
 
         virtual void CreateVertexBuffers(Device* device) = 0;
         virtual void CreateIndexBuffers(Device* device) = 0;
-        virtual void Cleanup() = 0;
+        virtual void DestroyBuffers() = 0;
 
         virtual void Bind(VkCommandBuffer commandBuffer, VkBuffer instBuffer) = 0;
         virtual void Draw(VkCommandBuffer commandBuffer, uint32_t baseIndex = 0) = 0;

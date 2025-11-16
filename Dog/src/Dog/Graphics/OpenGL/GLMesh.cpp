@@ -68,7 +68,7 @@ namespace Dog
         glBindVertexArray(0);
     }
 
-    void GLMesh::Cleanup()
+    void GLMesh::DestroyBuffers()
     {
         if (mEBO) {
             glDeleteBuffers(1, &mEBO);

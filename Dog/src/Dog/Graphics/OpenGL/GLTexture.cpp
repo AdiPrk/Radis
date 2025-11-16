@@ -21,9 +21,9 @@ namespace Dog {
         infile.close();
 
         // load image
-        int width, height, nrChannels;
-        unsigned char* data = stbi_load(file.c_str(), &width, &height, &nrChannels, STBI_rgb_alpha);
-        nrChannels = 4; // because we forced STBI_rgb_alpha
+        int width, height;
+        unsigned char* data = stbi_load(file.c_str(), &width, &height, &mChannels, STBI_rgb_alpha);
+        mChannels = 4; // because we forced STBI_rgb_alpha
 
         // check if data is loaded successfully
         if (!data)
@@ -33,24 +33,24 @@ namespace Dog {
         }
 
         // Set the internal and image formats based on the number of channels
-        if (nrChannels == 4)
+        if (mChannels == 4)
         {
             Internal_Format = GL_SRGB8_ALPHA8;
             Image_Format = GL_RGBA;
         }
-        else if (nrChannels == 3)
+        else if (mChannels == 3)
         {
             Internal_Format = GL_SRGB8;
             Image_Format = GL_RGB;
         }
         else
         {
-            DOG_CRITICAL("Unsupported number of channels: {0}", nrChannels);
+            DOG_CRITICAL("Unsupported number of channels: {0}", mChannels);
             stbi_image_free(data);
             return false;
         }
 
-        mUncompressedData.data.resize(width * height * nrChannels);
+        mUncompressedData.data.resize(width * height * mChannels);
         memcpy(mUncompressedData.data.data(), data, mUncompressedData.data.size());
 
         // Calculate the width and height of a single sprite
@@ -74,9 +74,9 @@ namespace Dog {
     bool GLTexture::loadFromData(const std::vector<char>& data)
     {
         // load image
-        int width, height, nrChannels;
-        unsigned char* imageData = stbi_load_from_memory(reinterpret_cast<const stbi_uc*>(data.data()), (int)data.size(), &width, &height, &nrChannels, STBI_rgb_alpha);
-        nrChannels = 4; // because we forced STBI_rgb_alpha
+        int width, height;
+        unsigned char* imageData = stbi_load_from_memory(reinterpret_cast<const stbi_uc*>(data.data()), (int)data.size(), &width, &height, &mChannels, STBI_rgb_alpha);
+        mChannels = 4; // because we forced STBI_rgb_alpha
 
         // check if data is loaded successfully
         if (!imageData)
@@ -89,7 +89,7 @@ namespace Dog {
         Internal_Format = GL_SRGB8_ALPHA8;
         Image_Format = GL_RGBA;
 
-        mUncompressedData.data.resize(width * height * nrChannels);
+        mUncompressedData.data.resize(width * height * mChannels);
         memcpy(mUncompressedData.data.data(), imageData, mUncompressedData.data.size());
 
         // Calculate the width and height of a single sprite
@@ -218,8 +218,6 @@ namespace Dog {
     GLTexture::~GLTexture()
     {
         glDeleteTextures(1, &this->ID);
-
-        // DOG_INFO("GLTexture destructor called.");
     }
 
     void GLTexture::Generate(unsigned int width, unsigned int height, const unsigned char* data, unsigned int numSprites)
