@@ -125,16 +125,15 @@ namespace Dog
             if (model->mAddedTexture) continue;
             model->mAddedTexture = true;
 
-            auto LoadOrGetTexture = [&](uint32_t& currentIndex, const std::string& path, std::unique_ptr<unsigned char[]>& data, uint32_t& dataSize, const std::string& embeddedName)
+            auto LoadOrGetTexture = [&](uint32_t& currentIndex, const std::string& path, std::vector<unsigned char>& data, const std::string& embeddedName)
             {
                 if (currentIndex != TextureLibrary::INVALID_TEXTURE_INDEX) return;
-                
+
                 if (!path.empty()) currentIndex = mTextureLibrary.AddTexture(path);
-                else if (data != nullptr && dataSize > 0)
+                else if (!data.empty())
                 {
-                    currentIndex = mTextureLibrary.AddTexture(data.get(), dataSize, embeddedName);
-                    data.reset();
-                    dataSize = 0;
+                    currentIndex = mTextureLibrary.AddTexture(data.data(), static_cast<uint32_t>(data.size()), embeddedName);
+                    data.clear();
                 }
             };
 
@@ -145,12 +144,12 @@ namespace Dog
                 std::string embeddedBaseName = "Embedded_" + model->mModelName + "_" + std::to_string(mesh->mMeshID);
 
                 // Call the helper for every texture type
-                LoadOrGetTexture(mesh->albedoTextureIndex, mesh->albedoTexturePath, mesh->mAlbedoTextureData, mesh->mAlbedoTextureSize, embeddedBaseName + "_Albedo");
-                LoadOrGetTexture(mesh->normalTextureIndex, mesh->normalTexturePath, mesh->mNormalTextureData, mesh->mNormalTextureSize, embeddedBaseName + "_Normal");
-                LoadOrGetTexture(mesh->metalnessTextureIndex, mesh->metalnessTexturePath, mesh->mMetalnessTextureData, mesh->mMetalnessTextureSize, embeddedBaseName + "_Metalness");
-                LoadOrGetTexture(mesh->roughnessTextureIndex, mesh->roughnessTexturePath, mesh->mRoughnessTextureData, mesh->mRoughnessTextureSize, embeddedBaseName + "_Roughness");
-                LoadOrGetTexture(mesh->occlusionTextureIndex, mesh->occlusionTexturePath, mesh->mOcclusionTextureData, mesh->mOcclusionTextureSize, embeddedBaseName + "_Occlusion");
-                LoadOrGetTexture(mesh->emissiveTextureIndex, mesh->emissiveTexturePath, mesh->mEmissiveTextureData, mesh->mEmissiveTextureSize, embeddedBaseName + "_Emissive");
+                LoadOrGetTexture(mesh->albedoTextureIndex, mesh->albedoTexturePath, mesh->mAlbedoTextureData, embeddedBaseName + "_Albedo");
+                LoadOrGetTexture(mesh->normalTextureIndex, mesh->normalTexturePath, mesh->mNormalTextureData, embeddedBaseName + "_Normal");
+                LoadOrGetTexture(mesh->metalnessTextureIndex, mesh->metalnessTexturePath, mesh->mMetalnessTextureData, embeddedBaseName + "_Metalness");
+                LoadOrGetTexture(mesh->roughnessTextureIndex, mesh->roughnessTexturePath, mesh->mRoughnessTextureData, embeddedBaseName + "_Roughness");
+                LoadOrGetTexture(mesh->occlusionTextureIndex, mesh->occlusionTexturePath, mesh->mOcclusionTextureData, embeddedBaseName + "_Occlusion");
+                LoadOrGetTexture(mesh->emissiveTextureIndex, mesh->emissiveTexturePath, mesh->mEmissiveTextureData, embeddedBaseName + "_Emissive");
             }
         }
     }

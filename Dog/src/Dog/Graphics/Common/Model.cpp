@@ -187,7 +187,7 @@ namespace Dog
         }
     }
 
-    std::string Model::ResolveTexturePath(aiMaterial* material, const std::vector<aiTextureType>& typesToTry, std::unique_ptr<unsigned char[]>& outEmbeddedData, uint32_t& outEmbeddedDataSize)
+    std::string Model::ResolveTexturePath(aiMaterial* material, const std::vector<aiTextureType>& typesToTry, std::vector<unsigned char>& outEmbeddedData)
     {
         aiString texturePath;
         aiReturn result = AI_FAILURE;
@@ -220,21 +220,20 @@ namespace Dog
 
             return Assets::ModelTexturesPath + mModelName + "/" + filename;
         }
-        else if (embeddedTexture->mHeight == 0)
+        
+        if (embeddedTexture->mHeight == 0)
         {
-            // This is compressed, "non-pixel" data (e.g., JPEG, PNG buffer)
-            embedded = true;
-            outEmbeddedDataSize = static_cast<uint32_t>(embeddedTexture->mWidth);
-            outEmbeddedData = std::make_unique<unsigned char[]>(outEmbeddedDataSize);
-            std::memcpy(outEmbeddedData.get(), embeddedTexture->pcData, outEmbeddedDataSize);
-        }
-        else
-        {
-            DOG_CRITICAL("Model has weird embedded texture data (?)?(?) what does this even mean");
+            const std::size_t dataSize = static_cast<std::size_t>(embeddedTexture->mWidth);
+            const unsigned char* src = reinterpret_cast<const unsigned char*>(embeddedTexture->pcData);
+            outEmbeddedData.assign(src, src + dataSize);
+
             return "";
         }
-
-        return embedded ? "" : texturePath.C_Str();
+        
+        
+        DOG_CRITICAL("Model has weird embedded texture data (?)?(?) what does this even mean");
+        outEmbeddedData.clear();
+        return "";
     }
 
     void Model::ProcessMaterials(aiMesh* mesh, IMesh& newMesh)
@@ -280,8 +279,7 @@ namespace Dog
         newMesh.albedoTexturePath = ResolveTexturePath(
             material,
             { aiTextureType_BASE_COLOR, aiTextureType_DIFFUSE },
-            newMesh.mAlbedoTextureData,
-            newMesh.mAlbedoTextureSize
+            newMesh.mAlbedoTextureData
         );
     }
 
@@ -290,8 +288,7 @@ namespace Dog
         newMesh.normalTexturePath = ResolveTexturePath(
             material,
             { aiTextureType_NORMAL_CAMERA, aiTextureType_NORMALS },
-            newMesh.mNormalTextureData,
-            newMesh.mNormalTextureSize
+            newMesh.mNormalTextureData
         );
     }
 
@@ -303,22 +300,19 @@ namespace Dog
         newMesh.metalnessTexturePath = ResolveTexturePath(
             material,
             { aiTextureType_METALNESS },
-            newMesh.mMetalnessTextureData,
-            newMesh.mMetalnessTextureSize
+            newMesh.mMetalnessTextureData
         );
 
         newMesh.roughnessTexturePath = ResolveTexturePath(
             material,
             { aiTextureType_DIFFUSE_ROUGHNESS },
-            newMesh.mRoughnessTextureData,
-            newMesh.mRoughnessTextureSize
+            newMesh.mRoughnessTextureData
         );
 
         newMesh.occlusionTexturePath = ResolveTexturePath(
             material,
             { aiTextureType_AMBIENT_OCCLUSION, aiTextureType_LIGHTMAP },
-            newMesh.mOcclusionTextureData,
-            newMesh.mOcclusionTextureSize
+            newMesh.mOcclusionTextureData
         );
 
         // Your *engine* can now check the paths
@@ -340,8 +334,7 @@ namespace Dog
         newMesh.emissiveTexturePath = ResolveTexturePath(
             material,
             { aiTextureType_EMISSION_COLOR, aiTextureType_EMISSIVE },
-            newMesh.mEmissiveTextureData,
-            newMesh.mEmissiveTextureSize
+            newMesh.mEmissiveTextureData
         );
     }
 }

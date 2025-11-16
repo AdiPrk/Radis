@@ -7,20 +7,17 @@ namespace Dog
     class GLTexture : public ITexture
     {
     public:
-        GLTexture(const std::string& filePath);
-        GLTexture(const std::string& filePath, const unsigned char* textureData, uint32_t textureSize);
-        GLTexture(const UncompressedPixelData& data);
-        GLTexture(const GLTexture& other) = default;
+        GLTexture(const TextureData& textureData);
         ~GLTexture();
+
+        GLTexture(const GLTexture&) = delete;
+        GLTexture& operator=(const GLTexture&) = delete;
 
         void* GetTextureID() override { return reinterpret_cast<void*>(static_cast<uintptr_t>(ID)); }
 
         // generates texture from image data
         void Generate(unsigned int width, unsigned int height, const unsigned char* data, unsigned int numSprites = 1);
         void Bind() const;
-
-        bool load(const std::string& path);
-        bool loadFromData(const std::vector<char>& data);
 
         // holds the ID of the texture object, used for all texture operations to reference to this particular texture
         unsigned int ID;

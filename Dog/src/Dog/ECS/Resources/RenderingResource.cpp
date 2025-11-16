@@ -73,6 +73,7 @@ namespace Dog
             sceneFrameBuffer = std::make_unique<GLFrameBuffer>(fbSpec);
         }
 
+        bool recreateTextures = textureLibrary != nullptr;
         if (!textureLibrary)
         {
             textureLibrary = std::make_unique<TextureLibrary>(device.get());
@@ -133,7 +134,10 @@ namespace Dog
         // Recreation if needed
         textureLibrary->CreateTextureSampler();
         textureLibrary->CreateDescriptors();
-        textureLibrary->RecreateAllBuffers(device.get());
+        if (recreateTextures)
+        {
+            textureLibrary->RecreateAllBuffers(device.get());
+        }
         modelLibrary->LoadTextures();
         
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
