@@ -26,6 +26,8 @@
 
 #include "Graphics/RHI/RHI.h"
 
+#include "Profiler/Profiler.h"
+
 namespace Dog 
 {
     bool Engine::mDevBuild = false;
@@ -37,6 +39,9 @@ namespace Dog
         : mSpecs(specs)
         , mEcs()
     {
+        Profiler::Initialize();
+        Profiler::SetReportOnEndFrame(false);
+
         mEditorEnabled = mSpecs.launchWithEditor;
         Logger::Init();
 
@@ -107,10 +112,13 @@ namespace Dog
         while (!mEcs.GetResource<WindowResource>()->window->ShouldClose() && mRunning) 
         {
             float dt = frameRateController.WaitForNextFrame();
+            Profiler::BeginFrame();
 
             mEcs.FrameStart();
             mEcs.Update(dt);
             mEcs.FrameEnd();
+
+            Profiler::EndFrame();
         }
 
         return Exit();

@@ -26,6 +26,7 @@
 #include "Windows/SceneWindow.h"
 #include "Windows/EntitiesWindow.h"
 #include "Windows/TextureBrowserWindow.h"
+#include "Windows/ProfilerWindow.h"
 
 #include "Assets/Assets.h"
 #include "Utils/Utils.h"
@@ -58,6 +59,7 @@ namespace Dog
         EditorWindows::RenderSceneWindow(ecs);
         EditorWindows::RenderEntitiesWindow(ecs);
         EditorWindows::RenderTextureBrowser(ecs);
+        EditorWindows::RenderProfilerWindow();
         RenderInspectorWindow();
 
         auto& tl = ecs->GetResource<RenderingResource>()->textureLibrary;
