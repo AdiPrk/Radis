@@ -16,17 +16,11 @@ namespace Dog
     {
         mWidth = w;
         mHeight = h;
-
-        if (!glfwInit()) 
-        {
-            DOG_CRITICAL("Failed to initialize GLFW");
-        }
     }
 
     IWindow::~IWindow()
     {
         glfwDestroyWindow(mWindow);
-        glfwTerminate();
     }
 
     void IWindow::PollEvents()

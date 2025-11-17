@@ -5,7 +5,7 @@
 #include "ECS/Resources/EditorResource.h"
 #include "ECS/Resources/DebugDrawResource.h"
 #include "ECS/Resources/WindowResource.h"
-#include "ECS/Resources/SwapRendererBackendResource.h"
+#include "ECS/Resources/SwapRendererResource.h"
 
 #include "../InputSystem.h"
 
@@ -168,63 +168,66 @@ namespace Dog
             // CreateSphereCube(ecs, 10, 15.0f, 2);
 
             // get num entities with model component
-            mConstStartingObjectCount = 0;
-            auto view = ecs->GetRegistry().view<ModelComponent>();
-            mRTMeshData.clear();
-            mRTMeshIndices.clear();
-            ecs->GetRegistry().view<ModelComponent>().each([&](auto entity, ModelComponent& mc) 
-            {
-                auto model = rr->modelLibrary->GetModel(mc.ModelPath);
-                if (model)
-                {
-                    for (auto& mesh : model->mMeshes)
-                    {
-                        mConstStartingObjectCount++;
-
-                        MeshDataUniform vertexData;
-                        for (auto& v : mesh->mVertices)
-                        {
-                            vertexData.position = v.position;
-                            vertexData.color = v.color;
-                            vertexData.normal = v.normal;
-                            vertexData.texCoord = v.uv;
-                            vertexData.boneIds = glm::ivec4(v.boneIDs[0], v.boneIDs[1], v.boneIDs[2], v.boneIDs[3]);
-                            vertexData.weights = glm::vec4(v.weights[0], v.weights[1], v.weights[2], v.weights[3]);
-                            mRTMeshData.push_back(vertexData);
-                        }
-
-                        for (auto& index : mesh->mIndices)
-                        {
-                            mRTMeshIndices.push_back(index);
-                        }
-                    }
-                }
-            });
-
-            CreateBottomLevelAS();  // Set up BLAS infrastructure
-            CreateTopLevelAS();     // Set up TLAS infrastructure
+            // mConstStartingObjectCount = 0;
+            // auto view = ecs->GetRegistry().view<ModelComponent>();
+            // mRTMeshData.clear();
+            // mRTMeshIndices.clear();
+            // 
+            // auto uMeshes = rr->modelLibrary->GetUnifiedMesh();
+            // if (uMeshes)
+            // {
+            //     mConstStartingObjectCount = uMeshes->GetMeshCount();
+            // 
+            //     MeshDataUniform vertexData;
+            //     for (auto& v : uMeshes->GetUnifiedMesh()->mVertices)
+            //     {
+            //         vertexData.position = v.position;
+            //         vertexData.color = v.color;
+            //         vertexData.normal = v.normal;
+            //         vertexData.texCoord = v.uv;
+            //         // vertexData.boneIds = glm::ivec4(v.boneIDs[0], v.boneIDs[1], v.boneIDs[2], v.boneIDs[3]);
+            //         // vertexData.weights = glm::vec4(v.weights[0], v.weights[1], v.weights[2], v.weights[3]);
+            //         mRTMeshData.push_back(vertexData);
+            //     }
+            // 
+            //     mRTMeshIndices = uMeshes->GetUnifiedMesh()->mIndices;
+            // }
             
-            VkWriteDescriptorSetAccelerationStructureKHR asInfo{};
-            asInfo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
-            asInfo.accelerationStructureCount = 1;
-            asInfo.pAccelerationStructures = &rr->tlasAccel.accel;
-            for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex)
-            {
-                DescriptorWriter writer(*rr->rtUniform->GetDescriptorLayout(), *rr->rtUniform->GetDescriptorPool());
-                writer.WriteAccelerationStructure(1, &asInfo);
-                writer.Overwrite(rr->rtUniform->GetDescriptorSets()[frameIndex]);
-            }
-
-            rr->rtUniform->SetUniformData(mRTMeshData, 2, 0);
-            rr->rtUniform->SetUniformData(mRTMeshData, 2, 1);
-            rr->rtUniform->SetUniformData(mRTMeshIndices, 3, 0);
-            rr->rtUniform->SetUniformData(mRTMeshIndices, 3, 1);
+            // CreateBottomLevelAS();  // Set up BLAS infrastructure
+            // CreateTopLevelAS();     // Set up TLAS infrastructure
+            
+            // VkWriteDescriptorSetAccelerationStructureKHR asInfo{};
+            // asInfo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
+            // asInfo.accelerationStructureCount = 1;
+            // asInfo.pAccelerationStructures = &rr->tlasAccel.accel;
+            // for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex)
+            // {
+            //     DescriptorWriter writer(*rr->rtUniform->GetDescriptorLayout(), *rr->rtUniform->GetDescriptorPool());
+            //     writer.WriteAccelerationStructure(1, &asInfo);
+            //     writer.Overwrite(rr->rtUniform->GetDescriptorSets()[frameIndex]);
+            // }
+            // 
+            // rr->rtUniform->SetUniformData(mRTMeshData, 2, 0);
+            // rr->rtUniform->SetUniformData(mRTMeshData, 2, 1);
+            // rr->rtUniform->SetUniformData(mRTMeshIndices, 3, 0);
+            // rr->rtUniform->SetUniformData(mRTMeshIndices, 3, 1);
         }
 
         // Update textures!
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
         {
-            ecs->GetResource<RenderingResource>()->UpdateTextureUniform();
+            if (rr->modelLibrary->NeedsTextureUpdate())
+            {
+                rr->modelLibrary->LoadTextures();
+            }
+        }
+
+        if (rr->textureLibrary->LoadQueuedTextures())
+        {
+            if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+            {
+                rr->UpdateTextureUniform();
+            }
         }
 
         DebugDrawResource::Clear();
@@ -239,13 +242,13 @@ namespace Dog
         // Heh
         if (InputSystem::isKeyTriggered(Key::T))
         {
-            auto sr = ecs->GetResource<SwapRendererBackendResource>();
+            auto sr = ecs->GetResource<SwapRendererResource>();
             sr->RequestSwap();
         }
         // static int si = 0;
         // if (si++ % 30 == 0) 
         // {
-        //     auto sr = ecs->GetResource<SwapRendererBackendResource>();
+        //     auto sr = ecs->GetResource<SwapRendererResource>();
         //     sr->RequestSwap();
         // }
     }
@@ -331,6 +334,7 @@ namespace Dog
 
         AnimationLibrary* al = rr->animationLibrary.get();
         ModelLibrary* ml = rr->modelLibrary.get();
+        UnifiedMeshes* uMeshes = ml->GetUnifiedMesh();
 
         auto entityView = registry.view<ModelComponent, TransformComponent>();
         uint32_t indexOffset = 0;
@@ -370,11 +374,9 @@ namespace Dog
                 data.metallicRoughnessFactor = glm::vec4(mesh->metallicFactor, mesh->roughnessFactor, 0.f, 0.f);
                 data.emissiveFactor = mesh->emissiveFactor;
 
-                data.indexOffset = indexOffset;
-                data.vertexOffset = vertexOffset;
-                indexOffset += static_cast<uint32_t>(mesh->mIndices.size());
-                vertexOffset += static_cast<uint32_t>(mesh->mVertices.size());
-
+                const MeshInfo& meshInfo = uMeshes->GetMeshInfo(mesh->GetID());
+                data.indexOffset = meshInfo.firstIndex;
+                data.vertexOffset = meshInfo.vertexOffset;
                 data._padding = 777;
             }
         }
@@ -466,8 +468,6 @@ namespace Dog
         VkRect2D scissor{ {0, 0}, rr->swapChain->GetSwapChainExtent() };
         vkCmdSetScissor(cmd, 0, 1, &scissor);
 
-        auto debugData = DebugDrawResource::GetInstanceData();
-        
         AnimationLibrary* al = rr->animationLibrary.get();
         ModelLibrary* ml = rr->modelLibrary.get();
 
@@ -478,11 +478,16 @@ namespace Dog
         Model* cubeModel = ml->TryAddGetModel("Assets/Models/cube.obj");
         auto& cubeMesh = cubeModel->mMeshes[0];
         cubeMesh->Bind(cmd, instBuffer);
+        
+        auto debugData = DebugDrawResource::GetInstanceData();
         //for (auto& data : debugData)
         //{
         //    cubeMesh->Draw(cmd, baseIndex++);
         //    ++mNumObjectsRendered;
         //}
+
+        UnifiedMeshes* uMeshes = rr->modelLibrary->GetUnifiedMesh();
+        uMeshes->GetUnifiedMesh()->Bind(cmd, instBuffer);
 
         auto entityView = registry.view<ModelComponent, TransformComponent>();
         for (auto& entityHandle : entityView)
@@ -494,8 +499,12 @@ namespace Dog
 
             for (auto& mesh : model->mMeshes)
             {
-                mesh->Bind(cmd, instBuffer);
-                mesh->Draw(cmd, baseIndex++);
+                //mesh->Bind(cmd, instBuffer);
+                //mesh->Draw(cmd, baseIndex);
+                auto& meshData = uMeshes->GetMeshInfo(mesh->GetID());
+                vkCmdDrawIndexed(cmd, meshData.indexCount, 1, meshData.firstIndex, meshData.vertexOffset, baseIndex);
+
+                ++baseIndex;
                 ++mNumObjectsRendered;
             }
         }
@@ -509,11 +518,13 @@ namespace Dog
         rr->shader->Use();
 
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        rr->sceneFrameBuffer->Bind();
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        if (Engine::GetEditorEnabled()) {
+            rr->sceneFrameBuffer->Bind();
+            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        }
 
         AnimationLibrary* al = rr->animationLibrary.get();
         ModelLibrary* ml = rr->modelLibrary.get();
@@ -538,12 +549,12 @@ namespace Dog
 
         GLuint iSSBO = GLShader::GetInstanceSSBO();
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, iSSBO);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, instanceCount * sizeof(InstanceUniforms), mInstanceData.data(), GL_DYNAMIC_DRAW);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, mInstanceData.size() * sizeof(InstanceUniforms), mInstanceData.data());
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
         
         GLuint textureSSBO = GLShader::GetTextureSSBO();
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, textureSSBO);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, textureData.size() * sizeof(uint64_t), textureData.data(), GL_DYNAMIC_DRAW);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, textureData.size() * sizeof(uint64_t), textureData.data());
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
         int baseIndex = 0;
@@ -556,6 +567,9 @@ namespace Dog
         //     ++mNumObjectsRendered;
         // }
 
+        UnifiedMeshes* uMeshes = rr->modelLibrary->GetUnifiedMesh();
+        uMeshes->GetUnifiedMesh()->Bind(nullptr, nullptr);
+
         for (auto& entityHandle : entityView)
         {
             Entity entity(&registry, entityHandle);
@@ -565,13 +579,29 @@ namespace Dog
 
             for (auto& mesh : model->mMeshes)
             {
-                mesh->Bind(nullptr, nullptr);
-                mesh->Draw(nullptr, baseIndex++);
+                // mesh->Bind(nullptr, nullptr);
+                // mesh->Draw(nullptr, baseIndex++);
+
+                auto& meshData = uMeshes->GetMeshInfo(mesh->GetID());
+                glDrawElementsInstancedBaseVertexBaseInstance(
+                    GL_TRIANGLES,
+                    static_cast<GLsizei>(meshData.indexCount),
+                    GL_UNSIGNED_INT,
+                    (void*)(sizeof(uint32_t) * meshData.firstIndex),
+                    1,
+                    meshData.vertexOffset,
+                    baseIndex
+                );
+
+                ++baseIndex;
                 ++mNumObjectsRendered;
             }
         }
 
-        rr->sceneFrameBuffer->Unbind();
+        if (Engine::GetEditorEnabled())
+        {
+            rr->sceneFrameBuffer->Unbind();
+        }
     }
 
     void RenderSystem::PrimitiveToGeometry(VKMesh& mesh, VkAccelerationStructureGeometryKHR& geometry, VkAccelerationStructureBuildRangeInfoKHR& rangeInfo)
@@ -758,9 +788,6 @@ namespace Dog
             }
         }
 
-        // For now, just log that we're ready to build TLAS
-        DOG_INFO("Ready to build top-level acceleration structure with {} instances", tlasInstances.size());
-
         // Then create the buffer with the instance data
         // --- Stage & Copy TLAS instance data ---
         Buffer stagingBuffer;
@@ -859,7 +886,7 @@ namespace Dog
             }
         }
 
-        DOG_INFO("  Top-level acceleration structures built successfully\n");
+        DOG_INFO("Top-level AS built with {} instances!", tlasInstances.size());
 
         // Cleanup staging and instance buffers
         Allocator::DestroyBuffer(stagingBuffer);

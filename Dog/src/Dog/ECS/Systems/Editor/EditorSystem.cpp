@@ -8,7 +8,7 @@
 #include "ECS/Resources/WindowResource.h"
 #include "ECS/Resources/EditorResource.h"
 #include "ECS/Resources/SerializationResource.h"
-#include "ECS/Resources/SwapRendererBackendResource.h"
+#include "ECS/Resources/SwapRendererResource.h"
 #include "ECS/Systems/InputSystem.h"
 
 #include "Graphics/Vulkan/Core/Device.h"
@@ -26,6 +26,8 @@
 #include "Windows/SceneWindow.h"
 #include "Windows/EntitiesWindow.h"
 #include "Windows/TextureBrowserWindow.h"
+#include "Windows/ProfilerWindow.h"
+#include "Windows/MemoryWindow.h"
 
 #include "Assets/Assets.h"
 #include "Utils/Utils.h"
@@ -55,13 +57,19 @@ namespace Dog
 
         ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
 
-        EditorWindows::RenderSceneWindow(ecs);
-        EditorWindows::RenderEntitiesWindow(ecs);
-        EditorWindows::RenderTextureBrowser(ecs);
-        RenderInspectorWindow();
-
         auto& tl = ecs->GetResource<RenderingResource>()->textureLibrary;
-        EditorWindows::UpdateAssetsWindow(tl.get());
+        {
+            PROFILE_SCOPE("Windows");
+
+            EditorWindows::RenderSceneWindow(ecs);
+            EditorWindows::RenderEntitiesWindow(ecs);
+            EditorWindows::RenderTextureBrowser(ecs);
+            EditorWindows::RenderProfilerWindow();
+            EditorWindows::RenderMemoryWindow();
+            EditorWindows::UpdateAssetsWindow(tl.get());
+            RenderInspectorWindow();
+        }
+
 
         ImGui::Begin("Debug");
         ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
@@ -205,7 +213,7 @@ namespace Dog
             {
                 // dropdown for the enum GraphicsAPI
                 auto currentAPI = Engine::GetGraphicsAPI();
-                auto sr = ecs->GetResource<SwapRendererBackendResource>();
+                auto sr = ecs->GetResource<SwapRendererResource>();
                 if (ImGui::MenuItem("Vulkan", nullptr, currentAPI == GraphicsAPI::Vulkan))
                 {
                     sr->RequestVulkan();
@@ -298,6 +306,8 @@ namespace Dog
     // --- Main Inspector Window Function ---
     void EditorSystem::RenderInspectorWindow()
     {
+        PROFILE_SCOPE("Inspector");
+
         ImGui::Begin("Inspector");
 
         Entity selectedEnt = ecs->GetResource<EditorResource>()->selectedEntity;

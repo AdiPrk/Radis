@@ -14,6 +14,8 @@ namespace Dog
         void Create(int w, int h, std::wstring_view name);
         void Cleanup();
 
+        void Shutdown() override;
+
         std::unique_ptr<IWindow> window;
     };
 }

@@ -24,7 +24,7 @@ namespace Dog
         uint32_t vertexOffset = 0;
         uint32_t _padding = 777;
 
-        const static uint32_t MAX_INSTANCES = 1000000;
+        const static uint32_t MAX_INSTANCES = 10000;
     };
 
     struct SimpleInstanceUniforms
@@ -58,7 +58,7 @@ namespace Dog
         glm::vec3 color;    float _padding2 = 777.0f;
         glm::vec3 normal;   float _padding3 = 777.0f;
         glm::vec2 texCoord; glm::vec2 _padding4 = glm::vec2(777.0f);
-        glm::ivec4 boneIds; 
-        glm::vec4 weights;
+        // glm::ivec4 boneIds; 
+        // glm::vec4 weights;
     };
 }

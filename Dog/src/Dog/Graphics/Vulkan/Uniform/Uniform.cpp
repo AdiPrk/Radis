@@ -66,7 +66,9 @@ namespace Dog
                     VMA_MEMORY_USAGE_AUTO,
                     VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT
                 );
-                Allocator::SetAllocationName(buffer.allocation, "Uniform Buffer (Dog)");
+
+                std::string dbgName = bindingInfo.debugName + std::to_string(frameIndex);
+                Allocator::SetAllocationName(buffer.allocation, dbgName.c_str());
 
                 buffers.push_back(std::move(buffer));
 

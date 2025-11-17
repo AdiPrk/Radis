@@ -30,6 +30,7 @@ namespace Dog
     ModelLibrary::~ModelLibrary()
     {
         mModels.clear();
+        mUnifiedMesh->GetUnifiedMesh()->DestroyBuffers();
     }
 
     uint32_t ModelLibrary::AddModel(const std::string& filePath)
@@ -44,7 +45,7 @@ namespace Dog
         
         uint32_t modelID = static_cast<uint32_t>(mModels.size());
         mModels.push_back(std::move(model));
-        //AddToUnifiedMesh(modelID);
+        AddToUnifiedMesh(modelID);
 
         // std::string mModelName = std::filesystem::path(filePath).stem().string();
         mModelMap[filePath] = modelID;
@@ -124,16 +125,15 @@ namespace Dog
             if (model->mAddedTexture) continue;
             model->mAddedTexture = true;
 
-            auto LoadOrGetTexture = [&](uint32_t& currentIndex, const std::string& path, std::unique_ptr<unsigned char[]>& data, uint32_t& dataSize, const std::string& embeddedName)
+            auto LoadOrGetTexture = [&](uint32_t& currentIndex, const std::string& path, std::vector<unsigned char>& data, const std::string& embeddedName)
             {
                 if (currentIndex != TextureLibrary::INVALID_TEXTURE_INDEX) return;
-                
-                if (!path.empty()) currentIndex = mTextureLibrary.AddTexture(path);
-                else if (data != nullptr && dataSize > 0)
+
+                if (!path.empty()) currentIndex = mTextureLibrary.QueueTextureLoad(path);
+                else if (!data.empty())
                 {
-                    currentIndex = mTextureLibrary.AddTexture(data.get(), dataSize, embeddedName);
-                    data.reset();
-                    dataSize = 0;
+                    currentIndex = mTextureLibrary.QueueTextureLoad(data.data(), static_cast<uint32_t>(data.size()), embeddedName);
+                    data.clear();
                 }
             };
 
@@ -144,12 +144,12 @@ namespace Dog
                 std::string embeddedBaseName = "Embedded_" + model->mModelName + "_" + std::to_string(mesh->mMeshID);
 
                 // Call the helper for every texture type
-                LoadOrGetTexture(mesh->albedoTextureIndex, mesh->albedoTexturePath, mesh->mAlbedoTextureData, mesh->mAlbedoTextureSize, embeddedBaseName + "_Albedo");
-                LoadOrGetTexture(mesh->normalTextureIndex, mesh->normalTexturePath, mesh->mNormalTextureData, mesh->mNormalTextureSize, embeddedBaseName + "_Normal");
-                LoadOrGetTexture(mesh->metalnessTextureIndex, mesh->metalnessTexturePath, mesh->mMetalnessTextureData, mesh->mMetalnessTextureSize, embeddedBaseName + "_Metalness");
-                LoadOrGetTexture(mesh->roughnessTextureIndex, mesh->roughnessTexturePath, mesh->mRoughnessTextureData, mesh->mRoughnessTextureSize, embeddedBaseName + "_Roughness");
-                LoadOrGetTexture(mesh->occlusionTextureIndex, mesh->occlusionTexturePath, mesh->mOcclusionTextureData, mesh->mOcclusionTextureSize, embeddedBaseName + "_Occlusion");
-                LoadOrGetTexture(mesh->emissiveTextureIndex, mesh->emissiveTexturePath, mesh->mEmissiveTextureData, mesh->mEmissiveTextureSize, embeddedBaseName + "_Emissive");
+                LoadOrGetTexture(mesh->albedoTextureIndex, mesh->albedoTexturePath, mesh->mAlbedoTextureData, embeddedBaseName + "_Albedo");
+                LoadOrGetTexture(mesh->normalTextureIndex, mesh->normalTexturePath, mesh->mNormalTextureData, embeddedBaseName + "_Normal");
+                LoadOrGetTexture(mesh->metalnessTextureIndex, mesh->metalnessTexturePath, mesh->mMetalnessTextureData, embeddedBaseName + "_Metalness");
+                LoadOrGetTexture(mesh->roughnessTextureIndex, mesh->roughnessTexturePath, mesh->mRoughnessTextureData, embeddedBaseName + "_Roughness");
+                LoadOrGetTexture(mesh->occlusionTextureIndex, mesh->occlusionTexturePath, mesh->mOcclusionTextureData, embeddedBaseName + "_Occlusion");
+                LoadOrGetTexture(mesh->emissiveTextureIndex, mesh->emissiveTexturePath, mesh->mEmissiveTextureData, embeddedBaseName + "_Emissive");
             }
         }
     }
@@ -158,22 +158,28 @@ namespace Dog
     {
         if (mLastModelLoaded == INVALID_MODEL_INDEX) return false;
 
-        Model* model = GetModel(mLastModelLoaded);
-        if (!model) return false;
+        for (const auto& model : mModels)
+        {
+            if (!model->mAddedTexture)
+            {
+                return true;
+            }
+        }
 
-        return !model->mAddedTexture;
+        return false;
     }
 
     void ModelLibrary::ClearAllBuffers(Device* device)
     {
         for (auto& model : mModels)
         {
-            model->mAddedTexture = false;
             for (auto& mesh : model->mMeshes)
             {
-                mesh->Cleanup();
+                mesh->DestroyBuffers();
             }
         }
+
+        mUnifiedMesh->GetUnifiedMesh()->DestroyBuffers();
     }
 
     void ModelLibrary::RecreateAllBuffers(Device* device)
@@ -186,6 +192,11 @@ namespace Dog
                 std::vector<uint32_t> oldIndices = mesh->mIndices;
                 uint32_t oldMeshID = mesh->GetID();
                 uint32_t oldDiffuseTextureIndex = mesh->albedoTextureIndex;
+                uint32_t oldNormalTextureIndex = mesh->normalTextureIndex;
+                uint32_t oldMetalnessTextureIndex = mesh->metalnessTextureIndex;
+                uint32_t oldRoughnessTextureIndex = mesh->roughnessTextureIndex;
+                uint32_t oldOcclusionTextureIndex = mesh->occlusionTextureIndex;
+                uint32_t oldEmissiveTextureIndex = mesh->emissiveTextureIndex;
 
                 mesh.reset();
 
@@ -202,10 +213,35 @@ namespace Dog
                 mesh->mVertices = oldVertices;
                 mesh->mIndices = oldIndices;
                 mesh->albedoTextureIndex = oldDiffuseTextureIndex;
+                mesh->normalTextureIndex = oldNormalTextureIndex;
+                mesh->metalnessTextureIndex = oldMetalnessTextureIndex;
+                mesh->roughnessTextureIndex = oldRoughnessTextureIndex;
+                mesh->occlusionTextureIndex = oldOcclusionTextureIndex;
+                mesh->emissiveTextureIndex = oldEmissiveTextureIndex;
 
                 mesh->CreateVertexBuffers(device);
                 mesh->CreateIndexBuffers(device);
             }
+        }
+
+        {
+            std::vector<Vertex> oldVertices = mUnifiedMesh->GetUnifiedMesh()->mVertices;
+            std::vector<uint32_t> oldIndices = mUnifiedMesh->GetUnifiedMesh()->mIndices;
+
+            mUnifiedMesh->GetUnifiedMesh().reset();
+            if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
+            {
+                mUnifiedMesh->GetUnifiedMesh() = std::make_unique<GLMesh>(false);
+            }
+            else if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+            {
+                mUnifiedMesh->GetUnifiedMesh() = std::make_unique<VKMesh>(false);
+            }
+
+            mUnifiedMesh->GetUnifiedMesh()->mVertices = oldVertices;
+            mUnifiedMesh->GetUnifiedMesh()->mIndices = oldIndices;
+            mUnifiedMesh->GetUnifiedMesh()->CreateVertexBuffers(device);
+            mUnifiedMesh->GetUnifiedMesh()->CreateIndexBuffers(device);
         }
     }
 }

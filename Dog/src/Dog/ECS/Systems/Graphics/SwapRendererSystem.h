@@ -5,11 +5,11 @@
 
 namespace Dog
 {
-    class SwapRendererBackendSystem : public ISystem
+    class SwapRendererSystem : public ISystem
     {
     public:
-        SwapRendererBackendSystem() : ISystem("SwapRendererBackendSystem") {}
-        ~SwapRendererBackendSystem() {}
+        SwapRendererSystem() : ISystem("SwapRendererSystem") {}
+        ~SwapRendererSystem() {}
 
         void Init() override;
         void FrameStart() override;
@@ -17,4 +17,3 @@ namespace Dog
         void SwapBackend();
     };
 }
-
