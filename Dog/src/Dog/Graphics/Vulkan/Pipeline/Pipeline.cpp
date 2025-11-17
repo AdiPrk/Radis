@@ -167,7 +167,7 @@ namespace Dog
 		configInfo.rasterizationCreateInfo.rasterizerDiscardEnable = VK_FALSE;
 		configInfo.rasterizationCreateInfo.polygonMode = VK_POLYGON_MODE_FILL;
 		configInfo.rasterizationCreateInfo.lineWidth = 1.0f;
-		configInfo.rasterizationCreateInfo.cullMode = VK_CULL_MODE_BACK_BIT;
+		configInfo.rasterizationCreateInfo.cullMode = VK_CULL_MODE_NONE;// VK_CULL_MODE_BACK_BIT;
 		configInfo.rasterizationCreateInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 		configInfo.rasterizationCreateInfo.depthBiasEnable = VK_FALSE;
 		configInfo.rasterizationCreateInfo.depthBiasConstantFactor = 0.0f;

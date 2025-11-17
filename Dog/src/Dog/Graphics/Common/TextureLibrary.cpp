@@ -1,9 +1,13 @@
 #include <PCH/pch.h>
 #include "TextureLibrary.h"
+#include "ECS/Resources/RenderingResource.h"
 
 #include "../RHI/ITexture.h"
 #include "../Vulkan/Texture/VKTexture.h"
 #include "../Vulkan/Core/Device.h"
+#include "../Vulkan/Core/SwapChain.h"
+#include "../Vulkan/Uniform/Descriptors.h"
+#include "../Vulkan/Uniform/Uniform.h"
 #include "../OpenGL/GLTexture.h"
 
 #include "TextureLoader.h"
@@ -165,6 +169,29 @@ namespace Dog
         CreateDescriptorSet(static_cast<VKTexture*>(mTextures[index].get()), finalLayout);
 
         return index;
+    }
+
+    void TextureLibrary::ResizeStorageImage(const std::string& imageName, uint32_t newWidth, uint32_t newHeight)
+    {
+        auto it = mTextureMap.find(imageName);
+        if (it == mTextureMap.end())
+        {
+            return;
+        }
+
+        mNeedReuploadRTImage = true;
+
+        uint32_t index = it->second;
+
+        TextureData& tex = mTexturesData[index];
+        tex.width = newWidth;
+        tex.height = newHeight;
+
+        // vkFreeDescriptorSets(device->GetDevice(), mImageDescriptorPool, 1, &static_cast<VKTexture*>(mTextures[index].get())->mDescriptorSet);
+        mTextures[index].reset();
+
+        mTextures[index] = std::make_unique<VKTexture>(*device, tex);
+        CreateDescriptorSet(static_cast<VKTexture*>(mTextures[index].get()), tex.finalLayout);
     }
 
     ITexture* TextureLibrary::GetTexture(uint32_t index)
@@ -366,6 +393,35 @@ namespace Dog
 
             // Ensure mTextureMap has the same mapping still (this should be true if we didn't clear it).
             mTextureMap[textureData.name] = index;
+        }
+    }
+
+    void TextureLibrary::UpdateRTUniform(RenderingResource& rr)
+    {
+        if (!mNeedReuploadRTImage) return;
+        mNeedReuploadRTImage = false;
+
+        std::vector<VKTexture*> rtTextures(SwapChain::MAX_FRAMES_IN_FLIGHT);
+
+        // Loop and create one texture for each frame
+        for (int i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i)
+        {
+            // Give each texture a unique name
+            std::string texName = "RayTracingOutput_" + std::to_string(i);
+            rtTextures[i] = static_cast<VKTexture*>(rr.textureLibrary->GetTexture(texName));
+        }
+
+        VkDescriptorImageInfo outImageInfo{};
+        outImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL; // storage image layout
+        outImageInfo.sampler = VK_NULL_HANDLE; // storage images donÅft use samplers
+
+        for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex) 
+        {
+            outImageInfo.imageView = rtTextures[frameIndex]->GetImageView();
+
+            DescriptorWriter writer(*rr.rtUniform->GetDescriptorLayout(), *rr.rtUniform->GetDescriptorPool());
+            writer.WriteImage(0, &outImageInfo);
+            writer.Overwrite(rr.rtUniform->GetDescriptorSets()[frameIndex]);
         }
     }
 }

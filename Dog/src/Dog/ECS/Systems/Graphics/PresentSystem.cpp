@@ -10,8 +10,9 @@
 #include "Graphics/Vulkan/Core/SwapChain.h"
 #include "Graphics/Vulkan/RenderGraph.h"
 #include "Graphics/Vulkan/Core/Synchronization.h"
-
 #include "Graphics/Vulkan/VulkanWindow.h"
+
+#include "Graphics/Common/TextureLibrary.h"
 
 #include "Engine.h"
 
@@ -23,6 +24,14 @@ namespace Dog
         {
             auto rr = ecs->GetResource<RenderingResource>();
             rr->RecreateAllSceneTextures();
+
+            auto tl = rr->textureLibrary.get();
+            if (tl)
+            {
+                const auto& extent = rr->swapChain->GetSwapChainExtent();
+                tl->ResizeStorageImage("RayTracingOutput_0", extent.width, extent.height);
+                tl->ResizeStorageImage("RayTracingOutput_1", extent.width, extent.height);
+            }
         }
 	}
 
@@ -48,6 +57,14 @@ namespace Dog
         {
             rr->RecreateSwapChain(wr->window.get());
             rr->RecreateAllSceneTextures();
+
+            auto tl = rr->textureLibrary.get();
+            if (tl)
+            {
+                const auto& extent = rr->swapChain->GetSwapChainExtent();
+                tl->ResizeStorageImage("RayTracingOutput_0", extent.width, extent.height);
+                tl->ResizeStorageImage("RayTracingOutput_1", extent.width, extent.height);
+            }
             return;
         }
 
@@ -169,6 +186,14 @@ namespace Dog
             wr->window->ResetResizeFlag();
             rr->RecreateSwapChain(wr->window.get());
             rr->RecreateAllSceneTextures();
+
+            auto tl = rr->textureLibrary.get();
+            if (tl)
+            {
+                const auto& extent = rr->swapChain->GetSwapChainExtent();
+                tl->ResizeStorageImage("RayTracingOutput_0", extent.width, extent.height);
+                tl->ResizeStorageImage("RayTracingOutput_1", extent.width, extent.height);
+            }
             rr->syncObjects->ClearImageFences();
         }
         else if (result != VK_SUCCESS) {

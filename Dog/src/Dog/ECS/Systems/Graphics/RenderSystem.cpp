@@ -227,6 +227,11 @@ namespace Dog
             }
         }
 
+        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+        {
+            rr->textureLibrary->UpdateRTUniform(*rr);
+        }
+
         DebugDrawResource::Clear();
 
         DrawEditorGrid(50, 1.0f);
@@ -265,6 +270,7 @@ namespace Dog
             auto extant = windowResource->window->GetExtent();
             aspectRatio = static_cast<float>(extant.x) / static_cast<float>(extant.y);
         }
+        printf("Aspect Ratio: %f\n", aspectRatio);
 
         mNumObjectsRendered = 0;
 
