@@ -50,6 +50,7 @@ namespace Dog
 		VkDescriptorPool mImageDescriptorPool;
 
         std::vector<TextureLoadData> mPendingTextureLoads;
+        uint32_t mNextIndex = 0;
 	};
 
 } // namespace Dog

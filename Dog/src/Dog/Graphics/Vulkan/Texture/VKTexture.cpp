@@ -196,6 +196,7 @@ namespace Dog
 		}
 
         std::string dbgName = "Tex_" + mData.name;
+		if (dbgName == "Tex_") __debugbreak();
         Allocator::SetAllocationName(mTextureImageAllocation, dbgName.c_str());
 	}
 
