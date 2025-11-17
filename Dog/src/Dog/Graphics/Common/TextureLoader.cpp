@@ -59,4 +59,35 @@ namespace Dog
         stbi_image_free(data);
         return true;
     }
+
+    void TextureLoader::LoadMT(std::vector<TextureLoadData>& loadData)
+    {
+        if (loadData.empty()) return;
+
+        std::vector<std::future<bool>> futures;
+        futures.reserve(loadData.size());
+
+        for (auto& entry : loadData)
+        {
+            futures.emplace_back(std::async(std::launch::async, [&entry]()
+            {
+                if (entry.data != nullptr && entry.size > 0)
+                {
+                    return TextureLoader::FromMemory(entry.data, entry.size, entry.outTexture.name, entry.outTexture);
+                }
+                else if (!entry.path.empty())
+                {
+                    return TextureLoader::FromFile(entry.path, entry.outTexture);
+                }
+
+                return false;
+            }));
+        }
+
+        // Wait for all tasks to complete
+        for (auto& f : futures)
+        {
+            f.get();
+        }
+    }
 }

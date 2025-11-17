@@ -129,10 +129,10 @@ namespace Dog
             {
                 if (currentIndex != TextureLibrary::INVALID_TEXTURE_INDEX) return;
 
-                if (!path.empty()) currentIndex = mTextureLibrary.AddTexture(path);
+                if (!path.empty()) currentIndex = mTextureLibrary.QueueTextureLoad(path);
                 else if (!data.empty())
                 {
-                    currentIndex = mTextureLibrary.AddTexture(data.data(), static_cast<uint32_t>(data.size()), embeddedName);
+                    currentIndex = mTextureLibrary.QueueTextureLoad(data.data(), static_cast<uint32_t>(data.size()), embeddedName);
                     data.clear();
                 }
             };
@@ -158,17 +158,21 @@ namespace Dog
     {
         if (mLastModelLoaded == INVALID_MODEL_INDEX) return false;
 
-        Model* model = GetModel(mLastModelLoaded);
-        if (!model) return false;
+        for (const auto& model : mModels)
+        {
+            if (!model->mAddedTexture)
+            {
+                return true;
+            }
+        }
 
-        return !model->mAddedTexture;
+        return false;
     }
 
     void ModelLibrary::ClearAllBuffers(Device* device)
     {
         for (auto& model : mModels)
         {
-            model->mAddedTexture = false;
             for (auto& mesh : model->mMeshes)
             {
                 mesh->DestroyBuffers();

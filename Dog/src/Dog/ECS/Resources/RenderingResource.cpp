@@ -77,19 +77,19 @@ namespace Dog
         if (!textureLibrary)
         {
             textureLibrary = std::make_unique<TextureLibrary>(device.get());
-            textureLibrary->AddTexture(Assets::ImagesPath + "dog.png");
-            textureLibrary->AddTexture(Assets::ImagesPath + "circle.png");
-            textureLibrary->AddTexture(Assets::ImagesPath + "circleOutline2.png");
-            textureLibrary->AddTexture(Assets::ImagesPath + "dogmodel.png");
-            textureLibrary->AddTexture(Assets::ImagesPath + "error.png");
-            textureLibrary->AddTexture(Assets::ImagesPath + "ErrorTexture.png");
-            textureLibrary->AddTexture(Assets::ImagesPath + "glslIcon.png");
-            textureLibrary->AddTexture(Assets::ImagesPath + "playButton.png");
-            textureLibrary->AddTexture(Assets::ImagesPath + "square.png");
-            textureLibrary->AddTexture(Assets::ImagesPath + "stopButton.png");
-            textureLibrary->AddTexture(Assets::ImagesPath + "texture.jpg");
-            textureLibrary->AddTexture(Assets::ImagesPath + "folderIcon.png");
-            textureLibrary->AddTexture(Assets::ImagesPath + "unknownFileIcon.png");
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "dog.png");
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "circle.png");
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "circleOutline2.png");
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "dogmodel.png");
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "error.png");
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "ErrorTexture.png");
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "glslIcon.png");
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "playButton.png");
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "square.png");
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "stopButton.png");
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "texture.jpg");
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "folderIcon.png");
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "unknownFileIcon.png");
         }
         else
         {
@@ -246,40 +246,32 @@ namespace Dog
 
     void RenderingResource::UpdateTextureUniform()
     {
-        auto& ml = modelLibrary;
-        if (ml->NeedsTextureUpdate())
-        {
-            ml->LoadTextures();
+        auto& tl = textureLibrary;
+        size_t textureCount = tl->GetTextureCount();
+        VkSampler defaultSampler = tl->GetSampler();
+        bool hasTex = textureCount > 0;
 
-            auto& tl = textureLibrary;
+        std::vector<VkDescriptorImageInfo> imageInfos(TextureLibrary::MAX_TEXTURE_COUNT);
+        for (size_t j = 0; j < TextureLibrary::MAX_TEXTURE_COUNT; ++j) {
+            imageInfos[j].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            imageInfos[j].sampler = defaultSampler;
+            imageInfos[j].imageView = 0;
 
-            size_t textureCount = tl->GetTextureCount();
-            std::vector<VkDescriptorImageInfo> imageInfos(TextureLibrary::MAX_TEXTURE_COUNT);
-
-            VkSampler defaultSampler = tl->GetSampler();
-
-            bool hasTex = textureCount > 0;
-            for (size_t j = 0; j < TextureLibrary::MAX_TEXTURE_COUNT; ++j) {
-                imageInfos[j].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                imageInfos[j].sampler = defaultSampler;
-                imageInfos[j].imageView = 0;
-
-                if (hasTex)
+            if (hasTex)
+            {
+                ITexture* itex = tl->GetTextureByIndex(static_cast<uint32_t>(std::min(j, textureCount - 1)));
+                VKTexture* vktex = static_cast<VKTexture*>(itex);
+                if (vktex)
                 {
-                    ITexture* itex = tl->GetTextureByIndex(static_cast<uint32_t>(std::min(j, textureCount - 1)));
-                    VKTexture* vktex = static_cast<VKTexture*>(itex);
-                    if (vktex)
-                    {
-                        imageInfos[j].imageView = vktex->GetImageView();
-                    }
+                    imageInfos[j].imageView = vktex->GetImageView();
                 }
             }
+        }
 
-            for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex) {
-                DescriptorWriter writer(*cameraUniform->GetDescriptorLayout(), *cameraUniform->GetDescriptorPool());
-                writer.WriteImage(3, imageInfos.data(), static_cast<uint32_t>(imageInfos.size()));
-                writer.Overwrite(cameraUniform->GetDescriptorSets()[frameIndex]);
-            }
+        for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex) {
+            DescriptorWriter writer(*cameraUniform->GetDescriptorLayout(), *cameraUniform->GetDescriptorPool());
+            writer.WriteImage(3, imageInfos.data(), static_cast<uint32_t>(imageInfos.size()));
+            writer.Overwrite(cameraUniform->GetDescriptorSets()[frameIndex]);
         }
     }
 
