@@ -11,6 +11,11 @@ namespace Dog
     {
     }
 
+    GLMesh::~GLMesh()
+    {
+        DestroyBuffers();
+    }
+
     // device will be nullptr
     void GLMesh::CreateVertexBuffers(Device* device)
     {
@@ -68,7 +73,7 @@ namespace Dog
         glBindVertexArray(0);
     }
 
-    void GLMesh::Cleanup()
+    void GLMesh::DestroyBuffers()
     {
         if (mEBO) {
             glDeleteBuffers(1, &mEBO);

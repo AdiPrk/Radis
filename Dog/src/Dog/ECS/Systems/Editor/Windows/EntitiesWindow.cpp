@@ -11,6 +11,8 @@ namespace Dog
     {
         void RenderEntitiesWindow(ECS* ecs)
         {
+            PROFILE_SCOPE("Entities");
+
             auto er = ecs->GetResource<EditorResource>();
             if (!er) return;
 

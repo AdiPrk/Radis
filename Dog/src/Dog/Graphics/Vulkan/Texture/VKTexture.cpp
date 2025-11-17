@@ -8,98 +8,26 @@
 
 namespace Dog
 {
-	VKTexture::VKTexture(Device& device, const std::string& path, VkFormat imageFormat)
-		: ITexture()
+	VKTexture::VKTexture(Device& device, const TextureData& textureData)
+		: ITexture(textureData)
 		, mDevice(device)
-        , mImageFormat(imageFormat)
 	{
-		mPath = path;
-		if (!std::filesystem::exists(path))
+		if (textureData.isStorageImage)
 		{
-            DOG_CRITICAL("File path {0} doesn't exist!", path);
-			return;
-		}
-
-		LoadPixelsFromFile(path);
-		CreateTextureImage();
-		CreateTextureImageView();
-	}
-
-	VKTexture::VKTexture(Device& device, const std::string& name, const unsigned char* textureData, uint32_t textureSize, VkFormat imageFormat)
-		: ITexture()
-		, mDevice(device)
-        , mImageFormat(imageFormat)
-	{
-		mPath = name;
-
-		LoadPixelsFromMemory(textureData, static_cast<int>(textureSize));
-		CreateTextureImage();
-		CreateTextureImageView();
-	}
-
-	VKTexture::VKTexture(Device& device, const UncompressedPixelData& data, VkFormat imageFormat)
-		: ITexture()
-		, mDevice(device)
-        , mImageFormat(imageFormat)
-		, mUsage(data.usage)
-		, mFinalLayout(data.finalLayout)
-	{
-		mUncompressedData = data;
-
-		if (data.isStorageImage)
-		{
-			mImageFormat = data.imageFormat;
-			mWidth = data.width;
-			mHeight = data.height;
-			mChannels = 4; // Assumed for formats like rgba32f
 			mMipLevels = 1; // Storage images don't have mipmaps
-			mImageSize = 0; // No pixel data loaded from CPU
-			mPixels = nullptr; // No pixel data
 
 			// Create the image
-			CreateImage(mWidth, mHeight, data.imageFormat, VK_IMAGE_TILING_OPTIMAL, mUsage, VMA_MEMORY_USAGE_GPU_ONLY);
-			TransitionImageLayout(mDevice, mTextureImage, data.imageFormat, VK_IMAGE_LAYOUT_UNDEFINED, mFinalLayout, mMipLevels);
+			CreateImage(mData.width, mData.height, mData.imageFormat, VK_IMAGE_TILING_OPTIMAL, textureData.usage, VMA_MEMORY_USAGE_GPU_ONLY);
+			TransitionImageLayout(mDevice, mTextureImage, mData.imageFormat, VK_IMAGE_LAYOUT_UNDEFINED, textureData.finalLayout, mMipLevels);
 			CreateTextureImageView();
 		}
 		else
 		{
-			mPixels = new unsigned char[data.data.size()];
-			memcpy(mPixels, data.data.data(), data.data.size());
-
-			mPath = data.path;
-			mWidth = data.width;
-			mHeight = data.height;
-			mChannels = data.channels;
-			mImageSize = data.data.size();
+			mMipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(mData.width, mData.height)))) + 1;
 
 			CreateTextureImage();
 			CreateTextureImageView();
 		}
-	}
-
-	VKTexture::VKTexture(Device& device, uint32_t width, uint32_t height, VkFormat imageFormat, VkImageUsageFlags usage, VkImageLayout finalLayout)
-        : ITexture()
-		, mDevice(device)
-        , mImageFormat(imageFormat)
-		, mUsage(usage)
-		, mFinalLayout(finalLayout)
-	{
-		mStorageImage = true;
-		mWidth = width;
-		mHeight = height;
-		mChannels = 4; // Assumed for formats like rgba32f
-		mMipLevels = 1; // Storage images don't have mipmaps
-		mImageSize = 0; // No pixel data loaded from CPU
-		mPixels = nullptr; // No pixel data
-		mUncompressedData.isStorageImage = true;
-		mUncompressedData.imageFormat = imageFormat;
-		mUncompressedData.usage = usage;
-		mUncompressedData.finalLayout = finalLayout;
-
-		// Create the image
-		CreateImage(mWidth, mHeight, mImageFormat, VK_IMAGE_TILING_OPTIMAL, usage, VMA_MEMORY_USAGE_GPU_ONLY);
-		TransitionImageLayout(mDevice, mTextureImage, mImageFormat, VK_IMAGE_LAYOUT_UNDEFINED, finalLayout, mMipLevels);
-		CreateTextureImageView();
 	}
 
 	VKTexture::~VKTexture()
@@ -120,14 +48,11 @@ namespace Dog
 
 	void VKTexture::CreateTextureImage()
 	{
-		// Mip levels is the number of times the image can be halved in size
-		mMipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(mWidth, mHeight)))) + 1;
-
 		// Create a staging buffer to load texture data
 		Buffer stagingBuffer{};
 		Allocator::CreateBuffer(
 			stagingBuffer,
-			mImageSize,
+            mData.pixels.size(),
 			VK_BUFFER_USAGE_2_TRANSFER_SRC_BIT_KHR,  // Note: new flag type (VkBufferUsageFlags2KHR)
 			VMA_MEMORY_USAGE_AUTO,                   // auto-select memory type
 			VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT // ensures host-visible, coherent memory
@@ -137,7 +62,7 @@ namespace Dog
 		// Copy pixel data to staging buffer (mapping is stored in ABuffer.mapping)
 		if (stagingBuffer.mapping)
 		{
-			memcpy(stagingBuffer.mapping, mPixels, static_cast<size_t>(mImageSize));
+			memcpy(stagingBuffer.mapping, mData.pixels.data(), static_cast<size_t>(mData.pixels.size()));
 		}
 		else
 		{
@@ -145,20 +70,17 @@ namespace Dog
 			return;
 		}
 
-		// Free the pixel data
-		stbi_image_free(mPixels);
-
 		//Set the usage flags for the image
 		VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 
 		// Create the Vulkan image
-		CreateImage(mWidth, mHeight, mImageFormat, VK_IMAGE_TILING_OPTIMAL, usage, VMA_MEMORY_USAGE_GPU_ONLY);
+		CreateImage(mData.width, mData.height, mData.imageFormat, VK_IMAGE_TILING_OPTIMAL, usage, VMA_MEMORY_USAGE_GPU_ONLY);
 
 		// Transition the image to a transfer destination layout
-		TransitionImageLayout(mDevice, mTextureImage, mImageFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mMipLevels);
+		TransitionImageLayout(mDevice, mTextureImage, mData.imageFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mMipLevels);
 
 		// Copy the staging buffer to the image
-		CopyBufferToImage(stagingBuffer.buffer, mTextureImage, static_cast<uint32_t>(mWidth), static_cast<uint32_t>(mHeight), 1);
+		CopyBufferToImage(stagingBuffer.buffer, mTextureImage, static_cast<uint32_t>(mData.width), static_cast<uint32_t>(mData.height), 1);
 
 		// Destroy the staging buffer
 		vmaDestroyBuffer(Allocator::GetAllocator(), stagingBuffer.buffer, stagingBuffer.allocation);
@@ -244,44 +166,6 @@ namespace Dog
 		mDevice.EndSingleTimeCommands(commandBuffer); // Helper to finish recording and submit the commands
 	}
 
-	void VKTexture::LoadPixelsFromFile(const std::string& filepath)
-	{
-		stbi_set_flip_vertically_on_load(true);
-
-		// Load in the pixel data
-		mPixels = stbi_load(filepath.c_str(), &mWidth, &mHeight, &mChannels, STBI_rgb_alpha);
-
-		if (!mPixels) {
-            DOG_CRITICAL("stbi_load failed from path: {0}", filepath);
-			return;
-		}
-
-		// width * height * 4 (rgba)
-		mImageSize = mWidth * mHeight * 4;
-
-        mUncompressedData.data.resize(static_cast<size_t>(mImageSize));
-        memcpy(mUncompressedData.data.data(), mPixels, static_cast<size_t>(mImageSize));
-	}
-
-	void VKTexture::LoadPixelsFromMemory(const unsigned char* textureData, int textureSize)
-	{
-		stbi_set_flip_vertically_on_load(true);
-
-		// Load in the pixel data
-		mPixels = stbi_load_from_memory(textureData, static_cast<int>(textureSize), &mWidth, &mHeight, &mChannels, STBI_rgb_alpha);
-
-		if (!mPixels) {
-            DOG_CRITICAL("stbi_load_from_memory failed");
-			return;
-		}
-
-		// width * height * 4 (rgba)
-		mImageSize = mWidth * mHeight * 4;
-
-		mUncompressedData.data.resize(static_cast<size_t>(mImageSize));
-        memcpy(mUncompressedData.data.data(), mPixels, static_cast<size_t>(mImageSize));
-	}
-
 	void VKTexture::CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VmaMemoryUsage memoryUsage)
 	{
 		// The parameters for the image creation
@@ -310,6 +194,9 @@ namespace Dog
 		{
             DOG_CRITICAL("Failed to create and allocate image using VMA!");
 		}
+
+        std::string dbgName = "Tex_" + mData.name;
+        Allocator::SetAllocationName(mTextureImageAllocation, dbgName.c_str());
 	}
 
 	void VKTexture::CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount)
@@ -344,7 +231,7 @@ namespace Dog
 	{
 		// Check if image format supports linear blitting
 		VkFormatProperties formatProperties;
-		vkGetPhysicalDeviceFormatProperties(mDevice.GetPhysicalDevice(), mImageFormat, &formatProperties);
+		vkGetPhysicalDeviceFormatProperties(mDevice.GetPhysicalDevice(), mData.imageFormat, &formatProperties);
 
 		if (!(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT))
 		{
@@ -363,8 +250,8 @@ namespace Dog
 		barrier.subresourceRange.layerCount = 1;
 		barrier.subresourceRange.levelCount = 1;
 
-		int32_t mipWidth = mWidth;
-		int32_t mipHeight = mHeight;
+		int32_t mipWidth = mData.width;
+		int32_t mipHeight = mData.height;
 
 		for (uint32_t i = 1; i < mMipLevels; i++) {
 			barrier.subresourceRange.baseMipLevel = i - 1;
@@ -429,8 +316,9 @@ namespace Dog
 		mDevice.EndSingleTimeCommands(commandBuffer);
 	}
 
-	void VKTexture::CreateTextureImageView() {
-		mTextureImageView = CreateImageView(mTextureImage, mImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+	void VKTexture::CreateTextureImageView() 
+	{
+		mTextureImageView = CreateImageView(mTextureImage, mData.imageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
 	}
 
 	VkImageView VKTexture::CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags)

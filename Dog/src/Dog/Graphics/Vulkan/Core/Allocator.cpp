@@ -92,6 +92,11 @@ namespace Dog
 
     void Allocator::DestroyBuffer(VkBuffer buffer, VmaAllocation bufferAllocation)
     {
+        if (!buffer || !bufferAllocation)
+        {
+            return;
+        }
+
         vmaDestroyBuffer(mAllocator, buffer, bufferAllocation);
         buffer = VK_NULL_HANDLE;
         bufferAllocation = VK_NULL_HANDLE;
@@ -99,6 +104,11 @@ namespace Dog
 
     void Allocator::DestroyBuffer(Buffer& buffer)
     {
+        if (!buffer.buffer || !buffer.allocation)
+        {
+            return;
+        }
+
         vmaDestroyBuffer(mAllocator, buffer.buffer, buffer.allocation);
         buffer = {};
     }

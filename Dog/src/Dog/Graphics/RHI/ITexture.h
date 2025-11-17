@@ -2,39 +2,35 @@
 
 namespace Dog
 {
+    struct TextureData
+    {
+        int width{};
+        int height{};
+        int channels{};
+        std::string name{};
+        std::vector<unsigned char> pixels{};
+
+        // For storage images:
+        bool isStorageImage{ false };
+        VkFormat imageFormat{};
+        VkImageUsageFlags usage{};
+        VkImageLayout finalLayout{};
+    };
+
     class ITexture
     {
     public:
-        ITexture();
+        ITexture(const TextureData& data);
         virtual ~ITexture();
 
-        int GetWidth() const { return mWidth; }
-        int GetHeight() const { return mHeight; }
-        int GetChannels() const { return mChannels; }
-        uint64_t GetImageSize() const { return mImageSize; }
+        int GetWidth() const { return mData.width; }
+        int GetHeight() const { return mData.height; }
+        int GetChannels() const { return mData.channels; }
+        uint64_t GetImageSize() const { return mData.pixels.size(); }
 
         virtual void* GetTextureID() = 0;
 
     protected:
-        int mWidth, mHeight, mChannels;
-        uint64_t mImageSize;
-        std::string mPath;
-        bool mStorageImage = false; // For certain vk textures
-
-        struct UncompressedPixelData
-        {
-            int width, height, channels;
-            std::vector<unsigned char> data;
-            std::string path;
-
-            // For storage images;
-            bool isStorageImage = false;
-            VkFormat imageFormat;
-            VkImageUsageFlags usage;
-            VkImageLayout finalLayout;
-        };
-
-        friend class TextureLibrary;
-        UncompressedPixelData mUncompressedData;
+        const TextureData& mData;
     };
 }

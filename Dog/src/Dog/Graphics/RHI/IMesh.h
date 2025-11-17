@@ -33,7 +33,7 @@ namespace Dog
 
         virtual void CreateVertexBuffers(Device* device) = 0;
         virtual void CreateIndexBuffers(Device* device) = 0;
-        virtual void Cleanup() = 0;
+        virtual void DestroyBuffers() = 0;
 
         virtual void Bind(VkCommandBuffer commandBuffer, VkBuffer instBuffer) = 0;
         virtual void Draw(VkCommandBuffer commandBuffer, uint32_t baseIndex = 0) = 0;
@@ -59,12 +59,12 @@ namespace Dog
         uint32_t mMeshID = 0;
 
         // Tex data if from memory
-        std::unique_ptr<unsigned char[]> mAlbedoTextureData = nullptr;
-        std::unique_ptr<unsigned char[]> mNormalTextureData = nullptr;
-        std::unique_ptr<unsigned char[]> mMetalnessTextureData = nullptr;
-        std::unique_ptr<unsigned char[]> mRoughnessTextureData = nullptr;
-        std::unique_ptr<unsigned char[]> mOcclusionTextureData = nullptr;
-        std::unique_ptr<unsigned char[]> mEmissiveTextureData = nullptr;
+        std::vector<unsigned char> mAlbedoTextureData{};
+        std::vector<unsigned char> mNormalTextureData{};
+        std::vector<unsigned char> mMetalnessTextureData{};
+        std::vector<unsigned char> mRoughnessTextureData{};
+        std::vector<unsigned char> mOcclusionTextureData{};
+        std::vector<unsigned char> mEmissiveTextureData{};
         uint32_t mAlbedoTextureSize = 0;
         uint32_t mNormalTextureSize = 0;
         uint32_t mMetalnessTextureSize = 0;

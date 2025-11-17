@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Graphics/RHI/ITexture.h"
+#include "TextureLoader.h"
 
 namespace Dog
 {
@@ -14,9 +15,11 @@ namespace Dog
 		TextureLibrary(Device* device);
 		~TextureLibrary();
 
-		uint32_t AddTexture(const std::string& texturePath);
-		uint32_t AddTexture(const unsigned char* textureData, uint32_t textureSize, const std::string& texturePath);
-		uint32_t CreateImage(const std::string& imageName, uint32_t width, uint32_t height, VkFormat imageFormat, VkImageUsageFlags usage, VkImageLayout finalLayout = VK_IMAGE_LAYOUT_GENERAL);
+        uint32_t QueueTextureLoad(const std::string& texturePath);
+		uint32_t QueueTextureLoad(const unsigned char* textureData, uint32_t textureSize, const std::string& texturePath);
+        bool LoadQueuedTextures();
+
+		uint32_t CreateStorageImage(const std::string& imageName, uint32_t width, uint32_t height, VkFormat imageFormat, VkImageUsageFlags usage, VkImageLayout finalLayout = VK_IMAGE_LAYOUT_GENERAL);
 
 		ITexture* GetTexture(uint32_t textureID);
 		ITexture* GetTexture(const std::string& texturePath);
@@ -37,9 +40,8 @@ namespace Dog
         void SetDevice(Device* dev) { device = dev; }
 
 	private:
-
-		friend class VKTexture;
 		std::vector<std::unique_ptr<ITexture>> mTextures;
+		std::vector<TextureData> mTexturesData;
 		std::unordered_map<std::string, uint32_t> mTextureMap;
 
 		Device* device;
@@ -47,7 +49,8 @@ namespace Dog
 		VkDescriptorSetLayout mImageDescriptorSetLayout;
 		VkDescriptorPool mImageDescriptorPool;
 
-		std::vector<ITexture::UncompressedPixelData> mCpuPixelArrays;
+        std::vector<TextureLoadData> mPendingTextureLoads;
+        uint32_t mNextIndex = 0;
 	};
 
 } // namespace Dog

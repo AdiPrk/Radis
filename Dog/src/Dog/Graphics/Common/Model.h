@@ -47,7 +47,7 @@ namespace Dog
         IMesh& ProcessMesh(aiMesh* mesh, const glm::mat4& transform);
 
         // Checks for textures in order of types to try
-        std::string ResolveTexturePath(aiMaterial* material, const std::vector<aiTextureType>& typesToTry, std::unique_ptr<unsigned char[]>& outEmbeddedData, uint32_t& outEmbeddedDataSize);
+        std::string ResolveTexturePath(aiMaterial* material, const std::vector<aiTextureType>& typesToTry, std::vector<unsigned char>& outEmbeddedData);
 
         void ProcessMaterials(aiMesh* mesh, IMesh& newMesh);
         void ProcessVertexColor(aiMaterial* material, IMesh& newMesh);

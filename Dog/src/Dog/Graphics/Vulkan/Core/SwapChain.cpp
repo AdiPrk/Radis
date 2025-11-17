@@ -27,34 +27,58 @@ namespace Dog
 
     SwapChain::~SwapChain()
     {
-        //Delete all image views
+        // Destroy framebuffers
+        for (VkFramebuffer framebuffer : mSwapChainFramebuffers)
+        {
+            if (framebuffer != VK_NULL_HANDLE)
+            {
+                vkDestroyFramebuffer(mDevice.GetDevice(), framebuffer, nullptr);
+            }
+        }
+        mSwapChainFramebuffers.clear();
+
+        // Destroy color image views
         for (VkImageView imageView : mSwapChainImageViews)
         {
-            vkDestroyImageView(mDevice.GetDevice(), imageView, nullptr);
+            if (imageView != VK_NULL_HANDLE)
+            {
+                vkDestroyImageView(mDevice.GetDevice(), imageView, nullptr);
+            }
         }
         mSwapChainImageViews.clear();
 
-        //Delete the swapchain 
-        if (mSwapChain != nullptr)
+        // Destroy depth image views and depth images
+        for (size_t i = 0; i < mDepthImages.size(); ++i)
+        {
+            if (mDepthImageViews[i] != VK_NULL_HANDLE)
+            {
+                vkDestroyImageView(mDevice.GetDevice(), mDepthImageViews[i], nullptr);
+            }
+
+            if (mDepthImages[i] != VK_NULL_HANDLE)
+            {
+                vmaDestroyImage(Allocator::GetAllocator(), mDepthImages[i], mDepthImageMemorys[i]);
+            }
+        }
+        mDepthImageViews.clear();
+        mDepthImages.clear();
+        mDepthImageMemorys.clear();
+
+        // Destroy render pass
+        if (mRenderPass != VK_NULL_HANDLE)
+        {
+            vkDestroyRenderPass(mDevice.GetDevice(), mRenderPass, nullptr);
+            mRenderPass = VK_NULL_HANDLE;
+        }
+
+        // Destroy swapchain
+        if (mSwapChain != VK_NULL_HANDLE)
         {
             vkDestroySwapchainKHR(mDevice.GetDevice(), mSwapChain, nullptr);
-            mSwapChain = nullptr;
+            mSwapChain = VK_NULL_HANDLE;
         }
 
-        //Cleanup depth data
-        for (size_t i = 0; i < mDepthImages.size(); i++) {
-            vkDestroyImageView(mDevice.GetDevice(), mDepthImageViews[i], nullptr);
-            vmaDestroyImage(Allocator::GetAllocator(), mDepthImages[i], mDepthImageMemorys[i]);
-        }
-
-        //Delete all framebuffers
-        for (VkFramebuffer framebuffer : mSwapChainFramebuffers)
-        {
-            vkDestroyFramebuffer(mDevice.GetDevice(), framebuffer, nullptr);
-        }
-
-        //Delete render pass
-        vkDestroyRenderPass(mDevice.GetDevice(), mRenderPass, nullptr);
+        mSwapChainImages.clear();
     }
 
     VkResult SwapChain::AcquireNextImage(uint32_t* imageIndex, Synchronizer& syncObjects)
@@ -64,11 +88,11 @@ namespace Dog
 
         //Get next image to draw too in the swap chain
         VkResult result = vkAcquireNextImageKHR(mDevice.GetDevice(), //Device swap chain is on
-            mSwapChain,                                                //Swapchain being used
-            std::numeric_limits<uint64_t>::max(),                      //Use max so no timeout
-            syncObjects.GetImageAvailableSemaphore(),              //Give semaphore to be triggered when image is ready for rendering (must be a not signaled semaphore)
-            VK_NULL_HANDLE,                                            //No fences in use for this
-            imageIndex);                                               //Gets set to image index to use
+            mSwapChain,                                              //Swapchain being used
+            std::numeric_limits<uint64_t>::max(),                    //Use max so no timeout
+            syncObjects.GetImageAvailableSemaphore(),                //Give semaphore to be triggered when image is ready for rendering (must be a not signaled semaphore)
+            VK_NULL_HANDLE,                                          //No fences in use for this
+            imageIndex);                                             //Gets set to image index to use
 
         mCurrentImageIndex = *imageIndex; //Set current image index to the one we just got
 

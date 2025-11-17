@@ -96,7 +96,7 @@ namespace Dog
         {
             // Give each texture a unique name
             std::string texName = "RayTracingOutput_" + std::to_string(i);
-            uint32_t rtInd = renderData.textureLibrary->CreateImage(texName, width, height, format, usage, layout);
+            uint32_t rtInd = renderData.textureLibrary->CreateStorageImage(texName, width, height, format, usage, layout);
             rtTextures[i] = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture(rtInd));
         }
 

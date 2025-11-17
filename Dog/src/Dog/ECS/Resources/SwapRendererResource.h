@@ -4,7 +4,7 @@
 
 namespace Dog
 {
-    struct SwapRendererBackendResource : public IResource
+    struct SwapRendererResource : public IResource
     {
         void RequestSwap() { swapRequested = true; }
         bool SwapRequested() { return swapRequested; }
@@ -13,7 +13,7 @@ namespace Dog
         void RequestOpenGL();
 
     private:
-        friend class SwapRendererBackendSystem;
+        friend class SwapRendererSystem;
         bool swapRequested = false;
     };
 }

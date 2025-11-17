@@ -217,8 +217,10 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Dog\ECS\Resources\InputResource.cpp" />
     <ClCompile Include="src\Dog\ECS\Resources\RenderingResource.cpp" />
     <ClCompile Include="src\Dog\ECS\Resources\SerializationResource.cpp" />
-    <ClCompile Include="src\Dog\ECS\Resources\SwapRendererBackendResource.cpp" />
+    <ClCompile Include="src\Dog\ECS\Resources\SwapRendererResource.cpp" />
     <ClCompile Include="src\Dog\ECS\Resources\WindowResource.cpp" />
+    <ClCompile Include="src\Dog\ECS\Systems\Editor\Windows\MemoryWindow.cpp" />
+    <ClCompile Include="src\Dog\ECS\Systems\Editor\Windows\ProfilerWindow.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\Graphics\AnimationSystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\CameraSystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\Editor\EditorSystem.cpp" />
@@ -230,7 +232,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Dog\ECS\Systems\ISystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\Graphics\PresentSystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\Graphics\RenderSystem.cpp" />
-    <ClCompile Include="src\Dog\ECS\Systems\Graphics\SwapRendererBackendSystem.cpp" />
+    <ClCompile Include="src\Dog\ECS\Systems\Graphics\SwapRendererSystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\WindowSystem.cpp" />
     <ClCompile Include="src\Dog\Engine.cpp" />
     <ClCompile Include="src\Dog\Events\Event.cpp" />
@@ -239,6 +241,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Dog\Graphics\Common\Path\CubicSpline.cpp" />
     <ClCompile Include="src\Dog\Graphics\Common\Path\PathFollower.cpp" />
     <ClCompile Include="src\Dog\Graphics\Common\Path\SpeedControl.cpp" />
+    <ClCompile Include="src\Dog\Graphics\Common\TextureLoader.cpp" />
     <ClCompile Include="src\Dog\Graphics\OpenGL\GLFrameBuffer.cpp" />
     <ClCompile Include="src\Dog\Graphics\OpenGL\GLMesh.cpp" />
     <ClCompile Include="src\Dog\Graphics\OpenGL\GLShader.cpp" />
@@ -271,6 +274,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Dog\Graphics\Vulkan\Uniform\Uniform.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Uniform\UniformData.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Uniform\UniformSettings.cpp" />
+    <ClCompile Include="src\Dog\Profiler\Profiler.cpp" />
     <ClCompile Include="src\Dog\Utils\FrameRate.cpp" />
     <ClCompile Include="src\Dog\Graphics\IWindow.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\VulkanWindow.cpp" />
@@ -321,8 +325,10 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Dog\ECS\Resources\IResource.h" />
     <ClInclude Include="src\Dog\ECS\Resources\RenderingResource.h" />
     <ClInclude Include="src\Dog\ECS\Resources\SerializationResource.h" />
-    <ClInclude Include="src\Dog\ECS\Resources\SwapRendererBackendResource.h" />
+    <ClInclude Include="src\Dog\ECS\Resources\SwapRendererResource.h" />
     <ClInclude Include="src\Dog\ECS\Resources\WindowResource.h" />
+    <ClInclude Include="src\Dog\ECS\Systems\Editor\Windows\MemoryWindow.h" />
+    <ClInclude Include="src\Dog\ECS\Systems\Editor\Windows\ProfilerWindow.h" />
     <ClInclude Include="src\Dog\ECS\Systems\Graphics\AnimationSystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\CameraSystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\Editor\EditorSystem.h" />
@@ -334,7 +340,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Dog\ECS\Systems\ISystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\Graphics\PresentSystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\Graphics\RenderSystem.h" />
-    <ClInclude Include="src\Dog\ECS\Systems\Graphics\SwapRendererBackendSystem.h" />
+    <ClInclude Include="src\Dog\ECS\Systems\Graphics\SwapRendererSystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\WindowSystem.h" />
     <ClInclude Include="src\Dog\Engine.h" />
     <ClInclude Include="src\Dog\Events\Event.h" />
@@ -343,6 +349,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Dog\Graphics\Common\Path\CubicSpline.h" />
     <ClInclude Include="src\Dog\Graphics\Common\Path\PathFollower.h" />
     <ClInclude Include="src\Dog\Graphics\Common\Path\SpeedControl.h" />
+    <ClInclude Include="src\Dog\Graphics\Common\TextureLoader.h" />
     <ClInclude Include="src\Dog\Graphics\OpenGL\GLFrameBuffer.h" />
     <ClInclude Include="src\Dog\Graphics\OpenGL\GLMesh.h" />
     <ClInclude Include="src\Dog\Graphics\OpenGL\GLShader.h" />
@@ -378,6 +385,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Dog\Graphics\Vulkan\Uniform\Uniform.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Uniform\UniformData.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Uniform\UniformSettings.h" />
+    <ClInclude Include="src\Dog\Profiler\Profiler.h" />
     <ClInclude Include="src\Dog\Utils\FrameRate.h" />
     <ClInclude Include="src\Dog\Graphics\IWindow.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\VulkanWindow.h" />

@@ -11,7 +11,6 @@ namespace Dog
     class SwapChain
     {
     public:
-
         //Max number of frames to be executing commands/presenting for at once
         static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 

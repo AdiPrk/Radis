@@ -36,24 +36,36 @@ namespace Dog
 
     void ECS::FrameStart()
     {
+        PROFILE_SCOPE("ECS::FrameStart");
+
         for (auto& system : mSystems)
         {
+            std::string profileName = system->GetDebugName() + "::FrameStart";
+            PROFILE_SCOPE(profileName.c_str());
             system->FrameStart();
         }
     }
 
     void ECS::Update(float dt)
     {
+        PROFILE_SCOPE("ECS::Update");
+
         for (auto& system : mSystems)
         {
+            std::string profileName = system->GetDebugName() + "::Update";
+            PROFILE_SCOPE(profileName.c_str());
             system->Update(dt);
         }
     }
 
     void ECS::FrameEnd()
     {
+        PROFILE_SCOPE("ECS::FrameEnd");
+
         for (auto& system : mSystems | std::views::reverse)
         {
+            std::string profileName = system->GetDebugName() + "::FrameEnd";
+            PROFILE_SCOPE(profileName.c_str());
             system->FrameEnd();
         }
     }
@@ -63,6 +75,11 @@ namespace Dog
         for (auto& system : mSystems | std::views::reverse)
         {
             system->Exit();
+        }
+
+        for (auto& resource : mResources)
+        {
+            resource.second->Shutdown();
         }
     }
 

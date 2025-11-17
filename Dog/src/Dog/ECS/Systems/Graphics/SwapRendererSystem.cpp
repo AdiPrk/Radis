@@ -1,10 +1,10 @@
 #include <PCH/pch.h>
-#include "SwapRendererBackendSystem.h"
+#include "SwapRendererSystem.h"
 
 #include "ECS/Resources/renderingResource.h"
 #include "ECS/Resources/EditorResource.h"
 #include "ECS/Resources/WindowResource.h"
-#include "ECS/Resources/SwapRendererBackendResource.h"
+#include "ECS/Resources/SwapRendererResource.h"
 #include "../InputSystem.h"
 #include "Engine.h"
 
@@ -16,7 +16,7 @@
 
 namespace Dog
 {
-    void SwapRendererBackendSystem::Init()
+    void SwapRendererSystem::Init()
     {
         bool canVulkan = Engine::GetVulkanSupported();
         bool isVulkan = (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan);
@@ -32,9 +32,9 @@ namespace Dog
         }
     }
 
-    void SwapRendererBackendSystem::FrameStart()
+    void SwapRendererSystem::FrameStart()
     {
-        auto sr = ecs->GetResource<SwapRendererBackendResource>();
+        auto sr = ecs->GetResource<SwapRendererResource>();
 
         if (sr->SwapRequested())
         {
@@ -43,7 +43,7 @@ namespace Dog
         }
     }
 
-    void SwapRendererBackendSystem::SwapBackend()
+    void SwapRendererSystem::SwapBackend()
     {
         bool hasEditor = Engine::GetEditorEnabled();
 
