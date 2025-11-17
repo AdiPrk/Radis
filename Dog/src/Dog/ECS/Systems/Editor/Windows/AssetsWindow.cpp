@@ -201,18 +201,23 @@ namespace Dog
 			std::vector<std::filesystem::directory_entry> directories;
 			std::vector<std::filesystem::directory_entry> files;
 
-			if (std::filesystem::exists(browser.currentDir) && std::filesystem::is_directory(browser.currentDir))
+			if (std::filesystem::is_directory(browser.currentDir))
 			{
+				directories.reserve(16);
+				files.reserve(128);
+
 				for (const auto& entry : std::filesystem::directory_iterator(browser.currentDir))
 				{
-					std::string filename = entry.path().filename().string();
-					if (entry.is_directory()) {
-						// Filter out specific directories
+					const auto& filename = entry.path().filename();
+
+					if (entry.is_directory()) 
+					{
 						if (filename == Assets::EditorDir || filename == "spv") continue;
-						directories.push_back(entry);
+						directories.emplace_back(entry);
 					}
-					else {
-						files.push_back(entry);
+					else 
+					{
+						files.emplace_back(entry);
 					}
 				}
 			}
@@ -222,7 +227,6 @@ namespace Dog
 			};
 			std::sort(directories.begin(), directories.end(), sortAlpha);
 			std::sort(files.begin(), files.end(), sortAlpha);
-
 
 			// --- Setup columns for the grid ---
 			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f)); // Transparent background

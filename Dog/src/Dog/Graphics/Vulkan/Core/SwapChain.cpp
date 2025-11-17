@@ -64,11 +64,11 @@ namespace Dog
 
         //Get next image to draw too in the swap chain
         VkResult result = vkAcquireNextImageKHR(mDevice.GetDevice(), //Device swap chain is on
-            mSwapChain,                                                //Swapchain being used
-            std::numeric_limits<uint64_t>::max(),                      //Use max so no timeout
-            syncObjects.GetImageAvailableSemaphore(),              //Give semaphore to be triggered when image is ready for rendering (must be a not signaled semaphore)
-            VK_NULL_HANDLE,                                            //No fences in use for this
-            imageIndex);                                               //Gets set to image index to use
+            mSwapChain,                                              //Swapchain being used
+            std::numeric_limits<uint64_t>::max(),                    //Use max so no timeout
+            syncObjects.GetImageAvailableSemaphore(),                //Give semaphore to be triggered when image is ready for rendering (must be a not signaled semaphore)
+            VK_NULL_HANDLE,                                          //No fences in use for this
+            imageIndex);                                             //Gets set to image index to use
 
         mCurrentImageIndex = *imageIndex; //Set current image index to the one we just got
 

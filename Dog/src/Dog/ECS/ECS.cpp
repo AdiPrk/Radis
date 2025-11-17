@@ -37,6 +37,8 @@ namespace Dog
 
     void ECS::FrameStart()
     {
+        PROFILE_SCOPE("ECS::FrameStart");
+
         for (auto& system : mSystems)
         {
             std::string profileName = system->GetDebugName() + "::FrameStart";
@@ -47,6 +49,8 @@ namespace Dog
 
     void ECS::Update(float dt)
     {
+        PROFILE_SCOPE("ECS::Update");
+
         for (auto& system : mSystems)
         {
             std::string profileName = system->GetDebugName() + "::Update";
@@ -57,6 +61,8 @@ namespace Dog
 
     void ECS::FrameEnd()
     {
+        PROFILE_SCOPE("ECS::FrameEnd");
+
         for (auto& system : mSystems | std::views::reverse)
         {
             std::string profileName = system->GetDebugName() + "::FrameEnd";

@@ -8,7 +8,7 @@
 #include "ECS/Systems/Graphics/PresentSystem.h"
 #include "ECS/Systems/CameraSystem.h"
 #include "ECS/Systems/Graphics/RenderSystem.h"
-#include "ECS/Systems/Graphics/SwapRendererBackendSystem.h"
+#include "ECS/Systems/Graphics/SwapRendererSystem.h"
 
 #include "ECS/Resources/InputResource.h"
 #include "ECS/Resources/WindowResource.h"
@@ -17,7 +17,7 @@
 #include "ECS/Resources/SerializationResource.h"
 #include "ECS/Resources/AnimationResource.h"
 #include "ECS/Resources/DebugDrawResource.h"
-#include "ECS/Resources/SwapRendererBackendResource.h"
+#include "ECS/Resources/SwapRendererResource.h"
 
 #include "Utils/FrameRate.h"
 #include "Graphics/Vulkan/Core/Device.h"
@@ -40,8 +40,7 @@ namespace Dog
         , mEcs()
     {
         Profiler::Initialize();
-        Profiler::SetReportOnEndFrame(false);
-
+ 
         mEditorEnabled = mSpecs.launchWithEditor;
         Logger::Init();
 
@@ -54,7 +53,7 @@ namespace Dog
         mEcs.AddSystem<WindowSystem>();
         mEcs.AddSystem<InputSystem>();
 
-        mEcs.AddSystem<SwapRendererBackendSystem>();
+        mEcs.AddSystem<SwapRendererSystem>();
         mEcs.AddSystem<AnimationSystem>();
         mEcs.AddSystem<PresentSystem>();
         mEcs.AddSystem<RenderSystem>();
@@ -66,7 +65,7 @@ namespace Dog
         // ---------------------------------
 
         // Resources -----------------------
-        mEcs.AddResource<SwapRendererBackendResource>();
+        mEcs.AddResource<SwapRendererResource>();
         mEcs.AddResource<WindowResource>(mSpecs.width, mSpecs.height, mSpecs.name);
 
         auto wr = mEcs.GetResource<WindowResource>();

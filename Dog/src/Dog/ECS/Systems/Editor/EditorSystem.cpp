@@ -8,7 +8,7 @@
 #include "ECS/Resources/WindowResource.h"
 #include "ECS/Resources/EditorResource.h"
 #include "ECS/Resources/SerializationResource.h"
-#include "ECS/Resources/SwapRendererBackendResource.h"
+#include "ECS/Resources/SwapRendererResource.h"
 #include "ECS/Systems/InputSystem.h"
 
 #include "Graphics/Vulkan/Core/Device.h"
@@ -207,7 +207,7 @@ namespace Dog
             {
                 // dropdown for the enum GraphicsAPI
                 auto currentAPI = Engine::GetGraphicsAPI();
-                auto sr = ecs->GetResource<SwapRendererBackendResource>();
+                auto sr = ecs->GetResource<SwapRendererResource>();
                 if (ImGui::MenuItem("Vulkan", nullptr, currentAPI == GraphicsAPI::Vulkan))
                 {
                     sr->RequestVulkan();

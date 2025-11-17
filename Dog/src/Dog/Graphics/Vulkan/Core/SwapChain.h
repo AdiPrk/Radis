@@ -11,9 +11,8 @@ namespace Dog
     class SwapChain
     {
     public:
-
         //Max number of frames to be executing commands/presenting for at once
-        static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+        static constexpr int MAX_FRAMES_IN_FLIGHT = 3;
 
         //Delete copy constructor/operator
         SwapChain(const SwapChain&) = delete;

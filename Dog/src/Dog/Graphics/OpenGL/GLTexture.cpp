@@ -1,6 +1,5 @@
 #include <PCH/pch.h>
 #include "GLTexture.h"
-#include "Graphics/Common/TextureData.h"
 
 namespace Dog {
 
