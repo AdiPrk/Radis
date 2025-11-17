@@ -1,4 +1,4 @@
-#include <PCH/pch.h>
+﻿#include <PCH/pch.h>
 #include "EditorSystem.h"
 #include "Engine.h"
 #include "ECS/ECS.h"
@@ -29,7 +29,6 @@
 #include "Windows/ProfilerWindow.h"
 #include "Windows/MemoryWindow.h"
 
-#include "Assets/Assets.h"
 #include "Utils/Utils.h"
 
 #include "imgui_internal.h"
@@ -194,38 +193,150 @@ namespace Dog
 
     void EditorSystem::RenderMainMenuBar()
     {
-        if (!ImGui::BeginMainMenuBar()) return;
+        // persistent across frames
+        static bool requestOpenSavePopup = false;
+        static char sceneNameBuffer[128] = "";
+
+        if (!ImGui::BeginMainMenuBar())
+            return;
+
+        // -----------------------
+        // File Menu
+        // -----------------------
+        if (ImGui::BeginMenu("File"))
         {
-            if (ImGui::BeginMenu("File"))
+            // Save
+            if (ImGui::MenuItem("Save Scene"))
             {
-                if (ImGui::MenuItem("Save Scene"))
-                {
-                    ecs->GetResource<SerializationResource>()->Serialize("assets/scenes/scene.json");
+                auto sr = ecs->GetResource<SerializationResource>();
+                sr->Serialize(sr->currentScenePath);
+            }
+
+            // Save As
+            if (ImGui::MenuItem("Save Scene As..."))
+            {
+                // Prepare buffer with current scene name (best guess)
+                auto sr = ecs->GetResource<SerializationResource>();
+                try {
+                    std::filesystem::path p(sr->currentScenePath);
+                    auto stem = p.stem().string();
+                    strncpy(sceneNameBuffer, stem.c_str(), sizeof(sceneNameBuffer) - 1);
+                    sceneNameBuffer[sizeof(sceneNameBuffer) - 1] = '\0';
                 }
-                if (ImGui::MenuItem("Load Scene"))
+                catch (...) {
+                    sceneNameBuffer[0] = '\0';
+                }
+
+                requestOpenSavePopup = true;
+            }
+
+            // Open Scene menu
+            if (ImGui::BeginMenu("Open Scene"))
+            {
+                try
                 {
-                    ecs->GetResource<SerializationResource>()->Deserialize("assets/scenes/scene.json");
+                    const std::filesystem::path sceneDir = Assets::ScenesPath;
+                    if (std::filesystem::exists(sceneDir) && std::filesystem::is_directory(sceneDir))
+                    {
+                        for (auto const& entry : std::filesystem::directory_iterator(sceneDir))
+                        {
+                            if (!entry.is_regular_file()) continue;
+                            if (entry.path().extension() != ".json") continue;
+
+                            auto file = entry.path().filename().string();
+                            if (ImGui::MenuItem(file.c_str()))
+                            {
+                                ecs->GetResource<SerializationResource>()->Deserialize((sceneDir / file).string());
+                            }
+                        }
+                    }
+                    else
+                    {
+                        ImGui::MenuItem("(no scenes found)", nullptr, false, false);
+                    }
+                }
+                catch (std::exception const& e)
+                {
+                    DOG_WARN("Failed to list scenes: {}", e.what());
                 }
 
                 ImGui::EndMenu();
             }
-            if (ImGui::BeginMenu("Graphics"))
+
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Graphics"))
+        {
+            auto currentAPI = Engine::GetGraphicsAPI();
+            auto sr = ecs->GetResource<SwapRendererResource>();
+
+            if (ImGui::MenuItem("Vulkan", nullptr, currentAPI == GraphicsAPI::Vulkan)) sr->RequestVulkan();
+            if (ImGui::MenuItem("OpenGL", nullptr, currentAPI == GraphicsAPI::OpenGL)) sr->RequestOpenGL();
+
+            ImGui::EndMenu();
+        }
+
+        ImGui::EndMainMenuBar();
+
+        // Save popup
+        if (requestOpenSavePopup)
+        {
+            ImGui::OpenPopup("Save Scene As");
+            requestOpenSavePopup = false;
+        }
+
+        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, { 0.5f, 0.5f });
+
+        if (ImGui::BeginPopupModal("Save Scene As", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::Text("Enter Scene Name:");
+            ImGui::InputText("##SceneNameInput", sceneNameBuffer, IM_ARRAYSIZE(sceneNameBuffer));
+
+            ImGui::Separator();
+
+            // Save button
+            if (ImGui::Button("Save"))
             {
-                // dropdown for the enum GraphicsAPI
-                auto currentAPI = Engine::GetGraphicsAPI();
-                auto sr = ecs->GetResource<SwapRendererResource>();
-                if (ImGui::MenuItem("Vulkan", nullptr, currentAPI == GraphicsAPI::Vulkan))
+                std::string name(sceneNameBuffer);
+
+                // simple whitespace check
+                bool valid = false;
+                for (char c : name)
+                    if (!isspace((unsigned char)c)) { valid = true; break; }
+
+                if (valid)
                 {
-                    sr->RequestVulkan();
+                    std::string filename = name;
+                    if (filename.size() < 5 || filename.substr(filename.size() - 5) != ".json")
+                    {
+                        filename += ".json";
+                    }
+
+                    try 
+                    {
+                        auto sr = ecs->GetResource<SerializationResource>();
+                        sr->Serialize((std::filesystem::path(Assets::ScenesPath) / filename).string());
+                    }
+                    catch (std::exception const& e)
+                    {
+                        DOG_WARN("Failed to save scene: {}", e.what());
+                    }
+
+                    ImGui::CloseCurrentPopup();
                 }
-                if (ImGui::MenuItem("OpenGL", nullptr, currentAPI == GraphicsAPI::OpenGL))
-                {
-                    sr->RequestOpenGL();
-                }
-                ImGui::EndMenu();
             }
 
-            ImGui::EndMainMenuBar();
+            ImGui::SameLine();
+
+            // Cancel button
+            if (ImGui::Button("Cancel"))
+            {
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::EndPopup();
         }
     }
 
