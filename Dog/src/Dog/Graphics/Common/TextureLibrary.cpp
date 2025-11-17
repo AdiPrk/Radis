@@ -110,11 +110,11 @@ namespace Dog
 
             mTexturesData[index] = std::move(loadData.outTexture);
             mTexturesData[index].name = loadData.path;
+            mTexturesData[index].imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
 
             std::unique_ptr<ITexture> newTexture;
             if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
             {
-                mTexturesData[index].imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
                 newTexture = std::make_unique<VKTexture>(*device, mTexturesData[index]);
                 CreateDescriptorSet(static_cast<VKTexture*>(newTexture.get()));
             }
@@ -372,12 +372,6 @@ namespace Dog
         {
             TextureData& textureData = mTexturesData[index];
             if (textureData.name.empty() && textureData.pixels.size() == 0) continue;
-
-            textureData.imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
-            if (textureData.isStorageImage)
-            {
-                textureData.imageFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
-            }
 
             if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
             {

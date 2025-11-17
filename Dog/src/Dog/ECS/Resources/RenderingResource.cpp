@@ -77,8 +77,8 @@ namespace Dog
         if (!textureLibrary)
         {
             textureLibrary = std::make_unique<TextureLibrary>(device.get());
-            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "dog.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "circle.png");
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "dog.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "circleOutline2.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "dogmodel.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "error.png");

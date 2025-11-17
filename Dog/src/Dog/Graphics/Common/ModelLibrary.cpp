@@ -197,6 +197,10 @@ namespace Dog
                 uint32_t oldRoughnessTextureIndex = mesh->roughnessTextureIndex;
                 uint32_t oldOcclusionTextureIndex = mesh->occlusionTextureIndex;
                 uint32_t oldEmissiveTextureIndex = mesh->emissiveTextureIndex;
+                glm::vec4 oldBaseColorFactor = mesh->baseColorFactor;
+                float oldMetallicFactor = mesh->metallicFactor;
+                float oldRoughnessFactor = mesh->roughnessFactor;
+                glm::vec4 oldEmissiveFactor = mesh->emissiveFactor;
 
                 mesh.reset();
 
@@ -218,6 +222,10 @@ namespace Dog
                 mesh->roughnessTextureIndex = oldRoughnessTextureIndex;
                 mesh->occlusionTextureIndex = oldOcclusionTextureIndex;
                 mesh->emissiveTextureIndex = oldEmissiveTextureIndex;
+                mesh->baseColorFactor = oldBaseColorFactor;
+                mesh->metallicFactor = oldMetallicFactor;
+                mesh->roughnessFactor = oldRoughnessFactor;
+                mesh->emissiveFactor = oldEmissiveFactor;
 
                 mesh->CreateVertexBuffers(device);
                 mesh->CreateIndexBuffers(device);
