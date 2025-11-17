@@ -46,8 +46,8 @@ struct Vertex
     vec3 color;   
     vec3 normal;  
     vec2 texCoord;
-    ivec4 boneIds;
-    vec4 weights; 
+    // ivec4 boneIds;
+    // vec4 weights; 
 };
 
 struct Light {

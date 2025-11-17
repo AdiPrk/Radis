@@ -125,7 +125,7 @@ namespace Dog
                 .range = ubuf3.bufferSize
             };
 
-            writer.WriteImage(0, &outImageInfo, 1);
+            writer.WriteImage(0, &outImageInfo);
             writer.WriteBuffer(2, &bufferInfo2);
             writer.WriteBuffer(3, &bufferInfo3);
 

@@ -33,7 +33,6 @@ namespace Dog
 
     private:
         uint32_t mNumObjectsRendered = 0;
-        uint32_t mConstStartingObjectCount = 0;
         std::vector<MeshDataUniform> mRTMeshData{};
         std::vector<uint32_t> mRTMeshIndices{};
 

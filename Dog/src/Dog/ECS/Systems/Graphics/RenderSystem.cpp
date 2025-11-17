@@ -168,49 +168,46 @@ namespace Dog
             // CreateSphereCube(ecs, 10, 15.0f, 2);
 
             // get num entities with model component
-            // mConstStartingObjectCount = 0;
-            // auto view = ecs->GetRegistry().view<ModelComponent>();
-            // mRTMeshData.clear();
-            // mRTMeshIndices.clear();
-            // 
-            // auto uMeshes = rr->modelLibrary->GetUnifiedMesh();
-            // if (uMeshes)
-            // {
-            //     mConstStartingObjectCount = uMeshes->GetMeshCount();
-            // 
-            //     MeshDataUniform vertexData;
-            //     for (auto& v : uMeshes->GetUnifiedMesh()->mVertices)
-            //     {
-            //         vertexData.position = v.position;
-            //         vertexData.color = v.color;
-            //         vertexData.normal = v.normal;
-            //         vertexData.texCoord = v.uv;
-            //         // vertexData.boneIds = glm::ivec4(v.boneIDs[0], v.boneIDs[1], v.boneIDs[2], v.boneIDs[3]);
-            //         // vertexData.weights = glm::vec4(v.weights[0], v.weights[1], v.weights[2], v.weights[3]);
-            //         mRTMeshData.push_back(vertexData);
-            //     }
-            // 
-            //     mRTMeshIndices = uMeshes->GetUnifiedMesh()->mIndices;
-            // }
+            auto view = ecs->GetRegistry().view<ModelComponent>();
+            mRTMeshData.clear();
+            mRTMeshIndices.clear();
             
-            // CreateBottomLevelAS();  // Set up BLAS infrastructure
-            // CreateTopLevelAS();     // Set up TLAS infrastructure
+            auto uMeshes = rr->modelLibrary->GetUnifiedMesh();
+            if (uMeshes)
+            {            
+                MeshDataUniform vertexData;
+                for (auto& v : uMeshes->GetUnifiedMesh()->mVertices)
+                {
+                    vertexData.position = v.position;
+                    vertexData.color = v.color;
+                    vertexData.normal = v.normal;
+                    vertexData.texCoord = v.uv;
+                    // vertexData.boneIds = glm::ivec4(v.boneIDs[0], v.boneIDs[1], v.boneIDs[2], v.boneIDs[3]);
+                    // vertexData.weights = glm::vec4(v.weights[0], v.weights[1], v.weights[2], v.weights[3]);
+                    mRTMeshData.push_back(vertexData);
+                }
             
-            // VkWriteDescriptorSetAccelerationStructureKHR asInfo{};
-            // asInfo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
-            // asInfo.accelerationStructureCount = 1;
-            // asInfo.pAccelerationStructures = &rr->tlasAccel.accel;
-            // for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex)
-            // {
-            //     DescriptorWriter writer(*rr->rtUniform->GetDescriptorLayout(), *rr->rtUniform->GetDescriptorPool());
-            //     writer.WriteAccelerationStructure(1, &asInfo);
-            //     writer.Overwrite(rr->rtUniform->GetDescriptorSets()[frameIndex]);
-            // }
-            // 
-            // rr->rtUniform->SetUniformData(mRTMeshData, 2, 0);
-            // rr->rtUniform->SetUniformData(mRTMeshData, 2, 1);
-            // rr->rtUniform->SetUniformData(mRTMeshIndices, 3, 0);
-            // rr->rtUniform->SetUniformData(mRTMeshIndices, 3, 1);
+                mRTMeshIndices = uMeshes->GetUnifiedMesh()->mIndices;
+            }
+            
+            CreateBottomLevelAS();  // Set up BLAS infrastructure
+            CreateTopLevelAS();     // Set up TLAS infrastructure
+            
+            VkWriteDescriptorSetAccelerationStructureKHR asInfo{};
+            asInfo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
+            asInfo.accelerationStructureCount = 1;
+            asInfo.pAccelerationStructures = &rr->tlasAccel.accel;
+            for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex)
+            {
+                DescriptorWriter writer(*rr->rtUniform->GetDescriptorLayout(), *rr->rtUniform->GetDescriptorPool());
+                writer.WriteAccelerationStructure(1, &asInfo);
+                writer.Overwrite(rr->rtUniform->GetDescriptorSets()[frameIndex]);
+            }
+            
+            rr->rtUniform->SetUniformData(mRTMeshData, 2, 0);
+            rr->rtUniform->SetUniformData(mRTMeshData, 2, 1);
+            rr->rtUniform->SetUniformData(mRTMeshIndices, 3, 0);
+            rr->rtUniform->SetUniformData(mRTMeshIndices, 3, 1);
         }
 
         // Update textures!
@@ -759,7 +756,7 @@ namespace Dog
 
         // Prepare instance data for TLAS
         std::vector<VkAccelerationStructureInstanceKHR> tlasInstances;
-        tlasInstances.reserve(mConstStartingObjectCount);
+        tlasInstances.reserve(64);
 
         auto& registry = ecs->GetRegistry();
         auto entityView = registry.view<ModelComponent, TransformComponent>();
@@ -778,8 +775,7 @@ namespace Dog
                 VkAccelerationStructureInstanceKHR asInstance{};
                 asInstance.transform = toTransformMatrixKHR(tc.GetTransform() * model->GetNormalizationMatrix());  // Position of the instance
 
-                // TODO: Fix the custom instance to match the one in BLAS
-                asInstance.instanceCustomIndex = instanceIndex++;//mesh->GetID();                       // gl_InstanceCustomIndexEXT
+                asInstance.instanceCustomIndex = instanceIndex++;//mesh->GetID();  // gl_InstanceCustomIndexEXT
                 asInstance.accelerationStructureReference = rr->blasAccel[mesh->GetID()].address;
                 asInstance.instanceShaderBindingTableRecordOffset = 0;  // We will use the same hit group for all objects
                 asInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;  // No culling - double sided
@@ -857,7 +853,7 @@ namespace Dog
             };
             
             asBuildRangeInfo = { 
-                .primitiveCount = static_cast<uint32_t>(mConstStartingObjectCount) 
+                .primitiveCount = static_cast<uint32_t>(tlasInstances.size()) 
             };
 
             CreateAccelerationStructure(
