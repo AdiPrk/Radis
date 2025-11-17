@@ -176,19 +176,6 @@ namespace Dog
         attributeDescriptions.push_back({ 4, 0, VK_FORMAT_R32G32B32A32_SINT, offsetof(Vertex, boneIDs) });
         attributeDescriptions.push_back({ 5, 0, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(Vertex, weights) });
 
-        // Per instance
-        // attributeDescriptions.push_back({ 6,  1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, model)});
-        // attributeDescriptions.push_back({ 7,  1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, model) + sizeof(float) * 4 });
-        // attributeDescriptions.push_back({ 8,  1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, model) + sizeof(float) * 8 });
-        // attributeDescriptions.push_back({ 9,  1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, model) + sizeof(float) * 12 });
-        // attributeDescriptions.push_back({ 10, 1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, tint) });
-        // attributeDescriptions.push_back({ 11, 1, VK_FORMAT_R32G32B32A32_UINT, offsetof(InstanceUniforms, textureIndicies) });
-        // attributeDescriptions.push_back({ 12, 1, VK_FORMAT_R32G32B32A32_UINT, offsetof(InstanceUniforms, textureIndicies2) });
-        // attributeDescriptions.push_back({ 13, 1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, baseColorFactor) });
-        // attributeDescriptions.push_back({ 14, 1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, metallicRoughnessFactor) });
-        // attributeDescriptions.push_back({ 15, 1, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(InstanceUniforms, emissiveFactor) });
-        // attributeDescriptions.push_back({ 16, 1, VK_FORMAT_R32_UINT, offsetof(InstanceUniforms, boneOffset) });
-
         //Return description
         return attributeDescriptions;
     }

@@ -92,6 +92,7 @@
 #include "Graphics/Common/AssimpGlmHelper.h"
 #include "Graphics/Common/Animation/VQS.h"
 #include "Profiler/Profiler.h"
+#include "Assets/Assets.h"
 
 // Shared files
 #include "../../Common/src/Core.h"

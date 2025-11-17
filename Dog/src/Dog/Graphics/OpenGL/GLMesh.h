@@ -18,12 +18,6 @@ namespace Dog
 
         void Bind(VkCommandBuffer commandBuffer, VkBuffer instBuffer) override;
         void Draw(VkCommandBuffer commandBuffer, uint32_t baseIndex = 0) override;
-
-    public:
-        GLuint mVAO{};
-        GLuint mVBO{};
-        GLuint mEBO{};
-        GLuint mIVBO{};
     };
 }
 
