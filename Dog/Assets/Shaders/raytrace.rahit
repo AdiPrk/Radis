@@ -41,12 +41,10 @@ layout(set = 0, binding = 3) uniform sampler2D uTextures[];
 
 struct Vertex
 {
-    vec3 position;
-    vec3 color;   
-    vec3 normal;  
-    vec2 texCoord;
-    // ivec4 boneIds;
-    // vec4 weights; 
+    float posX, posY, posZ;
+    float cR, cG, cB;
+    float nX, nY, nZ;
+    float texU, texV; float _padding;
 };
 
 struct Light {
@@ -91,7 +89,8 @@ void main()
     Vertex v0 = meshBuffer.vertices[i0 + instance.vertexOffset];
     Vertex v1 = meshBuffer.vertices[i1 + instance.vertexOffset];
     Vertex v2 = meshBuffer.vertices[i2 + instance.vertexOffset];
-    vec2 uv = v0.texCoord * bary.x + v1.texCoord * bary.y + v2.texCoord * bary.z;
+    vec2 v0UV = vec2(v0.texU, v0.texV); vec2 v1UV = vec2(v1.texU, v1.texV); vec2 v2UV = vec2(v2.texU, v2.texV);
+    vec2 uv = v0UV * bary.x + v1UV * bary.y + v2UV * bary.z;
 
     // Calculate alpha
     vec4 color = instance.baseColorFactor * instance.tint;

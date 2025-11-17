@@ -397,6 +397,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="src\PCH\pch.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assets\Scenes\cube.json" />
     <None Include="Assets\Scenes\lighttest.json" />
     <None Include="Assets\Scenes\sponza.json" />
     <None Include="src\Dog\Graphics\Vulkan\Uniform\Uniform.inl" />
