@@ -40,78 +40,71 @@ namespace Dog
         mTextures.clear();
     }
 
-    uint32_t TextureLibrary::AddTexture(const std::string& filePath)
+    uint32_t TextureLibrary::QueueTextureLoad(const std::string& texturePath)
     {
-        // Check if texture already exists
-        auto it = mTextureMap.find(filePath);
-        if (it != mTextureMap.end()) {
-            return it->second; // Return existing texture index
-        }
-
-        auto& textureData = mTexturesData.emplace_back();
-        if (!TextureLoader::FromFile(filePath, textureData))
+        if (mTextureMap.find(texturePath) != mTextureMap.end())
         {
-            mTexturesData.pop_back();
-            return INVALID_TEXTURE_INDEX;
+            return mTextureMap[texturePath];
         }
 
-        // Load new texture
-        std::unique_ptr<ITexture> newTexture;
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan) 
-        {
-            textureData.imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
-            newTexture = std::make_unique<VKTexture>(*device, textureData);
-            CreateDescriptorSet(static_cast<VKTexture*>(newTexture.get()));
-        }
-        else
-        {
-            newTexture = std::make_unique<GLTexture>(textureData);
-        }
+        TextureLoadData& loadData = mPendingTextureLoads.emplace_back();
+        loadData.path = texturePath;
 
-        uint32_t newIndex = static_cast<uint32_t>(mTextures.size());
-        mTextures.push_back(std::move(newTexture));
-        mTextureMap[filePath] = newIndex;
-
-        DOG_INFO("Loaded texture: {0} (Index: {1})", filePath, newIndex);
-        
-        return newIndex;
+        uint32_t index = static_cast<uint32_t>(mTextureMap.size());
+        mTextureMap[texturePath] = index;
+        return index;
     }
 
-    uint32_t TextureLibrary::AddTexture(const unsigned char* data, uint32_t size, const std::string& texturePath)
+    uint32_t TextureLibrary::QueueTextureLoad(const unsigned char* textureData, uint32_t textureSize, const std::string& texturePath)
     {
-        // Check if texture already exists
-        auto it = mTextureMap.find(texturePath);
-        if (it != mTextureMap.end()) {
-            return it->second; // Return existing texture index
-        }
-
-        auto& textureData = mTexturesData.emplace_back();
-        if (!TextureLoader::FromMemory(data, size, texturePath, textureData))
+        if (mTextureMap.find(texturePath) != mTextureMap.end())
         {
-            mTexturesData.pop_back();
-            return INVALID_TEXTURE_INDEX;
+            return mTextureMap[texturePath];
         }
 
-        // Load new texture
-        std::unique_ptr<ITexture> newTexture;
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+        TextureLoadData& loadData = mPendingTextureLoads.emplace_back();
+        loadData.data = textureData;
+        loadData.size = textureSize;
+        loadData.path = texturePath;
+
+        uint32_t index = static_cast<uint32_t>(mTextureMap.size());
+        mTextureMap[texturePath] = index;
+        return index;
+    }
+
+    bool TextureLibrary::LoadQueuedTextures()
+    {
+        if (mPendingTextureLoads.empty())
         {
-            textureData.imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
-            newTexture = std::make_unique<VKTexture>(*device, textureData);
-            CreateDescriptorSet(static_cast<VKTexture*>(newTexture.get()));
+            return false;
         }
-        else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
+
+        DOG_INFO("Loading {0} queued textures...", mPendingTextureLoads.size());
+        TextureLoader::LoadMT(mPendingTextureLoads);
+
+        DOG_INFO("Finished loading textures. Creating GPU resources...");
+        mTextures.resize(mTextureMap.size());
+        for (auto& loadData : mPendingTextureLoads)
         {
-            newTexture = std::make_unique<GLTexture>(textureData);
+            std::unique_ptr<ITexture> newTexture;
+            if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+            {
+                loadData.outTexture.imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
+                newTexture = std::make_unique<VKTexture>(*device, loadData.outTexture);
+                CreateDescriptorSet(static_cast<VKTexture*>(newTexture.get()));
+            }
+            else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
+            {
+                newTexture = std::make_unique<GLTexture>(loadData.outTexture);
+            }
+
+            mTextures[mTextureMap[loadData.path]] = std::move(newTexture);
+            mTexturesData.emplace_back(std::move(loadData.outTexture));
         }
 
-        uint32_t newIndex = static_cast<uint32_t>(mTextures.size());
-        mTextures.push_back(std::move(newTexture));
-        mTextureMap[texturePath] = newIndex;
-
-        DOG_INFO("Loaded texture from memory: {0} (Index: {1})", texturePath, newIndex);
-
-        return newIndex;
+        DOG_INFO("All queued textures loaded successfully!");
+        mPendingTextureLoads.clear();
+        return true;
     }
 
     uint32_t TextureLibrary::CreateStorageImage(const std::string& imageName, uint32_t width, uint32_t height, VkFormat imageFormat, VkImageUsageFlags usage, VkImageLayout finalLayout)
@@ -141,10 +134,14 @@ namespace Dog
         std::unique_ptr<ITexture> newTexture;
         newTexture = std::make_unique<VKTexture>(*device, textureData);
 
-        uint32_t newIndex = static_cast<uint32_t>(mTextures.size());
-        mTextures.push_back(std::move(newTexture));
+        uint32_t newIndex = static_cast<uint32_t>(mTextureMap.size());
+        if (mTextures.size() <= newIndex)
+        {
+            mTextures.resize(newIndex + 1);
+        }
+        mTextures[newIndex] = std::move(newTexture);
         mTextureMap[imageName] = newIndex;
-        CreateDescriptorSet(static_cast<VKTexture*>(mTextures.back().get()), finalLayout);
+        CreateDescriptorSet(static_cast<VKTexture*>(mTextures[newIndex].get()), finalLayout);
         return newIndex;
     }
 

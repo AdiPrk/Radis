@@ -4,13 +4,13 @@
 
 namespace Dog
 {
-    /*struct TextureLoadData
+    struct TextureLoadData
     {
         std::string path{};
         const unsigned char* data{ nullptr };
         uint32_t size{ 0 };
-        TextureData* outTexture{ nullptr };
-    };*/
+        TextureData outTexture{};
+    };
 
     class TextureLoader
     {
@@ -19,8 +19,7 @@ namespace Dog
         static bool FromFile(const std::string& path, TextureData& outTexture);
         static bool FromMemory(const unsigned char* textureData, uint32_t textureSize, const std::string& name, TextureData& outTexture);
 
-        // Multi-threaded (many files)
-        static bool FromFiles(const std::vector<std::string>& paths, std::vector<TextureData>& outTextures);
-
+        // Multi-threaded
+        static void LoadMT(std::vector<TextureLoadData>& loadData);
     };
 }
