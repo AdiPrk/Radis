@@ -10,6 +10,7 @@ namespace Dog
         const unsigned char* data{ nullptr };
         uint32_t size{ 0 };
         TextureData outTexture{};
+        uint32_t targetIndex{ 0 }; // For texture library
     };
 
     class TextureLoader

@@ -47,11 +47,17 @@ namespace Dog
             return mTextureMap[texturePath];
         }
 
+        uint32_t index = mNextIndex++;
+        mTextureMap[texturePath] = index;
+
+        if (mTexturesData.size() <= index)
+        {
+            mTexturesData.resize(index + 1);
+        }
+
         TextureLoadData& loadData = mPendingTextureLoads.emplace_back();
         loadData.path = texturePath;
-
-        uint32_t index = static_cast<uint32_t>(mTextureMap.size());
-        mTextureMap[texturePath] = index;
+        loadData.targetIndex = index;
         return index;
     }
 
@@ -62,13 +68,19 @@ namespace Dog
             return mTextureMap[texturePath];
         }
 
+        uint32_t index = mNextIndex++;
+        mTextureMap[texturePath] = index;
+
+        if (mTexturesData.size() <= index)
+        {
+            mTexturesData.resize(index + 1);
+        }
+
         TextureLoadData& loadData = mPendingTextureLoads.emplace_back();
         loadData.data = textureData;
         loadData.size = textureSize;
         loadData.path = texturePath;
-
-        uint32_t index = static_cast<uint32_t>(mTextureMap.size());
-        mTextureMap[texturePath] = index;
+        loadData.targetIndex = index;
         return index;
     }
 
@@ -83,23 +95,31 @@ namespace Dog
         TextureLoader::LoadMT(mPendingTextureLoads);
 
         DOG_INFO("Finished loading textures. Creating GPU resources...");
-        mTextures.resize(mTextureMap.size());
+        if (mTextures.size() < mNextIndex)
+        {
+            mTextures.resize(mNextIndex);
+        }
+
         for (auto& loadData : mPendingTextureLoads)
         {
+            uint32_t index = loadData.targetIndex;
+
+            mTexturesData[index] = std::move(loadData.outTexture);
+            mTexturesData[index].name = loadData.path;
+
             std::unique_ptr<ITexture> newTexture;
             if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
             {
-                loadData.outTexture.imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
-                newTexture = std::make_unique<VKTexture>(*device, loadData.outTexture);
+                mTexturesData[index].imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
+                newTexture = std::make_unique<VKTexture>(*device, mTexturesData[index]);
                 CreateDescriptorSet(static_cast<VKTexture*>(newTexture.get()));
             }
             else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
             {
-                newTexture = std::make_unique<GLTexture>(loadData.outTexture);
+                newTexture = std::make_unique<GLTexture>(mTexturesData[index]);
             }
 
-            mTextures[mTextureMap[loadData.path]] = std::move(newTexture);
-            mTexturesData.emplace_back(std::move(loadData.outTexture));
+            mTextures[index] = std::move(newTexture);
         }
 
         DOG_INFO("All queued textures loaded successfully!");
@@ -122,7 +142,14 @@ namespace Dog
             return it->second;
         }
 
-        auto& textureData = mTexturesData.emplace_back();
+        uint32_t index = mNextIndex++;
+        mTextureMap[imageName] = index;
+        if (mTexturesData.size() <= index)
+        {
+            mTexturesData.resize(index + 1);
+        }
+
+        TextureData& textureData = mTexturesData[index];
         textureData.isStorageImage = true;
         textureData.width = width;
         textureData.height = height;
@@ -131,18 +158,13 @@ namespace Dog
         textureData.finalLayout = finalLayout;
         textureData.name = imageName;
 
-        std::unique_ptr<ITexture> newTexture;
-        newTexture = std::make_unique<VKTexture>(*device, textureData);
+        if (mTextures.size() <= index)
+            mTextures.resize(index + 1);
 
-        uint32_t newIndex = static_cast<uint32_t>(mTextureMap.size());
-        if (mTextures.size() <= newIndex)
-        {
-            mTextures.resize(newIndex + 1);
-        }
-        mTextures[newIndex] = std::move(newTexture);
-        mTextureMap[imageName] = newIndex;
-        CreateDescriptorSet(static_cast<VKTexture*>(mTextures[newIndex].get()), finalLayout);
-        return newIndex;
+        mTextures[index] = std::make_unique<VKTexture>(*device, textureData);
+        CreateDescriptorSet(static_cast<VKTexture*>(mTextures[index].get()), finalLayout);
+
+        return index;
     }
 
     ITexture* TextureLibrary::GetTexture(uint32_t index)
@@ -313,30 +335,37 @@ namespace Dog
         }
 
         mTextures.clear();
-        mTextureMap.clear();
     }
 
     void TextureLibrary::RecreateAllBuffers(class Device* device)
     {
-        for (auto& textureData : mTexturesData)
+        mTextures.resize(mTexturesData.size());
+
+        for (uint32_t index = 0; index < mTexturesData.size(); ++index)
         {
+            TextureData& textureData = mTexturesData[index];
+            if (textureData.name.empty() && textureData.pixels.size() == 0) continue;
+
+            textureData.imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
+            if (textureData.isStorageImage)
+            {
+                textureData.imageFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
+            }
+
             if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
             {
-                textureData.imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
-                if (textureData.isStorageImage)
-                {
-                    textureData.imageFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
-                }
-
-                mTextures.emplace_back(std::make_unique<VKTexture>(*device, textureData));
-                CreateDescriptorSet(static_cast<VKTexture*>(mTextures.back().get()));
+                // If you have textureData.isStorageImage flag, pass the proper final layout
+                mTextures[index] = std::make_unique<VKTexture>(*device, textureData);
+                CreateDescriptorSet(static_cast<VKTexture*>(mTextures[index].get()),
+                    textureData.isStorageImage ? textureData.finalLayout : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
             }
             else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
             {
-                mTextures.emplace_back(std::make_unique<GLTexture>(textureData));
+                mTextures[index] = std::make_unique<GLTexture>(textureData);
             }
 
-            mTextureMap[textureData.name] = static_cast<uint32_t>(mTextures.size() - 1);
+            // Ensure mTextureMap has the same mapping still (this should be true if we didn't clear it).
+            mTextureMap[textureData.name] = index;
         }
     }
 }
