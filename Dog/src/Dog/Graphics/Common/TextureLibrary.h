@@ -20,6 +20,7 @@ namespace Dog
         bool LoadQueuedTextures();
 
 		uint32_t CreateStorageImage(const std::string& imageName, uint32_t width, uint32_t height, VkFormat imageFormat, VkImageUsageFlags usage, VkImageLayout finalLayout = VK_IMAGE_LAYOUT_GENERAL);
+		void ResizeStorageImage(const std::string& imageName, uint32_t newWidth, uint32_t newHeight);
 
 		ITexture* GetTexture(uint32_t textureID);
 		ITexture* GetTexture(const std::string& texturePath);
@@ -33,6 +34,7 @@ namespace Dog
 
 		void ClearAllBuffers(class Device* device);
 		void RecreateAllBuffers(class Device* device);
+		void UpdateRTUniform(struct RenderingResource& renderData);
 
 		void CreateTextureSampler();
 		void CreateDescriptors();
@@ -51,6 +53,7 @@ namespace Dog
 
         std::vector<TextureLoadData> mPendingTextureLoads;
         uint32_t mNextIndex = 0;
+        bool mNeedReuploadRTImage = false;
 	};
 
 } // namespace Dog

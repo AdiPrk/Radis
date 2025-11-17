@@ -42,7 +42,7 @@ namespace Dog
                 if (!texture) continue;
 
                 ImGui::PushID(i);
-                ImGui::Image(reinterpret_cast<ImTextureID>(texture->GetTextureID()), ImVec2(thumbnailSize, thumbnailSize), uv0, uv1);
+                ImGui::Image(texture->GetTextureID(), ImVec2(thumbnailSize, thumbnailSize), uv0, uv1);
                 ImGui::NextColumn();
                 ImGui::PopID();
             }
