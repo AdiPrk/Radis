@@ -42,12 +42,10 @@ layout(set = 0, binding = 3) uniform sampler2D uTextures[];
 
 struct Vertex
 {
-    vec3 position;
-    vec3 color;   
-    vec3 normal;  
-    vec2 texCoord;
-    // ivec4 boneIds;
-    // vec4 weights; 
+    float posX, posY, posZ;
+    float cR, cG, cB;
+    float nX, nY, nZ;
+    float texU, texV; float _padding;
 };
 
 struct Light {
@@ -169,10 +167,13 @@ void main()
     Vertex v0 = meshBuffer.vertices[i0 + instance.vertexOffset];
     Vertex v1 = meshBuffer.vertices[i1 + instance.vertexOffset];
     Vertex v2 = meshBuffer.vertices[i2 + instance.vertexOffset];
+    vec2 v0UV = vec2(v0.texU, v0.texV); vec2 v1UV = vec2(v1.texU, v1.texV); vec2 v2UV = vec2(v2.texU, v2.texV);
+    vec3 v0N = vec3(v0.nX, v0.nY, v0.nZ); vec3 v1N = vec3(v1.nX, v1.nY, v1.nZ); vec3 v2N = vec3(v2.nX, v2.nY, v2.nZ);
+    vec3 v0C = vec3(v0.cR, v0.cG, v0.cB); vec3 v1C = vec3(v1.cR, v1.cG, v1.cB); vec3 v2C = vec3(v2.cR, v2.cG, v2.cB);
 
-    vec2 uv = v0.texCoord * bary.x + v1.texCoord * bary.y + v2.texCoord * bary.z;
-    vec3 normalLocal = v0.normal * bary.x + v1.normal * bary.y + v2.normal * bary.z;
-    vec3 vertexColor = v0.color * bary.x + v1.color * bary.y + v2.color * bary.z;
+    vec2 uv = v0UV * bary.x + v1UV * bary.y + v2UV * bary.z;
+    vec3 normalLocal = v0N * bary.x + v1N * bary.y + v2N * bary.z;
+    vec3 vertexColor = v0C * bary.x + v1C * bary.y + v2C * bary.z;
 
     // Position: Origin + (Direction * Distance)
     vec3 fragWorldPos = gl_WorldRayOriginEXT + gl_WorldRayDirectionEXT * gl_HitTEXT;

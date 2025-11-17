@@ -178,12 +178,18 @@ namespace Dog
                 MeshDataUniform vertexData;
                 for (auto& v : uMeshes->GetUnifiedMesh()->mVertices)
                 {
-                    vertexData.position = v.position;
-                    vertexData.color = v.color;
-                    vertexData.normal = v.normal;
-                    vertexData.texCoord = v.uv;
-                    // vertexData.boneIds = glm::ivec4(v.boneIDs[0], v.boneIDs[1], v.boneIDs[2], v.boneIDs[3]);
-                    // vertexData.weights = glm::vec4(v.weights[0], v.weights[1], v.weights[2], v.weights[3]);
+                    vertexData.posX = v.position.x;
+                    vertexData.posY = v.position.y;
+                    vertexData.posZ = v.position.z;
+                    vertexData.colorR = v.color.r;
+                    vertexData.colorG = v.color.g;
+                    vertexData.colorB = v.color.b;
+                    vertexData.normalX = v.normal.x;
+                    vertexData.normalY = v.normal.y;
+                    vertexData.normalZ = v.normal.z;
+                    vertexData.texU = v.uv.x;
+                    vertexData.texV = v.uv.y;
+
                     mRTMeshData.push_back(vertexData);
                 }
             
@@ -270,7 +276,6 @@ namespace Dog
             auto extant = windowResource->window->GetExtent();
             aspectRatio = static_cast<float>(extant.x) / static_cast<float>(extant.y);
         }
-        printf("Aspect Ratio: %f\n", aspectRatio);
 
         mNumObjectsRendered = 0;
 
