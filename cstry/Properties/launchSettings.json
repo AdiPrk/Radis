@@ -1,9 +1,0 @@
-{
-  "profiles": {
-    "cstry": {
-      "commandName": "Project",
-      "commandLineArgs": "$DevBuild$",
-      "nativeDebugging": true
-    }
-  }
-}
