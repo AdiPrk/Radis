@@ -2,6 +2,13 @@
 #include "ProfilerWindow.h"
 #include "Profiler/Profiler.h"
 
+#include <algorithm>
+#include <string>
+#include <cctype>
+#include <vector>
+#include <cstdio>
+#include <cmath>
+
 namespace Dog
 {
     namespace EditorWindows
@@ -12,61 +19,229 @@ namespace Dog
         static inline double NsToMs(uint64_t ns) { return double(ns) * 1e-6; }
         static inline float Clamp01(float v) { return (v < 0.0f ? 0.0f : (v > 1.0f ? 1.0f : v)); }
 
-        // Renders the top aggregates table
-        static void RenderAggregatesTable(const ProfilerSnapshot& snap, int maxRows, float minPercentFilter)
+        // Helper: lowercase a string in-place
+        static inline void ToLowerInPlace(std::string& s) {
+            std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
+        }
+
+        // Render a single line for a node: name on the left (tree node arrow), then compact stats on the same line.
+        static void RenderNodeLine(const ProfilerSnapshot& snap, int nodeIdx)
         {
-            // Build index list of aggregates with call count > 0
-            struct Row { size_t id; uint64_t totalNs; uint32_t calls; double avgMs; uint64_t maxNs; };
-            std::vector<Row> rows;
-            rows.reserve(snap.aggs.size());
-            for (size_t i = 0; i < snap.aggs.size(); ++i) {
-                const auto& a = snap.aggs[i];
-                if (a.callCount == 0) continue;
-                double pct = snap.frameTotalNs > 0 ? (100.0 * double(a.totalNs) / double(snap.frameTotalNs)) : 0.0;
-                if (pct < minPercentFilter) continue;
-                Row r;
-                r.id = i;
-                r.totalNs = a.totalNs;
-                r.calls = a.callCount;
-                r.avgMs = a.callCount ? NsToMs(a.totalNs / a.callCount) : 0.0;
-                r.maxNs = a.maxNs;
-                rows.push_back(r);
+            const ProfilerSnapshotNode& node = snap.nodes[nodeIdx];
+            const std::string& name = (node.nameId >= 0 && node.nameId < (int)snap.names.size()) ? snap.names[node.nameId] : "<unknown>";
+
+            double totalMs = NsToMs(node.totalNs);
+            double exclusiveMs = NsToMs((node.totalNs > node.childNs) ? (node.totalNs - node.childNs) : 0ULL);
+            double pct = snap.frameTotalNs > 0 ? (100.0 * double(node.totalNs) / double(snap.frameTotalNs)) : 0.0;
+            uint32_t calls = node.callCount;
+            double avgMs = calls ? NsToMs(node.totalNs / calls) : 0.0;
+            uint64_t maxNs = 0;
+            if (node.nameId >= 0 && node.nameId < (int)snap.aggs.size()) {
+                maxNs = snap.aggs[node.nameId].maxNs;
             }
 
-            std::sort(rows.begin(), rows.end(), [](const Row& a, const Row& b) { return a.totalNs > b.totalNs; });
+            // The tree label is the name. We'll render the TreeNode (arrow + label) and then place stats on the same line.
+            ImGui::TextUnformatted(name.c_str());
+            ImGui::SameLine(300); // adjust X position where stats start; tweak as needed for preferred layout
+            ImGui::TextDisabled("%.3f ms", totalMs);
+            ImGui::SameLine();
+            ImGui::TextDisabled("(%.2f%%)", pct);
+            ImGui::SameLine();
+            ImGui::TextDisabled("excl %.3f ms", exclusiveMs);
+            ImGui::SameLine();
+            ImGui::TextDisabled("calls %u", calls);
+            ImGui::SameLine();
+            ImGui::TextDisabled("avg %.3f ms", avgMs);
+            ImGui::SameLine();
+            ImGui::TextDisabled("max %.3f ms", NsToMs(maxNs));
+        }
 
-            ImGui::BeginChild("agg_table_child", ImVec2(0, 220), true);
-            ImGui::Columns(5, "agg_cols", true);
-            ImGui::TextUnformatted("Name"); ImGui::NextColumn();
-            ImGui::TextUnformatted("Total"); ImGui::NextColumn();
-            ImGui::TextUnformatted("Calls"); ImGui::NextColumn();
-            ImGui::TextUnformatted("Avg"); ImGui::NextColumn();
-            ImGui::TextUnformatted("Max"); ImGui::NextColumn();
+        // Recursively determine if a node or any descendant matches the search string (case-insensitive),
+        // and whether it meets the minPercentFilter (at least one descendant or the node itself must meet min%).
+        // This is used to determine whether to show a branch when a search is active.
+        static bool NodeOrDescendantMatchesFilter(const ProfilerSnapshot& snap, int nodeIdx, const std::string& searchLower, float minPctFilter)
+        {
+            if (nodeIdx < 0 || nodeIdx >= (int)snap.nodes.size()) return false;
+            const ProfilerSnapshotNode& node = snap.nodes[nodeIdx];
+
+            // percent filter
+            double pct = snap.frameTotalNs > 0 ? (double(node.totalNs) / double(snap.frameTotalNs)) : 0.0;
+            bool meetsPct = pct >= double(minPctFilter);
+
+            // search filter
+            bool matchesSearch = false;
+            if (!searchLower.empty()) {
+                if (node.nameId >= 0 && node.nameId < (int)snap.names.size()) {
+                    std::string nameLower = snap.names[node.nameId];
+                    ToLowerInPlace(nameLower);
+                    if (nameLower.find(searchLower) != std::string::npos) matchesSearch = true;
+                }
+            }
+            else {
+                // no search -> treat as matched
+                matchesSearch = true;
+            }
+
+            if (meetsPct && matchesSearch) return true;
+
+            // Check children
+            int child = node.firstChild;
+            while (child != -1) {
+                if (NodeOrDescendantMatchesFilter(snap, child, searchLower, minPctFilter)) return true;
+                child = snap.nodes[child].nextSibling;
+            }
+            return false;
+        }
+
+        // Render the hierarchy starting at a given node's children, sorting siblings by totalNs descending.
+        // `showRootChildrenOnly` can be used when you want to start from root's children (root itself isn't shown as a node).
+        static void RenderHierarchyRecursive(const ProfilerSnapshot& snap, int nodeIdx, const std::string& searchLower, float minPctFilter)
+        {
+            // Gather children of nodeIdx
+            std::vector<int> children;
+            if (nodeIdx >= 0 && nodeIdx < (int)snap.nodes.size()) {
+                int child = snap.nodes[nodeIdx].firstChild;
+                while (child != -1) {
+                    children.push_back(child);
+                    child = snap.nodes[child].nextSibling;
+                }
+            }
+
+            // Sort children by descending totalNs
+            std::sort(children.begin(), children.end(), [&snap](int a, int b) {
+                uint64_t ta = (a >= 0 && a < (int)snap.nodes.size()) ? snap.nodes[a].totalNs : 0;
+                uint64_t tb = (b >= 0 && b < (int)snap.nodes.size()) ? snap.nodes[b].totalNs : 0;
+                return ta > tb;
+                });
+
+            for (int childIdx : children)
+            {
+                // If search/minPct filters are active, check whether to show this branch at all
+                if (!searchLower.empty() || minPctFilter > 0.0f) {
+                    if (!NodeOrDescendantMatchesFilter(snap, childIdx, searchLower, minPctFilter)) {
+                        continue; // skip entire branch
+                    }
+                }
+
+                const ProfilerSnapshotNode& node = snap.nodes[childIdx];
+                const std::string& name = (node.nameId >= 0 && node.nameId < (int)snap.names.size()) ? snap.names[node.nameId] : "<unknown>";
+
+                // Determine if it's a leaf (no children that pass the filter)
+                bool hasChild = false;
+                int ch = node.firstChild;
+                while (ch != -1) {
+                    // check child's percent/search quickly to avoid showing expand arrow if no visible children
+                    if (searchLower.empty() && minPctFilter <= 0.0f) {
+                        hasChild = true;
+                        break;
+                    }
+                    else {
+                        if (NodeOrDescendantMatchesFilter(snap, ch, searchLower, minPctFilter)) { hasChild = true; break; }
+                    }
+                    ch = snap.nodes[ch].nextSibling;
+                }
+
+                // Use tree node so it can be expanded/collapsed; label only contains the name (we render stats to the same line)
+                ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
+                if (!hasChild) flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+
+                // We want a unique id per node; use the pointer-less index based id
+                ImGui::PushID(childIdx);
+                if (hasChild) {
+                    // When node has children we call TreeNodeEx which returns true if opened
+                    bool opened = ImGui::TreeNodeEx(name.c_str(), flags);
+                    // Render stats on same line (we used name as label above but want stats packed right)
+                    ImGui::SameLine(300);
+                    {
+                        double totalMs = NsToMs(node.totalNs);
+                        double exclusiveMs = NsToMs((node.totalNs > node.childNs) ? (node.totalNs - node.childNs) : 0ULL);
+                        double pct = snap.frameTotalNs > 0 ? (100.0 * double(node.totalNs) / double(snap.frameTotalNs)) : 0.0;
+                        uint32_t calls = node.callCount;
+                        double avgMs = calls ? NsToMs(node.totalNs / calls) : 0.0;
+                        uint64_t maxNs = 0;
+                        if (node.nameId >= 0 && node.nameId < (int)snap.aggs.size()) {
+                            maxNs = snap.aggs[node.nameId].maxNs;
+                        }
+
+                        ImGui::TextDisabled("%.3f ms", totalMs);
+                        ImGui::SameLine();
+                        ImGui::TextDisabled("(%.2f%%)", pct);
+                        ImGui::SameLine();
+                        ImGui::TextDisabled("excl %.3f ms", exclusiveMs);
+                        ImGui::SameLine();
+                        ImGui::TextDisabled("calls %u", calls);
+                        ImGui::SameLine();
+                        ImGui::TextDisabled("avg %.3f ms", avgMs);
+                        ImGui::SameLine();
+                        ImGui::TextDisabled("max %.3f ms", NsToMs(maxNs));
+                    }
+
+                    if (opened) {
+                        // Recurse into children
+                        RenderHierarchyRecursive(snap, childIdx, searchLower, minPctFilter);
+                        ImGui::TreePop();
+                    }
+                }
+                else {
+                    // Leaf: use selectable-looking presentation with no push/pop
+                    // Because we passed NoTreePushOnOpen, we must render the label ourselves
+                    ImGui::TreeNodeEx(name.c_str(), flags);
+                    ImGui::SameLine(300);
+                    {
+                        double totalMs = NsToMs(node.totalNs);
+                        double exclusiveMs = NsToMs((node.totalNs > node.childNs) ? (node.totalNs - node.childNs) : 0ULL);
+                        double pct = snap.frameTotalNs > 0 ? (100.0 * double(node.totalNs) / double(snap.frameTotalNs)) : 0.0;
+                        uint32_t calls = node.callCount;
+                        double avgMs = calls ? NsToMs(node.totalNs / calls) : 0.0;
+                        uint64_t maxNs = 0;
+                        if (node.nameId >= 0 && node.nameId < (int)snap.aggs.size()) {
+                            maxNs = snap.aggs[node.nameId].maxNs;
+                        }
+
+                        ImGui::TextDisabled("%.3f ms", totalMs);
+                        ImGui::SameLine();
+                        ImGui::TextDisabled("(%.2f%%)", pct);
+                        ImGui::SameLine();
+                        ImGui::TextDisabled("excl %.3f ms", exclusiveMs);
+                        ImGui::SameLine();
+                        ImGui::TextDisabled("calls %u", calls);
+                        ImGui::SameLine();
+                        ImGui::TextDisabled("avg %.3f ms", avgMs);
+                        ImGui::SameLine();
+                        ImGui::TextDisabled("max %.3f ms", NsToMs(maxNs));
+                    }
+                }
+                ImGui::PopID();
+            }
+        }
+
+        // High-level entry that renders the profiling hierarchy (root's children)
+        static void RenderProfilerHierarchy(const ProfilerSnapshot& snap, float minPercentFilter, const std::string& searchLower)
+        {
+            ImGui::BeginChild("prof_hierarchy_child", ImVec2(0, 320), true);
+
+            // Header / legend row
+            ImGui::TextUnformatted("Name (click arrow to expand)"); ImGui::SameLine(300);
+            ImGui::TextDisabled("Total"); ImGui::SameLine();
+            ImGui::TextDisabled("%"); ImGui::SameLine();
+            ImGui::TextDisabled("Exclusive"); ImGui::SameLine();
+            ImGui::TextDisabled("Calls"); ImGui::SameLine();
+            ImGui::TextDisabled("Avg"); ImGui::SameLine();
+            ImGui::TextDisabled("Max");
             ImGui::Separator();
 
-            int printed = 0;
-            for (const auto& r : rows) {
-                if (printed++ >= maxRows) break;
-                const std::string& n = snap.names[r.id];
-                ImGui::TextUnformatted(n.c_str()); ImGui::NextColumn();
-
-                char buf[64];
-                std::snprintf(buf, sizeof(buf), "%.3f ms", NsToMs(r.totalNs));
-                ImGui::TextUnformatted(buf); ImGui::NextColumn();
-
-                ImGui::Text("%u", r.calls); ImGui::NextColumn();
-
-                char buf2[64];
-                std::snprintf(buf2, sizeof(buf2), "%.3f ms", r.avgMs);
-                ImGui::TextUnformatted(buf2); ImGui::NextColumn();
-
-                char buf3[64];
-                std::snprintf(buf3, sizeof(buf3), "%.3f ms", NsToMs(r.maxNs));
-                ImGui::TextUnformatted(buf3); ImGui::NextColumn();
+            // If root index is invalid, early out
+            int root = snap.rootIndex;
+            if (root < 0 || root >= (int)snap.nodes.size()) {
+                ImGui::TextDisabled("No root node in snapshot.");
+                ImGui::EndChild();
+                return;
             }
 
+            // Render children of root (top-level groups) sorted by total time descending
+            RenderHierarchyRecursive(snap, root, searchLower, minPercentFilter);
+
             ImGui::EndChild();
-            ImGui::Columns(1);
         }
 
         // Main ImGui update function
@@ -76,16 +251,14 @@ namespace Dog
             ProfilerSnapshot snap;
             bool have = Profiler::GetLastFrameSnapshot(snap);
             if (!have) {
-                // No snapshot yet: render placeholder with a short help text.
                 if (ImGui::Begin("Profiler", nullptr)) {
                     ImGui::TextDisabled("No profiler snapshot available yet.");
-                    ImGui::TextWrapped("Profiler takes a snapshot at the end of each frame. Run one frame or enable report-on-end-frame to populate.");
                 }
                 ImGui::End();
                 return;
             }
 
-            // UI state (could be stored in static or persistent editor state)
+            // UI state
             static bool freeze = false;
             static bool autoRefresh = true;
             static float minPercent = 0.05f; // 0.05% minimum display
@@ -94,13 +267,6 @@ namespace Dog
 
             // If frozen, don't refresh the local 'snap' after first frame
             static ProfilerSnapshot frozenSnap;
-            if (freeze) {
-                if (frozenSnap.nodes.empty()) frozenSnap = snap;
-            }
-            else {
-                frozenSnap = ProfilerSnapshot(); // clear
-            }
-
             const ProfilerSnapshot& displaySnap = freeze ? frozenSnap : snap;
 
             ImGui::Begin("Profiler");
@@ -117,28 +283,16 @@ namespace Dog
                 ImGui::NextColumn();
 
                 // Controls
-                if (ImGui::Button(freeze ? "Unfreeze" : "Freeze")) {
+                if (ImGui::Button(freeze ? "Unfreeze" : "Freeze"))
+                {
                     freeze = !freeze;
-                    if (!freeze) frozenSnap = ProfilerSnapshot(); // clear frozen copy
+                    if (freeze)
+                    {
+                        frozenSnap = snap;
+                    }
                 }
                 ImGui::SameLine();
                 ImGui::Checkbox("Auto", &autoRefresh);
-                ImGui::SameLine();
-                ImGui::TextDisabled("  ");
-                ImGui::SameLine();
-                if (ImGui::SmallButton("Copy CSV")) {
-                    // quick CSV: name,total_ms,calls,avg_ms,max_ms
-                    std::ostringstream ss;
-                    ss << "Name,TotalMs,Calls,AvgMs,MaxMs\n";
-                    for (size_t i = 0; i < displaySnap.aggs.size(); ++i) {
-                        const auto& a = displaySnap.aggs[i];
-                        if (a.callCount == 0) continue;
-                        ss << "\"" << displaySnap.names[i] << "\","
-                            << NsToMs(a.totalNs) << "," << a.callCount << ","
-                            << (a.callCount ? NsToMs(a.totalNs / a.callCount) : 0.0) << "," << NsToMs(a.maxNs) << "\n";
-                    }
-                    ImGui::SetClipboardText(ss.str().c_str());
-                }
             }
             ImGui::Columns(1);
             ImGui::Separator();
@@ -155,34 +309,21 @@ namespace Dog
 
             ImGui::Spacing();
 
-            // Right: Aggregates
-            ImGui::BeginChild("AggregatesChild", ImVec2(0, 0), true);
-            ImGui::Text("Top aggregates");
+            // Right: Hierarchy
+            ImGui::BeginChild("HierarchyChild", ImVec2(0, 0), true);
+            ImGui::Text("Profile hierarchy (sorted by inclusive time)");
             ImGui::Separator();
 
-            // Optionally filter by search:
-            // Simple search lower-case match
+            // Prepare search lower-case
             std::string search = searchBuf;
-            std::transform(search.begin(), search.end(), search.begin(), ::tolower);
-
-            // Build a temporary snapshot filtered by name if search specified.
-            ProfilerSnapshot filteredSnap;
+            std::string searchLower;
             if (!search.empty()) {
-                // We'll copy names and aggs but only keep matching ones
-                filteredSnap = displaySnap; // shallow copy; we'll prune after
-                filteredSnap.nodes.clear(); // do not need nodes here for aggregates view
-                for (size_t i = 0; i < displaySnap.aggs.size(); ++i) {
-                    if (displaySnap.aggs[i].callCount == 0) continue;
-                    std::string nameLower = displaySnap.names[i];
-                    std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), ::tolower);
-                    if (nameLower.find(search) != std::string::npos) {
-                        // keep
-                        // nothing to do - we will read directly from displaySnap below
-                    }
-                }
+                searchLower = search;
+                ToLowerInPlace(searchLower);
             }
 
-            RenderAggregatesTable(displaySnap, maxAggRows, minPctFilter);
+            // Render the hierarchy (root's children) with sorting and expand/collapse behavior.
+            RenderProfilerHierarchy(displaySnap, minPctFilter, searchLower);
 
             ImGui::EndChild();
 

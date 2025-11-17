@@ -6,7 +6,7 @@
 #include "../Vulkan/Core/Device.h"
 #include "../OpenGL/GLTexture.h"
 
-#include "TextureData.h"
+#include "TextureLoader.h"
 #include "Engine.h"
 
 namespace Dog

@@ -5,7 +5,7 @@
 #include "ECS/Resources/EditorResource.h"
 #include "ECS/Resources/DebugDrawResource.h"
 #include "ECS/Resources/WindowResource.h"
-#include "ECS/Resources/SwapRendererBackendResource.h"
+#include "ECS/Resources/SwapRendererResource.h"
 
 #include "../InputSystem.h"
 
@@ -231,13 +231,13 @@ namespace Dog
         // Heh
         if (InputSystem::isKeyTriggered(Key::T))
         {
-            auto sr = ecs->GetResource<SwapRendererBackendResource>();
+            auto sr = ecs->GetResource<SwapRendererResource>();
             sr->RequestSwap();
         }
         // static int si = 0;
         // if (si++ % 30 == 0) 
         // {
-        //     auto sr = ecs->GetResource<SwapRendererBackendResource>();
+        //     auto sr = ecs->GetResource<SwapRendererResource>();
         //     sr->RequestSwap();
         // }
     }

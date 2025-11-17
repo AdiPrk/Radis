@@ -31,7 +31,7 @@ namespace Dog
         std::vector<ProfilerSnapshotAggregate> aggs;  // per-name aggregates
         uint64_t frameTotalNs = 0;
         int32_t rootIndex = -1;
-        uint64_t frameIndex = 0; // optional: frame counter
+        uint64_t frameIndex = 0;
     };
 
     class Profiler {
@@ -47,11 +47,6 @@ namespace Dog
         static void BeginScope(const char* name);
         static void EndScope();
 
-        // Print a textual report of the last recorded frame
-        static void ReportFrame();
-
-        // Control whether a report should be emitted automatically at EndFrame
-        static void SetReportOnEndFrame(bool on);
 
         static bool GetLastFrameSnapshot(ProfilerSnapshot& out);
 
@@ -60,13 +55,6 @@ namespace Dog
         Profiler() = delete;
         ~Profiler() = delete;
     };
-
-    // Populate `out` with the last fully-recorded frame snapshot.
-    // Returns true if a snapshot was available (otherwise returns false).
-    static inline bool Profiler_GetLastFrameSnapshot(ProfilerSnapshot& out) {
-        // wrapper to call static method on Profiler class
-        return Profiler::GetLastFrameSnapshot(out);
-    }
 
     // RAII helper that begins a scope on construction and ends it on destruction
     struct ProfilerScope {
@@ -90,14 +78,13 @@ namespace Dog
 #define PROFILE_SCOPE(name)
 #define PROFILE_FUNCTION()
 
-namespace Profiler {
+namespace Profiler 
+{
     static void Initialize() {}
     static void BeginFrame() {}
     static void EndFrame() {}
     static void BeginScope(const char*) {}
     static void EndScope(const char*) {}
-    static void ReportFrame() {}
-    static void SetReportOnEndFrame(bool) {}
 }
 
 #endif // PROFILING_ENABLED

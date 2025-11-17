@@ -55,7 +55,7 @@
     <ClCompile Include="src\Dog\Graphics\OpenGL\GLShader.cpp" />
     <ClCompile Include="src\Dog\Graphics\OpenGL\GLFrameBuffer.cpp" />
     <ClCompile Include="src\Dog\Events\Event.cpp" />
-    <ClCompile Include="src\Dog\ECS\Resources\SwapRendererBackendResource.cpp" />
+    <ClCompile Include="src\Dog\ECS\Resources\SwapRendererResource.cpp" />
     <ClCompile Include="src\Dog\Graphics\RHI\ITexture.cpp" />
     <ClCompile Include="src\Dog\Graphics\OpenGL\GLTexture.cpp" />
     <ClCompile Include="src\Dog\Graphics\Common\Path\CubicSpline.cpp" />
@@ -74,10 +74,10 @@
     <ClCompile Include="src\Dog\ECS\Systems\Graphics\AnimationSystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\Graphics\PresentSystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\Graphics\RenderSystem.cpp" />
-    <ClCompile Include="src\Dog\ECS\Systems\Graphics\SwapRendererBackendSystem.cpp" />
+    <ClCompile Include="src\Dog\ECS\Systems\Graphics\SwapRendererSystem.cpp" />
     <ClCompile Include="src\Dog\Profiler\Profiler.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\Editor\Windows\ProfilerWindow.cpp" />
-    <ClCompile Include="src\Dog\Graphics\Common\TextureData.cpp" />
+    <ClCompile Include="src\Dog\Graphics\Common\TextureLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\nlohmann\json.hpp" />
@@ -157,7 +157,7 @@
     <ClInclude Include="src\Dog\Graphics\OpenGL\GLShader.h" />
     <ClInclude Include="src\Dog\Graphics\OpenGL\GLFrameBuffer.h" />
     <ClInclude Include="src\Dog\Events\Event.h" />
-    <ClInclude Include="src\Dog\ECS\Resources\SwapRendererBackendResource.h" />
+    <ClInclude Include="src\Dog\ECS\Resources\SwapRendererResource.h" />
     <ClInclude Include="src\Dog\Graphics\RHI\ITexture.h" />
     <ClInclude Include="src\Dog\Graphics\OpenGL\GLTexture.h" />
     <ClInclude Include="src\Dog\Graphics\Common\Path\CubicSpline.h" />
@@ -175,10 +175,10 @@
     <ClInclude Include="src\Dog\ECS\Systems\Graphics\AnimationSystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\Graphics\PresentSystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\Graphics\RenderSystem.h" />
-    <ClInclude Include="src\Dog\ECS\Systems\Graphics\SwapRendererBackendSystem.h" />
+    <ClInclude Include="src\Dog\ECS\Systems\Graphics\SwapRendererSystem.h" />
     <ClInclude Include="src\Dog\Profiler\Profiler.h" />
     <ClInclude Include="src\Dog\ECS\Systems\Editor\Windows\ProfilerWindow.h" />
-    <ClInclude Include="src\Dog\Graphics\Common\TextureData.h" />
+    <ClInclude Include="src\Dog\Graphics\Common\TextureLoader.h" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="Assets\Shaders\*.*" />

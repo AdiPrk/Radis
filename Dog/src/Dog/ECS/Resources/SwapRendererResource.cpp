@@ -1,15 +1,15 @@
 #include <PCH/pch.h>
-#include "SwapRendererBackendResource.h"
+#include "SwapRendererResource.h"
 #include "Engine.h"
 
 namespace Dog
 {
-    void SwapRendererBackendResource::RequestVulkan()
+    void SwapRendererResource::RequestVulkan()
     {
         swapRequested = Engine::GetGraphicsAPI() != GraphicsAPI::Vulkan;
     }
 
-    void SwapRendererBackendResource::RequestOpenGL()
+    void SwapRendererResource::RequestOpenGL()
     {
         swapRequested = Engine::GetGraphicsAPI() != GraphicsAPI::OpenGL;
     }
