@@ -110,8 +110,8 @@ namespace Dog
             modelLibrary->AddModel(Assets::ModelsPath + "DragonAttenuation.glb");
             modelLibrary->AddModel(Assets::ModelsPath + "Sponza.gltf");
 
-            //modelLibrary->AddModel("Assets/Models/okayu.pmx");
-            //modelLibrary->AddModel("Assets/Models/AlisaMikhailovna.fbx");
+            // modelLibrary->AddModel("Assets/Models/okayu.pmx");
+            // modelLibrary->AddModel("Assets/Models/AlisaMikhailovna.fbx");
         }
 
         if (!animationLibrary)
@@ -145,14 +145,11 @@ namespace Dog
             CreateCommandBuffers();
             renderGraph = std::make_unique<RenderGraph>();
 
-
             cameraUniform = std::make_unique<Uniform>(*device, *this, cameraUniformSettings);
             rtUniform = std::make_unique<Uniform>(*device, *this, rayTracingUniformSettings);
-            //instanceUniform = std::make_unique<Uniform>(*device, *this, instanceUniformSettings);
 
             std::vector<Uniform*> unis{
                 cameraUniform.get(),
-                //instanceUniform.get()
             };
             std::vector<Uniform*> rtunis{
                 cameraUniform.get(),
@@ -178,9 +175,6 @@ namespace Dog
             raytracingPipeline = std::make_unique<RaytracingPipeline>(
                 *device,
                 rtunis
-                // "raytrace.rgen",
-                // "raytrace.rmiss",
-                // "raytrace.rchit"
             );
         }
     }

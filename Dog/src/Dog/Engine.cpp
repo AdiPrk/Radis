@@ -26,8 +26,6 @@
 
 #include "Graphics/RHI/RHI.h"
 
-#include "Profiler/Profiler.h"
-
 namespace Dog 
 {
     bool Engine::mDevBuild = false;

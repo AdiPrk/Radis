@@ -221,7 +221,7 @@ namespace Dog
             ImGui::BeginChild("prof_hierarchy_child", ImVec2(0, 320), true);
 
             // Header / legend row
-            ImGui::TextUnformatted("Name (click arrow to expand)"); ImGui::SameLine(300);
+            ImGui::TextUnformatted("Name"); ImGui::SameLine(300);
             ImGui::TextDisabled("Total"); ImGui::SameLine();
             ImGui::TextDisabled("%"); ImGui::SameLine();
             ImGui::TextDisabled("Exclusive"); ImGui::SameLine();
@@ -247,6 +247,8 @@ namespace Dog
         // Main ImGui update function
         void RenderProfilerWindow()
         {
+            PROFILE_SCOPE("Profiler");
+
             // Try to get last fully-complete frame snapshot.
             ProfilerSnapshot snap;
             bool have = Profiler::GetLastFrameSnapshot(snap);
@@ -260,7 +262,6 @@ namespace Dog
 
             // UI state
             static bool freeze = false;
-            static bool autoRefresh = true;
             static float minPercent = 0.05f; // 0.05% minimum display
             static int maxAggRows = 25;
             static char searchBuf[128] = "";
@@ -291,8 +292,6 @@ namespace Dog
                         frozenSnap = snap;
                     }
                 }
-                ImGui::SameLine();
-                ImGui::Checkbox("Auto", &autoRefresh);
             }
             ImGui::Columns(1);
             ImGui::Separator();
@@ -302,17 +301,8 @@ namespace Dog
             ImGui::InputTextWithHint("##search", "Filter by name...", searchBuf, sizeof(searchBuf));
             ImGui::SameLine();
             ImGui::SliderFloat("Min %", &minPercent, 0.0f, 5.0f, "%.2f%%");
-            // convert percent to fraction
             float minPctFilter = minPercent * 0.01f;
-            ImGui::SameLine();
-            ImGui::TextDisabled("(Use Freeze to keep last shown frame)");
-
             ImGui::Spacing();
-
-            // Right: Hierarchy
-            ImGui::BeginChild("HierarchyChild", ImVec2(0, 0), true);
-            ImGui::Text("Profile hierarchy (sorted by inclusive time)");
-            ImGui::Separator();
 
             // Prepare search lower-case
             std::string search = searchBuf;
@@ -324,8 +314,6 @@ namespace Dog
 
             // Render the hierarchy (root's children) with sorting and expand/collapse behavior.
             RenderProfilerHierarchy(displaySnap, minPctFilter, searchLower);
-
-            ImGui::EndChild();
 
             ImGui::Columns(1);
 

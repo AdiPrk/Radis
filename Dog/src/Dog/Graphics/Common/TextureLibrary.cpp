@@ -114,7 +114,7 @@ namespace Dog
         return newIndex;
     }
 
-    uint32_t TextureLibrary::CreateImage(const std::string& imageName, uint32_t width, uint32_t height, VkFormat imageFormat, VkImageUsageFlags usage, VkImageLayout finalLayout)
+    uint32_t TextureLibrary::CreateStorageImage(const std::string& imageName, uint32_t width, uint32_t height, VkFormat imageFormat, VkImageUsageFlags usage, VkImageLayout finalLayout)
     {
         if (Engine::GetGraphicsAPI() != GraphicsAPI::Vulkan)
         {
@@ -136,6 +136,7 @@ namespace Dog
         textureData.imageFormat = imageFormat;
         textureData.usage = usage;
         textureData.finalLayout = finalLayout;
+        textureData.name = imageName;
 
         std::unique_ptr<ITexture> newTexture;
         newTexture = std::make_unique<VKTexture>(*device, textureData);

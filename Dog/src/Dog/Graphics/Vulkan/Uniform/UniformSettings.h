@@ -13,6 +13,7 @@ namespace Dog
         size_t elementCount;                         // Number of elements for dynamic buffers (SSBOs)
         bool buffered = true;                        // True if this binding is stored in a buffer
         bool doubleBuffered = true;
+        std::string debugName = "Uniform Buffer";
     };
 
     struct UniformSettings
@@ -68,6 +69,16 @@ namespace Dog
         UniformSettings& AddASBinding(VkShaderStageFlags stageFlags, uint32_t descriptorCount = 1)
         {
             bindings.push_back({ { nextBinding++, VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR, descriptorCount, stageFlags }, 0, 0, descriptorCount, false, false });
+            return *this;
+        }
+
+        UniformSettings& SetDebugName(const std::string& debugName)
+        {
+            if (!bindings.empty())
+            {
+                bindings.back().debugName = debugName;
+            }
+
             return *this;
         }
     };

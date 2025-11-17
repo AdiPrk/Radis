@@ -27,6 +27,7 @@
 #include "Windows/EntitiesWindow.h"
 #include "Windows/TextureBrowserWindow.h"
 #include "Windows/ProfilerWindow.h"
+#include "Windows/MemoryWindow.h"
 
 #include "Assets/Assets.h"
 #include "Utils/Utils.h"
@@ -56,14 +57,19 @@ namespace Dog
 
         ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
 
-        EditorWindows::RenderSceneWindow(ecs);
-        EditorWindows::RenderEntitiesWindow(ecs);
-        EditorWindows::RenderTextureBrowser(ecs);
-        EditorWindows::RenderProfilerWindow();
-        RenderInspectorWindow();
-
         auto& tl = ecs->GetResource<RenderingResource>()->textureLibrary;
-        EditorWindows::UpdateAssetsWindow(tl.get());
+        {
+            PROFILE_SCOPE("Windows");
+
+            EditorWindows::RenderSceneWindow(ecs);
+            EditorWindows::RenderEntitiesWindow(ecs);
+            EditorWindows::RenderTextureBrowser(ecs);
+            EditorWindows::RenderProfilerWindow();
+            EditorWindows::RenderMemoryWindow();
+            EditorWindows::UpdateAssetsWindow(tl.get());
+            RenderInspectorWindow();
+        }
+
 
         ImGui::Begin("Debug");
         ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
@@ -300,6 +306,8 @@ namespace Dog
     // --- Main Inspector Window Function ---
     void EditorSystem::RenderInspectorWindow()
     {
+        PROFILE_SCOPE("Inspector");
+
         ImGui::Begin("Inspector");
 
         Entity selectedEnt = ecs->GetResource<EditorResource>()->selectedEntity;

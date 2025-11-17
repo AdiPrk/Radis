@@ -15,6 +15,8 @@ namespace Dog
     {
         void RenderSceneWindow(ECS* ecs)
         {
+            PROFILE_SCOPE("Viewport");
+
             auto rr = ecs->GetResource<RenderingResource>();
             auto er = ecs->GetResource<EditorResource>();
             if (!rr || !er) return;

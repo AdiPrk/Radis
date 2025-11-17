@@ -20,17 +20,17 @@ namespace Dog
                                         VK_SHADER_STAGE_CALLABLE_BIT_KHR;
 
     const UniformSettings cameraUniformSettings = UniformSettings(CameraUniformInit)
-        .AddUBBinding(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags, sizeof(CameraUniforms))
-        .AddSSBOBinding(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags, sizeof(InstanceUniforms), InstanceUniforms::MAX_INSTANCES)
-        .AddSSBOBinding(VK_SHADER_STAGE_VERTEX_BIT, sizeof(VQS), 10000)
-        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags, TextureLibrary::MAX_TEXTURE_COUNT)
-        .AddSSBOBinding(VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags, sizeof(LightUniform) * 10000 + sizeof(uint32_t));
+        .AddUBBinding(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags, sizeof(CameraUniforms)).SetDebugName("Camera Uniforms")
+        .AddSSBOBinding(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags, sizeof(InstanceUniforms), InstanceUniforms::MAX_INSTANCES).SetDebugName("Instance SSBO")
+        .AddSSBOBinding(VK_SHADER_STAGE_VERTEX_BIT, sizeof(VQS), 10000).SetDebugName("Animation SSBO")
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags, TextureLibrary::MAX_TEXTURE_COUNT).SetDebugName("Texture SSBO")
+        .AddSSBOBinding(VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags, sizeof(LightUniform) * 10000 + sizeof(uint32_t)).SetDebugName("Light SSBO");
 
     const UniformSettings rayTracingUniformSettings = UniformSettings(RTUniformInit)
-        .AddSSBIBinding(rtFlags, 1) // for outImage
-        .AddASBinding(rtFlags, 1)  // TLAS handled separately
-        .AddSSBOBinding(rtFlags, sizeof(MeshDataUniform), 10000000) // 10 million verts
-        .AddSSBOBinding(rtFlags, sizeof(uint32_t), 10000000); // 10 million indicies
+        .AddSSBIBinding(rtFlags, 1).SetDebugName("RT Storage Image Buffer")
+        .AddASBinding(rtFlags, 1).SetDebugName("RT TLAS Buffer")
+        .AddSSBOBinding(rtFlags, sizeof(MeshDataUniform), 2000000).SetDebugName("RT Vertices SSBO")
+        .AddSSBOBinding(rtFlags, sizeof(uint32_t), 10000000).SetDebugName("RT Indices SSBO");
 
     //const UniformSettings instanceUniformSettings = UniformSettings(InstanceUniformInit)
     //    .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, TextureLibrary::MAX_TEXTURE_COUNT)

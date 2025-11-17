@@ -66,12 +66,12 @@ struct Instance
 
 SSBO_LAYOUT(0, 1) readonly buffer InstanceData
 {
-    Instance instances[10000];
+    Instance instances[];
 };
 
 SSBO_LAYOUT(0, 2) readonly buffer BoneBuffer
 {
-    VQS finalBoneVQS[10000];
+    VQS finalBoneVQS[];
 } animationData;
 
 // Helper Functions --------------------------------

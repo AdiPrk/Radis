@@ -185,8 +185,8 @@ namespace Dog
                     vertexData.color = v.color;
                     vertexData.normal = v.normal;
                     vertexData.texCoord = v.uv;
-                    vertexData.boneIds = glm::ivec4(v.boneIDs[0], v.boneIDs[1], v.boneIDs[2], v.boneIDs[3]);
-                    vertexData.weights = glm::vec4(v.weights[0], v.weights[1], v.weights[2], v.weights[3]);
+                    // vertexData.boneIds = glm::ivec4(v.boneIDs[0], v.boneIDs[1], v.boneIDs[2], v.boneIDs[3]);
+                    // vertexData.weights = glm::vec4(v.weights[0], v.weights[1], v.weights[2], v.weights[3]);
                     mRTMeshData.push_back(vertexData);
                 }
 

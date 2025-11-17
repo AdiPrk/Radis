@@ -15,6 +15,8 @@ namespace Dog
     {
         void RenderTextureBrowser(ECS* ecs)
         {
+            PROFILE_SCOPE("Texture Browser");
+
             auto rr = ecs->GetResource<RenderingResource>();
             if (!rr) return;
 
