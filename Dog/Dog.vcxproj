@@ -219,6 +219,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Dog\ECS\Resources\SerializationResource.cpp" />
     <ClCompile Include="src\Dog\ECS\Resources\SwapRendererResource.cpp" />
     <ClCompile Include="src\Dog\ECS\Resources\WindowResource.cpp" />
+    <ClCompile Include="src\Dog\ECS\Systems\Editor\Windows\MemoryWindow.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\Editor\Windows\ProfilerWindow.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\Graphics\AnimationSystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\CameraSystem.cpp" />
@@ -326,6 +327,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Dog\ECS\Resources\SerializationResource.h" />
     <ClInclude Include="src\Dog\ECS\Resources\SwapRendererResource.h" />
     <ClInclude Include="src\Dog\ECS\Resources\WindowResource.h" />
+    <ClInclude Include="src\Dog\ECS\Systems\Editor\Windows\MemoryWindow.h" />
     <ClInclude Include="src\Dog\ECS\Systems\Editor\Windows\ProfilerWindow.h" />
     <ClInclude Include="src\Dog\ECS\Systems\Graphics\AnimationSystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\CameraSystem.h" />

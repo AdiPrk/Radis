@@ -194,6 +194,9 @@ namespace Dog
 		{
             DOG_CRITICAL("Failed to create and allocate image using VMA!");
 		}
+
+        std::string dbgName = "Tex_" + mData.name;
+        Allocator::SetAllocationName(mTextureImageAllocation, dbgName.c_str());
 	}
 
 	void VKTexture::CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount)

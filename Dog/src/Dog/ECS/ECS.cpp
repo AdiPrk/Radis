@@ -4,7 +4,6 @@
 #include "Resources/IResource.h"
 #include "Entities/Entity.h"
 #include "Components/Components.h"
-#include "Profiler/Profiler.h"
 
 namespace Dog
 {

@@ -11,6 +11,11 @@ namespace Dog
     {
     }
 
+    GLMesh::~GLMesh()
+    {
+        DestroyBuffers();
+    }
+
     // device will be nullptr
     void GLMesh::CreateVertexBuffers(Device* device)
     {

@@ -126,6 +126,8 @@ namespace Dog
 
 		void UpdateAssetsWindow(TextureLibrary* tl)
 		{
+            PROFILE_SCOPE("Assets");
+
 			if (!tl) return;
 
 			static FileBrowser browser;

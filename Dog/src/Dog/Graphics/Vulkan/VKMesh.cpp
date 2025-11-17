@@ -12,6 +12,11 @@ namespace Dog
     {
     }
 
+    VKMesh::~VKMesh()
+    {
+        DestroyBuffers();
+    }
+
     Buffer mVertexBuffer;
     Buffer mIndexBuffer;
 

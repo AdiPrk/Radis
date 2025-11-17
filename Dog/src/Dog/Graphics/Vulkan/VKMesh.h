@@ -10,6 +10,7 @@ namespace Dog
     class VKMesh : public IMesh {
     public:
         VKMesh(bool assignID = true);
+        ~VKMesh();
 
         void CreateVertexBuffers(Device* device);
         void CreateIndexBuffers(Device* device);

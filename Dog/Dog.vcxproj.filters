@@ -78,6 +78,7 @@
     <ClCompile Include="src\Dog\Profiler\Profiler.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\Editor\Windows\ProfilerWindow.cpp" />
     <ClCompile Include="src\Dog\Graphics\Common\TextureLoader.cpp" />
+    <ClCompile Include="src\Dog\ECS\Systems\Editor\Windows\MemoryWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\nlohmann\json.hpp" />
@@ -179,8 +180,17 @@
     <ClInclude Include="src\Dog\Profiler\Profiler.h" />
     <ClInclude Include="src\Dog\ECS\Systems\Editor\Windows\ProfilerWindow.h" />
     <ClInclude Include="src\Dog\Graphics\Common\TextureLoader.h" />
+    <ClInclude Include="src\Dog\ECS\Systems\Editor\Windows\MemoryWindow.h" />
   </ItemGroup>
   <ItemGroup>
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
