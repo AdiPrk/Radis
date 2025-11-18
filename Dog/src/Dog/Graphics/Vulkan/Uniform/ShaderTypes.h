@@ -22,7 +22,7 @@ namespace Dog
         uint32_t boneOffset = 10001;
         uint32_t indexOffset = 0;
         uint32_t vertexOffset = 0;
-        uint32_t _padding = 777;
+        uint32_t meshID = 777;
 
         const static uint32_t MAX_INSTANCES = 10000;
     };

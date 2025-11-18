@@ -528,6 +528,18 @@ namespace Dog
             }
 
             ImGui::ColorEdit4("Tint Color", glm::value_ptr(component.tintColor));
+
+            // Checkbox with slider + input field for metallic and roughness overrides
+            ImGui::Checkbox("Override Metallic", &component.useMetallicOverride);
+            if (component.useMetallicOverride)
+            {
+                ImGui::DragFloat("Metallic Override", &component.metallicOverride, 0.01f, 0.0f, 1.0f);
+            }
+            ImGui::Checkbox("Override Roughness", &component.useRoughnessOverride);
+            if (component.useRoughnessOverride)
+            {
+                ImGui::DragFloat("Roughness Override", &component.roughnessOverride, 0.01f, 0.0f, 1.0f);
+            }
         });
 
         DrawComponentUI<AnimationComponent>("Animation", selectedEnt, [&](AnimationComponent& component)
