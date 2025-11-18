@@ -78,7 +78,7 @@ namespace Dog
         // --
 
         bool renderWireframe = false;
-        bool useRaytracing = false;
+        bool useRaytracing = true;
 
         // Texture update
         void UpdateTextureUniform();

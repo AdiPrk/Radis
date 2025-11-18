@@ -26,9 +26,19 @@ namespace Dog
             VkAccelerationStructureGeometryKHR& geometry,
             VkAccelerationStructureBuildRangeInfoKHR& rangeInfo);
 
-        void CreateAccelerationStructure(VkAccelerationStructureTypeKHR asType, AccelerationStructure& accelStruct, VkAccelerationStructureGeometryKHR& asGeometry, VkAccelerationStructureBuildRangeInfoKHR& asBuildRangeInfo, VkBuildAccelerationStructureFlagsKHR flags);
+        void CreateAccelerationStructure(VkAccelerationStructureTypeKHR asType, 
+            AccelerationStructure& accelStruct, 
+            VkAccelerationStructureGeometryKHR& asGeometry, 
+            VkAccelerationStructureBuildRangeInfoKHR& asBuildRangeInfo, 
+            VkBuildAccelerationStructureFlagsKHR flags,
+            AccelerationStructure const* srcAccel = nullptr,
+            VkBuildAccelerationStructureModeKHR buildMode = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR);
+
         void CreateBottomLevelAS();
         void CreateTopLevelAS();
+        void UpdateBLASForModel(class Model* model);
+        void BuildTLASFromInstances(const std::vector<VkAccelerationStructureInstanceKHR>& tlasInstances);
+
         void RaytraceScene(VkCommandBuffer cmd);
 
     private:
