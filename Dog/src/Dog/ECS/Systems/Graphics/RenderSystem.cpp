@@ -1,4 +1,4 @@
-#include <PCH/pch.h>
+ï»¿#include <PCH/pch.h>
 #include "RenderSystem.h"
 
 #include "ECS/Resources/renderingResource.h"
@@ -856,7 +856,7 @@ namespace Dog
             );
             Allocator::SetAllocationName(tlasInstancesBuffer.allocation, "TLAS Instance Buffer");
 
-            // Copy data from staging ¨ device-local buffer
+            // Copy data from staging device-local buffer
             VkCommandBuffer cmd = rr->device->BeginSingleTimeCommands();
 
             VkBufferCopy copyRegion{};

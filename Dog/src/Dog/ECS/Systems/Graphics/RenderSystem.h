@@ -37,7 +37,6 @@ namespace Dog
         void CreateBottomLevelAS();
         void CreateTopLevelAS();
 
-        void UpdateTopLevelAS(VkCommandBuffer cmd, const std::vector<VkAccelerationStructureInstanceKHR>& instances);
         void UpdateTopLevelASImmediate(const std::vector<VkAccelerationStructureInstanceKHR>& instances);
 
         void RaytraceScene(VkCommandBuffer cmd);

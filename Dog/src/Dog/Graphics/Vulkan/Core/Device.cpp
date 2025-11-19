@@ -160,11 +160,26 @@ namespace Dog
         createInfo.ppEnabledExtensionNames = extensions.data();
 
         VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
-        if (enableValidationLayers) {
+        if (enableValidationLayers) 
+        {
+            VkValidationFeatureEnableEXT enables[] = {
+                VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT,
+                // VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT
+            };
+
+            VkValidationFeaturesEXT validationFeatures{};
+            validationFeatures.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
+            validationFeatures.enabledValidationFeatureCount = std::size(enables);
+            validationFeatures.pEnabledValidationFeatures = enables;
+
             createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
             createInfo.ppEnabledLayerNames = validationLayers.data();
 
             populateDebugMessengerCreateInfo(debugCreateInfo);
+
+            debugCreateInfo.pNext = nullptr;             // end of chain
+            validationFeatures.pNext = &debugCreateInfo; // next in chain
+            //createInfo.pNext = &validationFeatures;      // start of chain
             createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
         }
         else {
@@ -342,6 +357,7 @@ namespace Dog
         REQUEST_FEATURE(vulkan12Features, supported12, runtimeDescriptorArray);
         REQUEST_FEATURE(vulkan12Features, supported12, bufferDeviceAddress);
         REQUEST_FEATURE(vulkan12Features, supported12, bufferDeviceAddressCaptureReplay);
+        REQUEST_FEATURE(vulkan12Features, supported12, timelineSemaphore);
 
         VkPhysicalDeviceAccelerationStructureFeaturesKHR accelFeature{};
         accelFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
