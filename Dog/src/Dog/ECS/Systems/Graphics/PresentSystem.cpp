@@ -170,14 +170,15 @@ namespace Dog
         submitInfo.pSignalSemaphores = signalSemaphores;
 
         vkResetFences(rr->device->GetDevice(), 1, &rr->syncObjects->GetCommandBufferInFlightFence());
-        if (vkQueueSubmit(rr->device->GetGraphicsQueue(), 1, &submitInfo, rr->syncObjects->GetCommandBufferInFlightFence()) != VK_SUCCESS)
+        VkResult result = vkQueueSubmit(rr->device->GetGraphicsQueue(), 1, &submitInfo, rr->syncObjects->GetCommandBufferInFlightFence());
+        if (result != VK_SUCCESS)
         {
             DOG_CRITICAL("Failed to submit draw command buffer!");
-            throw std::runtime_error("failed to submit draw command buffer!");
+            return;
         }
 
         // --- Presentation ---
-        VkResult result = rr->swapChain->PresentImage(&rr->currentImageIndex, *rr->syncObjects);
+        result = rr->swapChain->PresentImage(&rr->currentImageIndex, *rr->syncObjects);
 
         auto wr = ecs->GetResource<WindowResource>();
         bool winResized = wr->window->WasResized();

@@ -13,6 +13,11 @@ namespace Dog
         void RequestOpenGL();
 
     private:
+        friend class Engine;
+
+        // Careful with this!
+        void SwapBackend(class ECS* ecs, bool isAtInitializaton = false);
+
         friend class SwapRendererSystem;
         bool swapRequested = false;
     };

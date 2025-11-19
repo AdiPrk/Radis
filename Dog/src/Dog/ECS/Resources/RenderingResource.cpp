@@ -47,6 +47,8 @@ namespace Dog
 
             if (!device->SupportsVulkan())
             {
+                supportsVulkan = false;
+                device.reset();
                 Engine::ForceVulkanUnsupportedSwap();
                 return;
             }
@@ -183,6 +185,11 @@ namespace Dog
     {
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
         {
+            if (!device)
+            {
+                return;
+            }
+
             if (device->GetDevice()) 
             {
                 vkDeviceWaitIdle(*device);
@@ -273,6 +280,11 @@ namespace Dog
             writer.WriteImage(3, imageInfos.data(), static_cast<uint32_t>(imageInfos.size()));
             writer.Overwrite(cameraUniform->GetDescriptorSets()[frameIndex]);
         }
+    }
+
+    bool RenderingResource::SupportsVulkan()
+    {
+        return supportsVulkan;
     }
 
     void RenderingResource::RecreateSwapChain(IWindow* window)

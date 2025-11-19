@@ -8,11 +8,14 @@ layout(location = 0) rayPayloadInEXT HitPayload {
     vec3 nextRayOrigin;
     vec3 nextRayDir;    
     bool stop;    
-    uint seed;
+    float cost;
 } payload;
 
 void main()
 {
+    const float MISS_COST = 0.5;
+    payload.cost += MISS_COST;
+
     vec3 direction = normalize(gl_WorldRayDirectionEXT);
 
     // --- HARDCODED CONFIGURATION ---

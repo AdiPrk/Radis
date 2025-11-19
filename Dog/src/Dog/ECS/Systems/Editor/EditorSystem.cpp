@@ -145,17 +145,6 @@ namespace Dog
 
     void EditorSystem::FrameEnd()
     {
-        auto er = ecs->GetResource<EditorResource>();
-        if (er->entityToDelete)
-        {
-            if (er->selectedEntity == er->entityToDelete)
-            {
-                er->selectedEntity = {};
-            }
-
-            ecs->RemoveEntity(er->entityToDelete);
-            er->entityToDelete = {};
-        }
     }
 
     void EditorSystem::Exit()

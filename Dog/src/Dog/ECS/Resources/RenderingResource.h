@@ -80,8 +80,11 @@ namespace Dog
         bool renderWireframe = false;
         bool useRaytracing = true;
 
+        bool supportsVulkan = true;
+
         // Texture update
         void UpdateTextureUniform();
+        bool SupportsVulkan();
 
     private:
         friend class Renderer;
@@ -102,6 +105,5 @@ namespace Dog
         // --------------------------------
         
         VkFormat ToLinearFormat(VkFormat format);
-
     };
 }

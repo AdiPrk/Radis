@@ -82,7 +82,7 @@ namespace Dog
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;      // Enable docking
 		// io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable multi-viewport / platform windows
 
-		ImGui_ImplGlfw_InitForVulkan(glfwWindow, true);
+		ImGui_ImplGlfw_InitForVulkan(glfwWindow, false);
 		ImGui_ImplVulkan_InitInfo init_info = {};
 		init_info.Instance = device->GetInstance();
 		init_info.PhysicalDevice = device->GetPhysicalDevice();
@@ -125,7 +125,7 @@ namespace Dog
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // IF using Docking Branch
 
 		// Setup Platform/Renderer backends
-		ImGui_ImplGlfw_InitForOpenGL(glfwWindow, true);  // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
+		ImGui_ImplGlfw_InitForOpenGL(glfwWindow, false);  // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
 		ImGui_ImplOpenGL3_Init();
 
 		ImGui::StyleColorsDark();
