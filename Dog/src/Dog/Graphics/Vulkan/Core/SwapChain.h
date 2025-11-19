@@ -143,6 +143,7 @@ namespace Dog
         VkImageView GetImageView() { return mSwapChainImageViews[mCurrentImageIndex]; }
         VkImage GetDepthImage() { return mDepthImages[mCurrentImageIndex]; }
         VkImageView GetDepthImageView() { return mDepthImageViews[mCurrentImageIndex]; }
+        uint32_t GetCurrentImageIndex() { return mCurrentImageIndex; }
 
     private:
 
