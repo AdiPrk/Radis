@@ -36,8 +36,9 @@ namespace Dog
 
         void CreateBottomLevelAS();
         void CreateTopLevelAS();
-        void UpdateBLASForModel(class Model* model);
-        void BuildTLASFromInstances(const std::vector<VkAccelerationStructureInstanceKHR>& tlasInstances);
+
+        void UpdateTopLevelAS(VkCommandBuffer cmd, const std::vector<VkAccelerationStructureInstanceKHR>& instances);
+        void UpdateTopLevelASImmediate(const std::vector<VkAccelerationStructureInstanceKHR>& instances);
 
         void RaytraceScene(VkCommandBuffer cmd);
 

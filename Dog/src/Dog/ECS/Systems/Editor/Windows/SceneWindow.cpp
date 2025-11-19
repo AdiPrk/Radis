@@ -109,7 +109,7 @@ namespace Dog
             ImGuizmo::SetDrawlist();
             ImGuizmo::SetRect(er->sceneWindowX, er->sceneWindowY, er->sceneWindowWidth, er->sceneWindowHeight);
 
-            ImGuizmo::OPERATION operation = ImGuizmo::OPERATION::ROTATE;
+            ImGuizmo::OPERATION operation = ImGuizmo::OPERATION::UNIVERSAL;
             glm::mat4 modelMatrix = transformComponent.GetTransform();
 
             if (ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(projection), operation, ImGuizmo::WORLD, glm::value_ptr(modelMatrix)))
