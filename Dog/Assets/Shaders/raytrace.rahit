@@ -9,7 +9,7 @@ layout(location = 0) rayPayloadInEXT HitPayload {
     vec3 nextRayOrigin;
     vec3 nextRayDir;    
     bool stop;    
-    uint seed;
+    float cost;
 } payload;
 
 hitAttributeEXT vec2 attribs;
@@ -78,6 +78,9 @@ layout(set = 1, binding = 1) uniform accelerationStructureEXT topLevelAS;
 
 void main()
 {
+    const float ANYHIT_COST = 1.0;
+    payload.cost += ANYHIT_COST;
+
     Instance instance = instances[gl_InstanceCustomIndexEXT];
     
     // Calculate UVs

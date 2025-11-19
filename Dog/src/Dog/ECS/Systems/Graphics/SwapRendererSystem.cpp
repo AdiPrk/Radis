@@ -18,6 +18,8 @@ namespace Dog
 {
     void SwapRendererSystem::Init()
     {
+        auto sr = ecs->GetResource<SwapRendererResource>();
+
         bool canVulkan = Engine::GetVulkanSupported();
         bool isVulkan = (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan);
         bool requiresSwap = false;
@@ -28,7 +30,7 @@ namespace Dog
 
         if (requiresSwap)
         {
-            SwapBackend();
+            sr->SwapBackend(ecs);
         }
     }
 
@@ -38,72 +40,23 @@ namespace Dog
 
         if (sr->SwapRequested())
         {
-            SwapBackend();
+            sr->SwapBackend(ecs);
             sr->swapRequested = false;
         }
     }
 
-    void SwapRendererSystem::SwapBackend()
+    void SwapRendererSystem::FrameEnd()
     {
-        bool hasEditor = Engine::GetEditorEnabled();
-
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
+        auto er = ecs->GetResource<EditorResource>();
+        if (er->entityToDelete)
         {
-            bool vulkanSupported = Engine::GetVulkanSupported();
-            if (!vulkanSupported)
+            if (er->selectedEntity == er->entityToDelete)
             {
-                DOG_WARN("Cannot switch to Vulkan; No suitable GPUs!");
-                return;
+                er->selectedEntity = {};
             }
 
-            auto rr = ecs->GetResource<RenderingResource>();
-            auto wr = ecs->GetResource<WindowResource>();
-            EditorResource* er = nullptr;
-            if (hasEditor) {
-                er = ecs->GetResource<EditorResource>();
-                er->Cleanup(rr->device.get());
-            }
-            rr->Cleanup();
-            wr->Cleanup();
-            Engine::SetGraphicsAPI(GraphicsAPI::Vulkan);
-            wr->Create();
-            rr->Create(wr->window.get());
-            if (hasEditor) {
-                er->Create(rr->device.get(), rr->swapChain.get(), wr->window->GetGLFWwindow(), wr->window->GetDPIScale());
-                er->CreateSceneTextures(rr);
-            }
-
-            rr->modelLibrary->RecreateAllBuffers(rr->device.get());
-            //rr->textureLibrary->RecreateAllBuffers(rr->device.get());
-            InputSystem::ResetWindow(wr->window->GetGLFWwindow());
-        }
-        else if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
-        {
-            auto rr = ecs->GetResource<RenderingResource>();
-            auto wr = ecs->GetResource<WindowResource>();
-            EditorResource* er = nullptr;
-
-            if (rr->device->SupportsVulkan()) 
-            {
-                vkDeviceWaitIdle(rr->device->GetDevice());
-            }
-
-            if (hasEditor) {
-                er = ecs->GetResource<EditorResource>();
-                er->Cleanup(rr->device.get());
-            }
-            rr->Cleanup();
-            wr->Cleanup();
-            Engine::SetGraphicsAPI(GraphicsAPI::OpenGL);
-            wr->Create();
-            rr->Create(wr->window.get());
-            if (hasEditor) {
-                er->Create(wr->window->GetGLFWwindow(), wr->window->GetDPIScale());
-            }
-
-            rr->modelLibrary->RecreateAllBuffers(rr->device.get());
-            //rr->textureLibrary->RecreateAllBuffers(rr->device.get());
-            InputSystem::ResetWindow(wr->window->GetGLFWwindow());
+            ecs->RemoveEntity(er->entityToDelete);
+            er->entityToDelete = {};
         }
     }
 }

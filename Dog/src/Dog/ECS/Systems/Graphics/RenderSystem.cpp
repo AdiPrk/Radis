@@ -1004,7 +1004,6 @@ namespace Dog
         // rr->tlasDirty = true; // ensure RenderingResource has this flag, or set a similar flag in your system.
     }
 
-
     void RenderSystem::BuildTLASFromInstances(const std::vector<VkAccelerationStructureInstanceKHR>& tlasInstances)
     {
         auto rr = ecs->GetResource<RenderingResource>();
@@ -1121,7 +1120,6 @@ namespace Dog
         DOG_INFO("Top-level AS built/updated with {} instances.", tlasInstances.size());
     }
 
-
     void RenderSystem::RaytraceScene(VkCommandBuffer cmd)
     {
         auto rr = ecs->GetResource<RenderingResource>();
@@ -1155,6 +1153,19 @@ namespace Dog
                 asInstance.mask = 0xFF;
                 tlasInstances.emplace_back(asInstance);
             }
+
+            if (tlasInstances.empty())
+            {
+                VkAccelerationStructureInstanceKHR asInstance{};
+                asInstance.transform = toTransformMatrixKHR(glm::mat4(0.0f));
+                asInstance.instanceCustomIndex = 0;
+                asInstance.accelerationStructureReference = rr->blasAccel[0].address;
+                asInstance.instanceShaderBindingTableRecordOffset = 0;
+                asInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
+                asInstance.mask = 0xFF;
+                tlasInstances.emplace_back(asInstance);
+            }
+
             BuildTLASFromInstances(tlasInstances);
         }
         

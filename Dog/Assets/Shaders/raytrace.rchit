@@ -8,7 +8,8 @@ layout(location = 0) rayPayloadInEXT HitPayload {
     int depth;
     vec3 nextRayOrigin;
     vec3 nextRayDir;    
-    bool stop;    
+    bool stop;
+    float cost;
 } payload;
 
 layout(location = 1) rayPayloadEXT bool isShadowed;
@@ -117,6 +118,9 @@ vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
 
 vec3 computePBRLight(vec3 albedo, float metallic, float roughness, vec3 N, vec3 V, vec3 L, vec3 lightColor)
 {
+    const float PBR_COST = 1.0;
+    payload.cost += PBR_COST;
+
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
     vec3 H = normalize(V + L);
 
@@ -140,6 +144,8 @@ vec3 computePBRLight(vec3 albedo, float metallic, float roughness, vec3 N, vec3 
 // Helper to safely sample texture
 vec4 SampleTexture(uint texIndex, vec2 uv)
 {
+    const float SAMPLE_TEXTURE_COST = 0.5;
+    payload.cost += SAMPLE_TEXTURE_COST;
     return texture(uTextures[texIndex], uv);
 }
 
@@ -149,6 +155,9 @@ float fetchShadow(vec3 worldPos, vec3 normal, vec3 lightDir, float lightDist)
     vec3 origin = worldPos + normal * 0.01; 
     isShadowed = true;
 
+    const float SHADOW_SPAWN_COST = 0.5;
+    payload.cost += SHADOW_SPAWN_COST;
+
     uint rayFlags = gl_RayFlagsTerminateOnFirstHitEXT | gl_RayFlagsSkipClosestHitShaderEXT;
     traceRayEXT(topLevelAS, rayFlags, 0xFF, 0, 0, 1, origin, 0.001, lightDir, lightDist, 1);
 
@@ -157,6 +166,9 @@ float fetchShadow(vec3 worldPos, vec3 normal, vec3 lightDir, float lightDist)
 
 void main()
 {
+    const float CLOSEST_HIT_COST = 2.0;
+    payload.cost += CLOSEST_HIT_COST;
+
     Instance instance = instances[gl_InstanceCustomIndexEXT];
 
     vec3 bary = vec3(1.0 - attribs.x - attribs.y, attribs.x, attribs.y);

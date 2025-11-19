@@ -69,19 +69,25 @@ namespace Dog
         auto wr = mEcs.GetResource<WindowResource>();
         mEcs.AddResource<InputResource>(wr->window->GetGLFWwindow());
         mEcs.AddResource<RenderingResource>(wr->window.get());
-
-        if (mSpecs.graphicsAPI == GraphicsAPI::Vulkan)
+        bool canVulkan = Engine::GetVulkanSupported();
+        bool isVulkan = (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan);
+        bool swapVulkan = !canVulkan && isVulkan;
         {
-            auto rr = mEcs.GetResource<RenderingResource>();
-
-            if (mEditorEnabled) 
+            auto srr = mEcs.GetResource<SwapRendererResource>();
+            if (swapVulkan)
             {
-                mEcs.AddResource<EditorResource>(rr->device.get(), rr->swapChain.get(), wr->window->GetGLFWwindow(), wr->window->GetDPIScale());
+                srr->SwapBackend(&mEcs, true);
             }
         }
-        else if (mSpecs.graphicsAPI == GraphicsAPI::OpenGL)
+
+        if (mEditorEnabled)
         {
-            if (mEditorEnabled)
+            if (mSpecs.graphicsAPI == GraphicsAPI::Vulkan && !swapVulkan)
+            {
+                auto rr = mEcs.GetResource<RenderingResource>();
+                mEcs.AddResource<EditorResource>(rr->device.get(), rr->swapChain.get(), wr->window->GetGLFWwindow(), wr->window->GetDPIScale());
+            }
+            else /*if (mSpecs.graphicsAPI == GraphicsAPI::OpenGL)*/
             {
                 mEcs.AddResource<EditorResource>(wr->window->GetGLFWwindow(), wr->window->GetDPIScale());
             }
