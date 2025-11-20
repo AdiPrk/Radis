@@ -244,7 +244,7 @@ namespace Dog
             }
         }
 
-        if (rr->textureLibrary->LoadQueuedTextures())
+        if (rr->textureLibrary->LoadQueuedTextures() || rr->textureLibrary->NeedsTextureDescriptorUpdate())
         {
             if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
             {

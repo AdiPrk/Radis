@@ -163,16 +163,6 @@ namespace Dog
 
 		isInitialized = false;
     }
-	void EditorResource::CreateSceneTextures(RenderingResource* rr)
-	{
-		rr->RecreateAllSceneTextures();
-	}
-
-	void EditorResource::CleanSceneTextures(RenderingResource* rr)
-	{
-        rr->CleanupSceneTexture();
-		rr->CleanupDepthBuffer();
-	}
 
 	void EditorResource::SetupFonts(float dpiScale)
 	{

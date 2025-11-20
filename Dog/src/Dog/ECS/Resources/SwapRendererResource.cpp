@@ -53,7 +53,6 @@ namespace Dog
             rr->Create(wr->window.get());
             if (hasEditor) {
                 er->Create(rr->device.get(), rr->swapChain.get(), wr->window->GetGLFWwindow(), wr->window->GetDPIScale());
-                er->CreateSceneTextures(rr);
             }
 
             rr->modelLibrary->RecreateAllBuffers(rr->device.get());

@@ -22,6 +22,18 @@ namespace Dog
 		uint32_t CreateStorageImage(const std::string& imageName, uint32_t width, uint32_t height, VkFormat imageFormat, VkImageUsageFlags usage, VkImageLayout finalLayout = VK_IMAGE_LAYOUT_GENERAL);
 		void ResizeStorageImage(const std::string& imageName, uint32_t newWidth, uint32_t newHeight);
 
+		uint32_t CreateTexture(
+			const std::string& imageName,
+			uint32_t width,
+			uint32_t height,
+			VkFormat imageFormat,
+			VkImageTiling tiling,
+			VkImageUsageFlags usage,
+			VkImageLayout finalLayout
+		);
+
+		void ResizeTexture(const std::string& imageName, uint32_t newWidth, uint32_t newHeight);
+
 		ITexture* GetTexture(uint32_t textureID);
 		ITexture* GetTexture(const std::string& texturePath);
 		ITexture* GetTextureByIndex(uint32_t index);
@@ -40,6 +52,8 @@ namespace Dog
 		void CreateDescriptors();
 		void CreateDescriptorSet(class VKTexture* texture, VkImageLayout layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         void SetDevice(Device* dev) { device = dev; }
+		bool NeedsTextureDescriptorUpdate() const { return mNeedTextureDescriptorUpdate; }
+        void ResetsNeedTextureDescriptorUpdate() { mNeedTextureDescriptorUpdate = false; }
 
 	private:
 		std::vector<std::unique_ptr<ITexture>> mTextures;
@@ -54,6 +68,7 @@ namespace Dog
         std::vector<TextureLoadData> mPendingTextureLoads;
         uint32_t mNextIndex = 0;
         bool mNeedReuploadRTImage = false;
+        bool mNeedTextureDescriptorUpdate = false;
 	};
 
 } // namespace Dog

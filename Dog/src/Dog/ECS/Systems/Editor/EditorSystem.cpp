@@ -160,8 +160,6 @@ namespace Dog
 
             vkDestroyDescriptorSetLayout(device, er->samplerSetLayout, nullptr);
             vkDestroyDescriptorPool(device, er->descriptorPool, nullptr);
-
-            er->CleanSceneTextures(rr);
         }
         else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
         {

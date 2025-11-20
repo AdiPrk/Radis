@@ -33,7 +33,7 @@ namespace Dog
                 }
                 else
                 {
-                    sceneTexturePtr = reinterpret_cast<void*>(rr->sceneTextureDescriptorSet);
+                    sceneTexturePtr = reinterpret_cast<void*>(rr->textureLibrary->GetTexture("SceneTexture")->GetTextureID());
                 }
             }
             else
