@@ -16,7 +16,7 @@ namespace Dog
         void CreateIndexBuffers(Device* device);
         void DestroyBuffers() override;
 
-        void Bind(VkCommandBuffer commandBuffer, VkBuffer instBuffer);
+        void Bind(VkCommandBuffer commandBuffer);
         void Draw(VkCommandBuffer commandBuffer, uint32_t baseIndex = 0);
     };
 }

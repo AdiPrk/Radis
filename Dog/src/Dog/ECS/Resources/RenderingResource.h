@@ -82,7 +82,6 @@ namespace Dog
         bool supportsVulkan = true;
 
         // Texture update
-        void UpdateTextureUniform();
         bool SupportsVulkan();
 
     private:

@@ -8,21 +8,19 @@
 #include "Graphics/Vulkan/Pipeline/Pipeline.h"
 #include "Graphics/Vulkan/Pipeline/RaytracingPipeline.h"
 #include "Graphics/Vulkan/RenderGraph.h"
-
+#include "Graphics/Vulkan/Texture/VKTexture.h"
 #include "Graphics/Vulkan/VulkanWindow.h"
-
 #include "Graphics/Vulkan/Uniform/Uniform.h"
 #include "Graphics/Vulkan/Uniform/UniformData.h"
-
-#include "Graphics/Common/ModelLibrary.h"
-#include "Graphics/Common/TextureLibrary.h"
-#include "Graphics/Vulkan/Texture/VKTexture.h"
-#include "Graphics/Common/Animation/AnimationLibrary.h"
-#include "Graphics/Common/Animation/Animator.h"
-#include "Graphics/Common/Model.h"
 #include "Graphics/Vulkan/Uniform/Descriptors.h"
 
 #include "Graphics/OpenGL/GLFrameBuffer.h"
+
+#include "Graphics/Common/ModelLibrary.h"
+#include "Graphics/Common/TextureLibrary.h"
+#include "Graphics/Common/Animation/AnimationLibrary.h"
+#include "Graphics/Common/Animation/Animator.h"
+#include "Graphics/Common/Model.h"
 
 #include "Assets/Assets.h"
 #include "Engine.h"
@@ -92,28 +90,6 @@ namespace Dog
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "texture.jpg");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "folderIcon.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "unknownFileIcon.png");
-
-            VkExtent2D extent = swapChain->GetSwapChainExtent();
-
-            // Create scene and depth textures
-            textureLibrary->CreateTexture(
-                "SceneTexture",                 // name
-                extent.width,                   // width
-                extent.height,                  // height
-                device->GetLinearFormat(),      // format
-                VK_IMAGE_TILING_OPTIMAL,        // tiling
-                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, // usage
-                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL // final layout
-            );
-            textureLibrary->CreateTexture(
-                "SceneDepth",                 // name
-                extent.width,                   // width
-                extent.height,                  // height
-                swapChain->FindDepthFormat(),   // format
-                VK_IMAGE_TILING_OPTIMAL,        // tiling
-                VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, // usage
-                VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL // final layout
-            );
         }
         else
         {
@@ -162,7 +138,32 @@ namespace Dog
         {
             textureLibrary->RecreateAllBuffers(device.get());
         }
-        modelLibrary->LoadTextures();
+        if (swapChain)
+        {
+            VkExtent2D extent = swapChain->GetSwapChainExtent();
+
+            // Create scene and depth textures
+            textureLibrary->CreateTexture(
+                "SceneTexture",                 // name
+                extent.width,                   // width
+                extent.height,                  // height
+                device->GetLinearFormat(),      // format
+                VK_IMAGE_TILING_OPTIMAL,        // tiling
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, // usage
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL // final layout
+            );
+            textureLibrary->CreateTexture(
+                "SceneDepth",                 // name
+                extent.width,                 // width
+                extent.height,                // height
+                swapChain->FindDepthFormat(), // format
+                VK_IMAGE_TILING_OPTIMAL,      // tiling
+                VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, // usage
+                VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL // final layout
+            );
+        }
+
+        modelLibrary->QueueTextures();
         
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
         {
@@ -240,7 +241,6 @@ namespace Dog
             renderGraph.reset();
             cameraUniform.reset();
             rtUniform.reset();
-            //instanceUniform.reset();
             pipeline.reset();
             wireframePipeline.reset();
             raytracingPipeline.reset();
@@ -255,7 +255,6 @@ namespace Dog
                 Allocator::DestroyAcceleration(tlasAccel);
             }
 
-            //allocator.reset();
             swapChain.reset();
             device.reset();
         }
@@ -268,40 +267,6 @@ namespace Dog
             sceneFrameBuffer.reset();
             shader.reset();
             GLShader::CleanupUBO();
-        }
-    }
-
-    void RenderingResource::UpdateTextureUniform()
-    {
-        auto& tl = textureLibrary;
-        size_t textureCount = tl->GetTextureCount();
-        VkSampler defaultSampler = tl->GetSampler();
-        bool hasTex = textureCount > 0;
-        tl->ResetsNeedTextureDescriptorUpdate();
-
-        std::vector<VkDescriptorImageInfo> imageInfos(TextureLibrary::MAX_TEXTURE_COUNT);
-        for (size_t j = 0; j < TextureLibrary::MAX_TEXTURE_COUNT; ++j) {
-            imageInfos[j].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imageInfos[j].sampler = defaultSampler;
-            imageInfos[j].imageView = 0;
-
-            if (hasTex)
-            {
-                ITexture* itex = tl->GetTextureByIndex(static_cast<uint32_t>(std::min(j, textureCount - 1)));
-                VKTexture* vktex = static_cast<VKTexture*>(itex);
-                if (vktex)
-                {
-                    if (vktex->mData.name == "SceneTexture") continue;
-                    if (vktex->mData.name == "SceneDepth") continue;
-                    imageInfos[j].imageView = vktex->GetImageView();
-                }
-            }
-        }
-
-        for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex) {
-            DescriptorWriter writer(*cameraUniform->GetDescriptorLayout(), *cameraUniform->GetDescriptorPool());
-            writer.WriteImage(3, imageInfos.data(), static_cast<uint32_t>(imageInfos.size()));
-            writer.Overwrite(cameraUniform->GetDescriptorSets()[frameIndex]);
         }
     }
 

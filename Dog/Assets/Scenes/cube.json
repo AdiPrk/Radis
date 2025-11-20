@@ -7,7 +7,7 @@
           "Far": 1000.0,
           "Forward": [ -0.24881255626678467, -0.38144367933273315, -0.8902769684791565 ],
           "InvertY": true,
-          "MouseSensitivity": 0.20000000298023224,
+          "MouseSensitivity": 0.1523224,
           "MouseSmoothness": 20.0,
           "MoveSpeed": 40.0,
           "Near": 0.0010000000474974513,
