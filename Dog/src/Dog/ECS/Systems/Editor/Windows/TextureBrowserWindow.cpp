@@ -43,6 +43,14 @@ namespace Dog
 
                 ImGui::PushID(i);
                 ImGui::Image(texture->GetTextureID(), ImVec2(thumbnailSize, thumbnailSize), uv0, uv1);
+
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::BeginTooltip();
+                    ImGui::TextUnformatted(texture->mData.name.c_str());
+                    ImGui::EndTooltip();
+                }
+
                 ImGui::NextColumn();
                 ImGui::PopID();
             }

@@ -72,13 +72,18 @@ namespace Dog
 
         ImGui::Begin("Debug");
         ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
-        ImGui::Checkbox("Wireframe", &ecs->GetResource<RenderingResource>()->renderWireframe);
+        ImGui::Checkbox("Wireframe", &rr->renderWireframe);
         if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
         {
-            glPolygonMode(GL_FRONT_AND_BACK, ecs->GetResource<RenderingResource>()->renderWireframe ? GL_LINE : GL_FILL);
+            glPolygonMode(GL_FRONT_AND_BACK, rr->renderWireframe ? GL_LINE : GL_FILL);
         }
         
-        ImGui::Checkbox("Raytracing", &ecs->GetResource<RenderingResource>()->useRaytracing);
+        ImGui::BeginDisabled(Engine::GetGraphicsAPI() != GraphicsAPI::Vulkan);
+        ImGui::Checkbox("Raytracing", &rr->useRaytracing);
+        ImGui::EndDisabled();
+        ImGui::BeginDisabled(!rr->useRaytracing);
+        ImGui::Checkbox("Raytracing Heatmap Estimation", &er->renderRaytracingHeatmap);
+        ImGui::EndDisabled();
         ImGui::End();
 
         // Handle mouse lock for ImGui windows (excluding "Viewport")

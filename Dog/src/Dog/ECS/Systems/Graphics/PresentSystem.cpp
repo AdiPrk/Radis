@@ -28,8 +28,10 @@ namespace Dog
             if (tl)
             {
                 const auto& extent = rr->swapChain->GetSwapChainExtent();
-                tl->ResizeStorageImage("RayTracingOutput_0", extent.width, extent.height);
-                tl->ResizeStorageImage("RayTracingOutput_1", extent.width, extent.height);
+                tl->ResizeStorageImage("RTColorImage_0", extent.width, extent.height);
+                tl->ResizeStorageImage("RTColorImage_1", extent.width, extent.height);
+                tl->ResizeStorageImage("RTHeatmapImage_0", extent.width, extent.height);
+                tl->ResizeStorageImage("RTHeatmapImage_1", extent.width, extent.height);
                 tl->ResizeTexture("SceneTexture", extent.width, extent.height);
                 tl->ResizeTexture("SceneDepth", extent.width, extent.height);
             }
@@ -62,8 +64,10 @@ namespace Dog
             if (tl)
             {
                 const auto& extent = rr->swapChain->GetSwapChainExtent();
-                tl->ResizeStorageImage("RayTracingOutput_0", extent.width, extent.height);
-                tl->ResizeStorageImage("RayTracingOutput_1", extent.width, extent.height);
+                tl->ResizeStorageImage("RTColorImage_0", extent.width, extent.height);
+                tl->ResizeStorageImage("RTColorImage_1", extent.width, extent.height);
+                tl->ResizeStorageImage("RTHeatmapImage_0", extent.width, extent.height);
+                tl->ResizeStorageImage("RTHeatmapImage_1", extent.width, extent.height);
                 tl->ResizeTexture("SceneTexture", extent.width, extent.height);
                 tl->ResizeTexture("SceneDepth", extent.width, extent.height);
             }
@@ -206,8 +210,10 @@ namespace Dog
             if (tl)
             {
                 const auto& extent = rr->swapChain->GetSwapChainExtent();
-                tl->ResizeStorageImage("RayTracingOutput_0", extent.width, extent.height);
-                tl->ResizeStorageImage("RayTracingOutput_1", extent.width, extent.height);
+                tl->ResizeStorageImage("RTColorImage_0", extent.width, extent.height);
+                tl->ResizeStorageImage("RTColorImage_1", extent.width, extent.height);
+                tl->ResizeStorageImage("RTHeatmapImage_0", extent.width, extent.height);
+                tl->ResizeStorageImage("RTHeatmapImage_1", extent.width, extent.height);
                 tl->ResizeTexture("SceneTexture", extent.width, extent.height);
                 tl->ResizeTexture("SceneDepth", extent.width, extent.height);
             }

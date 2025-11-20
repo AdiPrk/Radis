@@ -9,8 +9,9 @@ layout(set = 0, binding = 0) uniform Uniforms
     mat4 view;
 } uniforms;
 
-layout(set = 1, binding = 0, rgba32f) uniform image2D outImage;
-layout(set = 1, binding = 1) uniform accelerationStructureEXT topLevelAS;
+layout(set = 1, binding = 0) uniform accelerationStructureEXT topLevelAS;
+layout(set = 1, binding = 1, rgba32f) uniform image2D colorImage;
+layout(set = 1, binding = 2, rgba32f) uniform image2D heatmapImage;
 
 layout(location = 0) rayPayloadEXT HitPayload {
     vec3 color;
@@ -22,10 +23,6 @@ layout(location = 0) rayPayloadEXT HitPayload {
     float cost;
 } payload;
 
-/**
- * Generates a 'Jet' style heatmap color based on the reference image.
- * Input 'x' is a value from 0.0 to 1.0.
- */
 vec3 getHeatmapColor(float x) {
     x = clamp(x, 0.0, 1.0);
     vec3 col = vec3(0.0);
@@ -115,17 +112,11 @@ void main()
     payload.color = payload.color / (payload.color + vec3(1.0));
     payload.color = pow(payload.color, vec3(1.0 / 2.2));
 
-    // imageStore(outImage, ivec2(launchID.xy), vec4(payload.color, 1.0));
+    imageStore(colorImage, ivec2(launchID.xy), vec4(payload.color, 1.0));
 
-    // Show cost
     const float maxCost = 204.0;
-
-    // This logarithmic mapping is still fine
     float mapped = log(1.0 + payload.cost) / log(1.0 + maxCost);
     mapped = clamp(mapped, 0.0, 1.0);
-
-    // Call the new heatmap function instead of turbo()
     vec3 col = getHeatmapColor(mapped);
-
-    imageStore(outImage, ivec2(launchID.xy), vec4(col, 1.0));
+    imageStore(heatmapImage, ivec2(launchID.xy), vec4(col, 1.0));
 }

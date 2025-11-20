@@ -474,26 +474,35 @@ namespace Dog
         if (!mNeedReuploadRTImage) return;
         mNeedReuploadRTImage = false;
 
-        std::vector<VKTexture*> rtTextures(SwapChain::MAX_FRAMES_IN_FLIGHT);
+        std::vector<VKTexture*> rtTextures(SwapChain::MAX_FRAMES_IN_FLIGHT * 2);
 
         // Loop and create one texture for each frame
         for (int i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i)
         {
-            // Give each texture a unique name
-            std::string texName = "RayTracingOutput_" + std::to_string(i);
+            std::string texName = "RTColorImage_" + std::to_string(i);
             rtTextures[i] = static_cast<VKTexture*>(rr.textureLibrary->GetTexture(texName));
+        }
+        for (int i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i)
+        {
+            std::string texName = "RTHeatmapImage_" + std::to_string(i);
+            rtTextures[i + SwapChain::MAX_FRAMES_IN_FLIGHT] = static_cast<VKTexture*>(rr.textureLibrary->GetTexture(texName));
         }
 
         VkDescriptorImageInfo outImageInfo{};
         outImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL; // storage image layout
         outImageInfo.sampler = VK_NULL_HANDLE; // storage images donÅft use samplers
+        VkDescriptorImageInfo heatmapImageInfo{};
+        heatmapImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL; // storage image layout
+        heatmapImageInfo.sampler = VK_NULL_HANDLE; // storage images donÅft use samplers
 
         for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex) 
         {
             outImageInfo.imageView = rtTextures[frameIndex]->GetImageView();
+            heatmapImageInfo.imageView = rtTextures[frameIndex + SwapChain::MAX_FRAMES_IN_FLIGHT]->GetImageView();
 
             DescriptorWriter writer(*rr.rtUniform->GetDescriptorLayout(), *rr.rtUniform->GetDescriptorPool());
-            writer.WriteImage(0, &outImageInfo);
+            writer.WriteImage(1, &outImageInfo);
+            writer.WriteImage(2, &heatmapImageInfo);
             writer.Overwrite(rr.rtUniform->GetDescriptorSets()[frameIndex]);
         }
     }

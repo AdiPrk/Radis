@@ -89,15 +89,22 @@ namespace Dog
         VkImageLayout layout = VK_IMAGE_LAYOUT_GENERAL;
 
         // Create a vector to hold the pointers to our new textures
-        std::vector<VKTexture*> rtTextures(SwapChain::MAX_FRAMES_IN_FLIGHT);
+        std::vector<VKTexture*> rtTextures(SwapChain::MAX_FRAMES_IN_FLIGHT * 2);
 
         // Loop and create one texture for each frame
         for (int i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i)
         {
             // Give each texture a unique name
-            std::string texName = "RayTracingOutput_" + std::to_string(i);
+            std::string texName = "RTColorImage_" + std::to_string(i);
             uint32_t rtInd = renderData.textureLibrary->CreateStorageImage(texName, width, height, format, usage, layout);
             rtTextures[i] = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture(rtInd));
+        }
+        for (int i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i)
+        {
+            // Give each texture a unique name
+            std::string texName = "RTHeatmapImage_" + std::to_string(i);
+            uint32_t rtInd = renderData.textureLibrary->CreateStorageImage(texName, width, height, format, usage, layout);
+            rtTextures[i + SwapChain::MAX_FRAMES_IN_FLIGHT] = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture(rtInd));
         }
 
         uniform.GetDescriptorSets().resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
@@ -106,16 +113,20 @@ namespace Dog
         VkDescriptorImageInfo outImageInfo{};
         outImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL; // storage image layout
         outImageInfo.sampler = VK_NULL_HANDLE; // storage images donÅft use samplers
+        VkDescriptorImageInfo outImageInfo2{};
+        outImageInfo2.imageLayout = VK_IMAGE_LAYOUT_GENERAL; // storage image layout
+        outImageInfo2.sampler = VK_NULL_HANDLE; // storage images donÅft use samplers
 
         // Build descriptor sets for each frame
         for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex)
         {
             outImageInfo.imageView = rtTextures[frameIndex]->GetImageView();
+            outImageInfo2.imageView = rtTextures[frameIndex + SwapChain::MAX_FRAMES_IN_FLIGHT]->GetImageView();
 
             DescriptorWriter writer(*uniform.GetDescriptorLayout(), *uniform.GetDescriptorPool());
 
-            const Buffer& ubuf2 = uniform.GetUniformBuffer(2, frameIndex);
-            const Buffer& ubuf3 = uniform.GetUniformBuffer(3, frameIndex);
+            const Buffer& ubuf2 = uniform.GetUniformBuffer(3, frameIndex);
+            const Buffer& ubuf3 = uniform.GetUniformBuffer(4, frameIndex);
             VkDescriptorBufferInfo bufferInfo2{
                 .buffer = ubuf2.buffer,
                 .range = ubuf2.bufferSize
@@ -125,9 +136,10 @@ namespace Dog
                 .range = ubuf3.bufferSize
             };
 
-            writer.WriteImage(0, &outImageInfo);
-            writer.WriteBuffer(2, &bufferInfo2);
-            writer.WriteBuffer(3, &bufferInfo3);
+            writer.WriteImage(1, &outImageInfo);
+            writer.WriteImage(2, &outImageInfo2);
+            writer.WriteBuffer(3, &bufferInfo2);
+            writer.WriteBuffer(4, &bufferInfo3);
 
             writer.Build(uniform.GetDescriptorSets()[frameIndex]);
         }
