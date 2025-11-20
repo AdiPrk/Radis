@@ -51,6 +51,8 @@ namespace Dog
         float outerCone;     // for spot
         int type;            // 0=dir, 1=point, 2=spot
         uint32_t _padding[2]; 
+
+        static const uint32_t MAX_LIGHTS = 1000;
     };
 
     /*struct MeshDataUniform {

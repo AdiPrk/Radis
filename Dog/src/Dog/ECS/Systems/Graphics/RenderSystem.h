@@ -17,18 +17,20 @@ namespace Dog
         void FrameEnd();
         void Exit();
 
-        void RenderSceneVK(VkCommandBuffer cmd);
-        void RenderSceneGL();
-
-        void RaytraceScene(VkCommandBuffer cmd);
 
     private:
-        uint32_t mNumObjectsRendered = 0;
+        void RenderSceneVK(VkCommandBuffer cmd);
+        void RaytraceSceneVK(VkCommandBuffer cmd);
+        void RenderSceneGL();
+
+        float GetAspectRatio();
+
         std::vector<MeshDataUniform> mRTMeshData{};
         std::vector<uint32_t> mRTMeshIndices{};
 
         std::vector<InstanceUniforms> mInstanceData{};
         std::vector<LightUniform> mLightData{};
+        std::vector<uint8_t> mLightBuffer{};
     };
 }
 
