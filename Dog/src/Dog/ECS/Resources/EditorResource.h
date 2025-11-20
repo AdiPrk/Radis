@@ -17,9 +17,6 @@ namespace Dog
         void Create(GLFWwindow* glfwWindow, float dpiScale);
         void Cleanup(Device* device);
 
-        void CreateSceneTextures(struct RenderingResource* rr);
-        void CleanSceneTextures(struct RenderingResource* rr);
-
         void SetupFonts(float dpiScale);
 
         VkDescriptorPool descriptorPool;

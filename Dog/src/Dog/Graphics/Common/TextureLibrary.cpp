@@ -22,6 +22,9 @@ namespace Dog
         : device{ device }
         , mTextureSampler{ VK_NULL_HANDLE }
     {
+        mTexturesData.resize(MAX_TEXTURE_COUNT);
+        mTextures.resize(MAX_TEXTURE_COUNT);
+
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
         {
             CreateTextureSampler();
@@ -78,6 +81,10 @@ namespace Dog
         if (mTexturesData.size() <= index)
         {
             mTexturesData.resize(index + 1);
+        }
+        if (mTexturesData[index].isSpecialImage)
+        {
+            return index;
         }
 
         TextureLoadData& loadData = mPendingTextureLoads.emplace_back();
@@ -179,7 +186,7 @@ namespace Dog
             return;
         }
 
-        mNeedReuploadRTImage = true;
+        mNeedTextureDescriptorUpdate = true;
 
         uint32_t index = it->second;
 
@@ -192,6 +199,78 @@ namespace Dog
 
         mTextures[index] = std::make_unique<VKTexture>(*device, tex);
         CreateDescriptorSet(static_cast<VKTexture*>(mTextures[index].get()), tex.finalLayout);
+    }
+
+    uint32_t TextureLibrary::CreateTexture(const std::string& imageName, uint32_t width, uint32_t height, VkFormat imageFormat, VkImageTiling tiling, VkImageUsageFlags usage, VkImageLayout finalLayout)
+    {
+        if (Engine::GetGraphicsAPI() != GraphicsAPI::Vulkan)
+        {
+            DOG_ERROR("CreateTexture called for non-Vulkan API");
+            return INVALID_TEXTURE_INDEX;
+        }
+
+        auto it = mTextureMap.find(imageName);
+        if (it != mTextureMap.end())
+        {
+            return it->second;
+        }
+
+        uint32_t index = mNextIndex++;
+        mTextureMap[imageName] = index;
+        if (mTexturesData.size() <= index)
+        {
+            mTexturesData.resize(index + 1);
+        }
+
+        TextureData& textureData = mTexturesData[index];
+        textureData.isSpecialImage = true; // Use this to flag as procedural
+        textureData.width = width;
+        textureData.height = height;
+        textureData.imageFormat = imageFormat;
+        textureData.tiling = tiling;
+        textureData.usage = usage;
+        textureData.finalLayout = finalLayout;
+        textureData.name = imageName;
+
+        if (mTextures.size() <= index)
+            mTextures.resize(index + 1);
+
+        mTextures[index] = std::make_unique<VKTexture>(*device, textureData);
+        CreateDescriptorSet(static_cast<VKTexture*>(mTextures[index].get()), finalLayout);
+
+        return index;
+    }
+
+    void TextureLibrary::ResizeTexture(const std::string& imageName, uint32_t newWidth, uint32_t newHeight)
+    {
+        auto it = mTextureMap.find(imageName);
+        if (it == mTextureMap.end())
+        {
+            return;
+        }
+
+        mNeedReuploadRTImage = true; // This seems related to RT, you may want to check this logic
+
+        uint32_t index = it->second;
+
+        TextureData& tex = mTexturesData[index];
+        tex.width = newWidth;
+        tex.height = newHeight;
+
+        // Check if the old texture had a descriptor set before we destroy it
+        VKTexture* oldTexture = static_cast<VKTexture*>(mTextures[index].get());
+        bool hadShaderDescriptor = (oldTexture && oldTexture->mDescriptorSet != VK_NULL_HANDLE);
+
+        // vkFreeDescriptorSets... (your commented-out line)
+        mTextures[index].reset();
+
+        mTextures[index] = std::make_unique<VKTexture>(*device, tex);
+
+        // If it had a descriptor set before, recreate one
+        if (hadShaderDescriptor)
+        {
+            CreateDescriptorSet(static_cast<VKTexture*>(mTextures[index].get()), tex.finalLayout);
+        }
     }
 
     ITexture* TextureLibrary::GetTexture(uint32_t index)
@@ -378,7 +457,7 @@ namespace Dog
                 // If you have textureData.isStorageImage flag, pass the proper final layout
                 mTextures[index] = std::make_unique<VKTexture>(*device, textureData);
                 CreateDescriptorSet(static_cast<VKTexture*>(mTextures[index].get()),
-                    textureData.isStorageImage ? textureData.finalLayout : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                    (textureData.isStorageImage || textureData.isSpecialImage) ? textureData.finalLayout : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
             }
             else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
             {

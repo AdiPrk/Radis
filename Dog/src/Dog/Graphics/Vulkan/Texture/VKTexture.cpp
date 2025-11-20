@@ -17,9 +17,13 @@ namespace Dog
 			mMipLevels = 1; // Storage images don't have mipmaps
 
 			// Create the image
-			CreateImage(mData.width, mData.height, mData.imageFormat, VK_IMAGE_TILING_OPTIMAL, textureData.usage, VMA_MEMORY_USAGE_GPU_ONLY);
+			CreateImage(mData.width, mData.height, mData.imageFormat, textureData.tiling, textureData.usage, VMA_MEMORY_USAGE_GPU_ONLY);
 			TransitionImageLayout(mDevice, mTextureImage, mData.imageFormat, VK_IMAGE_LAYOUT_UNDEFINED, textureData.finalLayout, mMipLevels);
 			CreateTextureImageView();
+		}
+		else if (textureData.isSpecialImage)
+		{
+			CreateSpecial();
 		}
 		else
 		{
@@ -43,6 +47,72 @@ namespace Dog
 			vmaDestroyImage(Allocator::GetAllocator(), mTextureImage, mTextureImageAllocation);
 			mTextureImage = VK_NULL_HANDLE;
 			mTextureImageAllocation = VK_NULL_HANDLE;
+		}
+	}
+
+	void VKTexture::CreateSpecial()
+	{
+		VkImageCreateInfo imageInfo{};
+		imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+		imageInfo.imageType = VK_IMAGE_TYPE_2D;
+		imageInfo.format = mData.imageFormat;
+		imageInfo.extent.width = mData.width;
+		imageInfo.extent.height = mData.height;
+		imageInfo.extent.depth = 1;
+		imageInfo.mipLevels = 1;
+		imageInfo.arrayLayers = 1;
+		imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+		imageInfo.tiling = mData.tiling;
+		imageInfo.usage = mData.usage;
+		imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		imageInfo.flags = 0;
+
+		VmaAllocationCreateInfo allocInfo{};
+		allocInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+
+		VkResult result = vmaCreateImage(Allocator::GetAllocator(), &imageInfo, &allocInfo, &mTextureImage, &mTextureImageAllocation, nullptr);
+		if (result != VK_SUCCESS)
+		{
+			DOG_CRITICAL("VMA failed to create special image");
+		}
+        Allocator::SetAllocationName(mTextureImageAllocation, "Special Texture Image");
+
+		VkImageAspectFlags aspect = 0;
+
+		if (mData.imageFormat == VK_FORMAT_D16_UNORM ||
+			mData.imageFormat == VK_FORMAT_X8_D24_UNORM_PACK32 ||
+			mData.imageFormat == VK_FORMAT_D32_SFLOAT)
+		{
+			aspect = VK_IMAGE_ASPECT_DEPTH_BIT;
+		}
+		else if (mData.imageFormat == VK_FORMAT_S8_UINT)
+		{
+			aspect = VK_IMAGE_ASPECT_STENCIL_BIT;
+		}
+		else if (mData.imageFormat == VK_FORMAT_D24_UNORM_S8_UINT ||
+			mData.imageFormat == VK_FORMAT_D32_SFLOAT_S8_UINT)
+		{
+			aspect = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+		}
+		else
+		{
+			aspect = VK_IMAGE_ASPECT_COLOR_BIT; // regular color textures
+		}
+
+		VkImageViewCreateInfo sampledViewInfo{};
+		sampledViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		sampledViewInfo.image = mTextureImage;
+		sampledViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		sampledViewInfo.format = mData.imageFormat;
+		sampledViewInfo.subresourceRange.aspectMask = aspect;
+		sampledViewInfo.subresourceRange.baseMipLevel = 0;
+		sampledViewInfo.subresourceRange.levelCount = 1;
+		sampledViewInfo.subresourceRange.baseArrayLayer = 0;
+		sampledViewInfo.subresourceRange.layerCount = 1;
+
+		if (vkCreateImageView(mDevice, &sampledViewInfo, nullptr, &mTextureImageView) != VK_SUCCESS)
+		{
+			DOG_CRITICAL("Failed to create special image view");
 		}
 	}
 
@@ -75,7 +145,7 @@ namespace Dog
 
 		// Create the Vulkan image
 		CreateImage(mData.width, mData.height, mData.imageFormat, VK_IMAGE_TILING_OPTIMAL, usage, VMA_MEMORY_USAGE_GPU_ONLY);
-
+			
 		// Transition the image to a transfer destination layout
 		TransitionImageLayout(mDevice, mTextureImage, mData.imageFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mMipLevels);
 
@@ -149,6 +219,13 @@ namespace Dog
 
 			sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 			destinationStage = VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR; // Use the ray tracing stage
+		}
+		else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
+			barrier.srcAccessMask = 0;
+			barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+			sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+			destinationStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		}
 		else {
 			throw std::invalid_argument("Unsupported layout transition!");

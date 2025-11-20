@@ -13,6 +13,7 @@
 #include "Graphics/Vulkan/VulkanWindow.h"
 
 #include "Graphics/Common/TextureLibrary.h"
+#include "Graphics/Vulkan/Texture/VKTexture.h"
 
 #include "Engine.h"
 
@@ -23,14 +24,14 @@ namespace Dog
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
         {
             auto rr = ecs->GetResource<RenderingResource>();
-            rr->RecreateAllSceneTextures();
-
             auto tl = rr->textureLibrary.get();
             if (tl)
             {
                 const auto& extent = rr->swapChain->GetSwapChainExtent();
                 tl->ResizeStorageImage("RayTracingOutput_0", extent.width, extent.height);
                 tl->ResizeStorageImage("RayTracingOutput_1", extent.width, extent.height);
+                tl->ResizeTexture("SceneTexture", extent.width, extent.height);
+                tl->ResizeTexture("SceneDepth", extent.width, extent.height);
             }
         }
 	}
@@ -56,7 +57,6 @@ namespace Dog
         if (result == VK_ERROR_OUT_OF_DATE_KHR)
         {
             rr->RecreateSwapChain(wr->window.get());
-            rr->RecreateAllSceneTextures();
 
             auto tl = rr->textureLibrary.get();
             if (tl)
@@ -64,6 +64,8 @@ namespace Dog
                 const auto& extent = rr->swapChain->GetSwapChainExtent();
                 tl->ResizeStorageImage("RayTracingOutput_0", extent.width, extent.height);
                 tl->ResizeStorageImage("RayTracingOutput_1", extent.width, extent.height);
+                tl->ResizeTexture("SceneTexture", extent.width, extent.height);
+                tl->ResizeTexture("SceneDepth", extent.width, extent.height);
             }
             return;
         }
@@ -96,24 +98,36 @@ namespace Dog
         rg->Clear();
 
         // Import resources!
+        auto tl = rr->textureLibrary.get();
         if (Engine::GetEditorEnabled()) 
         {
+            VKTexture* tex = (VKTexture*)tl->GetTexture("SceneTexture");
             rg->ImportTexture(
                 "SceneColor",
-                rr->sceneImage,
-                rr->sceneImageView,
-                rr->swapChain->GetSwapChainExtent(),
-                rr->swapChain->GetImageFormat()
+                tex->GetImage(),//rr->sceneImage,
+                tex->GetImageView(),//rr->sceneImageView,
+                tex->GetExtent(), //rr->swapChain->GetSwapChainExtent(),
+                tex->GetImageFormat() //rr->swapChain->GetImageFormat()
             );
         }
 
-        rg->ImportTexture(
-            "SceneDepth",
-            rr->mDepthImage,
-            rr->mDepthImageView,
-            rr->swapChain->GetSwapChainExtent(),
-            rr->swapChain->FindDepthFormat()
-        );
+        {
+            VKTexture* tex = (VKTexture*)tl->GetTexture("SceneDepth");
+            rg->ImportTexture(
+                "SceneDepth",
+                tex->GetImage(),
+                tex->GetImageView(),
+                tex->GetExtent(),
+                tex->GetImageFormat()
+            );
+            //rg->ImportTexture(
+            //    "SceneDepth",
+            //    rr->mDepthImage,
+            //    rr->mDepthImageView,
+            //    rr->swapChain->GetSwapChainExtent(),
+            //    rr->swapChain->FindDepthFormat()
+            //);
+        }
 
         rg->ImportBackbuffer(
             "BackBuffer",
@@ -186,7 +200,7 @@ namespace Dog
         {
             wr->window->ResetResizeFlag();
             rr->RecreateSwapChain(wr->window.get());
-            rr->RecreateAllSceneTextures();
+            //rr->RecreateAllSceneTextures();
 
             auto tl = rr->textureLibrary.get();
             if (tl)
@@ -194,6 +208,8 @@ namespace Dog
                 const auto& extent = rr->swapChain->GetSwapChainExtent();
                 tl->ResizeStorageImage("RayTracingOutput_0", extent.width, extent.height);
                 tl->ResizeStorageImage("RayTracingOutput_1", extent.width, extent.height);
+                tl->ResizeTexture("SceneTexture", extent.width, extent.height);
+                tl->ResizeTexture("SceneDepth", extent.width, extent.height);
             }
             rr->syncObjects->ClearImageFences();
         }
