@@ -57,7 +57,7 @@ struct Light {
     int type;          // 0=dir, 1=point, 2=spot
 };
 
-#define MAX_LIGHTS 10000
+#define MAX_LIGHTS 1000
 SSBO_LAYOUT(0, 4) readonly buffer LightData {
     uint lightCount;
     Light lights[MAX_LIGHTS];

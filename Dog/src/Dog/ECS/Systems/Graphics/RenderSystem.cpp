@@ -132,20 +132,7 @@ namespace Dog
     void RenderSystem::Update(float dt)
     {
         auto rr = ecs->GetResource<RenderingResource>();
-        float aspectRatio = 1.f;
-        if (Engine::GetEditorEnabled())
-        {
-            auto editorResource = ecs->GetResource<EditorResource>();
-            aspectRatio = editorResource->sceneWindowWidth / editorResource->sceneWindowHeight;
-        }
-        else
-        {
-            auto windowResource = ecs->GetResource<WindowResource>();
-            auto extant = windowResource->window->GetExtent();
-            aspectRatio = static_cast<float>(extant.x) / static_cast<float>(extant.y);
-        }
-
-        mNumObjectsRendered = 0;
+        float aspectRatio = GetAspectRatio();
 
         CameraUniforms camData{};
         camData.view = glm::mat4(1.0f);
@@ -189,12 +176,8 @@ namespace Dog
         }
 
         auto& registry = ecs->GetRegistry();
-
-        ecs->GetRegistry().view<LightComponent>().each([&](auto entity, LightComponent& lc)
+        registry.view<LightComponent, TransformComponent>().each([&](auto entity, LightComponent& lc, TransformComponent& tc)
         {
-            Entity lightEntity(&registry, entity);
-            TransformComponent& tc = lightEntity.GetComponent<TransformComponent>();
-
             LightUniform lu{};
             lu.position = glm::vec4(tc.Translation, 1.0f);
             lu.radius = lc.Radius;
@@ -259,20 +242,20 @@ namespace Dog
             }
         });
 
+        struct LightHeader { uint32_t lightCount; uint32_t _pad[3]; };
+        LightHeader header{ .lightCount = static_cast<uint32_t>(mLightData.size()) };
+        mLightBuffer.resize(sizeof(LightHeader) + sizeof(LightUniform) * mLightData.size());
+        memcpy(mLightBuffer.data(), &header, sizeof(LightHeader));
+        memcpy(mLightBuffer.data() + sizeof(LightHeader), mLightData.data(), sizeof(LightUniform) * mLightData.size());
+
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
         {
-            auto& rg = rr->renderGraph;
             rr->cameraUniform->SetUniformData(camData, 0, rr->currentFrameIndex);       // Set Camera Data
             rr->cameraUniform->SetUniformData(mInstanceData, 1, rr->currentFrameIndex); // Set Instance Data
-
-            struct LightHeader { uint32_t lightCount; uint32_t _pad[3]; };
-            LightHeader header{ .lightCount = static_cast<uint32_t>(mLightData.size()) };
-            std::vector<uint8_t> lightBuffer(sizeof(LightHeader) + sizeof(LightUniform) * mLightData.size());
-            memcpy(lightBuffer.data(), &header, sizeof(LightHeader));
-            memcpy(lightBuffer.data() + sizeof(LightHeader), mLightData.data(), sizeof(LightUniform) * mLightData.size());
-            rr->cameraUniform->SetUniformData(lightBuffer, 4, rr->currentFrameIndex);   // Set Light Data
+            rr->cameraUniform->SetUniformData(mLightBuffer, 4, rr->currentFrameIndex);  // Set Light Data
 
             // Add the scene render pass
+            auto& rg = rr->renderGraph;
             if (Engine::GetEditorEnabled()) 
             {
                 if (rr->useRaytracing)
@@ -280,7 +263,7 @@ namespace Dog
                     rg->AddPass(
                         "ScenePass",
                         [&](RGPassBuilder& builder) {},
-                        std::bind(&RenderSystem::RaytraceScene, this, std::placeholders::_1)
+                        std::bind(&RenderSystem::RaytraceSceneVK, this, std::placeholders::_1)
                     );
                 }
                 else
@@ -295,7 +278,6 @@ namespace Dog
                         std::bind(&RenderSystem::RenderSceneVK, this, std::placeholders::_1)
                     );
                 }
-                
             }
             else
             {
@@ -356,8 +338,7 @@ namespace Dog
         uint32_t debugDrawCount = DebugDrawResource::GetInstanceDataSize();
         vkCmdDrawIndexed(cmd, cubeMeshData.indexCount, debugDrawCount, cubeMeshData.firstIndex, cubeMeshData.vertexOffset, baseIndex);
         baseIndex += debugDrawCount;
-        mNumObjectsRendered += debugDrawCount;
-
+        
         auto entityView = registry.view<ModelComponent, TransformComponent>();
         for (auto& entityHandle : entityView)
         {
@@ -372,7 +353,6 @@ namespace Dog
                 vkCmdDrawIndexed(cmd, meshData.indexCount, 1, meshData.firstIndex, meshData.vertexOffset, baseIndex);
 
                 ++baseIndex;
-                ++mNumObjectsRendered;
             }
         }
     }
@@ -418,6 +398,12 @@ namespace Dog
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, textureData.size() * sizeof(uint64_t), textureData.data());
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
+        GLShader::SetupLightSSBO();
+        GLuint lightSSBO = GLShader::GetLightSSBO();
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, lightSSBO);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, mLightBuffer.size(), mLightBuffer.data());
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
         UnifiedMeshes* uMeshes = rr->modelLibrary->GetUnifiedMesh();
         uMeshes->GetUnifiedMesh()->Bind();
 
@@ -436,8 +422,7 @@ namespace Dog
             baseIndex
         );
         baseIndex += debugDrawCount;
-        mNumObjectsRendered += debugDrawCount;
-
+        
         auto& registry = ecs->GetRegistry();
         registry.view<ModelComponent, TransformComponent>().each([&](auto entityHandle, ModelComponent& mc, TransformComponent& tc)
         {
@@ -458,7 +443,6 @@ namespace Dog
                 );
 
                 ++baseIndex;
-                ++mNumObjectsRendered;
             }
         });
 
@@ -468,7 +452,7 @@ namespace Dog
         }
     }
 
-    void RenderSystem::RaytraceScene(VkCommandBuffer cmd)
+    void RenderSystem::RaytraceSceneVK(VkCommandBuffer cmd)
     {
         auto rr = ecs->GetResource<RenderingResource>();
         auto& rp = rr->raytracingPipeline;
@@ -538,5 +522,18 @@ namespace Dog
         };
 
         vkCmdPipelineBarrier2(cmd, &dependencyInfo);
+    }
+
+    float RenderSystem::GetAspectRatio()
+    {
+        if (Engine::GetEditorEnabled())
+        {
+            EditorResource* er = ecs->GetResource<EditorResource>();
+            return er->sceneWindowWidth / er->sceneWindowHeight;
+        }
+        
+        WindowResource* wr = ecs->GetResource<WindowResource>();
+        glm::uvec2 extant = wr->window->GetExtent();
+        return static_cast<float>(extant.x) / static_cast<float>(extant.y);
     }
 }

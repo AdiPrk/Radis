@@ -14,6 +14,7 @@ namespace Dog {
     GLuint GLShader::instanceSSBO = 0;
     GLuint GLShader::animationSSBO = 0;
     GLuint GLShader::textureSSBO = 0;
+    GLuint GLShader::lightSSBO = 0;
 
     int GLShader::CurrentID = 0;
     GLShader GLShader::activeShader = GLShader();
@@ -303,6 +304,17 @@ namespace Dog {
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, textureSSBO);
     }
 
+    void GLShader::SetupLightSSBO()
+    {
+        if (lightSSBO != 0) return;
+
+        glGenBuffers(1, &lightSSBO);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, lightSSBO);
+        uint32_t maxLights = LightUniform::MAX_LIGHTS;
+        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::vec4) + maxLights * sizeof(LightUniform), nullptr, GL_DYNAMIC_DRAW);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, lightSSBO);
+    }
+
     bool GLShader::checkCompileErrors(unsigned int object, std::string type)
     {
         int success;
@@ -386,10 +398,12 @@ namespace Dog {
         glDeleteBuffers(1, &instanceSSBO);
         glDeleteBuffers(1, &animationSSBO);
         glDeleteBuffers(1, &textureSSBO);
+        glDeleteBuffers(1, &lightSSBO);
         uboMatrices = 0;
         instanceSSBO = 0;
         animationSSBO = 0;
         textureSSBO = 0;
+        lightSSBO = 0;
 
         CurrentID = 0;
     }

@@ -61,6 +61,8 @@ namespace Dog {
         static void SetupAnimationSSBO();
         static GLuint GetTextureSSBO() { return textureSSBO; }
         static void SetupTextureSSBO();
+        static GLuint GetLightSSBO() { return lightSSBO; }
+        static void SetupLightSSBO();
 
     private:
         // checks if compilation or linking failed and if so, print the error logs
@@ -71,6 +73,7 @@ namespace Dog {
         static GLuint instanceSSBO;
         static GLuint animationSSBO;
         static GLuint textureSSBO;
+        static GLuint lightSSBO;
     };
 
 }

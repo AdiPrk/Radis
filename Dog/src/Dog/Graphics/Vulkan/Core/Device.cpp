@@ -3,6 +3,8 @@
 #include "Graphics/Vulkan/VulkanWindow.h"
 #include "VulkanFunctions.h"
 
+#include "Volk/volk.h"
+
 namespace Dog 
 {
     // local callback functions
