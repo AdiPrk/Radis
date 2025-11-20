@@ -29,7 +29,14 @@ namespace Dog
                 if (rr->useRaytracing)
                 {
                     uint32_t frameIndex = rr->currentFrameIndex;
-                    sceneTexturePtr = tl->GetTexture("RayTracingOutput_" + std::to_string(frameIndex))->GetTextureID();
+                    if (er->renderRaytracingHeatmap)
+                    {
+                        sceneTexturePtr = tl->GetTexture("RTHeatmapImage_" + std::to_string(frameIndex))->GetTextureID();
+                    }
+                    else
+                    {
+                        sceneTexturePtr = tl->GetTexture("RTColorImage_" + std::to_string(frameIndex))->GetTextureID();
+                    }
                 }
                 else
                 {

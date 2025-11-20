@@ -225,14 +225,14 @@ namespace Dog
             for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex)
             {
                 DescriptorWriter writer(*rr->rtUniform->GetDescriptorLayout(), *rr->rtUniform->GetDescriptorPool());
-                writer.WriteAccelerationStructure(1, &asInfo);
+                writer.WriteAccelerationStructure(0, &asInfo);
                 writer.Overwrite(rr->rtUniform->GetDescriptorSets()[frameIndex]);
             }
             
-            rr->rtUniform->SetUniformData(mRTMeshData, 2, 0);
-            rr->rtUniform->SetUniformData(mRTMeshData, 2, 1);
-            rr->rtUniform->SetUniformData(mRTMeshIndices, 3, 0);
-            rr->rtUniform->SetUniformData(mRTMeshIndices, 3, 1);
+            rr->rtUniform->SetUniformData(mRTMeshData, 3, 0);
+            rr->rtUniform->SetUniformData(mRTMeshData, 3, 1);
+            rr->rtUniform->SetUniformData(mRTMeshIndices, 4, 0);
+            rr->rtUniform->SetUniformData(mRTMeshIndices, 4, 1);
         }
 
         // Update textures!
@@ -1137,9 +1137,7 @@ namespace Dog
             asWrite.pAccelerationStructures = &rr->tlasAccel.accel;
 
             DescriptorWriter writer(*rr->rtUniform->GetDescriptorLayout(), *rr->rtUniform->GetDescriptorPool());
-            // Write into binding 1 like you did earlier (adjust binding if different)
-            writer.WriteAccelerationStructure(1, &asWrite);
-            // Overwrite all descriptor sets (for each frame)
+            writer.WriteAccelerationStructure(0, &asWrite);
             for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex)
             {
                 writer.Overwrite(rr->rtUniform->GetDescriptorSets()[frameIndex]);

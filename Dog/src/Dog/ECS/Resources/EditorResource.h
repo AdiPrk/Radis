@@ -26,6 +26,7 @@ namespace Dog
         float sceneWindowY = 1.f;
         float sceneWindowWidth = 1.f;
         float sceneWindowHeight = 1.f;
+        bool renderRaytracingHeatmap = false;
 
         Entity selectedEntity;
         Entity entityToDelete;

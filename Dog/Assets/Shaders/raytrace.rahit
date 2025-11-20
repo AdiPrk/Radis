@@ -64,17 +64,17 @@ layout(set = 0, binding = 4) readonly buffer LightData {
     Light lights[MAX_LIGHTS];
 } lightData;
 
-layout(set = 1, binding = 2, std430) readonly buffer MeshBuffer
+layout(set = 1, binding = 3, std430) readonly buffer MeshBuffer
 {
     Vertex vertices[];
 } meshBuffer;
 
-layout(set = 1, binding = 3, std430) readonly buffer MeshIndexBuffer
+layout(set = 1, binding = 4, std430) readonly buffer MeshIndexBuffer
 {
     uint indices[];
 } indexBuffer;
 
-layout(set = 1, binding = 1) uniform accelerationStructureEXT topLevelAS;
+layout(set = 1, binding = 0) uniform accelerationStructureEXT topLevelAS;
 
 void main()
 {
