@@ -62,7 +62,7 @@ namespace Dog {
 
 		float Yaw{ 0.0f };
 		float Pitch{ 0.0f };
-		float MouseSensitivity{ 0.2f };
+		float MouseSensitivity{ 0.15f };
 		bool InvertY{ true };
 		float MoveSpeed{ 10.f };
 

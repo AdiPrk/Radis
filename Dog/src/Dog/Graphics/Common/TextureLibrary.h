@@ -52,8 +52,8 @@ namespace Dog
 		void CreateDescriptors();
 		void CreateDescriptorSet(class VKTexture* texture, VkImageLayout layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         void SetDevice(Device* dev) { device = dev; }
-		bool NeedsTextureDescriptorUpdate() const { return mNeedTextureDescriptorUpdate; }
-        void ResetsNeedTextureDescriptorUpdate() { mNeedTextureDescriptorUpdate = false; }
+
+		void UpdateTextureUniform(class Uniform* uniform);
 
 	private:
 		std::vector<std::unique_ptr<ITexture>> mTextures;

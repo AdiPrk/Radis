@@ -13,6 +13,7 @@
 #include "ECS/Resources/InputResource.h"
 #include "ECS/Resources/WindowResource.h"
 #include "ECS/Resources/RenderingResource.h"
+#include "ECS/Resources/RaytracingResource.h"
 #include "ECS/Resources/EditorResource.h"
 #include "ECS/Resources/SerializationResource.h"
 #include "ECS/Resources/AnimationResource.h"
@@ -69,6 +70,8 @@ namespace Dog
         auto wr = mEcs.GetResource<WindowResource>();
         mEcs.AddResource<InputResource>(wr->window->GetGLFWwindow());
         mEcs.AddResource<RenderingResource>(wr->window.get());
+        mEcs.AddResource<RaytracingResource>();
+
         bool canVulkan = Engine::GetVulkanSupported();
         bool isVulkan = (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan);
         bool swapVulkan = !canVulkan && isVulkan;

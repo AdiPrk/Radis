@@ -106,6 +106,7 @@ namespace Dog
         TextureLoader::LoadMT(mPendingTextureLoads);
 
         DOG_INFO("Finished loading textures. Creating GPU resources...");
+        mNeedTextureDescriptorUpdate = true;
         if (mTextures.size() < mNextIndex)
         {
             mTextures.resize(mNextIndex);
@@ -418,6 +419,42 @@ namespace Dog
 
         // 3. Call vkUpdateDescriptorSets to perform the update
         vkUpdateDescriptorSets(device->GetDevice(), 1, &descriptorWrite, 0, nullptr);
+    }
+
+    void TextureLibrary::UpdateTextureUniform(Uniform* uniform)
+    {
+        if (!mNeedTextureDescriptorUpdate) return;
+        if (Engine::GetGraphicsAPI() != GraphicsAPI::Vulkan) return;
+
+        size_t textureCount = GetTextureCount();
+        VkSampler defaultSampler = GetSampler();
+        bool hasTex = textureCount > 0;
+        mNeedTextureDescriptorUpdate = false;
+
+        std::vector<VkDescriptorImageInfo> imageInfos(TextureLibrary::MAX_TEXTURE_COUNT);
+        for (size_t j = 0; j < TextureLibrary::MAX_TEXTURE_COUNT; ++j) {
+            imageInfos[j].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            imageInfos[j].sampler = defaultSampler;
+            imageInfos[j].imageView = 0;
+
+            if (hasTex)
+            {
+                ITexture* itex = GetTextureByIndex(static_cast<uint32_t>(std::min(j, textureCount - 1)));
+                VKTexture* vktex = static_cast<VKTexture*>(itex);
+                if (vktex)
+                {
+                    if (vktex->mData.name == "SceneTexture") continue;
+                    if (vktex->mData.name == "SceneDepth") continue;
+                    imageInfos[j].imageView = vktex->GetImageView();
+                }
+            }
+        }
+
+        for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex) {
+            DescriptorWriter writer(*uniform->GetDescriptorLayout(), *uniform->GetDescriptorPool());
+            writer.WriteImage(3, imageInfos.data(), static_cast<uint32_t>(imageInfos.size()));
+            writer.Overwrite(uniform->GetDescriptorSets()[frameIndex]);
+        }
     }
 
     void TextureLibrary::ClearAllBuffers(class Device* device)

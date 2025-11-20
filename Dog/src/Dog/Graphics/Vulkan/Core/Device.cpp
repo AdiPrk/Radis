@@ -300,6 +300,8 @@ namespace Dog
         // 4) Prepare requested features, but first query supported features (core and 1.2/1.3)
         VkPhysicalDeviceFeatures2 supportedFeatures2{};
         supportedFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+        VkPhysicalDeviceVulkan11Features supported11{};
+        supported11.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
         VkPhysicalDeviceVulkan12Features supported12{};
         supported12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
         VkPhysicalDeviceVulkan13Features supported13{};
@@ -315,7 +317,8 @@ namespace Dog
         robustness2Supported.pNext = &supportedAs;
         supported13.pNext = &robustness2Supported;
         supported12.pNext = &supported13;
-        supportedFeatures2.pNext = &supported12;
+        supported11.pNext = &supported12;
+        supportedFeatures2.pNext = &supported11;
 
         vkGetPhysicalDeviceFeatures2(physicalDevice, &supportedFeatures2);
 
@@ -359,6 +362,10 @@ namespace Dog
         REQUEST_FEATURE(vulkan12Features, supported12, bufferDeviceAddressCaptureReplay);
         REQUEST_FEATURE(vulkan12Features, supported12, timelineSemaphore);
 
+        VkPhysicalDeviceVulkan11Features vulkan11Features = {};
+        vulkan11Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+        REQUEST_FEATURE(vulkan11Features, supported11, shaderDrawParameters);
+
         VkPhysicalDeviceAccelerationStructureFeaturesKHR accelFeature{};
         accelFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
         REQUEST_FEATURE(accelFeature, supportedAs, accelerationStructure);
@@ -384,7 +391,8 @@ namespace Dog
         robustness2Features.pNext = &accelFeature;
         vulkan13Features.pNext = &robustness2Features;
         vulkan12Features.pNext = &vulkan13Features;
-        createInfo.pNext = &vulkan12Features;
+        vulkan11Features.pNext = &vulkan12Features;
+        createInfo.pNext = &vulkan11Features;
 
         createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
         createInfo.pQueueCreateInfos = queueCreateInfos.data();
@@ -765,6 +773,23 @@ namespace Dog
         // Create the image and allocate memory using VMA
         if (vmaCreateImage(Allocator::GetAllocator(), &imageInfo, &allocInfo, &image, &imageAllocation, nullptr) != VK_SUCCESS) {
             throw std::runtime_error("failed to create image with VMA!");
+        }
+    }
+
+    void Device::StartDebugLabel(VkCommandBuffer commandBuffer, const char* labelName, glm::vec4 c)
+    {
+        VkDebugUtilsLabelEXT s{ VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT, nullptr, labelName, { c.r, c.g, c.b, c.a } };
+        if (g_vkCmdBeginDebugUtilsLabelEXT)
+        {
+            g_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &s);
+        }
+    }
+
+    void Device::EndDebugLabel(VkCommandBuffer commandBuffer)
+    {
+        if (g_vkCmdEndDebugUtilsLabelEXT)
+        {
+            g_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
         }
     }
 

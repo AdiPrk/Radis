@@ -79,6 +79,9 @@
     <ClCompile Include="src\Dog\ECS\Systems\Editor\Windows\ProfilerWindow.cpp" />
     <ClCompile Include="src\Dog\Graphics\Common\TextureLoader.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\Editor\Windows\MemoryWindow.cpp" />
+    <ClCompile Include="src\Dog\ECS\Resources\RaytracingResource.cpp" />
+    <ClCompile Include="src\Dog\Utils\VKMath.cpp" />
+    <ClCompile Include="src\Dog\Graphics\Vulkan\Utils\ScopedDebugLabel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\nlohmann\json.hpp" />
@@ -181,8 +184,27 @@
     <ClInclude Include="src\Dog\ECS\Systems\Editor\Windows\ProfilerWindow.h" />
     <ClInclude Include="src\Dog\Graphics\Common\TextureLoader.h" />
     <ClInclude Include="src\Dog\ECS\Systems\Editor\Windows\MemoryWindow.h" />
+    <ClInclude Include="src\Dog\ECS\Resources\RaytracingResource.h" />
+    <ClInclude Include="src\Dog\Utils\VKMath.h" />
+    <ClInclude Include="src\Dog\Graphics\Vulkan\Utils\ScopedDebugLabel.h" />
   </ItemGroup>
   <ItemGroup>
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />

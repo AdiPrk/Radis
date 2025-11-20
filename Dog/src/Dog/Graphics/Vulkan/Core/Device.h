@@ -76,6 +76,9 @@ namespace Dog {
         const VkPhysicalDeviceRayTracingPipelinePropertiesKHR& GetRayTracingProperties() const { return mRtProperties; }
         const VkPhysicalDeviceAccelerationStructurePropertiesKHR& GetAccelerationStructureProperties() const { return mAsProperties; }
 
+        void StartDebugLabel(VkCommandBuffer commandBuffer, const char* labelName, glm::vec4 color);
+        void EndDebugLabel(VkCommandBuffer commandBuffer);
+
         PFN_vkCreateAccelerationStructureKHR g_vkCreateAccelerationStructureKHR;
         PFN_vkCmdBuildAccelerationStructuresKHR g_vkCmdBuildAccelerationStructuresKHR;
         PFN_vkGetAccelerationStructureBuildSizesKHR g_vkGetAccelerationStructureBuildSizesKHR;

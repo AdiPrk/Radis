@@ -215,6 +215,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Dog\ECS\Resources\DebugDrawResource.cpp" />
     <ClCompile Include="src\Dog\ECS\Resources\EditorResource.cpp" />
     <ClCompile Include="src\Dog\ECS\Resources\InputResource.cpp" />
+    <ClCompile Include="src\Dog\ECS\Resources\RaytracingResource.cpp" />
     <ClCompile Include="src\Dog\ECS\Resources\RenderingResource.cpp" />
     <ClCompile Include="src\Dog\ECS\Resources\SerializationResource.cpp" />
     <ClCompile Include="src\Dog\ECS\Resources\SwapRendererResource.cpp" />
@@ -261,6 +262,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Dog\Graphics\Common\Animation\Animator.cpp" />
     <ClCompile Include="src\Dog\Graphics\Common\Animation\Bone.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Pipeline\RaytracingPipeline.cpp" />
+    <ClCompile Include="src\Dog\Graphics\Vulkan\Utils\ScopedDebugLabel.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\VKMesh.cpp" />
     <ClCompile Include="src\Dog\Graphics\Common\ModelLibrary.cpp" />
     <ClCompile Include="src\Dog\Graphics\Common\UnifiedMesh.cpp" />
@@ -282,6 +284,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Dog\Utils\Logger.cpp" />
     <ClCompile Include="src\Dog\Utils\SerializationOperators.cpp" />
     <ClCompile Include="src\Dog\Utils\Utils.cpp" />
+    <ClCompile Include="src\Dog\Utils\VKMath.cpp" />
     <ClCompile Include="src\main.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
     </ClCompile>
@@ -323,6 +326,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Dog\ECS\Resources\EditorResource.h" />
     <ClInclude Include="src\Dog\ECS\Resources\InputResource.h" />
     <ClInclude Include="src\Dog\ECS\Resources\IResource.h" />
+    <ClInclude Include="src\Dog\ECS\Resources\RaytracingResource.h" />
     <ClInclude Include="src\Dog\ECS\Resources\RenderingResource.h" />
     <ClInclude Include="src\Dog\ECS\Resources\SerializationResource.h" />
     <ClInclude Include="src\Dog\ECS\Resources\SwapRendererResource.h" />
@@ -372,6 +376,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Dog\Graphics\Common\Animation\Skeleton.h" />
     <ClInclude Include="src\Dog\Graphics\Common\Animation\VQS.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Pipeline\RaytracingPipeline.h" />
+    <ClInclude Include="src\Dog\Graphics\Vulkan\Utils\ScopedDebugLabel.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\VKMesh.h" />
     <ClInclude Include="src\Dog\Graphics\Common\ModelLibrary.h" />
     <ClInclude Include="src\Dog\Graphics\Common\UnifiedMesh.h" />
@@ -394,6 +399,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Dog\Utils\Logger.h" />
     <ClInclude Include="src\Dog\Utils\SerializationOperators.h" />
     <ClInclude Include="src\Dog\Utils\Utils.h" />
+    <ClInclude Include="src\Dog\Utils\VKMath.h" />
     <ClInclude Include="src\PCH\pch.h" />
   </ItemGroup>
   <ItemGroup>

@@ -90,7 +90,7 @@ namespace Dog
     }
 
     // all will be nullptr
-    void GLMesh::Bind(VkCommandBuffer commandBuffer, VkBuffer instBuffer)
+    void GLMesh::Bind(VkCommandBuffer commandBuffer)
     {
         glBindVertexArray(mVAO);
     }

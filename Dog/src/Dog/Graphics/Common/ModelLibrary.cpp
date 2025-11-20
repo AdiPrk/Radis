@@ -118,7 +118,7 @@ namespace Dog
         return it->second;
     }
 
-    void ModelLibrary::LoadTextures()
+    void ModelLibrary::QueueTextures()
     {
         for (auto& model : mModels)
         {

@@ -120,17 +120,22 @@ namespace Dog
         }
     }
 
-    void VKMesh::Bind(VkCommandBuffer commandBuffer, VkBuffer instBuffer)
+    void VKMesh::Bind(VkCommandBuffer commandBuffer)
     {
+        if (!commandBuffer)
+        {
+            DOG_CRITICAL("No command buffer passed to bind mesh!");
+            return;
+        }
+
         if (!mHasIndexBuffer)
         {
             DOG_CRITICAL("Binding but no index buffer! Should not be happening");
             return;
         }
 
-        VkBuffer buffers[] = { mVertexBuffer.buffer, instBuffer };
-        VkDeviceSize offsets[] = { 0, 0 };
-        // only use 1, the instbuffer is not used here anymore;
+        VkBuffer buffers[] = { mVertexBuffer.buffer };
+        VkDeviceSize offsets[] = { 0 };
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
         vkCmdBindIndexBuffer(commandBuffer, mIndexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
     }

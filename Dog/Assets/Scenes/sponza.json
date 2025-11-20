@@ -368,7 +368,7 @@
             0.14191268384456635
           ],
           "InvertY": true,
-          "MouseSensitivity": 0.20000000298023224,
+          "MouseSensitivity": 0.15,
           "MouseSmoothness": 20.0,
           "MoveSpeed": 40.0,
           "Near": 0.10000000149011612,
