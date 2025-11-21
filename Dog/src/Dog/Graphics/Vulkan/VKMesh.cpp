@@ -61,7 +61,7 @@ namespace Dog
         // Copy from staging to GPU buffer
         device->CopyBuffer(staging.buffer, mVertexBuffer.buffer, bufferSize);
 
-        // Optional: destroy staging buffer immediately
+        // destroy staging buffer
         Allocator::DestroyBuffer(staging);
     }
 

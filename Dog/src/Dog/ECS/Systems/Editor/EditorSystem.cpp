@@ -225,33 +225,26 @@ namespace Dog
             // Open Scene menu
             if (ImGui::BeginMenu("Open Scene"))
             {
-                try
+                const std::filesystem::path sceneDir = Assets::ScenesPath;
+                if (std::filesystem::exists(sceneDir) && std::filesystem::is_directory(sceneDir))
                 {
-                    const std::filesystem::path sceneDir = Assets::ScenesPath;
-                    if (std::filesystem::exists(sceneDir) && std::filesystem::is_directory(sceneDir))
+                    for (auto const& entry : std::filesystem::directory_iterator(sceneDir))
                     {
-                        for (auto const& entry : std::filesystem::directory_iterator(sceneDir))
-                        {
-                            if (!entry.is_regular_file()) continue;
-                            if (entry.path().extension() != ".json") continue;
+                        if (!entry.is_regular_file()) continue;
+                        if (entry.path().extension() != ".json") continue;
 
-                            auto file = entry.path().filename().string();
-                            if (ImGui::MenuItem(file.c_str()))
-                            {
-                                ecs->GetResource<SerializationResource>()->Deserialize((sceneDir / file).string());
-                            }
+                        auto file = entry.path().filename().string();
+                        if (ImGui::MenuItem(file.c_str()))
+                        {
+                            ecs->GetResource<SerializationResource>()->Deserialize((sceneDir / file).string());
                         }
                     }
-                    else
-                    {
-                        ImGui::MenuItem("(no scenes found)", nullptr, false, false);
-                    }
                 }
-                catch (std::exception const& e)
+                else
                 {
-                    DOG_WARN("Failed to list scenes: {}", e.what());
+                    ImGui::MenuItem("(no scenes found)", nullptr, false, false);
                 }
-
+                
                 ImGui::EndMenu();
             }
 
@@ -305,16 +298,9 @@ namespace Dog
                     {
                         filename += ".json";
                     }
-
-                    try 
-                    {
-                        auto sr = ecs->GetResource<SerializationResource>();
-                        sr->Serialize((std::filesystem::path(Assets::ScenesPath) / filename).string());
-                    }
-                    catch (std::exception const& e)
-                    {
-                        DOG_WARN("Failed to save scene: {}", e.what());
-                    }
+                    
+                    auto sr = ecs->GetResource<SerializationResource>();
+                    sr->Serialize((std::filesystem::path(Assets::ScenesPath) / filename).string());
 
                     ImGui::CloseCurrentPopup();
                 }

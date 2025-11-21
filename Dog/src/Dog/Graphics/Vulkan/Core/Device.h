@@ -61,12 +61,6 @@ namespace Dog {
         void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
         void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
-        void CreateImageWithInfo(
-            const VkImageCreateInfo& imageInfo,
-            VmaMemoryUsage memoryUsage,
-            VkImage& image,
-            VmaAllocation& imageAllocation);
-
         VkPhysicalDeviceProperties properties;
 
         void SetFormats(VkFormat srgbFormat, VkFormat linearFormat) { mSrgbFormat = srgbFormat; mLinearFormat = linearFormat; }
@@ -78,18 +72,6 @@ namespace Dog {
 
         void StartDebugLabel(VkCommandBuffer commandBuffer, const char* labelName, glm::vec4 color);
         void EndDebugLabel(VkCommandBuffer commandBuffer);
-
-        PFN_vkCreateAccelerationStructureKHR g_vkCreateAccelerationStructureKHR;
-        PFN_vkCmdBuildAccelerationStructuresKHR g_vkCmdBuildAccelerationStructuresKHR;
-        PFN_vkGetAccelerationStructureBuildSizesKHR g_vkGetAccelerationStructureBuildSizesKHR;
-        PFN_vkGetAccelerationStructureDeviceAddressKHR g_vkGetAccelerationStructureDeviceAddressKHR;
-        PFN_vkDestroyAccelerationStructureKHR g_vkDestroyAccelerationStructureKHR;
-        PFN_vkSetDebugUtilsObjectNameEXT g_vkSetDebugUtilsObjectNameEXT;
-        PFN_vkCreateRayTracingPipelinesKHR g_vkCreateRayTracingPipelinesKHR;
-        PFN_vkGetRayTracingShaderGroupHandlesKHR g_vkGetRayTracingShaderGroupHandlesKHR;
-        PFN_vkCmdBeginDebugUtilsLabelEXT g_vkCmdBeginDebugUtilsLabelEXT;
-        PFN_vkCmdEndDebugUtilsLabelEXT g_vkCmdEndDebugUtilsLabelEXT;
-        PFN_vkCmdTraceRaysKHR g_vkCmdTraceRaysKHR;
 
         bool SupportsVulkan() const { return mSupportsVulkan; }
 
@@ -145,6 +127,8 @@ namespace Dog {
         VkPhysicalDeviceAccelerationStructurePropertiesKHR mAsProperties{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_PROPERTIES_KHR };
 
         bool mSupportsVulkan = true;
+        bool mRTFuncsAvailable = true;
+        bool mDebugFuncsAvailable = true;
     };
 
 } // namespace Dog
