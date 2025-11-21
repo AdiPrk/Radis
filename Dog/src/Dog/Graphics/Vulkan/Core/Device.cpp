@@ -3,8 +3,6 @@
 #include "Graphics/Vulkan/VulkanWindow.h"
 #include "VulkanFunctions.h"
 
-#include "Volk/volk.h"
-
 namespace Dog 
 {
     // local callback functions
@@ -63,7 +61,29 @@ namespace Dog
     Device::Device(VulkanWindow& window) 
         : window{ window }
     {
+        if (volkInitialize() != VK_SUCCESS)
+        {
+            DOG_ERROR("Failed to initialize volk.");
+            mSupportsVulkan = false;
+            return;
+        }
+
         createInstance();
+        volkLoadInstance(instance); 
+
+        mRTFuncsAvailable = vkCreateAccelerationStructureKHR &&
+            vkCmdBuildAccelerationStructuresKHR &&
+            vkGetAccelerationStructureBuildSizesKHR &&
+            vkGetAccelerationStructureDeviceAddressKHR &&
+            vkDestroyAccelerationStructureKHR &&
+            vkCreateRayTracingPipelinesKHR &&
+            vkGetRayTracingShaderGroupHandlesKHR &&
+            vkCmdTraceRaysKHR;
+
+        mDebugFuncsAvailable = vkSetDebugUtilsObjectNameEXT &&
+            vkCmdBeginDebugUtilsLabelEXT &&
+            vkCmdEndDebugUtilsLabelEXT;
+
         setupDebugMessenger();
         createSurface();
         
@@ -87,18 +107,6 @@ namespace Dog
         mRtProperties.pNext = &mAsProperties;
         prop2.pNext = &mRtProperties;
         vkGetPhysicalDeviceProperties2(physicalDevice, &prop2);
-
-        g_vkCreateAccelerationStructureKHR = (PFN_vkCreateAccelerationStructureKHR)vkGetDeviceProcAddr(device_, "vkCreateAccelerationStructureKHR");
-        g_vkCmdBuildAccelerationStructuresKHR = (PFN_vkCmdBuildAccelerationStructuresKHR)vkGetDeviceProcAddr(device_, "vkCmdBuildAccelerationStructuresKHR");
-        g_vkGetAccelerationStructureBuildSizesKHR = (PFN_vkGetAccelerationStructureBuildSizesKHR)vkGetDeviceProcAddr(device_, "vkGetAccelerationStructureBuildSizesKHR");
-        g_vkGetAccelerationStructureDeviceAddressKHR = (PFN_vkGetAccelerationStructureDeviceAddressKHR)vkGetDeviceProcAddr(device_, "vkGetAccelerationStructureDeviceAddressKHR");
-        g_vkDestroyAccelerationStructureKHR = (PFN_vkDestroyAccelerationStructureKHR)vkGetDeviceProcAddr(device_, "vkDestroyAccelerationStructureKHR");
-        g_vkSetDebugUtilsObjectNameEXT = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(instance, "vkSetDebugUtilsObjectNameEXT");
-        g_vkCreateRayTracingPipelinesKHR = (PFN_vkCreateRayTracingPipelinesKHR)vkGetDeviceProcAddr(device_, "vkCreateRayTracingPipelinesKHR");
-        g_vkGetRayTracingShaderGroupHandlesKHR = (PFN_vkGetRayTracingShaderGroupHandlesKHR)vkGetDeviceProcAddr(device_, "vkGetRayTracingShaderGroupHandlesKHR");
-        g_vkCmdBeginDebugUtilsLabelEXT = (PFN_vkCmdBeginDebugUtilsLabelEXT)vkGetDeviceProcAddr(device_, "vkCmdBeginDebugUtilsLabelEXT");
-        g_vkCmdEndDebugUtilsLabelEXT = (PFN_vkCmdEndDebugUtilsLabelEXT)vkGetDeviceProcAddr(device_, "vkCmdEndDebugUtilsLabelEXT");
-        g_vkCmdTraceRaysKHR = (PFN_vkCmdTraceRaysKHR)vkGetDeviceProcAddr(device_, "vkCmdTraceRaysKHR");
     }
 
     Device::~Device() 
@@ -762,37 +770,17 @@ namespace Dog
         EndSingleTimeCommands(commandBuffer);
     }
 
-    void Device::CreateImageWithInfo(
-        const VkImageCreateInfo& imageInfo,
-        VmaMemoryUsage memoryUsage,
-        VkImage& image,
-        VmaAllocation& imageAllocation)
-    {
-        // Allocation info for VMA
-        VmaAllocationCreateInfo allocInfo{};
-        allocInfo.usage = memoryUsage;
-
-        // Create the image and allocate memory using VMA
-        if (vmaCreateImage(Allocator::GetAllocator(), &imageInfo, &allocInfo, &image, &imageAllocation, nullptr) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create image with VMA!");
-        }
-    }
-
     void Device::StartDebugLabel(VkCommandBuffer commandBuffer, const char* labelName, glm::vec4 c)
     {
+        if (!mDebugFuncsAvailable) return;
         VkDebugUtilsLabelEXT s{ VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT, nullptr, labelName, { c.r, c.g, c.b, c.a } };
-        if (g_vkCmdBeginDebugUtilsLabelEXT)
-        {
-            g_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &s);
-        }
+        vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &s);
     }
 
     void Device::EndDebugLabel(VkCommandBuffer commandBuffer)
     {
-        if (g_vkCmdEndDebugUtilsLabelEXT)
-        {
-            g_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
-        }
+        if (!mDebugFuncsAvailable) return;
+        vkCmdEndDebugUtilsLabelEXT(commandBuffer);
     }
 
 } // namespace Dog

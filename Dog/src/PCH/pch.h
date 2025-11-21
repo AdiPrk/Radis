@@ -7,6 +7,8 @@
 #define NOMINMAX
 
 // vulkan
+#define VK_NO_PROTOTYPES
+#include <Volk/volk.h>
 #include <vulkan/vulkan.h>
 
 // glew
@@ -22,7 +24,7 @@
 #include <imgui.h>
 #include <imgui_stdlib.h>
 #include <backends/imgui_impl_glfw.h>
-#include <backends/imgui_impl_vulkan.h>
+#include <backends/imgui_impl_vulkan.h> // defines IMGUI_IMPL_VULKAN_USE_VOLK
 #include <backends/imgui_impl_opengl3.h>
 #include "ImGuizmo.h"
 

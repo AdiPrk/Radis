@@ -90,7 +90,7 @@ namespace Dog
 
         // Find the size of the acceleration structure and the scratch buffer
         VkAccelerationStructureBuildSizesInfoKHR asBuildSize{ .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR };
-        rr->device->g_vkGetAccelerationStructureBuildSizesKHR(device, VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR, &asBuildInfo,
+        vkGetAccelerationStructureBuildSizesKHR(device, VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR, &asBuildInfo,
             maxPrimCount.data(), &asBuildSize);
 
         // Make sure the scratch buffer is properly aligned
@@ -130,7 +130,7 @@ namespace Dog
             asBuildInfo.scratchData.deviceAddress = scratchBuffer.address;
 
             VkAccelerationStructureBuildRangeInfoKHR* pBuildRangeInfo = &asBuildRangeInfo;
-            rr->device->g_vkCmdBuildAccelerationStructuresKHR(cmd, 1, &asBuildInfo, &pBuildRangeInfo);
+            vkCmdBuildAccelerationStructuresKHR(cmd, 1, &asBuildInfo, &pBuildRangeInfo);
 
             rr->device->EndSingleTimeCommands(cmd);
         }
@@ -294,7 +294,7 @@ namespace Dog
             );
             Allocator::SetAllocationName(rr->tlasAccel.buffer.allocation, "Top Level AS");
 
-            if (rr->device->g_vkSetDebugUtilsObjectNameEXT)
+            if (vkSetDebugUtilsObjectNameEXT)
             {
                 VkAccelerationStructureKHR accelToName = rr->tlasAccel.accel;
                 const char* bufferName = "TLAS Accel"; // Your custom name
@@ -307,7 +307,7 @@ namespace Dog
                 nameInfo.objectHandle = (uint64_t)accelToName;
                 nameInfo.pObjectName = bufferName;
 
-                rr->device->g_vkSetDebugUtilsObjectNameEXT(rr->device->GetDevice(), &nameInfo);
+                vkSetDebugUtilsObjectNameEXT(rr->device->GetDevice(), &nameInfo);
             }
         }
 
@@ -401,7 +401,7 @@ namespace Dog
         maxPrimCount[0] = asBuildRangeInfo.primitiveCount;
 
         VkAccelerationStructureBuildSizesInfoKHR sizeInfo{ .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR };
-        rr->device->g_vkGetAccelerationStructureBuildSizesKHR(
+        vkGetAccelerationStructureBuildSizesKHR(
             rr->device->GetDevice(),
             VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
             &buildInfo,
@@ -480,7 +480,7 @@ namespace Dog
         const VkAccelerationStructureBuildRangeInfoKHR* pBuildRange = &asBuildRangeInfo;
 
         // Record build/update command into the same command buffer
-        rr->device->g_vkCmdBuildAccelerationStructuresKHR(cmd, 1, &buildInfo, &pBuildRange);
+        vkCmdBuildAccelerationStructuresKHR(cmd, 1, &buildInfo, &pBuildRange);
 
         // Ensure build finished (we are still in single-time command; but add a barrier just in case)
         // Use a memory barrier that signals AS write -> AS read (so next shaders can read it)
@@ -514,7 +514,7 @@ namespace Dog
             rr->tlasAccel.instanceCount = asBuildRangeInfo.primitiveCount;
 
             // Optionally set debug name
-            if (rr->device->g_vkSetDebugUtilsObjectNameEXT)
+            if (vkSetDebugUtilsObjectNameEXT)
             {
                 VkAccelerationStructureKHR accelToName = rr->tlasAccel.accel;
                 const char* bufferName = "TLAS Accel";
@@ -523,7 +523,7 @@ namespace Dog
                 nameInfo.objectType = VK_OBJECT_TYPE_ACCELERATION_STRUCTURE_KHR;
                 nameInfo.objectHandle = (uint64_t)accelToName;
                 nameInfo.pObjectName = bufferName;
-                rr->device->g_vkSetDebugUtilsObjectNameEXT(rr->device->GetDevice(), &nameInfo);
+                vkSetDebugUtilsObjectNameEXT(rr->device->GetDevice(), &nameInfo);
             }
 
             // Update the acceleration-structure descriptor with the new handle (per-frame)

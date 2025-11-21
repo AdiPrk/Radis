@@ -1,11 +1,12 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.9.34622.214
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11217.181 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Dog", "Dog\Dog.vcxproj", "{4D2ED8E4-EA0A-44A3-BDC2-D52582F4DFE7}"
 	ProjectSection(ProjectDependencies) = postProject
 		{2ED3B17C-6D74-4B7C-96FB-6F208FEA6977} = {2ED3B17C-6D74-4B7C-96FB-6F208FEA6977}
+		{DED0125C-6302-436F-994A-6573A648DA35} = {DED0125C-6302-436F-994A-6573A648DA35}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Server", "Server\Server.vcxproj", "{E54F2AC1-ED90-4741-A975-B0A6A0984ACA}"

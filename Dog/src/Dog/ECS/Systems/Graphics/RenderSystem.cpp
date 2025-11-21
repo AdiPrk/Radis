@@ -503,7 +503,7 @@ namespace Dog
 
         // Ray trace
         const VkExtent2D& size = rr->swapChain->GetSwapChainExtent();
-        rr->device->g_vkCmdTraceRaysKHR(cmd, &rp->GetRaygenRegion(), &rp->GetMissRegion(), &rp->GetHitRegion(), &rp->GetCallableRegion(), size.width, size.height, 1);
+        vkCmdTraceRaysKHR(cmd, &rp->GetRaygenRegion(), &rp->GetMissRegion(), &rp->GetHitRegion(), &rp->GetCallableRegion(), size.width, size.height, 1);
 
         VkMemoryBarrier2 memoryBarrier = {
             .sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER_2,

@@ -88,8 +88,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.4.321.1\Lib;$(SolutionDir)Dependencies\glfw\lib;$(SolutionDir)Dependencies\glew\lib\;$(SolutionDir)Dependencies\assimp\lib;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\yaml-cpp\lib;$(SolutionDir)Dependencies\enet\lib;$(SolutionDir)Common\$(Platform)\$(Configuration)\;$(SolutionDir)Dependencies\imgui\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Shell32.lib;opengl32.lib;glew32s.lib;winmm.lib;meshoptimizerd.lib;ImGuiDebug.lib;Common.lib;enet64.lib;ws2_32.lib;vulkan-1.lib;glfw3d.lib;assimp-vc143-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.4.321.1\Lib;$(SolutionDir)Dependencies\glfw\lib;$(SolutionDir)Dependencies\glew\lib\;$(SolutionDir)Dependencies\assimp\lib;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\yaml-cpp\lib;$(SolutionDir)Dependencies\enet\lib;$(SolutionDir)Common\$(Platform)\$(Configuration)\;$(SolutionDir)Dependencies\imgui\lib\;$(SolutionDir)ImGui\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>volkd.lib;Shell32.lib;opengl32.lib;glew32s.lib;winmm.lib;meshoptimizerd.lib;ImGui.lib;Common.lib;enet64.lib;ws2_32.lib;vulkan-1.lib;glfw3d.lib;assimp-vc143-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <DelayLoadDLLs>
       </DelayLoadDLLs>
       <AdditionalOptions>/ignore:4099</AdditionalOptions>
@@ -135,8 +135,8 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.4.321.1\Lib;$(SolutionDir)Dependencies\glfw\lib;$(SolutionDir)Dependencies\glew\lib\;$(SolutionDir)Dependencies\assimp\lib;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\yaml-cpp\lib;$(SolutionDir)Dependencies\enet\lib;$(SolutionDir)Common\$(Platform)\$(Configuration)\;$(SolutionDir)Dependencies\imgui\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Shell32.lib;opengl32.lib;glew32s.lib;winmm.lib;meshoptimizer.lib;ImGui.lib;Common.lib;enet64.lib;ws2_32.lib;vulkan-1.lib;glfw3.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.4.321.1\Lib;$(SolutionDir)Dependencies\glfw\lib;$(SolutionDir)Dependencies\glew\lib\;$(SolutionDir)Dependencies\assimp\lib;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\yaml-cpp\lib;$(SolutionDir)Dependencies\enet\lib;$(SolutionDir)Common\$(Platform)\$(Configuration)\;$(SolutionDir)ImGui\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>volk.lib;Shell32.lib;opengl32.lib;glew32s.lib;winmm.lib;meshoptimizer.lib;ImGui.lib;Common.lib;enet64.lib;ws2_32.lib;vulkan-1.lib;glfw3.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099</AdditionalOptions>
     </Link>
     <PreBuildEvent>
@@ -181,8 +181,8 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.4.321.1\Lib;$(SolutionDir)Dependencies\glfw\lib;$(SolutionDir)Dependencies\glew\lib\;$(SolutionDir)Dependencies\assimp\lib;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\enet\lib;$(SolutionDir)Common\$(Platform)\$(Configuration)\;$(SolutionDir)Dependencies\imgui\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Shell32.lib;opengl32.lib;glew32s.lib;winmm.lib;meshoptimizer.lib;ImGui.lib;Common.lib;enet64.lib;ws2_32.lib;vulkan-1.lib;glfw3.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.4.321.1\Lib;$(SolutionDir)Dependencies\glfw\lib;$(SolutionDir)Dependencies\glew\lib\;$(SolutionDir)Dependencies\assimp\lib;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\enet\lib;$(SolutionDir)Common\$(Platform)\$(Configuration)\;$(SolutionDir)ImGui\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>volk.lib;Shell32.lib;opengl32.lib;glew32s.lib;winmm.lib;meshoptimizer.lib;ImGui.lib;Common.lib;enet64.lib;ws2_32.lib;vulkan-1.lib;glfw3.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099</AdditionalOptions>
     </Link>
     <PreBuildEvent>
@@ -242,7 +242,6 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Dog\Graphics\Common\Path\CubicSpline.cpp" />
     <ClCompile Include="src\Dog\Graphics\Common\Path\PathFollower.cpp" />
     <ClCompile Include="src\Dog\Graphics\Common\Path\SpeedControl.cpp" />
-    <ClCompile Include="src\Dog\Graphics\Common\RenderUtils.cpp" />
     <ClCompile Include="src\Dog\Graphics\Common\TextureLoader.cpp" />
     <ClCompile Include="src\Dog\Graphics\OpenGL\GLFrameBuffer.cpp" />
     <ClCompile Include="src\Dog\Graphics\OpenGL\GLMesh.cpp" />
@@ -354,7 +353,6 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Dog\Graphics\Common\Path\CubicSpline.h" />
     <ClInclude Include="src\Dog\Graphics\Common\Path\PathFollower.h" />
     <ClInclude Include="src\Dog\Graphics\Common\Path\SpeedControl.h" />
-    <ClInclude Include="src\Dog\Graphics\Common\RenderUtils.h" />
     <ClInclude Include="src\Dog\Graphics\Common\TextureLoader.h" />
     <ClInclude Include="src\Dog\Graphics\OpenGL\GLFrameBuffer.h" />
     <ClInclude Include="src\Dog\Graphics\OpenGL\GLMesh.h" />
