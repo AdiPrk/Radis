@@ -1,31 +1,8 @@
 ﻿#include <PCH/pch.h>
 #include "Animation.h"
 
-/*
-VQS scaleVQS;
-scaleVQS.scale = glm::vec3(model->GetModelScale());
-
-VQS centerVQS;
-centerVQS.translation = -model->GetModelCenter();
-
-VQS finalVQS = rootVQS * scaleVQS * centerVQS;
-*/
-
 namespace Dog
 {
-    // Add this helper function to your Animation.cpp file
-    void PrintNodeHierarchy(const aiNode* node, int depth = 0) {
-        if (!node) return;
-        for (int i = 0; i < depth; ++i) {
-            printf("  ");
-        }
-        printf("- %s\n", node->mName.C_Str());
-
-        for (unsigned int i = 0; i < node->mNumChildren; ++i) {
-            PrintNodeHierarchy(node->mChildren[i], depth + 1);
-        }
-    }
-
     Animation::Animation()
         : mDuration(0.0f)
         , mTicksPerSecond(30.f)
@@ -51,7 +28,7 @@ namespace Dog
 
         ReadHeirarchyData(-1, model->mScene->mRootNode);
         ReadMissingBones(animation, *model);       
-        PrecomputeAnimationDataSimple();
+        CheckNodesToSkip();
 
         // clear data that we don't need anymore
         mNameToIDMap.clear();
@@ -106,7 +83,7 @@ namespace Dog
         }
     }
 
-    void Animation::PrecomputeAnimationDataSimple()
+    void Animation::CheckNodesToSkip()
     {
         for (auto& node : mNodes) {
             node.skipTransform = (node.debugName.find("$AssimpFbx$") != std::string::npos);

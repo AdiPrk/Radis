@@ -53,9 +53,7 @@ namespace Dog
     private:
         void ReadMissingBones(const aiAnimation* animation, Model& model);
         void ReadHeirarchyData(int parentIndex, const aiNode* src);
-
-        // New private function to kick off the process
-        void PrecomputeAnimationDataSimple();
+        void CheckNodesToSkip();
 
         float mDuration;
         float mTicksPerSecond;
