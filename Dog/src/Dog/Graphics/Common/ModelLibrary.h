@@ -36,7 +36,6 @@ namespace Dog
         uint32_t GetModelCount() const { return static_cast<uint32_t>(mModels.size()); }
 		
 		void QueueTextures();
-		bool NeedsTextureUpdate();
         const static uint32_t INVALID_MODEL_INDEX;
 
 		void ClearAllBuffers(class Device* device);

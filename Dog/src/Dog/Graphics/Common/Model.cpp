@@ -13,23 +13,15 @@ namespace Dog
 {
     Model::Model(Device& device, const std::string& filePath)
     {
+        std::filesystem::path pathObj(filePath);
+        mDirectory = pathObj.parent_path().string();
+        mModelName = pathObj.stem().string();
+
         LoadMeshes(filePath);
-        CreateMeshBuffers(device);
     }
 
     Model::~Model()
     {
-    }
-
-    void Model::CreateMeshBuffers(Device& device)
-    {
-        for (auto& mesh : mMeshes)
-        {
-            mesh->CreateVertexBuffers(&device);
-            mesh->CreateIndexBuffers(&device);
-
-            
-        }
     }
 
     void Model::LoadMeshes(const std::string& filepath)
@@ -43,26 +35,13 @@ namespace Dog
             return;
         }
 
-        // change all double backslash to forwardslash in filepath
-        std::string newPath = filepath;
-        std::replace(newPath.begin(), newPath.end(), '\\', '/');
-
-        std::filesystem::path pathObj(newPath);
-        mDirectory = pathObj.parent_path().string();
-        mModelName = pathObj.stem().string();
-
         ProcessNode(mScene->mRootNode);
-
-        // Scale all meshes to fit in a 1x1x1 cube and translate to 0,0,0
         NormalizeModel();
     }
 
     void Model::ProcessNode(aiNode* node, const glm::mat4& parentTransform)
     {
-        // Convert the node's transformation matrix
         glm::mat4 nodeTransform = aiMatToGlm(node->mTransformation);
-
-        // Combine this node's transformation with the parent transformation
         glm::mat4 globalTransform = parentTransform * nodeTransform;
 
         // Process each mesh in the current node
@@ -101,21 +80,11 @@ namespace Dog
         for (unsigned int j = 0; j < mesh->mNumVertices; j++)
         {
             Vertex vertex{};
-
-            //glm::vec4 pos = { mesh->mVertices[j].x, mesh->mVertices[j].y, mesh->mVertices[j].z, 1.f };
-            //vertex.position = glm::vec3(transform * pos);
             vertex.position = { mesh->mVertices[j].x, mesh->mVertices[j].y, mesh->mVertices[j].z };
-
-            // Update min and max vectors for AABB
-            meshMin = glm::min(meshMin, vertex.position);
-            meshMax = glm::max(meshMax, vertex.position);
 
             // Normals
             if (mesh->HasNormals())
             {
-                //glm::mat4 normalMatrix = glm::transpose(glm::inverse(transform));
-                //glm::vec4 norm = { mesh->mNormals[j].x, mesh->mNormals[j].y, mesh->mNormals[j].z, 0.f };
-                //vertex.normal = glm::normalize(glm::vec3(normalMatrix * norm));
                 vertex.normal = { mesh->mNormals[j].x, mesh->mNormals[j].y, mesh->mNormals[j].z };
             }
 
@@ -132,11 +101,11 @@ namespace Dog
             }
 
             newMesh.mVertices.push_back(vertex);
-        }
 
-        //Update model's AABB
-        mAABBmin = glm::min(meshMin, mAABBmin);
-        mAABBmax = glm::max(meshMax, mAABBmax);
+            // Update model's AABB
+            mAABBmin = glm::min(vertex.position, mAABBmin);
+            mAABBmax = glm::max(vertex.position, mAABBmax);
+        }
 
         // Extract indices from faces
         for (unsigned int k = 0; k < mesh->mNumFaces; k++)
@@ -157,7 +126,6 @@ namespace Dog
     void Model::NormalizeModel()
     {
         glm::vec3 size = mAABBmax - mAABBmin;
-
         glm::vec3 center = (mAABBmax + mAABBmin) * 0.5f;
         float invScale = 1.f / std::max({ size.x, size.y, size.z });
 
@@ -165,7 +133,6 @@ namespace Dog
         glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(invScale));
 
         mNormalizationMatrix = scaleMatrix * translationMatrix;
-        mAnimationTransform = glm::vec4(center, invScale);
     }
 
     void Model::ExtractBoneWeights(std::vector<Vertex>& vertices, aiMesh* mesh)
@@ -176,9 +143,15 @@ namespace Dog
             aiBone* bone = mesh->mBones[boneIndex];
             std::string boneName = bone->mName.C_Str();
 
-            int boneID = mSkeleton.GetOrCreateBoneID(boneName, aiMatToGlm(bone->mOffsetMatrix));
+            int boneID = mBoneCount;
+            auto it = mBoneInfoMap.find(boneName);
+            if (it == mBoneInfoMap.end())
+            {
+                BoneInfo info(mBoneCount, aiMatToGlm(bone->mOffsetMatrix));
+                mBoneInfoMap.emplace(boneName, info);
+                mBoneCount++;
+            }
 
-            // Update vertex weights
             for (unsigned int weightIndex = 0; weightIndex < bone->mNumWeights; ++weightIndex)
             {
                 const aiVertexWeight& weightData = bone->mWeights[weightIndex];

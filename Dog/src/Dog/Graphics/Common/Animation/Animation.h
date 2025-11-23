@@ -11,7 +11,6 @@
 
 #include "Graphics/Common/Model.h"
 #include "Bone.h"
-#include "Skeleton.h"
 
 namespace Dog
 {
@@ -62,7 +61,6 @@ namespace Dog
         std::unordered_map<int, BoneInfo> mBoneInfoMap;
         std::unordered_map<std::string, int> mNameToIDMap;
 
-        Skeleton mSkeleton;
         std::vector<AnimationNode> mNodes;
         int mRootNodeIndex;
     };

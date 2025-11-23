@@ -42,6 +42,11 @@ namespace Dog
         }
 
         std::unique_ptr<Model> model = std::make_unique<Model>(mDevice, filePath);
+        for (auto& mesh : model->mMeshes)
+        {
+            mesh->CreateVertexBuffers(&mDevice);
+            mesh->CreateIndexBuffers(&mDevice);
+        }
         
         uint32_t modelID = static_cast<uint32_t>(mModels.size());
         mModels.push_back(std::move(model));
@@ -152,21 +157,6 @@ namespace Dog
                 LoadOrGetTexture(mesh->emissiveTextureIndex, mesh->emissiveTexturePath, mesh->mEmissiveTextureData, embeddedBaseName + "_Emissive");
             }
         }
-    }
-
-    bool ModelLibrary::NeedsTextureUpdate()
-    {
-        if (mLastModelLoaded == INVALID_MODEL_INDEX) return false;
-
-        for (const auto& model : mModels)
-        {
-            if (!model->mAddedTexture)
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     void ModelLibrary::ClearAllBuffers(Device* device)
