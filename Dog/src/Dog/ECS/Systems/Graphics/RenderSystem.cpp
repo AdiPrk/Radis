@@ -105,10 +105,7 @@ namespace Dog
         // Update textures!
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
         {
-            if (rr->modelLibrary->NeedsTextureUpdate())
-            {
-                rr->modelLibrary->QueueTextures();
-            }
+            rr->modelLibrary->QueueTextures();
         }
 
         rr->textureLibrary->LoadQueuedTextures();

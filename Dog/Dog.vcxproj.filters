@@ -146,7 +146,6 @@
     <ClInclude Include="src\Dog\Utils\SerializationOperators.h" />
     <ClInclude Include="src\Dog\Utils\Utils.h" />
     <ClInclude Include="src\PCH\pch.h" />
-    <ClInclude Include="src\Dog\Graphics\Common\Animation\Skeleton.h" />
     <ClInclude Include="src\Dog\ECS\Resources\DebugDrawResource.h" />
     <ClInclude Include="src\Dog\Graphics\Common\UnifiedMesh.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Core\AccelerationStructures.h" />

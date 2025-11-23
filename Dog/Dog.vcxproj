@@ -373,7 +373,6 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Dog\Graphics\Common\Animation\AnimationLibrary.h" />
     <ClInclude Include="src\Dog\Graphics\Common\Animation\Animator.h" />
     <ClInclude Include="src\Dog\Graphics\Common\Animation\Bone.h" />
-    <ClInclude Include="src\Dog\Graphics\Common\Animation\Skeleton.h" />
     <ClInclude Include="src\Dog\Graphics\Common\Animation\VQS.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Pipeline\RaytracingPipeline.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Utils\ScopedDebugLabel.h" />

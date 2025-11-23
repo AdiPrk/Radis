@@ -77,15 +77,15 @@ namespace Dog
         if (!textureLibrary)
         {
             textureLibrary = std::make_unique<TextureLibrary>(device.get());
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "ErrorTexture.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "circle.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "dog.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "circleOutline2.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "dogmodel.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "error.png");
-            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "ErrorTexture.png");
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "square.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "glslIcon.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "playButton.png");
-            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "square.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "stopButton.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "texture.jpg");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "folderIcon.png");
@@ -103,12 +103,13 @@ namespace Dog
             modelLibrary->AddModel(Assets::ModelsPath + "cube.obj");
             modelLibrary->AddModel(Assets::ModelsPath + "quad.obj");
             modelLibrary->AddModel(Assets::ModelsPath + "sphere.glb");
-            modelLibrary->AddModel(Assets::ModelsPath + "sphere.obj");
-            modelLibrary->AddModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx");
-            modelLibrary->AddModel(Assets::ModelsPath + "jack_samba.glb");
-            modelLibrary->AddModel(Assets::ModelsPath + "SteampunkRobot.gltf");
-            modelLibrary->AddModel(Assets::ModelsPath + "DragonAttenuation.glb");
             modelLibrary->AddModel(Assets::ModelsPath + "Sponza.gltf");
+            modelLibrary->AddModel(Assets::ModelsPath + "trotting_cat.glb");
+            // modelLibrary->AddModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx");
+            // modelLibrary->AddModel(Assets::ModelsPath + "jack_samba.glb");
+            // modelLibrary->AddModel(Assets::ModelsPath + "SteampunkRobot.gltf");
+            // modelLibrary->AddModel(Assets::ModelsPath + "DragonAttenuation.glb");
+            // modelLibrary->AddModel(Assets::ModelsPath + "Sponza.gltf");
 
             // modelLibrary->AddModel("Assets/Models/okayu.pmx");
             // modelLibrary->AddModel("Assets/Models/AlisaMikhailovna.fbx");
@@ -117,6 +118,7 @@ namespace Dog
         if (!animationLibrary)
         {
             animationLibrary = std::make_unique<AnimationLibrary>();
+            animationLibrary->AddAnimation(Assets::ModelsPath + "trotting_cat.glb", modelLibrary->GetModel(Assets::ModelsPath + "trotting_cat.glb"));
             animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/idle.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
             animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/idle.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
             animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/jump.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
