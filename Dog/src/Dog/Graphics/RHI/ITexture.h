@@ -10,11 +10,13 @@ namespace Dog
         std::string name{};
         std::vector<unsigned char> pixels{};
 
-        // For storage images:
+        // For storage images (or other special images)
         bool isStorageImage{ false };
+        bool isSpecialImage{ false };
         VkFormat imageFormat{};
         VkImageUsageFlags usage{};
         VkImageLayout finalLayout{};
+        VkImageTiling tiling{};
     };
 
     class ITexture
@@ -30,7 +32,6 @@ namespace Dog
 
         virtual void* GetTextureID() = 0;
 
-    protected:
         const TextureData& mData;
     };
 }

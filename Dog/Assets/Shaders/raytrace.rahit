@@ -9,7 +9,7 @@ layout(location = 0) rayPayloadInEXT HitPayload {
     vec3 nextRayOrigin;
     vec3 nextRayDir;    
     bool stop;    
-    uint seed;
+    float cost;
 } payload;
 
 hitAttributeEXT vec2 attribs;
@@ -41,12 +41,10 @@ layout(set = 0, binding = 3) uniform sampler2D uTextures[];
 
 struct Vertex
 {
-    vec3 position;
-    vec3 color;   
-    vec3 normal;  
-    vec2 texCoord;
-    // ivec4 boneIds;
-    // vec4 weights; 
+    float posX, posY, posZ;
+    float cR, cG, cB;
+    float nX, nY, nZ;
+    float texU, texV; float _padding;
 };
 
 struct Light {
@@ -66,20 +64,23 @@ layout(set = 0, binding = 4) readonly buffer LightData {
     Light lights[MAX_LIGHTS];
 } lightData;
 
-layout(set = 1, binding = 2, std430) readonly buffer MeshBuffer
+layout(set = 1, binding = 3, std430) readonly buffer MeshBuffer
 {
     Vertex vertices[];
 } meshBuffer;
 
-layout(set = 1, binding = 3, std430) readonly buffer MeshIndexBuffer
+layout(set = 1, binding = 4, std430) readonly buffer MeshIndexBuffer
 {
     uint indices[];
 } indexBuffer;
 
-layout(set = 1, binding = 1) uniform accelerationStructureEXT topLevelAS;
+layout(set = 1, binding = 0) uniform accelerationStructureEXT topLevelAS;
 
 void main()
 {
+    const float ANYHIT_COST = 1.0;
+    payload.cost += ANYHIT_COST;
+
     Instance instance = instances[gl_InstanceCustomIndexEXT];
     
     // Calculate UVs
@@ -91,7 +92,8 @@ void main()
     Vertex v0 = meshBuffer.vertices[i0 + instance.vertexOffset];
     Vertex v1 = meshBuffer.vertices[i1 + instance.vertexOffset];
     Vertex v2 = meshBuffer.vertices[i2 + instance.vertexOffset];
-    vec2 uv = v0.texCoord * bary.x + v1.texCoord * bary.y + v2.texCoord * bary.z;
+    vec2 v0UV = vec2(v0.texU, v0.texV); vec2 v1UV = vec2(v1.texU, v1.texV); vec2 v2UV = vec2(v2.texU, v2.texV);
+    vec2 uv = v0UV * bary.x + v1UV * bary.y + v2UV * bary.z;
 
     // Calculate alpha
     vec4 color = instance.baseColorFactor * instance.tint;

@@ -19,10 +19,7 @@ namespace Dog
         int maxBoneID = 0;
         for (const auto& pair : mCurrentAnimation->GetBoneIDMap())
         {
-            if (pair.second.id > maxBoneID)
-            {
-                maxBoneID = pair.second.id;
-            }
+            maxBoneID = std::max(maxBoneID, pair.second.id);
         }
 
         mFinalBoneVQS.resize(maxBoneID + 1);
@@ -36,8 +33,7 @@ namespace Dog
             mCurrentTime += mCurrentAnimation->GetTicksPerSecond() * dt;
             mCurrentTime = fmod(mCurrentTime, mCurrentAnimation->GetDuration());
   
-            VQS identity;
-            CalculateBoneTransform(mCurrentAnimation->GetRootNodeIndex(), identity, false, glm::mat4(1));
+            CalculateBoneTransform(mCurrentAnimation->GetRootNodeIndex(), VQS(), false);
         }
     }
 
@@ -48,12 +44,11 @@ namespace Dog
             mPrevTime = mCurrentTime;
             mCurrentTime = time;
 
-            VQS identity;
-            CalculateBoneTransform(mCurrentAnimation->GetRootNodeIndex(), identity, inPlace, tr);
+            CalculateBoneTransform(mCurrentAnimation->GetRootNodeIndex(), VQS(), inPlace, tr);
         }
     }
 
-    void Animator::PlayAnimation(Animation* pAnimation)
+    void Animator::SetAnimation(Animation* pAnimation)
     {
         mCurrentAnimation = pAnimation;
         mCurrentTime = 0.0f;
@@ -67,15 +62,13 @@ namespace Dog
         VQS nodeTransform;
 
         Bone* bone = mCurrentAnimation->FindBone(nodeId);
-
         if (bone)
         {
             // Directly animated bone: use keyframed transform.
             bone->Update(mCurrentTime);
             nodeTransform = bone->GetLocalTransform();
 
-            // Make animation in place by removing translation from root motion bone
-            // Only works for mixamo animations for now
+            // inPlace only works for mixamo animations for now
             if (inPlace && bone->debugName == "mixamorig:Hips")
             {
                 nodeTransform.translation = glm::vec3(0.0f);
@@ -87,13 +80,14 @@ namespace Dog
         VQS globalTransformation = parentTransform * nodeTransform;
 
         // draw debug stuffs
-        // if (!InputSystem::isKeyDown(Key::H) && node.parentId > 0 && (bone && bone->debugName != "mixamorig:Hips")) {
-        //     glm::vec3 start = glm::vec3(tr * glm::vec4(parentTransform.translation, 1.f));
-        //     glm::vec3 end = glm::vec3(tr * glm::vec4(globalTransformation.translation, 1.f));
-        // 
-        //     DebugDrawResource::DrawLine(start, end, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
-        //     DebugDrawResource::DrawCube(end, glm::vec3(0.01f), glm::vec4(0.0f, 1.0f, 1.0f, 0.4f));
-        // }
+        if (nodeIndex > 0 && ((bone && bone->debugName != "mixamorig:Hips")))
+        {
+            glm::vec3 start = glm::vec3(tr * glm::vec4(parentTransform.translation, 1.f));
+            glm::vec3 end = glm::vec3(tr * glm::vec4(globalTransformation.translation, 1.f));
+
+            DebugDrawResource::DrawLine(start, end, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
+            DebugDrawResource::DrawCube(end, glm::vec3(0.01f), glm::vec4(0.0f, 1.0f, 1.0f, 0.4f));
+        }
 
         const auto& boneInfoMap = mCurrentAnimation->GetBoneIDMap();
         auto boneIt = boneInfoMap.find(nodeId);

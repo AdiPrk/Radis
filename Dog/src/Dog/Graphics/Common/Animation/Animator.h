@@ -20,8 +20,8 @@ namespace Dog
 
         void UpdateAnimation(float dt);
         void UpdateAnimationInstant(float time, bool inPlace, glm::mat4& tr);
-        void PlayAnimation(Animation* pAnimation);
-        void CalculateBoneTransform(int nodeIndex, const VQS& parentTransform, bool inPlace, const glm::mat4& tr);
+        void SetAnimation(Animation* pAnimation);
+        void CalculateBoneTransform(int nodeIndex, const VQS& parentTransform, bool inPlace, const glm::mat4& tr = glm::mat4(1.0));
 
         const std::vector<VQS>& GetFinalBoneVQS() const { return mFinalBoneVQS; }
         bool IsPlaying() const { return mIsPlaying; }

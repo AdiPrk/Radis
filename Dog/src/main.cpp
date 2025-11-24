@@ -14,7 +14,6 @@ int main(int argc, char* argv<::>)
     すぺくっす.graphicsAPI = Dog::GraphicsAPI::Vulkan;
     //すぺくっす.launchWithEditor = false;
 
-
-    Dog::Engine Engine(すぺくっす, argc, argv);
-    return Engine.Run("scene");
+    Dog::Engine Engine(すぺくっす, argc, argv); 
+    return Engine.Run("sponza");
 %>

@@ -13,6 +13,7 @@
 #include "ECS/Resources/InputResource.h"
 #include "ECS/Resources/WindowResource.h"
 #include "ECS/Resources/RenderingResource.h"
+#include "ECS/Resources/RaytracingResource.h"
 #include "ECS/Resources/EditorResource.h"
 #include "ECS/Resources/SerializationResource.h"
 #include "ECS/Resources/AnimationResource.h"
@@ -69,19 +70,27 @@ namespace Dog
         auto wr = mEcs.GetResource<WindowResource>();
         mEcs.AddResource<InputResource>(wr->window->GetGLFWwindow());
         mEcs.AddResource<RenderingResource>(wr->window.get());
+        mEcs.AddResource<RaytracingResource>();
 
-        if (mSpecs.graphicsAPI == GraphicsAPI::Vulkan)
+        bool canVulkan = Engine::GetVulkanSupported();
+        bool isVulkan = (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan);
+        bool swapVulkan = !canVulkan && isVulkan;
         {
-            auto rr = mEcs.GetResource<RenderingResource>();
-
-            if (mEditorEnabled) 
+            auto srr = mEcs.GetResource<SwapRendererResource>();
+            if (swapVulkan)
             {
-                mEcs.AddResource<EditorResource>(rr->device.get(), rr->swapChain.get(), wr->window->GetGLFWwindow(), wr->window->GetDPIScale());
+                srr->SwapBackend(&mEcs, true);
             }
         }
-        else if (mSpecs.graphicsAPI == GraphicsAPI::OpenGL)
+
+        if (mEditorEnabled)
         {
-            if (mEditorEnabled)
+            if (mSpecs.graphicsAPI == GraphicsAPI::Vulkan && !swapVulkan)
+            {
+                auto rr = mEcs.GetResource<RenderingResource>();
+                mEcs.AddResource<EditorResource>(rr->device.get(), rr->swapChain.get(), wr->window->GetGLFWwindow(), wr->window->GetDPIScale());
+            }
+            else /*if (mSpecs.graphicsAPI == GraphicsAPI::OpenGL)*/
             {
                 mEcs.AddResource<EditorResource>(wr->window->GetGLFWwindow(), wr->window->GetDPIScale());
             }
@@ -103,7 +112,7 @@ namespace Dog
     // Main Loop!
     int Engine::Run(const std::string& sceneName) 
     {
-        mEcs.GetResource<SerializationResource>()->Deserialize("Assets/scenes/" + sceneName + ".json");
+        mEcs.GetResource<SerializationResource>()->Deserialize(Assets::ScenesPath + sceneName + ".json");
 
         FrameRateController frameRateController(mSpecs.fps);
         while (!mEcs.GetResource<WindowResource>()->window->ShouldClose() && mRunning) 

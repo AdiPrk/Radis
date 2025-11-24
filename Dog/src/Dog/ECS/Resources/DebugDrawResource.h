@@ -18,7 +18,16 @@ namespace Dog
 
         static std::vector<InstanceUniforms> CreateDebugLightTest();
         static std::vector<InstanceUniforms> GetInstanceData();
+        static uint32_t GetInstanceDataSize();
         static void Clear();
+
+        /*********************************************************************
+         * param:  gridSize: Number of lines in each direction from the center (total lines = gridSize * 2 + 1)
+         * param:  step: Distance between each grid line
+         *
+         * brief:  Draws a standard editor grid on the XZ plane (Y=0).
+         *********************************************************************/
+        static void DrawEditorGrid(int gridSize = 50, float step = 1.0f);
 
     private:
         struct Line

@@ -22,7 +22,7 @@ namespace Dog
         uint32_t boneOffset = 10001;
         uint32_t indexOffset = 0;
         uint32_t vertexOffset = 0;
-        uint32_t _padding = 777;
+        uint32_t meshID = 777;
 
         const static uint32_t MAX_INSTANCES = 10000;
     };
@@ -51,14 +51,28 @@ namespace Dog
         float outerCone;     // for spot
         int type;            // 0=dir, 1=point, 2=spot
         uint32_t _padding[2]; 
+
+        static const uint32_t MAX_LIGHTS = 1000;
     };
 
-    struct MeshDataUniform {
+    /*struct MeshDataUniform {
         glm::vec3 position; float _padding1 = 777.0f;
         glm::vec3 color;    float _padding2 = 777.0f;
         glm::vec3 normal;   float _padding3 = 777.0f;
         glm::vec2 texCoord; glm::vec2 _padding4 = glm::vec2(777.0f);
-        // glm::ivec4 boneIds; 
-        // glm::vec4 weights;
+    };*/
+
+    /*struct MeshDataUniform2 {
+        glm::vec4 positionColorR;
+        glm::vec4 colorGBnormalXY;
+        glm::vec3 normalZtexXY; uint32_t padding;
+    };*/
+
+    struct MeshDataUniform
+    {
+        float posX, posY, posZ;
+        float colorR, colorG, colorB;
+        float normalX, normalY, normalZ;
+        float texU, texV; float _padding = 777.0f;
     };
 }

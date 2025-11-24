@@ -73,7 +73,7 @@ namespace Dog
             {
                 if (entry.data != nullptr && entry.size > 0)
                 {
-                    return TextureLoader::FromMemory(entry.data, entry.size, entry.outTexture.name, entry.outTexture);
+                    return TextureLoader::FromMemory(entry.data, entry.size, entry.path, entry.outTexture);
                 }
                 else if (!entry.path.empty())
                 {

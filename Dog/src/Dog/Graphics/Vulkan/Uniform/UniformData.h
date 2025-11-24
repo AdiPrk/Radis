@@ -27,8 +27,9 @@ namespace Dog
         .AddSSBOBinding(VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags, sizeof(LightUniform) * 10000 + sizeof(uint32_t)).SetDebugName("Light SSBO");
 
     const UniformSettings rayTracingUniformSettings = UniformSettings(RTUniformInit)
-        .AddSSBIBinding(rtFlags, 1).SetDebugName("RT Storage Image Buffer")
         .AddASBinding(rtFlags, 1).SetDebugName("RT TLAS Buffer")
+        .AddSSBIBinding(rtFlags, 1).SetDebugName("RT Color Image")
+        .AddSSBIBinding(rtFlags, 1).SetDebugName("RT Heatmap Image")
         .AddSSBOBinding(rtFlags, sizeof(MeshDataUniform), 2000000).SetDebugName("RT Vertices SSBO")
         .AddSSBOBinding(rtFlags, sizeof(uint32_t), 10000000).SetDebugName("RT Indices SSBO");
 

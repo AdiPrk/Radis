@@ -153,7 +153,7 @@ namespace Dog
         rtPipelineInfo.pGroups = shader_groups.data();
         rtPipelineInfo.maxPipelineRayRecursionDepth = std::max(3U, device.GetRayTracingProperties().maxRayRecursionDepth);
         rtPipelineInfo.layout = mRtPipelineLayout;
-        device.g_vkCreateRayTracingPipelinesKHR(device.GetDevice(), {}, {}, 1, &rtPipelineInfo, nullptr, &mRtPipeline);
+        vkCreateRayTracingPipelinesKHR(device.GetDevice(), {}, {}, 1, &rtPipelineInfo, nullptr, &mRtPipeline);
 
         DOG_INFO("Ray tracing pipeline layout created successfully");
 
@@ -225,7 +225,7 @@ namespace Dog
         // Get shader group handles
         size_t dataSize = handleSize * groupCount;
         mShaderHandles.resize(dataSize);
-        device.g_vkGetRayTracingShaderGroupHandlesKHR(device.GetDevice(), mRtPipeline, 0, groupCount, dataSize, mShaderHandles.data());
+        vkGetRayTracingShaderGroupHandlesKHR(device.GetDevice(), mRtPipeline, 0, groupCount, dataSize, mShaderHandles.data());
 
         // Calculate SBT buffer size with proper alignment
         auto     alignUp = [](uint32_t size, uint32_t alignment) { return (size + alignment - 1) & ~(alignment - 1); };

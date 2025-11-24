@@ -31,6 +31,11 @@ namespace Dog {
 	{
 		std::string ModelPath = "";
         glm::vec4 tintColor = glm::vec4(1.0f);
+
+        bool useMetallicOverride = false;
+        bool useRoughnessOverride = false;
+		float metallicOverride = 1.0f;
+        float roughnessOverride = 1.0f;
 	};
 
 	struct AnimationComponent
@@ -57,7 +62,7 @@ namespace Dog {
 
 		float Yaw{ 0.0f };
 		float Pitch{ 0.0f };
-		float MouseSensitivity{ 0.2f };
+		float MouseSensitivity{ 0.15f };
 		bool InvertY{ true };
 		float MoveSpeed{ 10.f };
 

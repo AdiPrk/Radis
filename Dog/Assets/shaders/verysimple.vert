@@ -39,7 +39,7 @@ struct VQS {
 #else
     #define UBO_LAYOUT(s, b) layout(std140, binding = b)
     #define SSBO_LAYOUT(s, b) layout(std430, binding = b)
-    #define INSTANCE_ID gl_BaseInstance
+    #define INSTANCE_ID gl_InstanceID + gl_BaseInstance
 #endif
 
 UBO_LAYOUT(0, 0) uniform Uniforms

@@ -57,7 +57,7 @@ struct Light {
     int type;          // 0=dir, 1=point, 2=spot
 };
 
-#define MAX_LIGHTS 10000
+#define MAX_LIGHTS 1000
 SSBO_LAYOUT(0, 4) readonly buffer LightData {
     uint lightCount;
     Light lights[MAX_LIGHTS];
@@ -231,30 +231,4 @@ void main()
     color = pow(color, vec3(1.0 / 2.2));
     
     outColor = vec4(color, baseColor.a);
-
-    // Visualize only alpha
-    // if (outColor.a > 0.99)
-    // {
-    //     outColor = vec4(1.0);
-    // }
-    // else if (outColor.a < 0.01)
-    // {
-    //     outColor = vec4(0.0);
-    // }
-    // else if (outColor.a < 0.1)
-    // {
-    //     outColor = vec4(1.0, 0.0, 0.0, 1.0);
-    // }
-    // else if (outColor.a < 0.25)
-    // {
-    //     outColor = vec4(0.0, 1.0, 0.0, 1.0);
-    // }
-    // else if (outColor.a < 0.5)
-    // {
-    //     outColor = vec4(0.0, 0.0, 1.0, 1.0);
-    // }
-    // else 
-    // {
-    //     outColor = vec4(0.0, 1.0, 1.0, 1.0);
-    // }
 }

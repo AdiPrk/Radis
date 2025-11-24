@@ -1,4 +1,4 @@
-#include <PCH/pch.h>
+﻿#include <PCH/pch.h>
 #include "EditorSystem.h"
 #include "Engine.h"
 #include "ECS/ECS.h"
@@ -29,7 +29,6 @@
 #include "Windows/ProfilerWindow.h"
 #include "Windows/MemoryWindow.h"
 
-#include "Assets/Assets.h"
 #include "Utils/Utils.h"
 
 #include "imgui_internal.h"
@@ -73,13 +72,18 @@ namespace Dog
 
         ImGui::Begin("Debug");
         ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
-        ImGui::Checkbox("Wireframe", &ecs->GetResource<RenderingResource>()->renderWireframe);
+        ImGui::Checkbox("Wireframe", &rr->renderWireframe);
         if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
         {
-            glPolygonMode(GL_FRONT_AND_BACK, ecs->GetResource<RenderingResource>()->renderWireframe ? GL_LINE : GL_FILL);
+            glPolygonMode(GL_FRONT_AND_BACK, rr->renderWireframe ? GL_LINE : GL_FILL);
         }
         
-        ImGui::Checkbox("Raytracing", &ecs->GetResource<RenderingResource>()->useRaytracing);
+        ImGui::BeginDisabled(Engine::GetGraphicsAPI() != GraphicsAPI::Vulkan);
+        ImGui::Checkbox("Raytracing", &rr->useRaytracing);
+        ImGui::EndDisabled();
+        ImGui::BeginDisabled(!rr->useRaytracing);
+        ImGui::Checkbox("Raytracing Heatmap Estimation", &er->renderRaytracingHeatmap);
+        ImGui::EndDisabled();
         ImGui::End();
 
         // Handle mouse lock for ImGui windows (excluding "Viewport")
@@ -146,17 +150,6 @@ namespace Dog
 
     void EditorSystem::FrameEnd()
     {
-        auto er = ecs->GetResource<EditorResource>();
-        if (er->entityToDelete)
-        {
-            if (er->selectedEntity == er->entityToDelete)
-            {
-                er->selectedEntity = {};
-            }
-
-            ecs->RemoveEntity(er->entityToDelete);
-            er->entityToDelete = {};
-        }
     }
 
     void EditorSystem::Exit()
@@ -172,8 +165,6 @@ namespace Dog
 
             vkDestroyDescriptorSetLayout(device, er->samplerSetLayout, nullptr);
             vkDestroyDescriptorPool(device, er->descriptorPool, nullptr);
-
-            er->CleanSceneTextures(rr);
         }
         else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
         {
@@ -194,38 +185,136 @@ namespace Dog
 
     void EditorSystem::RenderMainMenuBar()
     {
-        if (!ImGui::BeginMainMenuBar()) return;
+        // persistent across frames
+        static bool requestOpenSavePopup = false;
+        static char sceneNameBuffer[128] = "";
+
+        if (!ImGui::BeginMainMenuBar())
+            return;
+
+        // -----------------------
+        // File Menu
+        // -----------------------
+        if (ImGui::BeginMenu("File"))
         {
-            if (ImGui::BeginMenu("File"))
+            // Save
+            if (ImGui::MenuItem("Save Scene"))
             {
-                if (ImGui::MenuItem("Save Scene"))
-                {
-                    ecs->GetResource<SerializationResource>()->Serialize("assets/scenes/scene.json");
-                }
-                if (ImGui::MenuItem("Load Scene"))
-                {
-                    ecs->GetResource<SerializationResource>()->Deserialize("assets/scenes/scene.json");
-                }
-
-                ImGui::EndMenu();
-            }
-            if (ImGui::BeginMenu("Graphics"))
-            {
-                // dropdown for the enum GraphicsAPI
-                auto currentAPI = Engine::GetGraphicsAPI();
-                auto sr = ecs->GetResource<SwapRendererResource>();
-                if (ImGui::MenuItem("Vulkan", nullptr, currentAPI == GraphicsAPI::Vulkan))
-                {
-                    sr->RequestVulkan();
-                }
-                if (ImGui::MenuItem("OpenGL", nullptr, currentAPI == GraphicsAPI::OpenGL))
-                {
-                    sr->RequestOpenGL();
-                }
-                ImGui::EndMenu();
+                auto sr = ecs->GetResource<SerializationResource>();
+                sr->Serialize(sr->currentScenePath);
             }
 
-            ImGui::EndMainMenuBar();
+            // Save As
+            if (ImGui::MenuItem("Save Scene As..."))
+            {
+                // Prepare buffer with current scene name (best guess)
+                auto sr = ecs->GetResource<SerializationResource>();
+                try {
+                    std::filesystem::path p(sr->currentScenePath);
+                    auto stem = p.stem().string();
+                    strncpy(sceneNameBuffer, stem.c_str(), sizeof(sceneNameBuffer) - 1);
+                    sceneNameBuffer[sizeof(sceneNameBuffer) - 1] = '\0';
+                }
+                catch (...) {
+                    sceneNameBuffer[0] = '\0';
+                }
+
+                requestOpenSavePopup = true;
+            }
+
+            // Open Scene menu
+            if (ImGui::BeginMenu("Open Scene"))
+            {
+                const std::filesystem::path sceneDir = Assets::ScenesPath;
+                if (std::filesystem::exists(sceneDir) && std::filesystem::is_directory(sceneDir))
+                {
+                    for (auto const& entry : std::filesystem::directory_iterator(sceneDir))
+                    {
+                        if (!entry.is_regular_file()) continue;
+                        if (entry.path().extension() != ".json") continue;
+
+                        auto file = entry.path().filename().string();
+                        if (ImGui::MenuItem(file.c_str()))
+                        {
+                            ecs->GetResource<SerializationResource>()->Deserialize((sceneDir / file).string());
+                        }
+                    }
+                }
+                else
+                {
+                    ImGui::MenuItem("(no scenes found)", nullptr, false, false);
+                }
+                
+                ImGui::EndMenu();
+            }
+
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Graphics"))
+        {
+            auto currentAPI = Engine::GetGraphicsAPI();
+            auto sr = ecs->GetResource<SwapRendererResource>();
+
+            if (ImGui::MenuItem("Vulkan", nullptr, currentAPI == GraphicsAPI::Vulkan)) sr->RequestVulkan();
+            if (ImGui::MenuItem("OpenGL", nullptr, currentAPI == GraphicsAPI::OpenGL)) sr->RequestOpenGL();
+
+            ImGui::EndMenu();
+        }
+
+        ImGui::EndMainMenuBar();
+
+        // Save popup
+        if (requestOpenSavePopup)
+        {
+            ImGui::OpenPopup("Save Scene As");
+            requestOpenSavePopup = false;
+        }
+
+        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, { 0.5f, 0.5f });
+
+        if (ImGui::BeginPopupModal("Save Scene As", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::Text("Enter Scene Name:");
+            ImGui::InputText("##SceneNameInput", sceneNameBuffer, IM_ARRAYSIZE(sceneNameBuffer));
+
+            ImGui::Separator();
+
+            // Save button
+            if (ImGui::Button("Save"))
+            {
+                std::string name(sceneNameBuffer);
+
+                // simple whitespace check
+                bool valid = false;
+                for (char c : name)
+                    if (!isspace((unsigned char)c)) { valid = true; break; }
+
+                if (valid)
+                {
+                    std::string filename = name;
+                    if (filename.size() < 5 || filename.substr(filename.size() - 5) != ".json")
+                    {
+                        filename += ".json";
+                    }
+                    
+                    auto sr = ecs->GetResource<SerializationResource>();
+                    sr->Serialize((std::filesystem::path(Assets::ScenesPath) / filename).string());
+
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+
+            ImGui::SameLine();
+
+            // Cancel button
+            if (ImGui::Button("Cancel"))
+            {
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::EndPopup();
         }
     }
 
@@ -417,6 +506,18 @@ namespace Dog
             }
 
             ImGui::ColorEdit4("Tint Color", glm::value_ptr(component.tintColor));
+
+            // Checkbox with slider + input field for metallic and roughness overrides
+            ImGui::Checkbox("Override Metallic", &component.useMetallicOverride);
+            if (component.useMetallicOverride)
+            {
+                ImGui::DragFloat("Metallic Override", &component.metallicOverride, 0.01f, 0.0f, 1.0f);
+            }
+            ImGui::Checkbox("Override Roughness", &component.useRoughnessOverride);
+            if (component.useRoughnessOverride)
+            {
+                ImGui::DragFloat("Roughness Override", &component.roughnessOverride, 0.01f, 0.0f, 1.0f);
+            }
         });
 
         DrawComponentUI<AnimationComponent>("Animation", selectedEnt, [&](AnimationComponent& component)

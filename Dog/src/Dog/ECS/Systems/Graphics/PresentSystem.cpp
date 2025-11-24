@@ -10,8 +10,10 @@
 #include "Graphics/Vulkan/Core/SwapChain.h"
 #include "Graphics/Vulkan/RenderGraph.h"
 #include "Graphics/Vulkan/Core/Synchronization.h"
-
 #include "Graphics/Vulkan/VulkanWindow.h"
+
+#include "Graphics/Common/TextureLibrary.h"
+#include "Graphics/Vulkan/Texture/VKTexture.h"
 
 #include "Engine.h"
 
@@ -22,7 +24,17 @@ namespace Dog
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
         {
             auto rr = ecs->GetResource<RenderingResource>();
-            rr->RecreateAllSceneTextures();
+            auto tl = rr->textureLibrary.get();
+            if (tl)
+            {
+                const auto& extent = rr->swapChain->GetSwapChainExtent();
+                tl->ResizeStorageImage("RTColorImage_0", extent.width, extent.height);
+                tl->ResizeStorageImage("RTColorImage_1", extent.width, extent.height);
+                tl->ResizeStorageImage("RTHeatmapImage_0", extent.width, extent.height);
+                tl->ResizeStorageImage("RTHeatmapImage_1", extent.width, extent.height);
+                tl->ResizeTexture("SceneTexture", extent.width, extent.height);
+                tl->ResizeTexture("SceneDepth", extent.width, extent.height);
+            }
         }
 	}
 
@@ -47,7 +59,18 @@ namespace Dog
         if (result == VK_ERROR_OUT_OF_DATE_KHR)
         {
             rr->RecreateSwapChain(wr->window.get());
-            rr->RecreateAllSceneTextures();
+
+            auto tl = rr->textureLibrary.get();
+            if (tl)
+            {
+                const auto& extent = rr->swapChain->GetSwapChainExtent();
+                tl->ResizeStorageImage("RTColorImage_0", extent.width, extent.height);
+                tl->ResizeStorageImage("RTColorImage_1", extent.width, extent.height);
+                tl->ResizeStorageImage("RTHeatmapImage_0", extent.width, extent.height);
+                tl->ResizeStorageImage("RTHeatmapImage_1", extent.width, extent.height);
+                tl->ResizeTexture("SceneTexture", extent.width, extent.height);
+                tl->ResizeTexture("SceneDepth", extent.width, extent.height);
+            }
             return;
         }
 
@@ -79,24 +102,36 @@ namespace Dog
         rg->Clear();
 
         // Import resources!
+        auto tl = rr->textureLibrary.get();
         if (Engine::GetEditorEnabled()) 
         {
+            VKTexture* tex = (VKTexture*)tl->GetTexture("SceneTexture");
             rg->ImportTexture(
                 "SceneColor",
-                rr->sceneImage,
-                rr->sceneImageView,
-                rr->swapChain->GetSwapChainExtent(),
-                rr->swapChain->GetImageFormat()
+                tex->GetImage(),//rr->sceneImage,
+                tex->GetImageView(),//rr->sceneImageView,
+                tex->GetExtent(), //rr->swapChain->GetSwapChainExtent(),
+                tex->GetImageFormat() //rr->swapChain->GetImageFormat()
             );
         }
 
-        rg->ImportTexture(
-            "SceneDepth",
-            rr->mDepthImage,
-            rr->mDepthImageView,
-            rr->swapChain->GetSwapChainExtent(),
-            rr->swapChain->FindDepthFormat()
-        );
+        {
+            VKTexture* tex = (VKTexture*)tl->GetTexture("SceneDepth");
+            rg->ImportTexture(
+                "SceneDepth",
+                tex->GetImage(),
+                tex->GetImageView(),
+                tex->GetExtent(),
+                tex->GetImageFormat()
+            );
+            //rg->ImportTexture(
+            //    "SceneDepth",
+            //    rr->mDepthImage,
+            //    rr->mDepthImageView,
+            //    rr->swapChain->GetSwapChainExtent(),
+            //    rr->swapChain->FindDepthFormat()
+            //);
+        }
 
         rg->ImportBackbuffer(
             "BackBuffer",
@@ -153,14 +188,15 @@ namespace Dog
         submitInfo.pSignalSemaphores = signalSemaphores;
 
         vkResetFences(rr->device->GetDevice(), 1, &rr->syncObjects->GetCommandBufferInFlightFence());
-        if (vkQueueSubmit(rr->device->GetGraphicsQueue(), 1, &submitInfo, rr->syncObjects->GetCommandBufferInFlightFence()) != VK_SUCCESS)
+        VkResult result = vkQueueSubmit(rr->device->GetGraphicsQueue(), 1, &submitInfo, rr->syncObjects->GetCommandBufferInFlightFence());
+        if (result != VK_SUCCESS)
         {
             DOG_CRITICAL("Failed to submit draw command buffer!");
-            throw std::runtime_error("failed to submit draw command buffer!");
+            return;
         }
 
         // --- Presentation ---
-        VkResult result = rr->swapChain->PresentImage(&rr->currentImageIndex, *rr->syncObjects);
+        result = rr->swapChain->PresentImage(&rr->currentImageIndex, *rr->syncObjects);
 
         auto wr = ecs->GetResource<WindowResource>();
         bool winResized = wr->window->WasResized();
@@ -168,7 +204,19 @@ namespace Dog
         {
             wr->window->ResetResizeFlag();
             rr->RecreateSwapChain(wr->window.get());
-            rr->RecreateAllSceneTextures();
+            //rr->RecreateAllSceneTextures();
+
+            auto tl = rr->textureLibrary.get();
+            if (tl)
+            {
+                const auto& extent = rr->swapChain->GetSwapChainExtent();
+                tl->ResizeStorageImage("RTColorImage_0", extent.width, extent.height);
+                tl->ResizeStorageImage("RTColorImage_1", extent.width, extent.height);
+                tl->ResizeStorageImage("RTHeatmapImage_0", extent.width, extent.height);
+                tl->ResizeStorageImage("RTHeatmapImage_1", extent.width, extent.height);
+                tl->ResizeTexture("SceneTexture", extent.width, extent.height);
+                tl->ResizeTexture("SceneDepth", extent.width, extent.height);
+            }
             rr->syncObjects->ClearImageFences();
         }
         else if (result != VK_SUCCESS) {

@@ -3,66 +3,150 @@
     {
       "LightComponent": [
         {
-          "Color": [ 1.0, 1.0, 1.0 ],
-          "Direction": [ 0.0, 0.0, -1.0 ],
+          "Color": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "Direction": [
+            0.0,
+            0.0,
+            -1.0
+          ],
           "InnerCone": 0.5235987901687622,
           "Intensity": 10.0,
           "OuterCone": 1.0471975803375244,
-          "Position": [ 0.0, 0.0, 0.0 ],
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
           "Radius": 2.0,
           "Type": 1
         }
       ],
-      "TagComponent": [ { "Tag": "DragonLight" } ],
+      "TagComponent": [
+        {
+          "Tag": "DragonLight"
+        }
+      ],
       "TransformComponent": [
         {
-          "Rotation": [ 0.0, -0.0, 0.0 ],
-          "Scale": [ 1.0, 1.0, 1.0 ],
-          "Translation": [ -4.268712997436523, -3.7420225143432617, 0.0 ]
+          "Rotation": [
+            0.0,
+            -0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "Translation": [
+            -4.268712997436523,
+            -3.7420225143432617,
+            0.0
+          ]
         }
       ]
     },
     {
       "LightComponent": [
         {
-          "Color": [ 1.0, 1.0, 1.0 ],
-          "Direction": [ 0.0, 0.0, -1.0 ],
+          "Color": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "Direction": [
+            0.0,
+            0.0,
+            -1.0
+          ],
           "InnerCone": 0.5235987901687622,
           "Intensity": 10.0,
           "OuterCone": 1.0471975803375244,
-          "Position": [ 0.0, 0.0, 0.0 ],
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
           "Radius": 2.0,
           "Type": 1
         }
       ],
-      "TagComponent": [ { "Tag": "PointLight" } ],
+      "TagComponent": [
+        {
+          "Tag": "PointLight"
+        }
+      ],
       "TransformComponent": [
         {
-          "Rotation": [ 0.0, -0.0, 0.0 ],
-          "Scale": [ 1.0, 1.0, 1.0 ],
-          "Translation": [ 7.509252071380615, -3.5589964389801025, 0.0 ]
+          "Rotation": [
+            0.0,
+            -0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "Translation": [
+            7.509252071380615,
+            -3.5589964389801025,
+            0.0
+          ]
         }
       ]
     },
     {
       "LightComponent": [
         {
-          "Color": [ 1.0, 1.0, 1.0 ],
-          "Direction": [ 0.0, 0.0, -1.0 ],
+          "Color": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "Direction": [
+            0.0,
+            0.0,
+            -1.0
+          ],
           "InnerCone": 0.5235987901687622,
           "Intensity": 10.0,
           "OuterCone": 1.0471975803375244,
-          "Position": [ 0.0, 0.0, 0.0 ],
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
           "Radius": 2.0,
           "Type": 1
         }
       ],
-      "TagComponent": [ { "Tag": "PointLight" } ],
+      "TagComponent": [
+        {
+          "Tag": "PointLight"
+        }
+      ],
       "TransformComponent": [
         {
-          "Rotation": [ 0.0, -0.0, 0.0 ],
-          "Scale": [ 1.0, 1.0, 1.0 ],
-          "Translation": [ 4.0559587478637695, -3.5589964389801025, 0.0 ]
+          "Rotation": [
+            0.0,
+            -0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "Translation": [
+            4.0559587478637695,
+            -3.5589964389801025,
+            0.0
+          ]
         }
       ]
     },
@@ -70,15 +154,36 @@
       "ModelComponent": [
         {
           "ModelPath": "assets/models/steampunkrobot.gltf",
-          "tintColor": [ 1.0, 1.0, 1.0, 1.0 ]
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ]
         }
       ],
-      "TagComponent": [ { "Tag": "Robot" } ],
+      "TagComponent": [
+        {
+          "Tag": "Robot"
+        }
+      ],
       "TransformComponent": [
         {
-          "Rotation": [ -1.5707963705062866, 2.0542523860931396, 0.0 ],
-          "Scale": [ 0.9999997615814209, 0.9999998807907104, 0.9999997615814209 ],
-          "Translation": [ 0.0, -4.0, 1.0 ]
+          "Rotation": [
+            -1.5707963705062866,
+            2.0542523860931396,
+            0.0
+          ],
+          "Scale": [
+            0.9999997615814209,
+            0.9999998807907104,
+            0.9999997615814209
+          ],
+          "Translation": [
+            0.0,
+            -4.0,
+            1.0
+          ]
         }
       ]
     },
@@ -86,15 +191,36 @@
       "ModelComponent": [
         {
           "ModelPath": "assets/models/dragonattenuation.glb",
-          "tintColor": [ 1.0, 1.0, 1.0, 0.3921568691730499 ]
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0,
+            0.3921568691730499
+          ]
         }
       ],
-      "TagComponent": [ { "Tag": "Dragon" } ],
+      "TagComponent": [
+        {
+          "Tag": "Dragon"
+        }
+      ],
       "TransformComponent": [
         {
-          "Rotation": [ 0.0, 1.5707958936691284, 0.0 ],
-          "Scale": [ 1.9999996423721313, 2.0, 1.9999996423721313 ],
-          "Translation": [ -4.504000186920166, -3.845710515975952, -0.022632896900177002 ]
+          "Rotation": [
+            0.0,
+            1.5707958936691284,
+            0.0
+          ],
+          "Scale": [
+            1.9999996423721313,
+            2.0,
+            1.9999996423721313
+          ],
+          "Translation": [
+            -4.504000186920166,
+            -3.845710515975952,
+            -0.022632896900177002
+          ]
         }
       ]
     },
@@ -102,15 +228,36 @@
       "ModelComponent": [
         {
           "ModelPath": "assets/models/sponza.gltf",
-          "tintColor": [ 1.0, 1.0, 1.0, 1.0 ]
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ]
         }
       ],
-      "TagComponent": [ { "Tag": "Sponza" } ],
+      "TagComponent": [
+        {
+          "Tag": "Sponza"
+        }
+      ],
       "TransformComponent": [
         {
-          "Rotation": [ 0.0, -0.0, 0.0 ],
-          "Scale": [ 25.0, 25.0, 25.0 ],
-          "Translation": [ 0.0, 0.0, 0.0 ]
+          "Rotation": [
+            0.0,
+            -0.0,
+            0.0
+          ],
+          "Scale": [
+            25.0,
+            25.0,
+            25.0
+          ],
+          "Translation": [
+            0.0,
+            0.0,
+            0.0
+          ]
         }
       ]
     },
@@ -118,10 +265,10 @@
       "AnimationComponent": [
         {
           "AnimationIndex": 10,
-          "AnimationTime": 5333.21337890625,
+          "AnimationTime": 4048.125244140625,
           "BoneOffset": 0,
           "IsPlaying": true,
-          "PrevAnimationTime": 5333.21337890625,
+          "PrevAnimationTime": 4048.125244140625,
           "inPlace": false,
           "prevInPlace": false
         }
@@ -129,26 +276,47 @@
       "ModelComponent": [
         {
           "ModelPath": "assets/models/jack_samba.glb",
-          "tintColor": [ 1.0, 1.0, 1.0, 1.0 ]
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ]
         }
       ],
-      "TagComponent": [ { "Tag": "Jack" } ],
+      "TagComponent": [
+        {
+          "Tag": "Jack"
+        }
+      ],
       "TransformComponent": [
         {
-          "Rotation": [ -1.5707963705062866, 1.5707954168319702, 0.0 ],
-          "Scale": [ 0.3999998867511749, 0.4000000059604645, 0.3999999165534973 ],
-          "Translation": [ -0.21199999749660492, -4.321000099182129, -0.699999988079071 ]
+          "Rotation": [
+            -1.5707963705062866,
+            1.5707954168319702,
+            0.0
+          ],
+          "Scale": [
+            0.3999998867511749,
+            0.4000000059604645,
+            0.3999999165534973
+          ],
+          "Translation": [
+            -0.21199999749660492,
+            -4.321000099182129,
+            -0.699999988079071
+          ]
         }
       ]
     },
     {
       "AnimationComponent": [
         {
-          "AnimationIndex": 1,
-          "AnimationTime": 17.946407318115234,
+          "AnimationIndex": 10001,
+          "AnimationTime": 195.04005432128906,
           "BoneOffset": 33,
           "IsPlaying": true,
-          "PrevAnimationTime": 17.946407318115234,
+          "PrevAnimationTime": 195.04005432128906,
           "inPlace": false,
           "prevInPlace": false
         }
@@ -156,15 +324,36 @@
       "ModelComponent": [
         {
           "ModelPath": "assets/models/travislocomotion/travislocomotion.fbx",
-          "tintColor": [ 1.0, 1.0, 1.0, 1.0 ]
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ]
         }
       ],
-      "TagComponent": [ { "Tag": "Travis" } ],
+      "TagComponent": [
+        {
+          "Tag": "Travis"
+        }
+      ],
       "TransformComponent": [
         {
-          "Rotation": [ 0.0, 1.5707958936691284, 0.0 ],
-          "Scale": [ 0.9999998211860657, 1.0, 0.9999998211860657 ],
-          "Translation": [ -0.4000000059604645, -4.424450874328613, 0.0 ]
+          "Rotation": [
+            0.2503434121608734,
+            1.5707828998565674,
+            1.4076749086380005
+          ],
+          "Scale": [
+            0.9999991059303284,
+            0.9999983906745911,
+            0.9999971389770508
+          ],
+          "Translation": [
+            -2.4000000953674316,
+            -3.4240000247955322,
+            0.0
+          ]
         }
       ]
     },
@@ -173,99 +362,211 @@
         {
           "FOV": 45.0,
           "Far": 1000.0,
-          "Forward": [ -0.9535778760910034, -0.1340726613998413, 0.26965534687042236 ],
+          "Forward": [
+            -0.9864968657493591,
+            -0.08176129311323166,
+            0.14191268384456635
+          ],
           "InvertY": true,
-          "MouseSensitivity": 0.20000000298023224,
+          "MouseSensitivity": 0.15,
           "MouseSmoothness": 20.0,
           "MoveSpeed": 40.0,
           "Near": 0.10000000149011612,
           "Pitch": -0.3800048828125,
           "PositionSmoothness": 12.0,
           "RotationSmoothness": 18.0,
-          "SmoothedMouseDX": -5.605193857299268e-45,
-          "SmoothedMouseDY": 5.605193857299268e-45,
-          "SmoothedPitch": -7.704998970031738,
-          "SmoothedPosition": [ 1.2166728973388672, -3.746601104736328, 0.34261250495910645 ],
-          "SmoothedYaw": -105.78998565673828,
-          "TargetPitch": -7.704998970031738,
-          "TargetYaw": -105.78998565673828,
-          "Up": [ -0.12901349365711212, 0.990971565246582, 0.0364827886223793 ],
+          "SmoothedMouseDX": 2.802596928649634e-45,
+          "SmoothedMouseDY": -2.802596928649634e-45,
+          "SmoothedPitch": -4.689811706542969,
+          "SmoothedPosition": [
+            1.7722008228302002,
+            -3.65679931640625,
+            -0.14968684315681458
+          ],
+          "SmoothedYaw": -98.1861343383789,
+          "TargetPitch": -4.689811706542969,
+          "TargetYaw": -98.1861343383789,
+          "Up": [
+            -0.08092820644378662,
+            0.9966520071029663,
+            0.011641941964626312
+          ],
           "Yaw": 31.973487854003906,
           "isInitialized": true
         }
       ],
-      "TagComponent": [ { "Tag": "Camera" } ],
+      "TagComponent": [
+        {
+          "Tag": "Camera"
+        }
+      ],
       "TransformComponent": [
         {
-          "Rotation": [ -7.704998970031738, -105.78998565673828, 0.0 ],
-          "Scale": [ 1.0, 1.0, 1.0 ],
-          "Translation": [ 1.2166728973388672, -3.746601104736328, 0.34261250495910645 ]
+          "Rotation": [
+            -4.689811706542969,
+            -98.1861343383789,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "Translation": [
+            1.7722008228302002,
+            -3.65679931640625,
+            -0.14968684315681458
+          ]
         }
       ]
     },
     {
       "LightComponent": [
         {
-          "Color": [ 1.0, 1.0, 1.0 ],
-          "Direction": [ -0.5770000219345093, -0.5770000219345093, -0.5770000219345093 ],
+          "Color": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "Direction": [
+            -0.5770000219345093,
+            -0.5770000219345093,
+            -0.5770000219345093
+          ],
           "InnerCone": 0.5235987901687622,
           "Intensity": 1.0,
           "OuterCone": 1.3370000123977661,
-          "Position": [ 0.0, 0.0, 0.0 ],
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
           "Radius": 1.0,
           "Type": 0
         }
       ],
-      "TagComponent": [ { "Tag": "Sun" } ],
+      "TagComponent": [
+        {
+          "Tag": "Sun"
+        }
+      ],
       "TransformComponent": [
         {
-          "Rotation": [ 0.0, 0.0, 0.0 ],
-          "Scale": [ 1.0, 1.0, 1.0 ],
-          "Translation": [ 0.0, 0.0, 0.0 ]
+          "Rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "Translation": [
+            0.0,
+            0.0,
+            0.0
+          ]
         }
       ]
     },
     {
       "LightComponent": [
         {
-          "Color": [ 1.0, 1.0, 1.0 ],
-          "Direction": [ 0.0, 0.0, -1.0 ],
+          "Color": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "Direction": [
+            0.0,
+            0.0,
+            -1.0
+          ],
           "InnerCone": 0.5235987901687622,
           "Intensity": 10.0,
           "OuterCone": 1.0471975803375244,
-          "Position": [ 0.0, 0.0, 0.0 ],
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
           "Radius": 2.0,
           "Type": 1
         }
       ],
-      "TagComponent": [ { "Tag": "PointLight" } ],
+      "TagComponent": [
+        {
+          "Tag": "PointLight"
+        }
+      ],
       "TransformComponent": [
         {
-          "Rotation": [ 0.0, -0.0, 0.0 ],
-          "Scale": [ 1.0, 1.0, 1.0 ],
-          "Translation": [ 0.5127789974212646, -3.5589964389801025, 0.0 ]
+          "Rotation": [
+            0.0,
+            -0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "Translation": [
+            0.5127789974212646,
+            -3.5589964389801025,
+            0.0
+          ]
         }
       ]
     },
     {
       "LightComponent": [
         {
-          "Color": [ 1.0, 1.0, 1.0 ],
-          "Direction": [ 0.0, 0.0, -1.0 ],
+          "Color": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "Direction": [
+            0.0,
+            0.0,
+            -1.0
+          ],
           "InnerCone": 0.5235987901687622,
           "Intensity": 10.0,
           "OuterCone": 1.0471975803375244,
-          "Position": [ 0.0, 0.0, 0.0 ],
+          "Position": [
+            0.0,
+            0.0,
+            0.0
+          ],
           "Radius": 2.0,
           "Type": 1
         }
       ],
-      "TagComponent": [ { "Tag": "PointLight" } ],
+      "TagComponent": [
+        {
+          "Tag": "PointLight"
+        }
+      ],
       "TransformComponent": [
         {
-          "Rotation": [ 0.0, -0.0, 0.0 ],
-          "Scale": [ 1.0, 1.0, 1.0 ],
-          "Translation": [ -8.491000175476074, -3.5589964389801025, 0.0 ]
+          "Rotation": [
+            0.0,
+            -0.0,
+            0.0
+          ],
+          "Scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "Translation": [
+            -8.491000175476074,
+            -3.5589964389801025,
+            0.0
+          ]
         }
       ]
     }
