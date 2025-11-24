@@ -271,7 +271,7 @@ namespace Dog
         depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;                //Specifies that the previous contents within the stencil need not be preserved and will be undefined
         depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;              //Specifies the contents within the stencil render area are not needed after rendering
         depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                      //Inital image contents does not matter since we are clearing them on load
-        depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL; //Set so the layout after rendering allows read and write access as a depth/stencil attachment
+        depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL; //Set so the layout after rendering allows read and write access as a depth/stencil attachment
 
         //Defines the attachment index and the layout while rendering for the subpass (given to subpass below)
         VkAttachmentReference depthAttachmentRef{};

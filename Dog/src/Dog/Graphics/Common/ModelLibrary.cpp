@@ -42,6 +42,11 @@ namespace Dog
         }
 
         std::unique_ptr<Model> model = std::make_unique<Model>(mDevice, filePath);
+        for (auto& mesh : model->mMeshes)
+        {
+            mesh->CreateVertexBuffers(&mDevice);
+            mesh->CreateIndexBuffers(&mDevice);
+        }
         
         uint32_t modelID = static_cast<uint32_t>(mModels.size());
         mModels.push_back(std::move(model));
@@ -118,7 +123,7 @@ namespace Dog
         return it->second;
     }
 
-    void ModelLibrary::LoadTextures()
+    void ModelLibrary::QueueTextures()
     {
         for (auto& model : mModels)
         {
@@ -154,21 +159,6 @@ namespace Dog
         }
     }
 
-    bool ModelLibrary::NeedsTextureUpdate()
-    {
-        if (mLastModelLoaded == INVALID_MODEL_INDEX) return false;
-
-        for (const auto& model : mModels)
-        {
-            if (!model->mAddedTexture)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     void ModelLibrary::ClearAllBuffers(Device* device)
     {
         for (auto& model : mModels)
@@ -197,6 +187,10 @@ namespace Dog
                 uint32_t oldRoughnessTextureIndex = mesh->roughnessTextureIndex;
                 uint32_t oldOcclusionTextureIndex = mesh->occlusionTextureIndex;
                 uint32_t oldEmissiveTextureIndex = mesh->emissiveTextureIndex;
+                glm::vec4 oldBaseColorFactor = mesh->baseColorFactor;
+                float oldMetallicFactor = mesh->metallicFactor;
+                float oldRoughnessFactor = mesh->roughnessFactor;
+                glm::vec4 oldEmissiveFactor = mesh->emissiveFactor;
 
                 mesh.reset();
 
@@ -218,6 +212,10 @@ namespace Dog
                 mesh->roughnessTextureIndex = oldRoughnessTextureIndex;
                 mesh->occlusionTextureIndex = oldOcclusionTextureIndex;
                 mesh->emissiveTextureIndex = oldEmissiveTextureIndex;
+                mesh->baseColorFactor = oldBaseColorFactor;
+                mesh->metallicFactor = oldMetallicFactor;
+                mesh->roughnessFactor = oldRoughnessFactor;
+                mesh->emissiveFactor = oldEmissiveFactor;
 
                 mesh->CreateVertexBuffers(device);
                 mesh->CreateIndexBuffers(device);

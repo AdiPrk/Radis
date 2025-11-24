@@ -67,6 +67,8 @@ namespace Dog
 
     void SerializationResource::Deserialize(const std::string& filepath)
     {
+        currentScenePath = filepath;
+
         ecs->GetRegistry().clear();
 
         std::ifstream file(filepath);

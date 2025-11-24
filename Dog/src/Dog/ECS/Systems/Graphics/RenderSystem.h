@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../ISystem.h"
-#include "Graphics/Vulkan/Core/AccelerationStructures.h"
 #include "Graphics/Vulkan/Uniform/ShaderTypes.h"
 
 namespace Dog
@@ -18,26 +17,20 @@ namespace Dog
         void FrameEnd();
         void Exit();
 
-        void RenderSceneVK(VkCommandBuffer cmd);
-        void RenderSceneGL();
-
-        // Accel structure functions
-        void PrimitiveToGeometry(class VKMesh& mesh,
-            VkAccelerationStructureGeometryKHR& geometry,
-            VkAccelerationStructureBuildRangeInfoKHR& rangeInfo);
-
-        void CreateAccelerationStructure(VkAccelerationStructureTypeKHR asType, AccelerationStructure& accelStruct, VkAccelerationStructureGeometryKHR& asGeometry, VkAccelerationStructureBuildRangeInfoKHR& asBuildRangeInfo, VkBuildAccelerationStructureFlagsKHR flags);
-        void CreateBottomLevelAS();
-        void CreateTopLevelAS();
-        void RaytraceScene(VkCommandBuffer cmd);
 
     private:
-        uint32_t mNumObjectsRendered = 0;
+        void RenderSceneVK(VkCommandBuffer cmd);
+        void RaytraceSceneVK(VkCommandBuffer cmd);
+        void RenderSceneGL();
+
+        float GetAspectRatio();
+
         std::vector<MeshDataUniform> mRTMeshData{};
         std::vector<uint32_t> mRTMeshIndices{};
 
         std::vector<InstanceUniforms> mInstanceData{};
         std::vector<LightUniform> mLightData{};
+        std::vector<uint8_t> mLightBuffer{};
     };
 }
 

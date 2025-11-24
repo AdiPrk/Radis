@@ -12,11 +12,16 @@ namespace Dog
     {
         mDevice = device;
 
+        VmaVulkanFunctions vulkanFunctions{};
+        vulkanFunctions.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
+        vulkanFunctions.vkGetDeviceProcAddr = vkGetDeviceProcAddr;
+
         VmaAllocatorCreateInfo allocatorInfo = {};
         allocatorInfo.physicalDevice = mDevice->GetPhysicalDevice();
         allocatorInfo.device = mDevice->GetDevice();
         allocatorInfo.instance = mDevice->GetInstance();
         allocatorInfo.vulkanApiVersion = VK_API_VERSION_1_4;
+        allocatorInfo.pVulkanFunctions = &vulkanFunctions;
         allocatorInfo.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
         allocatorInfo.flags |= VMA_ALLOCATOR_CREATE_KHR_MAINTENANCE4_BIT;
         allocatorInfo.flags |= VMA_ALLOCATOR_CREATE_KHR_MAINTENANCE5_BIT;  // allow using VkBufferUsageFlags2CreateInfoKHR
@@ -150,7 +155,7 @@ namespace Dog
 
         // Step 2: Create the acceleration structure with the buffer
         accelStruct.buffer = accel.buffer.buffer;
-        result = mDevice->g_vkCreateAccelerationStructureKHR(mDevice->GetDevice(), &accelStruct, nullptr, &accel.accel);
+        result = vkCreateAccelerationStructureKHR(mDevice->GetDevice(), &accelStruct, nullptr, &accel.accel);
 
         if (result != VK_SUCCESS)
         {
@@ -162,7 +167,7 @@ namespace Dog
         {
             VkAccelerationStructureDeviceAddressInfoKHR info{ .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR,
                                                              .accelerationStructure = accel.accel };
-            accel.address = mDevice->g_vkGetAccelerationStructureDeviceAddressKHR(mDevice->GetDevice(), &info);
+            accel.address = vkGetAccelerationStructureDeviceAddressKHR(mDevice->GetDevice(), &info);
         }
 
         return result;
@@ -171,7 +176,7 @@ namespace Dog
     void Allocator::DestroyAcceleration(AccelerationStructure& accel)
     {
         DestroyBuffer(accel.buffer);
-        mDevice->g_vkDestroyAccelerationStructureKHR(mDevice->GetDevice(), accel.accel, nullptr);
+        vkDestroyAccelerationStructureKHR(mDevice->GetDevice(), accel.accel, nullptr);
         accel = {};
     }
 

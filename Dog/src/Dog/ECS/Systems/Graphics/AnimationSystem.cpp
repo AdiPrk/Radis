@@ -1,4 +1,4 @@
-#include <PCH/pch.h>
+﻿#include <PCH/pch.h>
 #include "AnimationSystem.h"
 
 #include "ECS/ECS.h"
@@ -58,15 +58,10 @@ namespace Dog
             }
             ac.AnimationTime = fmod(ac.AnimationTime, anim->GetDuration());
 
-            //if (ac.AnimationTime != ac.PrevAnimationTime || 
-            //    animator->GetPrevTime() != ac.AnimationTime || 
-            //    ac.prevInPlace != ac.inPlace)
-            //{
-                glm::mat4 tr = tc.GetTransform();
-                animator->UpdateAnimationInstant(ac.AnimationTime, ac.inPlace, tr);
-                ac.PrevAnimationTime = ac.AnimationTime;
-                ac.prevInPlace = ac.inPlace;
-            //}
+            glm::mat4 tr = tc.GetTransform();
+            animator->UpdateAnimationInstant(ac.AnimationTime, ac.inPlace, tr);
+            ac.PrevAnimationTime = ac.AnimationTime;
+            ac.prevInPlace = ac.inPlace;
 
             const auto& finalMatrices = animator->GetFinalBoneVQS();
             bonesMatrices.insert(bonesMatrices.end(), finalMatrices.begin(), finalMatrices.end());

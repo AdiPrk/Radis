@@ -101,7 +101,7 @@ namespace Dog
         if (it == mEntityMap.end())
         {
             DOG_WARN("Entity with name '{0}' not found!", name);
-            return nullptr;
+            return Entity();
         }
 
         return it->second;

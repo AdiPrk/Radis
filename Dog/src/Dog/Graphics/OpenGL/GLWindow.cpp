@@ -16,7 +16,7 @@ namespace Dog {
         const void* userParam) {
         // Displaying the debug message
         if (type == GL_DEBUG_TYPE_OTHER) return;
-        //if (id == 131218) return; // Don't care about shader recompilation medium severity warning
+        if (id == 131218) return; // Don't care about shader recompilation medium severity warning
 
         std::cerr << "OpenGL Debug Message (ID: " << id << "):\n";
         std::cerr << "Message: " << message << "\n";

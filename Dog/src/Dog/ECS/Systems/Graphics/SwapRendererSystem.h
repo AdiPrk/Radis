@@ -13,7 +13,6 @@ namespace Dog
 
         void Init() override;
         void FrameStart() override;
-
-        void SwapBackend();
+        void FrameEnd() override;
     };
 }

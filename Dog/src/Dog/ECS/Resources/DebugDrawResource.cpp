@@ -80,6 +80,48 @@ namespace Dog
         circles.clear();
     }
 
+    /*********************************************************************
+    * param:  gridSize: Number of lines in each direction from the center (total lines = gridSize * 2 + 1)
+    * param:  step: Distance between each grid line
+    *
+    * brief:  Draws a standard editor grid on the XZ plane (Y=0).
+    *********************************************************************/
+    void DebugDrawResource::DrawEditorGrid(int gridSize, float step)
+    {
+        // Define colors
+        glm::vec4 gridColor(0.4f, 0.4f, 0.4f, 0.75f);   // A medium grey
+        glm::vec4 xAxisColor(1.0f, 0.0f, 0.0f, 0.75f);  // Red
+        glm::vec4 zAxisColor(0.0f, 0.0f, 1.0f, 0.75f);  // Blue
+
+        float fGridSize = (float)gridSize * step;
+
+        // Draw lines parallel to the Z-axis (varying x)
+        for (int i = -gridSize; i <= gridSize; ++i)
+        {
+            float x = (float)i * step;
+            glm::vec3 start(x, 0.0f, -fGridSize);
+            glm::vec3 end(x, 0.0f, fGridSize);
+
+            // Use Z-axis color if x is 0, otherwise use regular grid color
+            glm::vec4 color = (i == 0) ? zAxisColor : gridColor;
+
+            DebugDrawResource::DrawLine(start, end, color);
+        }
+
+        // Draw lines parallel to the X-axis (varying z)
+        for (int i = -gridSize; i <= gridSize; ++i)
+        {
+            float z = (float)i * step;
+            glm::vec3 start(-fGridSize, 0.0f, z);
+            glm::vec3 end(fGridSize, 0.0f, z);
+
+            // Use X-axis color if z is 0, otherwise use regular grid color
+            glm::vec4 color = (i == 0) ? xAxisColor : gridColor;
+
+            DebugDrawResource::DrawLine(start, end, color);
+        }
+    }
+
     std::vector<InstanceUniforms> DebugDrawResource::GetInstanceData()
     {
         std::vector<InstanceUniforms> instanceData;
@@ -200,5 +242,11 @@ namespace Dog
         }
 
         return instanceData;
+    }
+
+    uint32_t DebugDrawResource::GetInstanceDataSize()
+    {
+        uint32_t totalSize = static_cast<uint32_t>(lines.size() + rects.size() + cubes.size() + circles.size());
+        return totalSize;
     }
 }

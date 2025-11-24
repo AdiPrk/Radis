@@ -29,11 +29,18 @@ namespace Dog
                 if (rr->useRaytracing)
                 {
                     uint32_t frameIndex = rr->currentFrameIndex;
-                    sceneTexturePtr = tl->GetTexture("RayTracingOutput_" + std::to_string(frameIndex))->GetTextureID();
+                    if (er->renderRaytracingHeatmap)
+                    {
+                        sceneTexturePtr = tl->GetTexture("RTHeatmapImage_" + std::to_string(frameIndex))->GetTextureID();
+                    }
+                    else
+                    {
+                        sceneTexturePtr = tl->GetTexture("RTColorImage_" + std::to_string(frameIndex))->GetTextureID();
+                    }
                 }
                 else
                 {
-                    sceneTexturePtr = reinterpret_cast<void*>(rr->sceneTextureDescriptorSet);
+                    sceneTexturePtr = reinterpret_cast<void*>(rr->textureLibrary->GetTexture("SceneTexture")->GetTextureID());
                 }
             }
             else
@@ -109,7 +116,7 @@ namespace Dog
             ImGuizmo::SetDrawlist();
             ImGuizmo::SetRect(er->sceneWindowX, er->sceneWindowY, er->sceneWindowWidth, er->sceneWindowHeight);
 
-            ImGuizmo::OPERATION operation = ImGuizmo::OPERATION::ROTATE;
+            ImGuizmo::OPERATION operation = ImGuizmo::OPERATION::UNIVERSAL;
             glm::mat4 modelMatrix = transformComponent.GetTransform();
 
             if (ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(projection), operation, ImGuizmo::WORLD, glm::value_ptr(modelMatrix)))

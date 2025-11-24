@@ -35,7 +35,7 @@ namespace Dog
         virtual void CreateIndexBuffers(Device* device) = 0;
         virtual void DestroyBuffers() = 0;
 
-        virtual void Bind(VkCommandBuffer commandBuffer, VkBuffer instBuffer) = 0;
+        virtual void Bind(VkCommandBuffer commandBuffer = nullptr) = 0;
         virtual void Draw(VkCommandBuffer commandBuffer, uint32_t baseIndex = 0) = 0;
 
         uint32_t GetID() const { return mMeshID; }

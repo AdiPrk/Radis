@@ -52,8 +52,7 @@ namespace Dog
         VkImage sceneImage{ VK_NULL_HANDLE };
         VmaAllocation sceneImageAllocation{ VK_NULL_HANDLE };
         VkImageView sceneImageView{ VK_NULL_HANDLE };
-        VkSampler sceneSampler{ VK_NULL_HANDLE };
-
+        
         VkImage mDepthImage{ VK_NULL_HANDLE };
         VmaAllocation mDepthImageAllocation{ VK_NULL_HANDLE };
         VkImageView mDepthImageView{ VK_NULL_HANDLE };
@@ -80,28 +79,17 @@ namespace Dog
         bool renderWireframe = false;
         bool useRaytracing = false;
 
+        bool supportsVulkan = true;
+
         // Texture update
-        void UpdateTextureUniform();
+        bool SupportsVulkan();
 
     private:
         friend class Renderer;
         friend class PresentSystem;
         void RecreateSwapChain(IWindow* window);
 
-        void CreateCommandBuffers();
-
-        // Scene textures ----------------
-        friend struct EditorResource;
-        void CreateSceneTexture();
-        void CleanupSceneTexture();
-        void RecreateSceneTexture();
-        void CreateDepthBuffer();
-        void CleanupDepthBuffer();
-        void RecreateDepthBuffer();
-        void RecreateAllSceneTextures();
-        // --------------------------------
-        
+        void CreateCommandBuffers();        
         VkFormat ToLinearFormat(VkFormat format);
-
     };
 }

@@ -8,7 +8,8 @@ layout(location = 0) rayPayloadInEXT HitPayload {
     int depth;
     vec3 nextRayOrigin;
     vec3 nextRayDir;    
-    bool stop;    
+    bool stop;
+    float cost;
 } payload;
 
 layout(location = 1) rayPayloadEXT bool isShadowed;
@@ -42,12 +43,10 @@ layout(set = 0, binding = 3) uniform sampler2D uTextures[];
 
 struct Vertex
 {
-    vec3 position;
-    vec3 color;   
-    vec3 normal;  
-    vec2 texCoord;
-    // ivec4 boneIds;
-    // vec4 weights; 
+    float posX, posY, posZ;
+    float cR, cG, cB;
+    float nX, nY, nZ;
+    float texU, texV; float _padding;
 };
 
 struct Light {
@@ -67,17 +66,17 @@ layout(set = 0, binding = 4) readonly buffer LightData {
     Light lights[MAX_LIGHTS];
 } lightData;
 
-layout(set = 1, binding = 2, std430) readonly buffer MeshBuffer
+layout(set = 1, binding = 3, std430) readonly buffer MeshBuffer
 {
     Vertex vertices[];
 } meshBuffer;
 
-layout(set = 1, binding = 3, std430) readonly buffer MeshIndexBuffer
+layout(set = 1, binding = 4, std430) readonly buffer MeshIndexBuffer
 {
     uint indices[];
 } indexBuffer;
 
-layout(set = 1, binding = 1) uniform accelerationStructureEXT topLevelAS;
+layout(set = 1, binding = 0) uniform accelerationStructureEXT topLevelAS;
 
 float DistributionGGX(float NdotH, float roughness)
 {
@@ -119,6 +118,9 @@ vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
 
 vec3 computePBRLight(vec3 albedo, float metallic, float roughness, vec3 N, vec3 V, vec3 L, vec3 lightColor)
 {
+    const float PBR_COST = 1.0;
+    payload.cost += PBR_COST;
+
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
     vec3 H = normalize(V + L);
 
@@ -142,6 +144,8 @@ vec3 computePBRLight(vec3 albedo, float metallic, float roughness, vec3 N, vec3 
 // Helper to safely sample texture
 vec4 SampleTexture(uint texIndex, vec2 uv)
 {
+    const float SAMPLE_TEXTURE_COST = 0.5;
+    payload.cost += SAMPLE_TEXTURE_COST;
     return texture(uTextures[texIndex], uv);
 }
 
@@ -151,6 +155,9 @@ float fetchShadow(vec3 worldPos, vec3 normal, vec3 lightDir, float lightDist)
     vec3 origin = worldPos + normal * 0.01; 
     isShadowed = true;
 
+    const float SHADOW_SPAWN_COST = 0.5;
+    payload.cost += SHADOW_SPAWN_COST;
+
     uint rayFlags = gl_RayFlagsTerminateOnFirstHitEXT | gl_RayFlagsSkipClosestHitShaderEXT;
     traceRayEXT(topLevelAS, rayFlags, 0xFF, 0, 0, 1, origin, 0.001, lightDir, lightDist, 1);
 
@@ -159,6 +166,9 @@ float fetchShadow(vec3 worldPos, vec3 normal, vec3 lightDir, float lightDist)
 
 void main()
 {
+    const float CLOSEST_HIT_COST = 2.0;
+    payload.cost += CLOSEST_HIT_COST;
+
     Instance instance = instances[gl_InstanceCustomIndexEXT];
 
     vec3 bary = vec3(1.0 - attribs.x - attribs.y, attribs.x, attribs.y);
@@ -169,10 +179,13 @@ void main()
     Vertex v0 = meshBuffer.vertices[i0 + instance.vertexOffset];
     Vertex v1 = meshBuffer.vertices[i1 + instance.vertexOffset];
     Vertex v2 = meshBuffer.vertices[i2 + instance.vertexOffset];
+    vec2 v0UV = vec2(v0.texU, v0.texV); vec2 v1UV = vec2(v1.texU, v1.texV); vec2 v2UV = vec2(v2.texU, v2.texV);
+    vec3 v0N = vec3(v0.nX, v0.nY, v0.nZ); vec3 v1N = vec3(v1.nX, v1.nY, v1.nZ); vec3 v2N = vec3(v2.nX, v2.nY, v2.nZ);
+    vec3 v0C = vec3(v0.cR, v0.cG, v0.cB); vec3 v1C = vec3(v1.cR, v1.cG, v1.cB); vec3 v2C = vec3(v2.cR, v2.cG, v2.cB);
 
-    vec2 uv = v0.texCoord * bary.x + v1.texCoord * bary.y + v2.texCoord * bary.z;
-    vec3 normalLocal = v0.normal * bary.x + v1.normal * bary.y + v2.normal * bary.z;
-    vec3 vertexColor = v0.color * bary.x + v1.color * bary.y + v2.color * bary.z;
+    vec2 uv = v0UV * bary.x + v1UV * bary.y + v2UV * bary.z;
+    vec3 normalLocal = v0N * bary.x + v1N * bary.y + v2N * bary.z;
+    vec3 vertexColor = v0C * bary.x + v1C * bary.y + v2C * bary.z;
 
     // Position: Origin + (Direction * Distance)
     vec3 fragWorldPos = gl_WorldRayOriginEXT + gl_WorldRayDirectionEXT * gl_HitTEXT;

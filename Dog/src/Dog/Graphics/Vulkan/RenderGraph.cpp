@@ -96,7 +96,7 @@ namespace Dog
                 bool isDepth = (resource.format == VK_FORMAT_D32_SFLOAT);
 
                 VkImageLayout newLayout = isDepth ?
-                    VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL :
+                    VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL :
                     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
                 // Transition the backbuffer for rendering
@@ -160,7 +160,7 @@ namespace Dog
                     if (depthTarget) {
                         depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
                         depthAttachment.imageView = depthTarget->imageView;
-                        depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                        depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
                         depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR; // Clear depth at start of pass
                         depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
                         depthAttachment.clearValue.depthStencil = { 1.0f, 0 };
