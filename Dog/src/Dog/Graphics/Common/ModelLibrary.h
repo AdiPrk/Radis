@@ -25,6 +25,7 @@ namespace Dog
 		~ModelLibrary();
 
 		uint32_t AddModel(const std::string& modelPath);
+		void AddModel(Model* model);
         void AddToUnifiedMesh(uint32_t modelIndex);
 
         Model* GetModel(uint32_t index);

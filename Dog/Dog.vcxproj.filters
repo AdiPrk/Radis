@@ -82,6 +82,8 @@
     <ClCompile Include="src\Dog\ECS\Resources\RaytracingResource.cpp" />
     <ClCompile Include="src\Dog\Utils\VKMath.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Utils\ScopedDebugLabel.cpp" />
+    <ClCompile Include="src\Dog\ECS\Resources\VFS\ModelSerializer.cpp" />
+    <ClCompile Include="src\Dog\Assets\UUID.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\nlohmann\json.hpp" />
@@ -149,7 +151,6 @@
     <ClInclude Include="src\Dog\ECS\Resources\DebugDrawResource.h" />
     <ClInclude Include="src\Dog\Graphics\Common\UnifiedMesh.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Core\AccelerationStructures.h" />
-    <ClInclude Include="src\Dog\Graphics\Vulkan\Core\VulkanFunctions.h" />
     <ClInclude Include="src\Dog\Graphics\IWindow.h" />
     <ClInclude Include="src\Dog\Graphics\OpenGL\GLWindow.h" />
     <ClInclude Include="src\Dog\ECS\Systems\WindowSystem.h" />
@@ -186,8 +187,19 @@
     <ClInclude Include="src\Dog\ECS\Resources\RaytracingResource.h" />
     <ClInclude Include="src\Dog\Utils\VKMath.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Utils\ScopedDebugLabel.h" />
+    <ClInclude Include="src\Dog\ECS\Resources\VFS\VFSResource.h" />
+    <ClInclude Include="src\Dog\ECS\Resources\VFS\ModelSerializer.h" />
+    <ClInclude Include="src\Dog\Assets\UUID.h" />
   </ItemGroup>
   <ItemGroup>
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />

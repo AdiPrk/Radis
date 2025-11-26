@@ -28,9 +28,6 @@
 #include <backends/imgui_impl_opengl3.h>
 #include "ImGuizmo.h"
 
-// vulkan
-#include "Graphics/Vulkan/Core/VulkanFunctions.h"
-
 // glm
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -96,6 +93,7 @@
 #include "Graphics/Common/Animation/VQS.h"
 #include "Profiler/Profiler.h"
 #include "Assets/Assets.h"
+#include "Assets/UUID.h"
 
 // Shared files
 #include "../../Common/src/Core.h"
