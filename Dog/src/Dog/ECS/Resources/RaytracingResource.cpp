@@ -16,6 +16,7 @@
 #include "Graphics/Vulkan/Texture/VKTexture.h"
 #include "Graphics/Vulkan/Uniform/Descriptors.h"
 #include "Graphics/Common/UnifiedMesh.h"
+#include "Graphics/Vulkan/VKMesh.h"
 
 #include "ECS/ECS.h"
 #include "ECS/Components/Components.h"

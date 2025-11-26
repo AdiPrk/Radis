@@ -25,6 +25,8 @@
 #include "Assets/Assets.h"
 #include "Engine.h"
 
+#include "VFS/ModelSerializer.h"
+
 namespace Dog
 {
     RenderingResource::RenderingResource(IWindow* window)
@@ -108,7 +110,14 @@ namespace Dog
             modelLibrary->AddModel(Assets::ModelsPath + "jack_samba.glb");
             modelLibrary->AddModel(Assets::ModelsPath + "SteampunkRobot.gltf");
             modelLibrary->AddModel(Assets::ModelsPath + "DragonAttenuation.glb");
-            modelLibrary->AddModel(Assets::ModelsPath + "Sponza.gltf");
+            uint32_t sponzaInd = modelLibrary->AddModel(Assets::ModelsPath + "Sponza.gltf");
+
+            Model* sponzaModel = modelLibrary->GetModel(sponzaInd);
+            //VFS::ModelSerializer::save(*sponzaModel, "Assets/Models/dm/Sponza.dm", 0xDEADBEEF);
+            // load it to test
+            //Model newModelTest;
+            //VFS::ModelSerializer::load(newModelTest, "Assets/Models/dm/Sponza.dm");
+            //printf("done"); // for breakpoint
 
             // modelLibrary->AddModel("Assets/Models/okayu.pmx");
             // modelLibrary->AddModel("Assets/Models/AlisaMikhailovna.fbx");
@@ -117,7 +126,7 @@ namespace Dog
         if (!animationLibrary)
         {
             animationLibrary = std::make_unique<AnimationLibrary>();
-            animationLibrary->AddAnimation(Assets::ModelsPath + "trotting_cat.glb", modelLibrary->GetModel(Assets::ModelsPath + "trotting_cat.glb"));
+            // animationLibrary->AddAnimation(Assets::ModelsPath + "trotting_cat.glb", modelLibrary->GetModel(Assets::ModelsPath + "trotting_cat.glb"));
             animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/idle.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
             animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/idle.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
             animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/jump.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));

@@ -1,7 +1,6 @@
 ﻿#include <PCH/pch.h>
 #include "Device.h"
 #include "Graphics/Vulkan/VulkanWindow.h"
-#include "VulkanFunctions.h"
 
 namespace Dog 
 {

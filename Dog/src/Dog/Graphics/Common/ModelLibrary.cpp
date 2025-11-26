@@ -13,6 +13,7 @@
 
 #include "TextureLibrary.h"
 #include "../Vulkan/Core/Device.h"
+#include "../Vulkan/VKMesh.h"
 #include "../OpenGL/GLMesh.h"
 #include "Engine.h"
 
@@ -55,8 +56,28 @@ namespace Dog
         // std::string mModelName = std::filesystem::path(filePath).stem().string();
         mModelMap[filePath] = modelID;
         mLastModelLoaded = modelID;
+
         
         return modelID;
+    }
+
+    void ModelLibrary::AddModel(Model* model)
+    {
+        if (!model) return;
+
+        uint32_t modelID = static_cast<uint32_t>(mModels.size());
+        mModels.push_back(std::unique_ptr<Model>(model));
+
+        for (auto& mesh : model->mMeshes)
+        {
+            mesh->CreateVertexBuffers(&mDevice);
+            mesh->CreateIndexBuffers(&mDevice);
+        }
+
+        AddToUnifiedMesh(modelID);
+
+        mModelMap[model->mModelName] = modelID;
+        mLastModelLoaded = modelID;
     }
 
     void ModelLibrary::AddToUnifiedMesh(uint32_t modelIndex)
