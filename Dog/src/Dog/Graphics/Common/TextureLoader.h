@@ -18,6 +18,8 @@ namespace Dog
     public:
         // Single threaded
         static bool FromFile(const std::string& path, TextureData& outTexture);
+        static bool FromKTX2File(const std::string& path, TextureData& outTexture);
+        static bool FromSTBFile(const std::string& path, TextureData& outTexture);
         static bool FromMemory(const unsigned char* textureData, uint32_t textureSize, const std::string& name, TextureData& outTexture);
 
         // Multi-threaded

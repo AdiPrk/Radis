@@ -92,6 +92,7 @@ namespace Dog
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "texture.jpg");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "folderIcon.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "unknownFileIcon.png");
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "shikaout.ktx2");
         }
         else
         {
