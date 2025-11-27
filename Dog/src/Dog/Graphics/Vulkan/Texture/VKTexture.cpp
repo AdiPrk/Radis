@@ -25,7 +25,13 @@ namespace Dog
 		{
 			CreateSpecial();
 		}
-		else
+		else if (mData.isCompressed)
+		{
+			mMipLevels = mData.mipLevels;
+			CreateTextureImageCompressed();
+			CreateTextureImageView();
+		}
+		else 
 		{
 			mMipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(mData.width, mData.height)))) + 1;
 
@@ -114,6 +120,125 @@ namespace Dog
 		{
 			DOG_CRITICAL("Failed to create special image view");
 		}
+	}
+
+	void VKTexture::CreateTextureImageCompressed()
+	{
+		// 1. Staging buffer for all mip data
+		Buffer stagingBuffer{};
+		Allocator::CreateBuffer(
+			stagingBuffer,
+			mData.pixels.size(),
+			VK_BUFFER_USAGE_2_TRANSFER_SRC_BIT_KHR,
+			VMA_MEMORY_USAGE_AUTO,
+			VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+			VMA_ALLOCATION_CREATE_MAPPED_BIT
+		);
+		Allocator::SetAllocationName(stagingBuffer.allocation, "Texture Staging Buffer (Compressed)");
+
+		if (!stagingBuffer.mapping)
+		{
+			DOG_ERROR("No Mapping found for staging buffer when creating compressed texture image!");
+			return;
+		}
+
+		std::memcpy(stagingBuffer.mapping, mData.pixels.data(), mData.pixels.size());
+
+		// 2. Create image with compressed format & mips
+		VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+		CreateImage(
+			mData.width,
+			mData.height,
+			mData.imageFormat,         // VK_FORMAT_BC7_SRGB_BLOCK
+			VK_IMAGE_TILING_OPTIMAL,
+			usage,
+			VMA_MEMORY_USAGE_GPU_ONLY
+		);
+
+		// 3. Record transitions + copy in a single command buffer
+		VkCommandBuffer cmd = mDevice.BeginSingleTimeCommands();
+
+		// 3a. UNDEFINED -> TRANSFER_DST_OPTIMAL for all mips
+		VkImageMemoryBarrier barrier{};
+		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.image = mTextureImage;
+		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		barrier.subresourceRange.baseMipLevel = 0;
+		barrier.subresourceRange.levelCount = mMipLevels;
+		barrier.subresourceRange.baseArrayLayer = 0;
+		barrier.subresourceRange.layerCount = 1;
+
+		barrier.srcAccessMask = 0;
+		barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+		vkCmdPipelineBarrier(
+			cmd,
+			VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+			VK_PIPELINE_STAGE_TRANSFER_BIT,
+			0,
+			0, nullptr,
+			0, nullptr,
+			1, &barrier
+		);
+
+		// 3b. Copy each mip from buffer to image
+		std::vector<VkBufferImageCopy> regions;
+		regions.reserve(mMipLevels);
+
+		for (uint32_t level = 0; level < mMipLevels; ++level)
+		{
+			const auto& mip = mData.mipInfos[level];
+
+			VkBufferImageCopy region{};
+			region.bufferOffset = mip.offset;
+			region.bufferRowLength = 0;
+			region.bufferImageHeight = 0;
+
+			region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			region.imageSubresource.mipLevel = level;
+			region.imageSubresource.baseArrayLayer = 0;
+			region.imageSubresource.layerCount = 1;
+
+			region.imageOffset = { 0, 0, 0 };
+			region.imageExtent = { mip.width, mip.height, 1 };
+
+			regions.push_back(region);
+		}
+
+		vkCmdCopyBufferToImage(
+			cmd,
+			stagingBuffer.buffer,
+			mTextureImage,
+			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			static_cast<uint32_t>(regions.size()),
+			regions.data()
+		);
+
+		// 3c. TRANSFER_DST_OPTIMAL -> SHADER_READ_ONLY_OPTIMAL for all mips
+		barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+		barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+		vkCmdPipelineBarrier(
+			cmd,
+			VK_PIPELINE_STAGE_TRANSFER_BIT,
+			VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+			0,
+			0, nullptr,
+			0, nullptr,
+			1, &barrier
+		);
+
+		// 4. Submit + wait
+		mDevice.EndSingleTimeCommands(cmd);
+
+		// 5. Destroy staging buffer
+		vmaDestroyBuffer(Allocator::GetAllocator(), stagingBuffer.buffer, stagingBuffer.allocation);
 	}
 
 	void VKTexture::CreateTextureImage()

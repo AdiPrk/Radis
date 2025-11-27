@@ -118,7 +118,6 @@ namespace Dog
 
             mTexturesData[index] = std::move(loadData.outTexture);
             mTexturesData[index].name = loadData.path;
-            mTexturesData[index].imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
 
             std::unique_ptr<ITexture> newTexture;
             if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)

@@ -26,6 +26,7 @@ namespace Dog
 
 	private:
 		void CreateSpecial();
+		void CreateTextureImageCompressed();
 		void CreateTextureImage();
 		void CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VmaMemoryUsage memoryUsage);
 		void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount);

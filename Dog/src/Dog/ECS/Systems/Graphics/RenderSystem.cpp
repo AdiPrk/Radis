@@ -53,54 +53,54 @@ namespace Dog
     {
         auto rr = ecs->GetResource<RenderingResource>();
 
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan && !rr->tlasAccel.accel && rr->blasAccel.empty())
-        {
-            // get num entities with model component
-            mRTMeshData.clear();
-            mRTMeshIndices.clear();
-            
-            auto uMeshes = rr->modelLibrary->GetUnifiedMesh();
-            if (uMeshes)
-            {            
-                MeshDataUniform vertexData;
-                for (auto& v : uMeshes->GetUnifiedMesh()->mVertices)
-                {
-                    vertexData.posX = v.position.x;
-                    vertexData.posY = v.position.y;
-                    vertexData.posZ = v.position.z;
-                    vertexData.colorR = v.color.r;
-                    vertexData.colorG = v.color.g;
-                    vertexData.colorB = v.color.b;
-                    vertexData.normalX = v.normal.x;
-                    vertexData.normalY = v.normal.y;
-                    vertexData.normalZ = v.normal.z;
-                    vertexData.texU = v.uv.x;
-                    vertexData.texV = v.uv.y;
+        //if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan && !rr->tlasAccel.accel && rr->blasAccel.empty())
+        //{
+        //    // get num entities with model component
+        //    mRTMeshData.clear();
+        //    mRTMeshIndices.clear();
+        //    
+        //    auto uMeshes = rr->modelLibrary->GetUnifiedMesh();
+        //    if (uMeshes)
+        //    {            
+        //        MeshDataUniform vertexData;
+        //        for (auto& v : uMeshes->GetUnifiedMesh()->mVertices)
+        //        {
+        //            vertexData.posX = v.position.x;
+        //            vertexData.posY = v.position.y;
+        //            vertexData.posZ = v.position.z;
+        //            vertexData.colorR = v.color.r;
+        //            vertexData.colorG = v.color.g;
+        //            vertexData.colorB = v.color.b;
+        //            vertexData.normalX = v.normal.x;
+        //            vertexData.normalY = v.normal.y;
+        //            vertexData.normalZ = v.normal.z;
+        //            vertexData.texU = v.uv.x;
+        //            vertexData.texV = v.uv.y;
 
-                    mRTMeshData.push_back(vertexData);
-                }
-            
-                mRTMeshIndices = uMeshes->GetUnifiedMesh()->mIndices;
-            }
-            
-            auto rtr = ecs->GetResource<RaytracingResource>();
-            rtr->CreateBLAS();  // Set up BLAS infrastructure
-            rtr->CreateTLAS();  // Set up TLAS infrastructure
-            
-            VkWriteDescriptorSetAccelerationStructureKHR asInfo{};
-            asInfo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
-            asInfo.accelerationStructureCount = 1;
-            asInfo.pAccelerationStructures = &rr->tlasAccel.accel;
-            for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex)
-            {
-                DescriptorWriter writer(*rr->rtUniform->GetDescriptorLayout(), *rr->rtUniform->GetDescriptorPool());
-                writer.WriteAccelerationStructure(0, &asInfo);
-                writer.Overwrite(rr->rtUniform->GetDescriptorSets()[frameIndex]);
+        //            mRTMeshData.push_back(vertexData);
+        //        }
+        //    
+        //        mRTMeshIndices = uMeshes->GetUnifiedMesh()->mIndices;
+        //    }
+        //    
+        //    auto rtr = ecs->GetResource<RaytracingResource>();
+        //    rtr->CreateBLAS();  // Set up BLAS infrastructure
+        //    rtr->CreateTLAS();  // Set up TLAS infrastructure
+        //    
+        //    VkWriteDescriptorSetAccelerationStructureKHR asInfo{};
+        //    asInfo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
+        //    asInfo.accelerationStructureCount = 1;
+        //    asInfo.pAccelerationStructures = &rr->tlasAccel.accel;
+        //    for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex)
+        //    {
+        //        DescriptorWriter writer(*rr->rtUniform->GetDescriptorLayout(), *rr->rtUniform->GetDescriptorPool());
+        //        writer.WriteAccelerationStructure(0, &asInfo);
+        //        writer.Overwrite(rr->rtUniform->GetDescriptorSets()[frameIndex]);
 
-                rr->rtUniform->SetUniformData(mRTMeshData, 3, frameIndex);
-                rr->rtUniform->SetUniformData(mRTMeshIndices, 4, frameIndex);
-            }
-        }
+        //        rr->rtUniform->SetUniformData(mRTMeshData, 3, frameIndex);
+        //        rr->rtUniform->SetUniformData(mRTMeshIndices, 4, frameIndex);
+        //    }
+        //}
 
         // Update textures!
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
@@ -225,6 +225,7 @@ namespace Dog
                 float meshRoughness = mc.useRoughnessOverride ? mc.roughnessOverride : mesh->roughnessFactor;
                 uint32_t metallicIndex = mc.useMetallicOverride ? TextureLibrary::INVALID_TEXTURE_INDEX : mesh->metalnessTextureIndex;
                 uint32_t roughnessIndex = mc.useRoughnessOverride ? TextureLibrary::INVALID_TEXTURE_INDEX : mesh->roughnessTextureIndex;
+                if (mesh->mMetallicRoughnessCombined) roughnessIndex = metallicIndex;
 
                 data.tint = mc.tintColor;
                 data.textureIndicies = glm::uvec4(mesh->albedoTextureIndex, mesh->normalTextureIndex, metallicIndex, roughnessIndex);

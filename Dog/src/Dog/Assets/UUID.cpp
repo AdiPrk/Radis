@@ -20,7 +20,6 @@ namespace Dog {
 
 	UUID::UUID(const std::string& name)
 	{
-		DOG_INFO("Generating UUID from name: {}", name);
 		m_UUID = std::hash<std::string>{}(name);
 	}
 

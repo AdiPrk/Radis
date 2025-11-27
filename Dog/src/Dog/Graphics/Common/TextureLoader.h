@@ -16,7 +16,15 @@ namespace Dog
     class TextureLoader
     {
     public:
-        // Single threaded
+        struct KTX2BuildInput
+        {
+            std::string sourcePath;                     // if original file exists
+            const std::vector<unsigned char>* data = nullptr; // if embedded texture
+        };
+
+        // Build a KTX2 file on disk from a path OR in-memory data.
+        static void BuildKTX2File(const KTX2BuildInput& input, const std::string& outPath);
+
         static bool FromFile(const std::string& path, TextureData& outTexture);
         static bool FromKTX2File(const std::string& path, TextureData& outTexture);
         static bool FromSTBFile(const std::string& path, TextureData& outTexture);
@@ -24,5 +32,9 @@ namespace Dog
 
         // Multi-threaded
         static void LoadMT(std::vector<TextureLoadData>& loadData);
+        
+        // Helpers
+        static bool IsKTX2Path(const std::string& path);
+        static void CreateKTX2File(const std::string& path, const std::string& outputPath);
     };
 }
