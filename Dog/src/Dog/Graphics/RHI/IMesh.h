@@ -87,13 +87,7 @@ namespace Dog
         uint32_t occlusionTextureIndex = 10001;
         uint32_t emissiveTextureIndex = 10001;
 
-        // Texture UUIDs
-        UUID albedoTextureUUID;
-        UUID normalTextureUUID;
-        UUID metalnessTextureUUID;
-        UUID roughnessTextureUUID;
-        UUID occlusionTextureUUID;
-        UUID emissiveTextureUUID;
+        bool mMetallicRoughnessCombined = false; // Roughness uses same texture as metallic
 
         // Color 'factors'
         glm::vec4 baseColorFactor{ 1.f };

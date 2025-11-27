@@ -40,6 +40,7 @@
 #include <glm/gtx/matrix_decompose.hpp>
 
 #include <string>
+#include <execution>
 #include <iostream>
 #include <fstream>
 #include <stdexcept>

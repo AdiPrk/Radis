@@ -84,33 +84,190 @@ bool ModelSerializer::validateHeader(std::ifstream& file) {
 
 void ModelSerializer::save(const Model& model, const std::string& filename, uint32_t hash)
 {
+    // ---------------- TEXTURE REGISTRY / DEDUP ---------------------------
+
+    enum class TextureSlot : uint8_t
+    {
+        Albedo = 0,
+        Normal,
+        Metalness,
+        Roughness,
+        Occlusion,
+        Emissive,
+        Count
+    };
+
+    static const char* TextureSlotNames[] =
+    {
+        "Albedo",
+        "Normal",
+        "Metalness",
+        "Roughness",
+        "Occlusion",
+        "Emissive"
+    };
+
+    struct TextureRecord
+    {
+        std::string key;                // dedup key
+        std::string sourcePath;        // original (non-ktx2) path if any
+        const std::vector<unsigned char>* embeddedData = nullptr; // if no path
+        std::string outKTX2Path;       // final KTX2 path we will write to disk
+    };
+
+    struct MeshTextureRefs
+    {
+        int32_t tex[static_cast<size_t>(TextureSlot::Count)] = { -1, -1, -1, -1, -1, -1 };
+        uint32_t metallicRoughnessCombined = 0;
+    };
+
+    auto HashBytes = [](const std::vector<unsigned char>& data) -> std::size_t
+        {
+            if (data.empty()) return 0;
+            return std::hash<std::string_view>{}(
+                std::string_view(reinterpret_cast<const char*>(data.data()), data.size()));
+        };
+
+    auto MakeKTX2PathForSource = [](const std::string& srcPath) -> std::string
+        {
+            std::filesystem::path p(srcPath);
+            p.replace_extension(".ktx2");
+            return p.string();
+        };
+
+    auto MakeKTX2PathForEmbedded = [&](TextureSlot slot, std::size_t hashValue) -> std::string
+        {
+            std::filesystem::path dir = std::filesystem::path(Assets::ModelsPath) / "ktx2";
+            // actual directory creation is handled in BuildKTX2File, so just build the path
+            std::string fileName =
+                model.mModelName + "_" +
+                TextureSlotNames[static_cast<size_t>(slot)] + "_" +
+                std::to_string(static_cast<unsigned long long>(hashValue)) + ".ktx2";
+
+            std::filesystem::path full = dir / fileName;
+            return full.string();
+        };
+
+    std::unordered_map<std::string, uint32_t> texIdByKey;
+    std::vector<TextureRecord> textures;
+    std::vector<MeshTextureRefs> meshTexRefs;
+    meshTexRefs.reserve(model.mMeshes.size());
+
+    auto RegisterTexture = [&](const std::string& path,
+        const std::vector<unsigned char>& data,
+        TextureSlot slot) -> int32_t
+        {
+            if (path.empty() && data.empty())
+                return -1; // no texture
+
+            std::string key;
+            std::string outPath;
+
+            if (!path.empty())
+            {
+                key = "PATH|" + path;
+                outPath = MakeKTX2PathForSource(path);
+            }
+            else
+            {
+                std::size_t h = HashBytes(data);
+                key = "EMBEDDED|" + std::to_string(static_cast<unsigned long long>(h));
+                outPath = MakeKTX2PathForEmbedded(slot, h);
+            }
+
+            auto it = texIdByKey.find(key);
+            if (it != texIdByKey.end())
+                return static_cast<int32_t>(it->second);
+
+            uint32_t newId = static_cast<uint32_t>(textures.size());
+            texIdByKey.emplace(key, newId);
+
+            TextureRecord rec;
+            rec.key = std::move(key);
+            rec.sourcePath = path;
+            rec.embeddedData = path.empty() ? &data : nullptr;
+            rec.outKTX2Path = std::move(outPath);
+
+            textures.push_back(std::move(rec));
+            return static_cast<int32_t>(newId);
+        };
+
+    // First pass: build registry + per-mesh refs
+    for (const auto& meshPtr : model.mMeshes)
+    {
+        const auto& mesh = *meshPtr;
+        MeshTextureRefs refs{};
+
+        refs.tex[static_cast<size_t>(TextureSlot::Albedo)] =
+            RegisterTexture(mesh.albedoTexturePath, mesh.mAlbedoTextureData, TextureSlot::Albedo);
+        refs.tex[static_cast<size_t>(TextureSlot::Normal)] =
+            RegisterTexture(mesh.normalTexturePath, mesh.mNormalTextureData, TextureSlot::Normal);
+        refs.tex[static_cast<size_t>(TextureSlot::Metalness)] =
+            RegisterTexture(mesh.metalnessTexturePath, mesh.mMetalnessTextureData, TextureSlot::Metalness);
+        refs.tex[static_cast<size_t>(TextureSlot::Roughness)] =
+            RegisterTexture(mesh.roughnessTexturePath, mesh.mRoughnessTextureData, TextureSlot::Roughness);
+        refs.tex[static_cast<size_t>(TextureSlot::Occlusion)] =
+            RegisterTexture(mesh.occlusionTexturePath, mesh.mOcclusionTextureData, TextureSlot::Occlusion);
+        refs.tex[static_cast<size_t>(TextureSlot::Emissive)] =
+            RegisterTexture(mesh.emissiveTexturePath, mesh.mEmissiveTextureData, TextureSlot::Emissive);
+
+        refs.metallicRoughnessCombined = mesh.mMetallicRoughnessCombined ? 1u : 0u;
+
+        meshTexRefs.push_back(refs);
+    }
+
+    // ---------------- PARALLEL KTX2 BUILD ---------------------------
+    printf("Starting KTX2 texture builds (%zu unique textures) for model '%s'...\n",
+        textures.size(),
+        model.mModelName.c_str());
+    std::for_each(std::execution::par,
+        textures.begin(), textures.end(),
+        [](TextureRecord& rec)
+        {
+            TextureLoader::KTX2BuildInput input{};
+            input.sourcePath = rec.sourcePath;
+            input.data = rec.embeddedData;
+
+            TextureLoader::BuildKTX2File(input, rec.outKTX2Path);
+
+            if (!rec.sourcePath.empty())
+            {
+                // Optional: log mapping
+                // printf("KTX2: %s -> %s\n", rec.sourcePath.c_str(), rec.outKTX2Path.c_str());
+            }
+        });
+    printf("Done");
+
+    // ---------------- FILE WRITE (same layout as before, but only paths) ----
+
     std::ofstream file(filename, std::ios::binary);
     if (!file)
     {
         DOG_CRITICAL("Could not open file for writing.");
+        return;
     }
 
     auto WriteU32 = [&](uint32_t value)
-    {
-        if constexpr (switchEndian) value = swapEndian(value);
-        file.write(reinterpret_cast<const char*>(&value), sizeof(value));
-    };
+        {
+            if constexpr (switchEndian) value = swapEndian(value);
+            file.write(reinterpret_cast<const char*>(&value), sizeof(value));
+        };
 
     auto WriteI32 = [&](int32_t value)
-    {
-        if constexpr (switchEndian) value = static_cast<int32_t>(swapEndian(static_cast<uint32_t>(value)));
-        file.write(reinterpret_cast<const char*>(&value), sizeof(value));
-    };
+        {
+            if constexpr (switchEndian) value = static_cast<int32_t>(swapEndian(static_cast<uint32_t>(value)));
+            file.write(reinterpret_cast<const char*>(&value), sizeof(value));
+        };
 
     auto WriteU64 = [&](uint64_t value)
-    {
-        if constexpr (switchEndian) value = swapEndian64(value);
-        file.write(reinterpret_cast<const char*>(&value), sizeof(value));
-    };
+        {
+            if constexpr (switchEndian) value = swapEndian64(value);
+            file.write(reinterpret_cast<const char*>(&value), sizeof(value));
+        };
 
     uint32_t magic = MAGIC_NUMBER;
     uint32_t version = VERSION;
-    uint32_t checksum = 0; // Placeholder for future checksum implementation
+    uint32_t checksum = 0; // reserved
     uint32_t hasAnimation = model.mBoneInfoMap.empty() ? 0u : 1u;
 
     // Header
@@ -118,7 +275,7 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
     WriteU32(magic);
     WriteU32(version);
     WriteU32(hasAnimation);
-    // WriteU32(checksum); // unused rn
+    // WriteU32(checksum); // still unused
 
     // AABB
     if constexpr (switchEndian)
@@ -138,18 +295,43 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
     uint32_t meshCount = static_cast<uint32_t>(model.mMeshes.size());
     WriteU32(meshCount);
 
+    auto WriteTexturePathEntry = [&](int32_t texId)
+        {
+            // Same structure as old "path" format: embedded=0, then nameSize + name.
+            uint32_t embedded = 0;
+            WriteU32(embedded);
+
+            if (texId < 0)
+            {
+                uint32_t nameSize = 0;
+                WriteU32(nameSize);
+                return;
+            }
+
+            const std::string& path = textures[static_cast<size_t>(texId)].outKTX2Path;
+            uint32_t nameSize = static_cast<uint32_t>(path.size());
+            WriteU32(nameSize);
+            if (nameSize > 0)
+            {
+                file.write(path.c_str(), nameSize);
+            }
+        };
+
     // Each mesh
-    uint32_t index = 0;
-    for (const auto& mesh : model.mMeshes)
+    for (uint32_t index = 0; index < meshCount; ++index)
     {
-        uint32_t vertexCount = static_cast<uint32_t>(mesh->mVertices.size());
-        uint32_t indexCount = static_cast<uint32_t>(mesh->mIndices.size());
+        const auto& meshPtr = model.mMeshes[index];
+        const auto& mesh = *meshPtr;
+        const MeshTextureRefs& refs = meshTexRefs[index];
+
+        uint32_t vertexCount = static_cast<uint32_t>(mesh.mVertices.size());
+        uint32_t indexCount = static_cast<uint32_t>(mesh.mIndices.size());
 
         WriteU32(vertexCount);
         WriteU32(indexCount);
 
         // Vertices
-        for (const auto& vertex : mesh->mVertices)
+        for (const auto& vertex : mesh.mVertices)
         {
             if constexpr (switchEndian)
             {
@@ -190,87 +372,37 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
             }
         }
 
-        // Indices (always via WriteU32 so endian is handled)
-        for (uint32_t idx : mesh->mIndices)
+        // Indices
+        for (uint32_t idxVal : mesh.mIndices)
         {
-            WriteU32(idx);
+            WriteU32(idxVal);
         }
 
-        // Texture UUIDs via WriteU64
-        WriteU64(static_cast<uint64_t>(mesh->albedoTextureUUID));
-        WriteU64(static_cast<uint64_t>(mesh->normalTextureUUID));
-        WriteU64(static_cast<uint64_t>(mesh->metalnessTextureUUID));
-        WriteU64(static_cast<uint64_t>(mesh->roughnessTextureUUID));
-        WriteU64(static_cast<uint64_t>(mesh->occlusionTextureUUID));
-        WriteU64(static_cast<uint64_t>(mesh->emissiveTextureUUID));
+        // Texture entries: now always paths to KTX2 files
+        WriteTexturePathEntry(refs.tex[static_cast<size_t>(TextureSlot::Albedo)]);
+        WriteTexturePathEntry(refs.tex[static_cast<size_t>(TextureSlot::Normal)]);
+        WriteTexturePathEntry(refs.tex[static_cast<size_t>(TextureSlot::Metalness)]);
+        WriteTexturePathEntry(refs.tex[static_cast<size_t>(TextureSlot::Roughness)]);
+        WriteTexturePathEntry(refs.tex[static_cast<size_t>(TextureSlot::Occlusion)]);
+        WriteTexturePathEntry(refs.tex[static_cast<size_t>(TextureSlot::Emissive)]);
 
-        std::string tBaseName = model.mModelName + "_" + std::to_string(index) + "_";
-
-        auto WriteTextureData = [&](const std::string& texturePath,
-            const std::vector<unsigned char>& textureData,
-            const std::string& texNameSuffix)
-            {
-                if (!texturePath.empty())
-                {
-                    uint32_t embedded = 0;
-                    WriteU32(embedded);
-
-                    uint32_t nameSize = static_cast<uint32_t>(texturePath.size());
-                    WriteU32(nameSize);
-                    file.write(texturePath.c_str(), nameSize);
-                }
-                else if (!textureData.empty())
-                {
-                    uint32_t embedded = 1;
-                    WriteU32(embedded);
-
-                    std::string texName = tBaseName + texNameSuffix;
-                    uint32_t nameSize = static_cast<uint32_t>(texName.size());
-                    WriteU32(nameSize);
-                    file.write(texName.c_str(), nameSize);
-
-                    uint32_t dataSize = static_cast<uint32_t>(textureData.size());
-                    WriteU32(dataSize);
-                    file.write(reinterpret_cast<const char*>(textureData.data()), dataSize);
-                }
-                else
-                {
-                    // Explicit "no texture" entry
-                    uint32_t embedded = 0;
-                    WriteU32(embedded);
-
-                    uint32_t nameSize = 0;
-                    WriteU32(nameSize);
-                }
-            };
-
-        WriteTextureData(mesh->albedoTexturePath, mesh->mAlbedoTextureData, "Albedo");
-        WriteTextureData(mesh->normalTexturePath, mesh->mNormalTextureData, "Normal");
-        WriteTextureData(mesh->metalnessTexturePath, mesh->mMetalnessTextureData, "Metalness");
-        WriteTextureData(mesh->roughnessTexturePath, mesh->mRoughnessTextureData, "Roughness");
-        WriteTextureData(mesh->occlusionTexturePath, mesh->mOcclusionTextureData, "Occlusion");
-        WriteTextureData(mesh->emissiveTexturePath, mesh->mEmissiveTextureData, "Emissive");
-
-        ++index;
+        WriteU32(refs.metallicRoughnessCombined);
     }
 
+    // Bones / animation as before
     if (!model.mBoneInfoMap.empty())
     {
-        // Number of bones
         uint32_t boneCount = static_cast<uint32_t>(model.mBoneInfoMap.size());
         WriteU32(boneCount);
 
         for (const auto& [boneName, boneInfo] : model.mBoneInfoMap)
         {
-            // Bone name
             uint32_t nameSize = static_cast<uint32_t>(boneName.size());
             WriteU32(nameSize);
             file.write(boneName.c_str(), nameSize);
 
-            // Bone ID
             WriteI32(boneInfo.id);
 
-            // VQS (rotation quat + translation vec3 + scale vec3)
             float rw = boneInfo.vqsOffset.rotation.w;
             float rx = boneInfo.vqsOffset.rotation.x;
             float ry = boneInfo.vqsOffset.rotation.y;
@@ -305,6 +437,7 @@ bool ModelSerializer::load(Model& model, const std::string& filename) {
     if (!file)
     {
         DOG_CRITICAL("Could not open file for reading.");
+        return false;
     }
 
     // Validate the file header and version
@@ -395,67 +528,46 @@ bool ModelSerializer::load(Model& model, const std::string& filename) {
             }
         }
 
-        // Read UUIDs
-        UUID albedo, normal, metalness, roughness, occlusion, emissive;
-        file.read(reinterpret_cast<char*>(&albedo), sizeof(albedo));
-        file.read(reinterpret_cast<char*>(&normal), sizeof(normal));
-        file.read(reinterpret_cast<char*>(&metalness), sizeof(metalness));
-        file.read(reinterpret_cast<char*>(&roughness), sizeof(roughness));
-        file.read(reinterpret_cast<char*>(&occlusion), sizeof(occlusion));
-        file.read(reinterpret_cast<char*>(&emissive), sizeof(emissive));
-        if constexpr (switchEndian) {
-            albedo = swapEndian64(albedo);
-            normal = swapEndian64(normal);
-            metalness = swapEndian64(metalness);
-            roughness = swapEndian64(roughness);
-            occlusion = swapEndian64(occlusion);
-            emissive = swapEndian64(emissive);
-        }
-
-        mesh->albedoTextureUUID = albedo;
-        mesh->normalTextureUUID = normal;
-        mesh->metalnessTextureUUID = metalness;
-        mesh->roughnessTextureUUID = roughness;
-        mesh->occlusionTextureUUID = occlusion;
-        mesh->emissiveTextureUUID = emissive;
-
-        // Read texture data if UUIDs are valid
+        // Read texture data (for new files: this only reads KTX2 paths)
         auto ReadTextureData = [&](std::string& texturePath, std::vector<unsigned char>& textureData)
-        {
-            uint32_t embedded;
-            file.read(reinterpret_cast<char*>(&embedded), sizeof(embedded));
-            if constexpr (switchEndian) embedded = swapEndian(embedded);
-
-            if (embedded)
             {
-                uint32_t nameSize;
-                file.read(reinterpret_cast<char*>(&nameSize), sizeof(nameSize));
-                if constexpr (switchEndian) nameSize = swapEndian(nameSize);
+                uint32_t embedded;
+                file.read(reinterpret_cast<char*>(&embedded), sizeof(embedded));
+                if constexpr (switchEndian) embedded = swapEndian(embedded);
 
-                std::string texName(nameSize, '\0');
-                file.read(&texName[0], nameSize);
+                if (embedded)
+                {
+                    // Legacy embedded texture path + raw bytes
+                    uint32_t nameSize;
+                    file.read(reinterpret_cast<char*>(&nameSize), sizeof(nameSize));
+                    if constexpr (switchEndian) nameSize = swapEndian(nameSize);
 
-                uint32_t dataSize;
-                file.read(reinterpret_cast<char*>(&dataSize), sizeof(dataSize));
-                if constexpr (switchEndian) dataSize = swapEndian(dataSize);
+                    std::string texName(nameSize, '\0');
+                    file.read(&texName[0], nameSize);
 
-                textureData.resize(dataSize);
-                file.read(reinterpret_cast<char*>(textureData.data()), dataSize);
+                    uint32_t dataSize;
+                    file.read(reinterpret_cast<char*>(&dataSize), sizeof(dataSize));
+                    if constexpr (switchEndian) dataSize = swapEndian(dataSize);
 
-                texturePath.clear(); // Indicate that texture is from memory
-            }
-            else
-            {
-                uint32_t nameSize;
-                file.read(reinterpret_cast<char*>(&nameSize), sizeof(nameSize));
-                if constexpr (switchEndian) nameSize = swapEndian(nameSize);
+                    textureData.resize(dataSize);
+                    file.read(reinterpret_cast<char*>(textureData.data()), dataSize);
 
-                texturePath.resize(nameSize);
-                file.read(&texturePath[0], nameSize);
+                    texturePath.clear(); // Indicates embedded data
+                }
+                else
+                {
+                    // Path-only case (new format: this will be path to a .ktx2 file)
+                    uint32_t nameSize;
+                    file.read(reinterpret_cast<char*>(&nameSize), sizeof(nameSize));
+                    if constexpr (switchEndian) nameSize = swapEndian(nameSize);
 
-                textureData.clear(); // Indicate that texture is from file
-            }
-        };
+                    texturePath.resize(nameSize);
+                    if (nameSize > 0)
+                        file.read(&texturePath[0], nameSize);
+
+                    textureData.clear(); // indicates texture from file
+                }
+            };
 
         ReadTextureData(mesh->albedoTexturePath, mesh->mAlbedoTextureData);
         ReadTextureData(mesh->normalTexturePath, mesh->mNormalTextureData);
@@ -463,8 +575,14 @@ bool ModelSerializer::load(Model& model, const std::string& filename) {
         ReadTextureData(mesh->roughnessTexturePath, mesh->mRoughnessTextureData);
         ReadTextureData(mesh->occlusionTexturePath, mesh->mOcclusionTextureData);
         ReadTextureData(mesh->emissiveTexturePath, mesh->mEmissiveTextureData);
+
+        uint32_t combined;
+        file.read(reinterpret_cast<char*>(&combined), sizeof(combined));
+        if constexpr (switchEndian) combined = swapEndian(combined);
+        mesh->mMetallicRoughnessCombined = (combined != 0);
     }
 
+    // Bones / animation (unchanged)
     model.mBoneInfoMap.clear();
     model.mBoneCount = 0;
 
@@ -479,7 +597,6 @@ bool ModelSerializer::load(Model& model, const std::string& filename) {
 
         for (uint32_t i = 0; i < boneCount; ++i)
         {
-            // bone name
             uint32_t nameSize = 0;
             file.read(reinterpret_cast<char*>(&nameSize), sizeof(nameSize));
             if constexpr (switchEndian) nameSize = swapEndian(nameSize);
@@ -490,14 +607,12 @@ bool ModelSerializer::load(Model& model, const std::string& filename) {
                 file.read(&boneName[0], nameSize);
             }
 
-            // bone id
             int32_t boneID = 0;
             file.read(reinterpret_cast<char*>(&boneID), sizeof(boneID));
             if constexpr (switchEndian) {
                 boneID = static_cast<int32_t>(swapEndian(static_cast<uint32_t>(boneID)));
             }
 
-            // VQS
             float rw, rx, ry, rz;
             glm::vec3 t, s;
 
@@ -526,11 +641,9 @@ bool ModelSerializer::load(Model& model, const std::string& filename) {
             if (boneID > maxID) maxID = boneID;
         }
 
-        // keep mBoneCount consistent with IDs
         model.mBoneCount = (maxID >= 0) ? (maxID + 1) : 0;
     }
 
     file.close();
-
     return true;
 }

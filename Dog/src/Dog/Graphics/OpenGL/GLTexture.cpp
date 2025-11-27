@@ -30,17 +30,26 @@ namespace Dog {
         glGenTextures(1, &id);
         this->ID = id;
 
-        Internal_Format = GL_SRGB8_ALPHA8;
-        Image_Format = GL_RGBA;
+        if (textureData.isCompressed)
+        {
+            // BC7 sRGB
+            Internal_Format = GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM;
+            Image_Format = GL_RGBA; // not used for compressed upload
+            Filter_Min = GL_LINEAR_MIPMAP_LINEAR; // make use of mips
+        }
+        else
+        {
+            Internal_Format = GL_SRGB8_ALPHA8;
+            Image_Format = GL_RGBA;
+            Filter_Min = GL_LINEAR_MIPMAP_LINEAR; // or GL_LINEAR if you prefer
+        }
 
-        // Calculate the width and height of a single sprite
         unsigned columns = 1, rows = 1;
-
-        SpriteWidth = textureData.width / columns;
+        SpriteWidth  = textureData.width / columns;
         SpriteHeight = textureData.height / rows;
-        Rows = rows;
-        Columns = columns;
-        Index = 0;
+        Rows         = rows;
+        Columns      = columns;
+        Index        = 0;
         IsSpriteSheet = columns != 1 || rows != 1;
 
         Generate(textureData.width, textureData.height, textureData.pixels.data());
@@ -55,18 +64,40 @@ namespace Dog {
     {
         glBindTexture(GL_TEXTURE_2D, this->ID);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, this->Internal_Format, width, height, 0, this->Image_Format, GL_UNSIGNED_BYTE, data);
+        if (!mData.isCompressed)
+        {
+            glTexImage2D(GL_TEXTURE_2D, 0, Internal_Format, width, height, 0, Image_Format, GL_UNSIGNED_BYTE, data);
+            glGenerateMipmap(GL_TEXTURE_2D);
+        }
+        else
+        {
+            // Compressed path: upload all mip levels using mData.mipInfos
+            for (uint32_t level = 0; level < mData.mipLevels; ++level)
+            {
+                const auto& mip = mData.mipInfos[level];
+                const void* src = mData.pixels.data() + mip.offset;
+
+                glCompressedTexImage2D(
+                    GL_TEXTURE_2D,
+                    static_cast<GLint>(level),
+                    this->Internal_Format,   // GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM
+                    static_cast<GLsizei>(mip.width),
+                    static_cast<GLsizei>(mip.height),
+                    0,
+                    static_cast<GLsizei>(mip.size),
+                    src
+                );
+            }
+        }
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, this->Wrap_S);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, this->Wrap_T);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, this->Filter_Min);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, this->Filter_Max);
 
-        // Generate a handle for the texture and make it resident
         textureHandle = glGetTextureHandleARB(this->ID);
         glMakeTextureHandleResidentARB(textureHandle);
 
-        // Reset stuff
         glBindTexture(GL_TEXTURE_2D, 0);
         glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
         glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);

@@ -19,10 +19,13 @@ namespace Dog
         mDirectory = pathObj.parent_path().string();
         mModelName = pathObj.stem().string();
 
-        LoadMeshes(filePath);
+        //LoadMeshes(filePath);
 
-        // VFS::ModelSerializer::save(*this, Assets::ModelsPath + "/dm/" + mModelName + ".dm", 0x0);
-        // VFS::ModelSerializer::load(*this, Assets::ModelsPath + "/dm/" + mModelName + ".dm");
+        //printf("Saving %s as .dm model...\n", mModelName.c_str());
+        //VFS::ModelSerializer::save(*this, Assets::ModelsPath + "/dm/" + mModelName + ".dm", 0x0);
+        
+        //printf("Loading %s from .dm model...\n", mModelName.c_str());
+        VFS::ModelSerializer::load(*this, Assets::ModelsPath + "/dm/" + mModelName + ".dm");
         
         NormalizeModel();
     }
@@ -260,21 +263,6 @@ namespace Dog
             { aiTextureType_BASE_COLOR, aiTextureType_DIFFUSE },
             newMesh.mAlbedoTextureData
         );
-
-
-        if (!newMesh.albedoTexturePath.empty())
-        {
-            newMesh.albedoTextureUUID = UUID(newMesh.albedoTexturePath);
-        }
-        else if (!newMesh.mAlbedoTextureData.empty())
-        {
-            std::string texUUID = mModelName + "_" + std::to_string(mMeshes.size()) + "_Albedo";
-            newMesh.albedoTextureUUID = UUID(texUUID);
-        }
-        else
-        {
-            newMesh.albedoTextureUUID = 0;
-        }
     }
 
     void Model::ProcessNormalMap(aiMaterial* material, IMesh& newMesh)
@@ -284,20 +272,6 @@ namespace Dog
             { aiTextureType_NORMAL_CAMERA, aiTextureType_NORMALS },
             newMesh.mNormalTextureData
         );
-
-        if (!newMesh.normalTexturePath.empty())
-        {
-            newMesh.normalTextureUUID = UUID(newMesh.normalTexturePath);
-        }
-        else if (!newMesh.mNormalTextureData.empty())
-        {
-            std::string texUUID = mModelName + "_" + std::to_string(mMeshes.size()) + "_Normal";
-            newMesh.normalTextureUUID = UUID(texUUID);
-        }
-        else
-        {
-            newMesh.normalTextureUUID = 0;
-        }
     }
 
     void Model::ProcessPBRMaps(aiMaterial* material, IMesh& newMesh)
@@ -323,52 +297,16 @@ namespace Dog
             newMesh.mOcclusionTextureData
         );
 
+        // Using the same texture; just use one
         if (!newMesh.metalnessTexturePath.empty() && newMesh.metalnessTexturePath == newMesh.roughnessTexturePath)
         {
-            // The paths are identical!
-            // This could be an ORM texture (Occlusion-Roughness-Metalness) if glTF
+            newMesh.mMetallicRoughnessCombined = true;
+            newMesh.roughnessTexturePath.clear();
         }
-
-        if (!newMesh.metalnessTexturePath.empty())
+        else if (!newMesh.mMetalnessTextureData.empty() && newMesh.mMetalnessTextureData == newMesh.mRoughnessTextureData)
         {
-            newMesh.metalnessTextureUUID = UUID(newMesh.metalnessTexturePath);
-        }
-        else if (!newMesh.mMetalnessTextureData.empty())
-        {
-            std::string texUUID = mModelName + "_" + std::to_string(mMeshes.size()) + "_Metalness";
-            newMesh.metalnessTextureUUID = UUID(texUUID);
-        }
-        else 
-        {
-            newMesh.metalnessTextureUUID = 0;
-        }
-
-        if (!newMesh.roughnessTexturePath.empty())
-        {
-            newMesh.roughnessTextureUUID = UUID(newMesh.roughnessTexturePath);
-        }
-        else if (!newMesh.mRoughnessTextureData.empty())
-        {
-            std::string texUUID = mModelName + "_" + std::to_string(mMeshes.size()) + "_Roughness";
-            newMesh.roughnessTextureUUID = UUID(texUUID);
-        }
-        else
-        {
-            newMesh.roughnessTextureUUID = 0;
-        }
-
-        if (!newMesh.occlusionTexturePath.empty())
-        {
-            newMesh.occlusionTextureUUID = UUID(newMesh.occlusionTexturePath);
-        }
-        else if (!newMesh.mOcclusionTextureData.empty())
-        {
-            std::string texUUID = mModelName + "_" + std::to_string(mMeshes.size()) + "_Occlusion";
-            newMesh.occlusionTextureUUID = UUID(texUUID);
-        }
-        else
-        {
-            newMesh.occlusionTextureUUID = 0;
+            newMesh.mMetallicRoughnessCombined = true;
+            newMesh.mRoughnessTextureData.clear();
         }
     }
         
@@ -385,19 +323,5 @@ namespace Dog
             { aiTextureType_EMISSION_COLOR, aiTextureType_EMISSIVE },
             newMesh.mEmissiveTextureData
         );
-
-        if (!newMesh.emissiveTexturePath.empty())
-        {
-            newMesh.emissiveTextureUUID = UUID(newMesh.emissiveTexturePath);
-        }
-        else if (!newMesh.mEmissiveTextureData.empty())
-        {
-            std::string texUUID = mModelName + "_" + std::to_string(mMeshes.size()) + "_Emissive";
-            newMesh.emissiveTextureUUID = UUID(texUUID);
-        }
-        else
-        {
-            newMesh.emissiveTextureUUID = 0;
-        }
     }
 }
