@@ -22,7 +22,7 @@ namespace Dog
         if (fromDM)
         {
             DOG_INFO("Loading {} from .dm model...", mModelName.c_str());
-            ModelSerializer::load(*this, Assets::ModelsPath + "/dm/" + mModelName + ".dm");
+            ModelSerializer::load(*this, Assets::ModelsPath + "dm/" + mModelName + ".dm");
         }
         else
         {
@@ -34,7 +34,7 @@ namespace Dog
         if (toDM)
         {
             DOG_INFO("Saving {} to .dm model...", mModelName.c_str());
-            ModelSerializer::save(*this, Assets::ModelsPath + "/dm/" + mModelName + ".dm", 0x0);
+            ModelSerializer::save(*this, Assets::ModelsPath + "dm/" + mModelName + ".dm", 0x0);
         }
     }
 
