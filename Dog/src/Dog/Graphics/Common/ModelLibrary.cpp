@@ -34,7 +34,7 @@ namespace Dog
         mUnifiedMesh->GetUnifiedMesh()->DestroyBuffers();
     }
 
-    uint32_t ModelLibrary::AddModel(const std::string& filePath)
+    uint32_t ModelLibrary::AddModel(const std::string& filePath, bool fromDM, bool toDM)
     {
         auto it = mModelMap.find(filePath);
         if (it != mModelMap.end())
@@ -42,7 +42,7 @@ namespace Dog
             return it->second;
         }
 
-        std::unique_ptr<Model> model = std::make_unique<Model>(mDevice, filePath);
+        std::unique_ptr<Model> model = std::make_unique<Model>(mDevice, filePath, fromDM, toDM);
         for (auto& mesh : model->mMeshes)
         {
             mesh->CreateVertexBuffers(&mDevice);
@@ -59,25 +59,6 @@ namespace Dog
 
         
         return modelID;
-    }
-
-    void ModelLibrary::AddModel(Model* model)
-    {
-        if (!model) return;
-
-        uint32_t modelID = static_cast<uint32_t>(mModels.size());
-        mModels.push_back(std::unique_ptr<Model>(model));
-
-        for (auto& mesh : model->mMeshes)
-        {
-            mesh->CreateVertexBuffers(&mDevice);
-            mesh->CreateIndexBuffers(&mDevice);
-        }
-
-        AddToUnifiedMesh(modelID);
-
-        mModelMap[model->mModelName] = modelID;
-        mLastModelLoaded = modelID;
     }
 
     void ModelLibrary::AddToUnifiedMesh(uint32_t modelIndex)

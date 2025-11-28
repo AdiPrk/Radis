@@ -13,21 +13,30 @@
 
 namespace Dog
 {
-    Model::Model(Device& device, const std::string& filePath)
+    Model::Model(Device& device, const std::string& filePath, bool fromDM, bool toDM)
     {
+        fromDM = true;
         std::filesystem::path pathObj(filePath);
         mDirectory = pathObj.parent_path().string();
         mModelName = pathObj.stem().string();
 
-        //LoadMeshes(filePath);
-
-        //printf("Saving %s as .dm model...\n", mModelName.c_str());
-        //VFS::ModelSerializer::save(*this, Assets::ModelsPath + "/dm/" + mModelName + ".dm", 0x0);
-        
-        //printf("Loading %s from .dm model...\n", mModelName.c_str());
-        VFS::ModelSerializer::load(*this, Assets::ModelsPath + "/dm/" + mModelName + ".dm");
+        if (fromDM)
+        {
+            DOG_INFO("Loading {} from .dm model...", mModelName.c_str());
+            VFS::ModelSerializer::load(*this, Assets::ModelsPath + "/dm/" + mModelName + ".dm");
+        }
+        else
+        {
+            LoadMeshes(filePath);
+        }
         
         NormalizeModel();
+        
+        if (toDM)
+        {
+            DOG_INFO("Saving {} to .dm model...", mModelName.c_str());
+            VFS::ModelSerializer::save(*this, Assets::ModelsPath + "/dm/" + mModelName + ".dm", 0x0);
+        }
     }
 
     Model::~Model()

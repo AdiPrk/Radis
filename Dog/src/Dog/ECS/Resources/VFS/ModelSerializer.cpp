@@ -97,7 +97,7 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
         Count
     };
 
-    static const char* TextureSlotNames[] =
+    static std::string TextureSlotNames[] =
     {
         "Albedo",
         "Normal",
@@ -122,94 +122,89 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
     };
 
     auto HashBytes = [](const std::vector<unsigned char>& data) -> std::size_t
-        {
-            if (data.empty()) return 0;
-            return std::hash<std::string_view>{}(
-                std::string_view(reinterpret_cast<const char*>(data.data()), data.size()));
-        };
+    {
+        if (data.empty()) return 0;
+        return std::hash<std::string_view>{}(std::string_view(reinterpret_cast<const char*>(data.data()), data.size()));
+    };
 
-    auto MakeKTX2PathForSource = [](const std::string& srcPath) -> std::string
-        {
-            std::filesystem::path p(srcPath);
-            p.replace_extension(".ktx2");
-            return p.string();
-        };
+    // KTX2 root: <ModelsPath>/ktx2/<ModelName>/
+    std::filesystem::path ktxRoot = std::filesystem::path(Assets::ModelsPath) / "ktx2";
+    std::filesystem::path modelDir = ktxRoot / model.mModelName;
+
+    auto MakeKTX2PathForSource = [&](const std::string& srcPath) -> std::string
+    {
+        std::filesystem::path src(srcPath);
+        std::string baseName = src.stem().string();  // original filename without extension
+        std::string fileName = baseName + ".ktx2";
+
+        std::filesystem::path full = modelDir / fileName;
+        return full.string();
+    };
 
     auto MakeKTX2PathForEmbedded = [&](TextureSlot slot, std::size_t hashValue) -> std::string
-        {
-            std::filesystem::path dir = std::filesystem::path(Assets::ModelsPath) / "ktx2";
-            // actual directory creation is handled in BuildKTX2File, so just build the path
-            std::string fileName =
-                model.mModelName + "_" +
-                TextureSlotNames[static_cast<size_t>(slot)] + "_" +
-                std::to_string(static_cast<unsigned long long>(hashValue)) + ".ktx2";
+    {
+        std::string fileName = TextureSlotNames[static_cast<size_t>(slot)] + "_" + std::to_string(hashValue) + ".ktx2";
 
-            std::filesystem::path full = dir / fileName;
-            return full.string();
-        };
+        std::filesystem::path full = modelDir / fileName;
+        return full.string();
+    };
 
     std::unordered_map<std::string, uint32_t> texIdByKey;
     std::vector<TextureRecord> textures;
     std::vector<MeshTextureRefs> meshTexRefs;
     meshTexRefs.reserve(model.mMeshes.size());
 
-    auto RegisterTexture = [&](const std::string& path,
-        const std::vector<unsigned char>& data,
-        TextureSlot slot) -> int32_t
+    auto RegisterTexture = [&](const std::string& path, const std::vector<unsigned char>& data, TextureSlot slot) -> int32_t
+    {
+        if (path.empty() && data.empty())
+            return -1; // no texture
+
+        std::string key;
+        std::string outPath;
+
+        if (!path.empty())
         {
-            if (path.empty() && data.empty())
-                return -1; // no texture
+            // Dedup key: distinguish path-based textures by path string
+            key = "PATH|" + path;
+            outPath = MakeKTX2PathForSource(path);
+        }
+        else
+        {
+            // Dedup by content hash for embedded textures
+            size_t h = HashBytes(data);
+            key = "EMBEDDED|" + std::to_string(h);
+            outPath = MakeKTX2PathForEmbedded(slot, h);
+        }
 
-            std::string key;
-            std::string outPath;
+        auto it = texIdByKey.find(key);
+        if (it != texIdByKey.end())
+            return static_cast<int32_t>(it->second);
 
-            if (!path.empty())
-            {
-                key = "PATH|" + path;
-                outPath = MakeKTX2PathForSource(path);
-            }
-            else
-            {
-                std::size_t h = HashBytes(data);
-                key = "EMBEDDED|" + std::to_string(static_cast<unsigned long long>(h));
-                outPath = MakeKTX2PathForEmbedded(slot, h);
-            }
+        uint32_t newId = static_cast<uint32_t>(textures.size());
+        texIdByKey.emplace(key, newId);
 
-            auto it = texIdByKey.find(key);
-            if (it != texIdByKey.end())
-                return static_cast<int32_t>(it->second);
+        TextureRecord rec;
+        rec.key = std::move(key);
+        rec.sourcePath = path;
+        rec.embeddedData = path.empty() ? &data : nullptr;
+        rec.outKTX2Path = std::move(outPath);
 
-            uint32_t newId = static_cast<uint32_t>(textures.size());
-            texIdByKey.emplace(key, newId);
+        textures.push_back(std::move(rec));
+        return static_cast<int32_t>(newId);
+    };
 
-            TextureRecord rec;
-            rec.key = std::move(key);
-            rec.sourcePath = path;
-            rec.embeddedData = path.empty() ? &data : nullptr;
-            rec.outKTX2Path = std::move(outPath);
-
-            textures.push_back(std::move(rec));
-            return static_cast<int32_t>(newId);
-        };
-
-    // First pass: build registry + per-mesh refs
+    // First pass: build registry + per-mesh refs (dedup within this model)
     for (const auto& meshPtr : model.mMeshes)
     {
         const auto& mesh = *meshPtr;
         MeshTextureRefs refs{};
 
-        refs.tex[static_cast<size_t>(TextureSlot::Albedo)] =
-            RegisterTexture(mesh.albedoTexturePath, mesh.mAlbedoTextureData, TextureSlot::Albedo);
-        refs.tex[static_cast<size_t>(TextureSlot::Normal)] =
-            RegisterTexture(mesh.normalTexturePath, mesh.mNormalTextureData, TextureSlot::Normal);
-        refs.tex[static_cast<size_t>(TextureSlot::Metalness)] =
-            RegisterTexture(mesh.metalnessTexturePath, mesh.mMetalnessTextureData, TextureSlot::Metalness);
-        refs.tex[static_cast<size_t>(TextureSlot::Roughness)] =
-            RegisterTexture(mesh.roughnessTexturePath, mesh.mRoughnessTextureData, TextureSlot::Roughness);
-        refs.tex[static_cast<size_t>(TextureSlot::Occlusion)] =
-            RegisterTexture(mesh.occlusionTexturePath, mesh.mOcclusionTextureData, TextureSlot::Occlusion);
-        refs.tex[static_cast<size_t>(TextureSlot::Emissive)] =
-            RegisterTexture(mesh.emissiveTexturePath, mesh.mEmissiveTextureData, TextureSlot::Emissive);
+        refs.tex[static_cast<size_t>(TextureSlot::Albedo)] = RegisterTexture(mesh.albedoTexturePath, mesh.mAlbedoTextureData, TextureSlot::Albedo);
+        refs.tex[static_cast<size_t>(TextureSlot::Normal)] = RegisterTexture(mesh.normalTexturePath, mesh.mNormalTextureData, TextureSlot::Normal);
+        refs.tex[static_cast<size_t>(TextureSlot::Metalness)] = RegisterTexture(mesh.metalnessTexturePath, mesh.mMetalnessTextureData, TextureSlot::Metalness);
+        refs.tex[static_cast<size_t>(TextureSlot::Roughness)] = RegisterTexture(mesh.roughnessTexturePath, mesh.mRoughnessTextureData, TextureSlot::Roughness);
+        refs.tex[static_cast<size_t>(TextureSlot::Occlusion)] = RegisterTexture(mesh.occlusionTexturePath, mesh.mOcclusionTextureData, TextureSlot::Occlusion);
+        refs.tex[static_cast<size_t>(TextureSlot::Emissive)] = RegisterTexture(mesh.emissiveTexturePath, mesh.mEmissiveTextureData, TextureSlot::Emissive);
 
         refs.metallicRoughnessCombined = mesh.mMetallicRoughnessCombined ? 1u : 0u;
 
@@ -217,28 +212,16 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
     }
 
     // ---------------- PARALLEL KTX2 BUILD ---------------------------
-    printf("Starting KTX2 texture builds (%zu unique textures) for model '%s'...\n",
-        textures.size(),
-        model.mModelName.c_str());
-    std::for_each(std::execution::par,
-        textures.begin(), textures.end(),
-        [](TextureRecord& rec)
-        {
-            TextureLoader::KTX2BuildInput input{};
-            input.sourcePath = rec.sourcePath;
-            input.data = rec.embeddedData;
+    std::for_each(std::execution::par, textures.begin(), textures.end(), [](TextureRecord& rec)
+    {
+        TextureLoader::KTX2BuildInput input{};
+        input.sourcePath = rec.sourcePath;
+        input.data = rec.embeddedData;
 
-            TextureLoader::BuildKTX2File(input, rec.outKTX2Path);
+        TextureLoader::BuildKTX2File(input, rec.outKTX2Path);
+    });
 
-            if (!rec.sourcePath.empty())
-            {
-                // Optional: log mapping
-                // printf("KTX2: %s -> %s\n", rec.sourcePath.c_str(), rec.outKTX2Path.c_str());
-            }
-        });
-    printf("Done");
-
-    // ---------------- FILE WRITE (same layout as before, but only paths) ----
+    // ---------------- FILE WRITE (paths to KTX2s only) ---------------
 
     std::ofstream file(filename, std::ios::binary);
     if (!file)
@@ -297,7 +280,8 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
 
     auto WriteTexturePathEntry = [&](int32_t texId)
         {
-            // Same structure as old "path" format: embedded=0, then nameSize + name.
+            // Same layout as your original path-based version:
+            // embedded=0, nameSize + path string (or nameSize=0 for "no texture")
             uint32_t embedded = 0;
             WriteU32(embedded);
 
@@ -378,7 +362,8 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
             WriteU32(idxVal);
         }
 
-        // Texture entries: now always paths to KTX2 files
+        // Texture entries: now always paths to KTX2 files in
+        // Assets::ModelsPath/ktx2/<ModelName>/
         WriteTexturePathEntry(refs.tex[static_cast<size_t>(TextureSlot::Albedo)]);
         WriteTexturePathEntry(refs.tex[static_cast<size_t>(TextureSlot::Normal)]);
         WriteTexturePathEntry(refs.tex[static_cast<size_t>(TextureSlot::Metalness)]);
@@ -431,6 +416,7 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
 
     file.close();
 }
+
 
 bool ModelSerializer::load(Model& model, const std::string& filename) {
     std::ifstream file(filename, std::ios::binary);
