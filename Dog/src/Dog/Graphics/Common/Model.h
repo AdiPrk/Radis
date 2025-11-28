@@ -16,11 +16,10 @@ namespace Dog
     {
     public:
         Model() = default;
-        //Remove copy constructor/operation from class 
         Model(const Model&) = delete;
         Model& operator=(const Model&) = delete;
 
-        Model(Device& device, const std::string& filePath);
+        Model(Device& device, const std::string& filePath, bool fromDM = false, bool toDM = false);
         ~Model();
 
         std::vector<std::unique_ptr<IMesh>> mMeshes;
