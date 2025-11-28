@@ -38,7 +38,8 @@ namespace Dog
     void Server::run() {
         ENetEvent event;
         while (true) {
-            while (enet_host_service(host, &event, 10) > 0) {
+            while (enet_host_service(host, &event, 10) > 0)
+            {
                 switch (event.type) {
                 case ENET_EVENT_TYPE_CONNECT:
                     handleConnect(event);
@@ -77,8 +78,36 @@ namespace Dog
         printf("Client %s connected.\n", newPlayerName.c_str());
     }
 
+    static void LogRawPacket(const ENetPacket* packet)
+    {
+        printf("---- RAW PACKET (%zu bytes) ----\n", packet->dataLength);
+
+        // Print hex dump
+        for (size_t i = 0; i < packet->dataLength; ++i)
+        {
+            printf("%02X ", packet->data[i]);
+            if ((i + 1) % 16 == 0) printf("\n");
+        }
+        printf("\n");
+
+        // Print ASCII (escaped)
+        printf("ASCII: \"");
+        for (size_t i = 0; i < packet->dataLength; ++i)
+        {
+            unsigned char c = packet->data[i];
+            if (c >= 32 && c <= 126)
+                printf("%c", c);
+            else
+                printf(".");
+        }
+        printf("\"\n");
+        printf("-------------------------------\n");
+    }
+
+
     void Server::handleReceive(ENetEvent& event) {
         // Delegate packet handling.
+        LogRawPacket(event.packet);
         packetHandler.HandlePacket(event.peer, event.packet, host, playerManager);
     }
 

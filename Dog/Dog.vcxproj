@@ -211,6 +211,7 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
   <ItemGroup>
     <ClCompile Include="src\Dog\Assets\Assets.cpp" />
     <ClCompile Include="src\Dog\Assets\CaseInsensitiveHash.cpp" />
+    <ClCompile Include="src\Dog\Assets\Serialization\BinaryIO.cpp" />
     <ClCompile Include="src\Dog\Assets\UUID.cpp" />
     <ClCompile Include="src\Dog\ECS\ECS.cpp" />
     <ClCompile Include="src\Dog\ECS\Components\Components.cpp" />
@@ -223,7 +224,7 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Dog\ECS\Resources\RenderingResource.cpp" />
     <ClCompile Include="src\Dog\ECS\Resources\SerializationResource.cpp" />
     <ClCompile Include="src\Dog\ECS\Resources\SwapRendererResource.cpp" />
-    <ClCompile Include="src\Dog\ECS\Resources\VFS\ModelSerializer.cpp" />
+    <ClCompile Include="src\Dog\Assets\Serialization\ModelSerializer.cpp" />
     <ClCompile Include="src\Dog\ECS\Resources\WindowResource.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\Editor\Windows\MemoryWindow.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\Editor\Windows\ProfilerWindow.cpp" />
@@ -323,6 +324,7 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <ClInclude Include="Dependencies\nlohmann\json.hpp" />
     <ClInclude Include="src\Dog\Assets\Assets.h" />
     <ClInclude Include="src\Dog\Assets\CaseInsensitiveHash.h" />
+    <ClInclude Include="src\Dog\Assets\Serialization\BinaryIO.h" />
     <ClInclude Include="src\Dog\Assets\UUID.h" />
     <ClInclude Include="src\Dog\ECS\ECS.h" />
     <ClInclude Include="src\Dog\ECS\Components\Components.h" />
@@ -336,8 +338,7 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Dog\ECS\Resources\RenderingResource.h" />
     <ClInclude Include="src\Dog\ECS\Resources\SerializationResource.h" />
     <ClInclude Include="src\Dog\ECS\Resources\SwapRendererResource.h" />
-    <ClInclude Include="src\Dog\ECS\Resources\VFS\ModelSerializer.h" />
-    <ClInclude Include="src\Dog\ECS\Resources\VFS\VFSResource.h" />
+    <ClInclude Include="src\Dog\Assets\Serialization\ModelSerializer.h" />
     <ClInclude Include="src\Dog\ECS\Resources\WindowResource.h" />
     <ClInclude Include="src\Dog\ECS\Systems\Editor\Windows\MemoryWindow.h" />
     <ClInclude Include="src\Dog\ECS\Systems\Editor\Windows\ProfilerWindow.h" />

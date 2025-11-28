@@ -5,10 +5,7 @@
 
 namespace Dog
 {
-    namespace VFS
-    {
-        class ModelSerializer;
-    }
+    class ModelSerializer;
 
     class Device;
 
@@ -54,7 +51,7 @@ namespace Dog
         void NormalizeModel();
         void ExtractBoneWeights(std::vector<Vertex>& vertices, aiMesh* mesh);
 
-        friend class VFS::ModelSerializer;
+        friend class ModelSerializer;
         glm::vec3 mAABBmin;
         glm::vec3 mAABBmax;
 

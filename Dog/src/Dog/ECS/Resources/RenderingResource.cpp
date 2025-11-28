@@ -25,7 +25,7 @@
 #include "Assets/Assets.h"
 #include "Engine.h"
 
-#include "VFS/ModelSerializer.h"
+#include "Assets/Serialization/ModelSerializer.h"
 
 namespace Dog
 {
@@ -103,17 +103,17 @@ namespace Dog
         {
             modelLibrary = std::make_unique<ModelLibrary>(*device, *textureLibrary);
 
-            modelLibrary->AddModel(Assets::ModelsPath + "cube.obj");
-            modelLibrary->AddModel(Assets::ModelsPath + "quad.obj");
-            modelLibrary->AddModel(Assets::ModelsPath + "sphere.glb");
+            modelLibrary->AddModel(Assets::ModelsPath + "cube.obj", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "quad.obj", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "sphere.glb", true);
             // modelLibrary->AddModel(Assets::ModelsPath + "trotting_cat.glb");
-            modelLibrary->AddModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx");
-            modelLibrary->AddModel(Assets::ModelsPath + "jack_samba.glb");
-            modelLibrary->AddModel(Assets::ModelsPath + "SteampunkRobot.gltf");
-            modelLibrary->AddModel(Assets::ModelsPath + "DragonAttenuation.glb");
-            uint32_t sponzaInd = modelLibrary->AddModel(Assets::ModelsPath + "Sponza.gltf");
+            modelLibrary->AddModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "jack_samba.glb", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "SteampunkRobot.gltf", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "DragonAttenuation.glb", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "Sponza.gltf", true);
 
-            Model* sponzaModel = modelLibrary->GetModel(sponzaInd);
+            // Model* sponzaModel = modelLibrary->GetModel(sponzaInd);
             //VFS::ModelSerializer::save(*sponzaModel, "Assets/Models/dm/Sponza.dm", 0xDEADBEEF);
             // load it to test
             //Model newModelTest;

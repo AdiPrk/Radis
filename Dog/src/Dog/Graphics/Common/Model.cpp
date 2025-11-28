@@ -9,13 +9,12 @@
 
 #include "Engine.h"
 
-#include "ECS/Resources/VFS/ModelSerializer.h"
+#include "Assets/Serialization/ModelSerializer.h"
 
 namespace Dog
 {
     Model::Model(Device& device, const std::string& filePath, bool fromDM, bool toDM)
     {
-        fromDM = true;
         std::filesystem::path pathObj(filePath);
         mDirectory = pathObj.parent_path().string();
         mModelName = pathObj.stem().string();
@@ -23,7 +22,7 @@ namespace Dog
         if (fromDM)
         {
             DOG_INFO("Loading {} from .dm model...", mModelName.c_str());
-            VFS::ModelSerializer::load(*this, Assets::ModelsPath + "/dm/" + mModelName + ".dm");
+            ModelSerializer::load(*this, Assets::ModelsPath + "/dm/" + mModelName + ".dm");
         }
         else
         {
@@ -35,7 +34,7 @@ namespace Dog
         if (toDM)
         {
             DOG_INFO("Saving {} to .dm model...", mModelName.c_str());
-            VFS::ModelSerializer::save(*this, Assets::ModelsPath + "/dm/" + mModelName + ".dm", 0x0);
+            ModelSerializer::save(*this, Assets::ModelsPath + "/dm/" + mModelName + ".dm", 0x0);
         }
     }
 
