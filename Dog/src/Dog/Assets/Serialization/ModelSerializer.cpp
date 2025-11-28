@@ -10,8 +10,8 @@
 
 using namespace Dog;
 
-const std::string ModelSerializer::DOG_MODEL_FILE_PATH = "assets/models/nlm/";
-const std::string ModelSerializer::DOG_MODEL_EXTENTION = ".nlm";
+const std::string ModelSerializer::DOG_MODEL_FILE_PATH = "assets/models/dm/";
+const std::string ModelSerializer::DOG_MODEL_EXTENTION = ".dm";
 
 bool ModelSerializer::validateHeader(std::ifstream& file) {
     BinaryReaderLE reader(file);
@@ -27,6 +27,45 @@ bool ModelSerializer::validateHeader(std::ifstream& file) {
     }
 
     return true;
+}
+
+void CompressInPlaceLZ4(const std::string& filename)
+{
+    std::string lz4Path = Assets::BinariesPath + "lz4.exe";
+    std::string tempCompressed = filename + ".lz4tmp";
+
+    // Build compression command
+    std::string inner =
+        "\"" + lz4Path + "\" "
+        "--favor-decSpeed -f "   // compress + force overwrite of temp file
+        "\"" + filename + "\" "  // INPUT
+        "\"" + tempCompressed + "\""; // OUTPUT
+
+    std::string command = "\"" + inner + "\"";
+
+    std::system(command.c_str());
+
+    // Now force replace original with compressed version
+    std::filesystem::remove(filename);          // force overwrite
+    std::filesystem::rename(tempCompressed, filename);
+}
+
+bool DecompressForReadLZ4(const std::string& filename, std::string& outTemp)
+{
+    std::string lz4Path = Assets::BinariesPath + "lz4.exe";
+    outTemp = filename + ".rawtmp";
+
+    std::string inner =
+        "\"" + lz4Path + "\" "
+        "-d -f "                 // decompress + force overwrite
+        "\"" + filename + "\" "  // INPUT (compressed)
+        "\"" + outTemp + "\"";   // OUTPUT (raw)
+
+    std::string command = "\"" + inner + "\"";
+
+    int result = std::system(command.c_str());
+
+    return result == 0;
 }
 
 void ModelSerializer::save(const Model& model, const std::string& filename, uint32_t hash)
@@ -287,21 +326,31 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
     }
 
     file.close();
+    CompressInPlaceLZ4(filename);
 }
 
 
 bool ModelSerializer::load(Model& model, const std::string& filename)
 {
-    std::ifstream file(filename, std::ios::binary);
+    std::string tempRaw;
+    if (!DecompressForReadLZ4(filename, tempRaw))
+    {
+        DOG_CRITICAL("Failed to decompress model file.");
+        return false;
+    }
+
+    std::ifstream file(tempRaw, std::ios::binary);
     if (!file)
     {
-        DOG_CRITICAL("Could not open file for reading.");
+        DOG_CRITICAL("Could not open decompressed file.");
+        std::filesystem::remove(tempRaw);
         return false;
     }
 
     if (!validateHeader(file))
     {
         file.close();
+        std::filesystem::remove(tempRaw);
         return false;
     }
 
@@ -423,6 +472,7 @@ bool ModelSerializer::load(Model& model, const std::string& filename)
     }
 
     file.close();
+    std::filesystem::remove(tempRaw);
     return true;
 }
 

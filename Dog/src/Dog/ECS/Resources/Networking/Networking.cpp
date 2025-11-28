@@ -82,10 +82,14 @@ namespace Dog {
 
     void Networking::Shutdown()
     {
-        mPacketUtils.sendPacket(mPeer, CLIENT_LEAVE_PACKET);
+        if (mPeer)
+        {
+            mPacketUtils.sendPacket(mPeer, CLIENT_LEAVE_PACKET);
 
-        enet_host_flush(mPeer->host);
-        enet_peer_disconnect(mPeer, 0);
+            enet_host_flush(mPeer->host);
+            enet_peer_disconnect(mPeer, 0);
+        }
+
         running = false;
 
         if (mNetworkThread.joinable())
