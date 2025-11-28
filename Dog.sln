@@ -20,8 +20,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ImGui", "ImGui\ImGui.vcxpro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DogLauncher", "DogLauncher\DogLauncher.vcxproj", "{7B1AF591-6005-423C-9BF4-3613B4501798}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Client", "Client\Client.vcxproj", "{CABAA1D1-0945-4171-9985-B5E6F6313029}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -92,18 +90,6 @@ Global
 		{7B1AF591-6005-423C-9BF4-3613B4501798}.Ship|Any CPU.Build.0 = Ship|x64
 		{7B1AF591-6005-423C-9BF4-3613B4501798}.Ship|x64.ActiveCfg = Ship|x64
 		{7B1AF591-6005-423C-9BF4-3613B4501798}.Ship|x64.Build.0 = Ship|x64
-		{CABAA1D1-0945-4171-9985-B5E6F6313029}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{CABAA1D1-0945-4171-9985-B5E6F6313029}.Debug|Any CPU.Build.0 = Debug|x64
-		{CABAA1D1-0945-4171-9985-B5E6F6313029}.Debug|x64.ActiveCfg = Debug|x64
-		{CABAA1D1-0945-4171-9985-B5E6F6313029}.Debug|x64.Build.0 = Debug|x64
-		{CABAA1D1-0945-4171-9985-B5E6F6313029}.Release|Any CPU.ActiveCfg = Release|x64
-		{CABAA1D1-0945-4171-9985-B5E6F6313029}.Release|Any CPU.Build.0 = Release|x64
-		{CABAA1D1-0945-4171-9985-B5E6F6313029}.Release|x64.ActiveCfg = Release|x64
-		{CABAA1D1-0945-4171-9985-B5E6F6313029}.Release|x64.Build.0 = Release|x64
-		{CABAA1D1-0945-4171-9985-B5E6F6313029}.Ship|Any CPU.ActiveCfg = Debug|x64
-		{CABAA1D1-0945-4171-9985-B5E6F6313029}.Ship|Any CPU.Build.0 = Debug|x64
-		{CABAA1D1-0945-4171-9985-B5E6F6313029}.Ship|x64.ActiveCfg = Debug|x64
-		{CABAA1D1-0945-4171-9985-B5E6F6313029}.Ship|x64.Build.0 = Debug|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -28,6 +28,7 @@
 #include "Windows/TextureBrowserWindow.h"
 #include "Windows/ProfilerWindow.h"
 #include "Windows/MemoryWindow.h"
+#include "Windows/ChatWindow.h"
 
 #include "Utils/Utils.h"
 
@@ -66,6 +67,7 @@ namespace Dog
             EditorWindows::RenderProfilerWindow();
             EditorWindows::RenderMemoryWindow();
             EditorWindows::UpdateAssetsWindow(tl.get());
+            ChatWindow::Get().Render();
             RenderInspectorWindow();
         }
 
