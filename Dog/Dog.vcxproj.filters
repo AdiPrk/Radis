@@ -82,8 +82,9 @@
     <ClCompile Include="src\Dog\ECS\Resources\RaytracingResource.cpp" />
     <ClCompile Include="src\Dog\Utils\VKMath.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Utils\ScopedDebugLabel.cpp" />
-    <ClCompile Include="src\Dog\ECS\Resources\VFS\ModelSerializer.cpp" />
+    <ClCompile Include="src\Dog\Assets\Serialization\ModelSerializer.cpp" />
     <ClCompile Include="src\Dog\Assets\UUID.cpp" />
+    <ClCompile Include="src\Dog\Assets\Serialization\BinaryIO.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\nlohmann\json.hpp" />
@@ -187,9 +188,9 @@
     <ClInclude Include="src\Dog\ECS\Resources\RaytracingResource.h" />
     <ClInclude Include="src\Dog\Utils\VKMath.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Utils\ScopedDebugLabel.h" />
-    <ClInclude Include="src\Dog\ECS\Resources\VFS\VFSResource.h" />
-    <ClInclude Include="src\Dog\ECS\Resources\VFS\ModelSerializer.h" />
+    <ClInclude Include="src\Dog\Assets\Serialization\ModelSerializer.h" />
     <ClInclude Include="src\Dog\Assets\UUID.h" />
+    <ClInclude Include="src\Dog\Assets\Serialization\BinaryIO.h" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="Assets\Shaders\*.*" />
