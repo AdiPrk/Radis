@@ -84,7 +84,8 @@ namespace Dog {
     {
         if (mPeer)
         {
-            mPacketUtils.sendPacket(mPeer, CLIENT_LEAVE_PACKET);
+            // notify server wefre leaving
+            mPacketUtils.send(mPeer, CLIENT_LEAVE_PACKET);
 
             enet_host_flush(mPeer->host);
             enet_peer_disconnect(mPeer, 0);
@@ -100,22 +101,22 @@ namespace Dog {
 
     void Networking::StartTyping()
     {
-        mPacketUtils.sendPacket(mPeer, STARTED_TYPING_PACKET);
+        mPacketUtils.send(mPeer, STARTED_TYPING_PACKET);
     }
 
     void Networking::StopTyping()
     {
-        mPacketUtils.sendPacket(mPeer, STOPPED_TYPING_PACKET);
+        mPacketUtils.send(mPeer, STOPPED_TYPING_PACKET);
     }
 
     void Networking::SendMessage(const std::string& message)
     {
-        mPacketUtils.sendPacket(mPeer, CHAT_MESSAGE_PACKET, message.c_str());
+        mPacketUtils.send(mPeer, CHAT_MESSAGE_PACKET, nlohmann::json{{"data", message}});
     }
 
     void Networking::SetUsername(const std::string& name)
     {
-        mPacketUtils.sendPacket(mPeer, CHAT_DISPLAY_NAME_PACKET, name.c_str());
+        mPacketUtils.send(mPeer, CHAT_DISPLAY_NAME_PACKET, nlohmann::json{{"data", name}});
         mPlayerManager.SetUsername(name);
     }
 
@@ -131,19 +132,20 @@ namespace Dog {
 
     void Networking::NetworkThread()
     {
-        if (!CreateAndConnectClient()) 
+        if (!CreateAndConnectClient())
         {
             return;
         }
 
-        mPacketUtils.sendPacket(mPeer, INIT_PLAYER_PACKET);
+        // tell server to init this player
+        mPacketUtils.send(mPeer, INIT_PLAYER_PACKET);
 
         ENetEvent event;
-        while (running) 
+        while (running)
         {
-            int eventStatus = enet_host_service(mPeer->host, &event, 10); // Wait up to 16 milliseconds for an event
+            int eventStatus = enet_host_service(mPeer->host, &event, 10); // Wait up to ~10 ms for an event
 
-            if (eventStatus > 0) 
+            if (eventStatus > 0)
             {
                 switch (event.type)
                 {
@@ -162,6 +164,8 @@ namespace Dog {
                     enet_deinitialize();
                     return;
                 }
+                default:
+                    break;
                 }
             }
             else if (eventStatus == 0) {

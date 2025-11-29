@@ -9,82 +9,143 @@ namespace Dog
     PacketHandler::PacketHandler(PacketUtils& utils) : packetUtils(utils) {}
     PacketHandler::~PacketHandler() {}
 
-    void PacketHandler::HandlePacket(ENetPeer* peer, ENetPacket* packet, PlayerManager& playerManager) {
-        int packetID;
-        char data[PACKET_BUFFER_SIZE] = {};
-
-        int ret = sscanf((char*)packet->data, "%d %[^\t\n]", &packetID, data);
-        if (ret < 1) {
-            printf("Failed to parse packet data.\n");
+    void PacketHandler::HandlePacket(ENetPeer* peer, ENetPacket* packet, PlayerManager& playerManager)
+    {
+        NetMessage msg;
+        if (!packetUtils.decode(packet, msg))
+        {
+            printf("Failed to decode packet on client.\n");
             return;
         }
 
-        printf("Packet id: %d\n", packetID);
+        PacketID packetID = msg.id;
+        std::string data = msg.body.value("data", std::string{});
 
-        switch (packetID) {
+        printf("Packet id: %d\n", static_cast<int>(packetID));
+
+        switch (packetID)
+        {
         case INIT_PLAYER_PACKET:
         {
-            playerManager.AddClient(data);
+            if (!data.empty())
+            {
+                playerManager.AddClient(data);
+            }
             break;
         }
+
         case SELF_NAME_PACKET:
         {
-            playerManager.SetUsername(data);
+            if (!data.empty())
+            {
+                playerManager.SetUsername(data);
+            }
             break;
         }
-        case REMOVE_PLAYER_PACKET: {
-            ChatWindow& chatWindow = ChatWindow::Get();
-            chatWindow.AddMessage("Server", std::string(data) + " has left the chat.");
-            chatWindow.UserStoppedTyping(data);
-            playerManager.RemoveClient(data);
+
+        case REMOVE_PLAYER_PACKET:
+        {
+            if (!data.empty())
+            {
+                ChatWindow& chatWindow = ChatWindow::Get();
+                chatWindow.AddMessage("Server", data + " has left the chat.");
+                chatWindow.UserStoppedTyping(data);
+                playerManager.RemoveClient(data);
+            }
             break;
         }
+
         case CHAT_MESSAGE_PACKET:
         {
-            printf("Received message: %s\n", data);
-            ChatWindow& chatWindow = ChatWindow::Get();
+            if (!data.empty())
+            {
+                printf("Received message: %s\n", data.c_str());
+                ChatWindow& chatWindow = ChatWindow::Get();
 
-            std::string message(data);
-            std::string sender = message.substr(0, message.find(":"));
-            std::string messageText = message.substr(message.find(":") + 2);
+                std::string message = data;
+                auto sep = message.find(':');
 
-            chatWindow.AddMessage(sender, messageText);
+                std::string sender;
+                std::string messageText;
 
+                if (sep != std::string::npos)
+                {
+                    sender = message.substr(0, sep);
+
+                    if (sep + 2 <= message.size())
+                        messageText = message.substr(sep + 2);
+                    else if (sep + 1 < message.size())
+                        messageText = message.substr(sep + 1);
+                }
+                else
+                {
+                    sender = "Unknown";
+                    messageText = message;
+                }
+
+                chatWindow.AddMessage(sender, messageText);
+            }
             break;
         }
+
         case STARTED_TYPING_PACKET:
         {
-            ChatWindow& chatWindow = ChatWindow::Get();
-            chatWindow.UserStartedTyping(data);
-            
+            if (!data.empty())
+            {
+                ChatWindow& chatWindow = ChatWindow::Get();
+                chatWindow.UserStartedTyping(data);
+            }
             break;
         }
+
         case STOPPED_TYPING_PACKET:
         {
-            ChatWindow& chatWindow = ChatWindow::Get();
-            chatWindow.UserStoppedTyping(data);
-
+            if (!data.empty())
+            {
+                ChatWindow& chatWindow = ChatWindow::Get();
+                chatWindow.UserStoppedTyping(data);
+            }
             break;
         }
+
         case CHAT_DISPLAY_NAME_PACKET:
         {
-            ChatWindow& chatWindow = ChatWindow::Get();
-            std::string nameChange(data);
-            std::string oldName = nameChange.substr(0, nameChange.find(","));
-            std::string newName = nameChange.substr(nameChange.find(",") + 1);
-            chatWindow.AddMessage("Server", oldName + " changed their name to " + newName);
-            chatWindow.UserChangedName(oldName);
-            playerManager.ChangeClientName(oldName, newName);
+            if (!data.empty())
+            {
+                ChatWindow& chatWindow = ChatWindow::Get();
+                std::string nameChange = data;
+
+                auto commaPos = nameChange.find(',');
+                std::string oldName;
+                std::string newName;
+
+                if (commaPos != std::string::npos)
+                {
+                    oldName = nameChange.substr(0, commaPos);
+                    newName = nameChange.substr(commaPos + 1);
+                }
+                else
+                {
+                    oldName = nameChange;
+                    newName = nameChange;
+                }
+
+                chatWindow.AddMessage("Server", oldName + " changed their name to " + newName);
+                chatWindow.UserChangedName(oldName);
+                playerManager.ChangeClientName(oldName, newName);
+            }
             break;
         }
+
         case CLIENT_LEAVE_PACKET:
         {
-            // we shouldn't ever get this anyway
+            // Not expected on client
             break;
         }
+
         default:
         {
-            printf("Unknown packet ID: %d\n", packetID);
+            printf("Unknown packet ID: %d\n", static_cast<int>(packetID));
             break;
         }
         }

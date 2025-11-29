@@ -8,64 +8,94 @@ namespace Dog
     PacketHandler::PacketHandler(PacketUtils& utils) : packetUtils(utils) {}
     PacketHandler::~PacketHandler() {}
 
-    void PacketHandler::HandlePacket(ENetPeer* peer, ENetPacket* packet, ENetHost* host, PlayerManager& playerManager) {
-        int packetID;
-        char data[PACKET_BUFFER_SIZE] = {};
+    void PacketHandler::HandlePacket(ENetPeer* peer, ENetPacket* packet, ENetHost* host, PlayerManager& playerManager)
+    {
+        NetMessage msg;
+        if (!packetUtils.decode(packet, msg))
+        {
+            printf("Failed to decode incoming packet.\n");
+            return;
+        }
 
-        // Parse the packet data: an integer packet ID and optional string data.
-        // (Note: For production code, consider a more robust parsing/serialization system.)
-        sscanf((char*)packet->data, "%d %[^\t\n]", &packetID, data);
+        PacketID    packetID = msg.id;
+        std::string data = msg.body.value("data", std::string{});
 
-        switch (packetID) {
-        case INIT_PLAYER_PACKET: {
-            std::string playerName = playerManager.getPlayerName(peer);
+        switch (packetID)
+        {
+        case INIT_PLAYER_PACKET:
+        {
+            std::string playerName = playerManager.GetPlayerName(peer);
             printf("Init Player %s\n", playerName.c_str());
-            packetUtils.broadcastPacket(host, peer, INIT_PLAYER_PACKET, playerName.c_str());
-            packetUtils.sendPacket(peer, SELF_NAME_PACKET, playerName.c_str());
+
+            // Tell everyone else about this player
+            packetUtils.broadcast(host, peer, INIT_PLAYER_PACKET, nlohmann::json{{"data", playerName}});
+
+            // Tell this peer what their own name is
+            packetUtils.send(peer, SELF_NAME_PACKET, nlohmann::json{{"data", playerName}});
             break;
         }
-        case STARTED_TYPING_PACKET: {
-            std::string user = playerManager.getPlayerName(peer);
-            packetUtils.broadcastPacket(host, peer, STARTED_TYPING_PACKET, user.c_str());
+
+        case STARTED_TYPING_PACKET:
+        {
+            std::string user = playerManager.GetPlayerName(peer);
+            packetUtils.broadcast(host, peer, STARTED_TYPING_PACKET, nlohmann::json{{"data", user}});
             break;
         }
-        case STOPPED_TYPING_PACKET: {
-            std::string user = playerManager.getPlayerName(peer);
-            packetUtils.broadcastPacket(host, peer, STOPPED_TYPING_PACKET, user.c_str());
+
+        case STOPPED_TYPING_PACKET:
+        {
+            std::string user = playerManager.GetPlayerName(peer);
+            packetUtils.broadcast(host, peer, STOPPED_TYPING_PACKET, nlohmann::json{{"data", user}});
             break;
         }
-        case CHAT_MESSAGE_PACKET: {
-            std::string message(data);
-            std::string user = playerManager.getPlayerName(peer);
-            std::string fullMessage = user + ": " + message;
-            packetUtils.broadcastPacket(host, peer, CHAT_MESSAGE_PACKET, fullMessage.c_str());
+
+        case CHAT_MESSAGE_PACKET:
+        {
+            std::string message = data;
+            std::string user = playerManager.GetPlayerName(peer);
+            std::string full = user + ": " + message;
+
+            packetUtils.broadcast(host, peer, CHAT_MESSAGE_PACKET, nlohmann::json{{"data", full}});
             break;
         }
-        case CHAT_DISPLAY_NAME_PACKET: {
-            std::string name(data);
-            std::string oldName = playerManager.getPlayerName(peer);
-            playerManager.updatePlayerName(peer, name);
+
+        case CHAT_DISPLAY_NAME_PACKET:
+        {
+            std::string name = data;
+            std::string oldName = playerManager.GetPlayerName(peer);
+
+            playerManager.UpdatePlayerName(peer, name);
             std::string nameChange = oldName + "," + name;
-            packetUtils.broadcastPacket(host, peer, CHAT_DISPLAY_NAME_PACKET, nameChange.c_str());
+
+            packetUtils.broadcast(host, peer, CHAT_DISPLAY_NAME_PACKET, nlohmann::json{{"data", nameChange}});
             break;
         }
-        case CLIENT_LEAVE_PACKET: {
-            printf("Client %s left.\n", data);
-            std::string user = playerManager.getPlayerName(peer);
-            packetUtils.broadcastPacket(host, peer, REMOVE_PLAYER_PACKET, user.c_str());
-            playerManager.popPlayer(peer);
+
+        case CLIENT_LEAVE_PACKET:
+        {
+            printf("Client %s left.\n", data.c_str());
+            std::string user = playerManager.GetPlayerName(peer);
+
+            packetUtils.broadcast(host, peer, REMOVE_PLAYER_PACKET, nlohmann::json{{"data", user}});
+            playerManager.PopPlayer(peer);
             break;
         }
-        case EVENT_ACTION: {
-            packetUtils.broadcastPacket(host, peer, EVENT_ACTION, data);           
+
+        case EVENT_ACTION:
+        {
+            packetUtils.broadcast(host, peer, EVENT_ACTION, nlohmann::json{{"data", data}});
             break;
         }
-        case EVENT_ACTION_UNDO: {
-            packetUtils.broadcastPacket(host, peer, EVENT_ACTION_UNDO, data);
+
+        case EVENT_ACTION_UNDO:
+        {
+            packetUtils.broadcast(host, peer, EVENT_ACTION_UNDO, nlohmann::json{{"data", data}});
             break;
         }
-        default: {
-            printf("Unknown packet ID: %d\n", packetID);
+
+        default:
+        {
+            printf("Unknown packet ID: %d\n", static_cast<int>(packetID));
             break;
         }
         }
