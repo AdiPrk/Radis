@@ -12,21 +12,19 @@ namespace Dog
         Server(unsigned short port);
         ~Server();
 
-        // Runs the server’s main loop.
-        void run();
-
+        // Runs the server main loop.
+        void Run();
 
     private:
-        ENetHost* host;
-        PlayerManager playerManager;
-        PacketUtils m_PacketUtils;
-        PacketHandler packetHandler;
+        ENetHost* mHost;
+        PlayerManager mPlayerManager;
+        PacketUtils mPacketUtils;
+        PacketHandler mPacketHandler;
 
         // Helper functions for processing ENet events.
-        void handleConnect(ENetEvent& event);
-        void handleReceive(ENetEvent& event);
-        void handleDisconnect(ENetEvent& event);
-        
+        void HandleConnect(ENetEvent& event);
+        void HandleReceive(ENetEvent& event);
+        void HandleDisconnect(ENetEvent& event);
     };
 
 }

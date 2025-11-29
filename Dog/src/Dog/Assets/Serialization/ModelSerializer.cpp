@@ -42,7 +42,6 @@ void CompressInPlaceLZ4(const std::string& filename)
         "\"" + tempCompressed + "\""; // OUTPUT
 
     std::string command = "\"" + inner + "\"";
-
     std::system(command.c_str());
 
     // Now force replace original with compressed version
@@ -62,7 +61,6 @@ bool DecompressForReadLZ4(const std::string& filename, std::string& outTemp)
         "\"" + outTemp + "\"";   // OUTPUT (raw)
 
     std::string command = "\"" + inner + "\"";
-
     int result = std::system(command.c_str());
 
     return result == 0;

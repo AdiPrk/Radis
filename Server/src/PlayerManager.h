@@ -8,24 +8,19 @@ namespace Dog
         PlayerManager();
         ~PlayerManager();
 
-        // Adds a new player for the given peer.
-        std::string pushPlayer(ENetPeer* peer);
+        // Add/Remove players
+        std::string PushPlayer(ENetPeer* peer);
+        void PopPlayer(ENetPeer* peer);
 
-        // Removes the player for the given peer.
-        void popPlayer(ENetPeer* peer);
+        // Player name helpers
+        void UpdatePlayerName(ENetPeer* peer, const std::string& newName);
+        std::string GetPlayerName(ENetPeer* peer) const;
 
-        // Returns the player’s name (or ID) for the given peer.
-        std::string getPlayerName(ENetPeer* peer) const;
-
-        // Updates the player’s name for the given peer.
-        void updatePlayerName(ENetPeer* peer, const std::string& newName);
-
-        // Returns a constant reference to the players map.
-        const std::unordered_map<ENetPeer*, std::string>& getPlayers() const;
+        const std::unordered_map<ENetPeer*, std::string>& GetPlayers() const { return mPlayers; }
 
     private:
-        std::unordered_map<ENetPeer*, std::string> players;
-        int idCounter;
+        std::unordered_map<ENetPeer*, std::string> mPlayers;
+        int mIdCounter;
     };
 
 }
