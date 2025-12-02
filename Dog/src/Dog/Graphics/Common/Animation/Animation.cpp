@@ -26,7 +26,7 @@ namespace Dog
             mTicksPerSecond = static_cast<float>(animation->mTicksPerSecond);
         }
 
-        ReadHeirarchyData(-1, model->mScene->mRootNode);
+        ReadHeirarchyData(-1, animScene->mRootNode);
         ReadMissingBones(animation, *model);       
         CheckNodesToSkip();
 

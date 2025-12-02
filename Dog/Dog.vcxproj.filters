@@ -82,6 +82,14 @@
     <ClCompile Include="src\Dog\ECS\Resources\RaytracingResource.cpp" />
     <ClCompile Include="src\Dog\Utils\VKMath.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Utils\ScopedDebugLabel.cpp" />
+    <ClCompile Include="src\Dog\Assets\Serialization\ModelSerializer.cpp" />
+    <ClCompile Include="src\Dog\Assets\UUID.cpp" />
+    <ClCompile Include="src\Dog\Assets\Serialization\BinaryIO.cpp" />
+    <ClCompile Include="src\Dog\ECS\Resources\Networking\PlayerManager.cpp" />
+    <ClCompile Include="src\Dog\ECS\Resources\Networking\PacketHandler.cpp" />
+    <ClCompile Include="src\Dog\ECS\Resources\Networking\Networking.cpp" />
+    <ClCompile Include="src\Dog\ECS\Systems\Editor\Windows\ChatWindow.cpp" />
+    <ClCompile Include="src\Dog\ECS\Resources\Networking\NetworkingResource.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\nlohmann\json.hpp" />
@@ -149,7 +157,6 @@
     <ClInclude Include="src\Dog\ECS\Resources\DebugDrawResource.h" />
     <ClInclude Include="src\Dog\Graphics\Common\UnifiedMesh.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Core\AccelerationStructures.h" />
-    <ClInclude Include="src\Dog\Graphics\Vulkan\Core\VulkanFunctions.h" />
     <ClInclude Include="src\Dog\Graphics\IWindow.h" />
     <ClInclude Include="src\Dog\Graphics\OpenGL\GLWindow.h" />
     <ClInclude Include="src\Dog\ECS\Systems\WindowSystem.h" />
@@ -186,8 +193,32 @@
     <ClInclude Include="src\Dog\ECS\Resources\RaytracingResource.h" />
     <ClInclude Include="src\Dog\Utils\VKMath.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Utils\ScopedDebugLabel.h" />
+    <ClInclude Include="src\Dog\Assets\Serialization\ModelSerializer.h" />
+    <ClInclude Include="src\Dog\Assets\UUID.h" />
+    <ClInclude Include="src\Dog\Assets\Serialization\BinaryIO.h" />
+    <ClInclude Include="src\Dog\ECS\Resources\Networking\PlayerManager.h" />
+    <ClInclude Include="src\Dog\ECS\Resources\Networking\PacketHandler.h" />
+    <ClInclude Include="src\Dog\ECS\Resources\Networking\Networking.h" />
+    <ClInclude Include="src\Dog\ECS\Systems\Editor\Windows\ChatWindow.h" />
+    <ClInclude Include="src\Dog\ECS\Resources\Networking\NetworkingResource.h" />
   </ItemGroup>
   <ItemGroup>
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />

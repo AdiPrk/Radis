@@ -1,20 +1,22 @@
 #pragma once
 
-#include "../Vulkan/VKMesh.h"
 #include "../Common/Animation/Bone.h"
+#include "../RHI/IMesh.h"
 
 namespace Dog
 {
+    class ModelSerializer;
+
     class Device;
 
     class Model
     {
     public:
-        //Remove copy constructor/operation from class 
+        Model() = default;
         Model(const Model&) = delete;
         Model& operator=(const Model&) = delete;
 
-        Model(Device& device, const std::string& filePath);
+        Model(Device& device, const std::string& filePath, bool fromDM = false, bool toDM = false);
         ~Model();
 
         std::vector<std::unique_ptr<IMesh>> mMeshes;
@@ -49,6 +51,7 @@ namespace Dog
         void NormalizeModel();
         void ExtractBoneWeights(std::vector<Vertex>& vertices, aiMesh* mesh);
 
+        friend class ModelSerializer;
         glm::vec3 mAABBmin;
         glm::vec3 mAABBmax;
 

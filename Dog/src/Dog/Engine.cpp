@@ -19,6 +19,7 @@
 #include "ECS/Resources/AnimationResource.h"
 #include "ECS/Resources/DebugDrawResource.h"
 #include "ECS/Resources/SwapRendererResource.h"
+#include "ECS/Resources/Networking/NetworkingResource.h"
 
 #include "Utils/FrameRate.h"
 #include "Graphics/Vulkan/Core/Device.h"
@@ -64,6 +65,7 @@ namespace Dog
         // ---------------------------------
 
         // Resources -----------------------
+        mEcs.AddResource<NetworkingResource>(mSpecs.serverAddress, mSpecs.serverPort);
         mEcs.AddResource<SwapRendererResource>();
         mEcs.AddResource<WindowResource>(mSpecs.width, mSpecs.height, mSpecs.name);
 

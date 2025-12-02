@@ -25,6 +25,8 @@
 #include "Assets/Assets.h"
 #include "Engine.h"
 
+#include "Assets/Serialization/ModelSerializer.h"
+
 namespace Dog
 {
     RenderingResource::RenderingResource(IWindow* window)
@@ -90,6 +92,7 @@ namespace Dog
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "texture.jpg");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "folderIcon.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "unknownFileIcon.png");
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "shikaout.ktx2");
         }
         else
         {
@@ -100,15 +103,22 @@ namespace Dog
         {
             modelLibrary = std::make_unique<ModelLibrary>(*device, *textureLibrary);
 
-            modelLibrary->AddModel(Assets::ModelsPath + "cube.obj");
-            modelLibrary->AddModel(Assets::ModelsPath + "quad.obj");
-            modelLibrary->AddModel(Assets::ModelsPath + "sphere.glb");
+            modelLibrary->AddModel(Assets::ModelsPath + "cube.obj", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "quad.obj", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "sphere.glb", true);
             // modelLibrary->AddModel(Assets::ModelsPath + "trotting_cat.glb");
-            modelLibrary->AddModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx");
-            modelLibrary->AddModel(Assets::ModelsPath + "jack_samba.glb");
-            modelLibrary->AddModel(Assets::ModelsPath + "SteampunkRobot.gltf");
-            modelLibrary->AddModel(Assets::ModelsPath + "DragonAttenuation.glb");
-            modelLibrary->AddModel(Assets::ModelsPath + "Sponza.gltf");
+            modelLibrary->AddModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "jack_samba.glb", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "SteampunkRobot.gltf", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "DragonAttenuation.glb", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "Sponza.gltf", true);
+
+            // Model* sponzaModel = modelLibrary->GetModel(sponzaInd);
+            //VFS::ModelSerializer::save(*sponzaModel, "Assets/Models/dm/Sponza.dm", 0xDEADBEEF);
+            // load it to test
+            //Model newModelTest;
+            //VFS::ModelSerializer::load(newModelTest, "Assets/Models/dm/Sponza.dm");
+            //printf("done"); // for breakpoint
 
             // modelLibrary->AddModel("Assets/Models/okayu.pmx");
             // modelLibrary->AddModel("Assets/Models/AlisaMikhailovna.fbx");
@@ -117,7 +127,7 @@ namespace Dog
         if (!animationLibrary)
         {
             animationLibrary = std::make_unique<AnimationLibrary>();
-            animationLibrary->AddAnimation(Assets::ModelsPath + "trotting_cat.glb", modelLibrary->GetModel(Assets::ModelsPath + "trotting_cat.glb"));
+            // animationLibrary->AddAnimation(Assets::ModelsPath + "trotting_cat.glb", modelLibrary->GetModel(Assets::ModelsPath + "trotting_cat.glb"));
             animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/idle.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
             animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/idle.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
             animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/jump.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));

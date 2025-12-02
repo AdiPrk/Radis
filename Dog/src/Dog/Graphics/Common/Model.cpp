@@ -9,15 +9,33 @@
 
 #include "Engine.h"
 
+#include "Assets/Serialization/ModelSerializer.h"
+
 namespace Dog
 {
-    Model::Model(Device& device, const std::string& filePath)
+    Model::Model(Device& device, const std::string& filePath, bool fromDM, bool toDM)
     {
         std::filesystem::path pathObj(filePath);
         mDirectory = pathObj.parent_path().string();
         mModelName = pathObj.stem().string();
 
-        LoadMeshes(filePath);
+        if (fromDM)
+        {
+            DOG_INFO("Loading {} from .dm model...", mModelName.c_str());
+            ModelSerializer::load(*this, Assets::ModelsPath + "dm/" + mModelName + ".dm");
+        }
+        else
+        {
+            LoadMeshes(filePath);
+        }
+        
+        NormalizeModel();
+        
+        if (toDM)
+        {
+            DOG_INFO("Saving {} to .dm model...", mModelName.c_str());
+            ModelSerializer::save(*this, Assets::ModelsPath + "dm/" + mModelName + ".dm", 0x0);
+        }
     }
 
     Model::~Model()
@@ -36,7 +54,6 @@ namespace Dog
         }
 
         ProcessNode(mScene->mRootNode);
-        NormalizeModel();
     }
 
     void Model::ProcessNode(aiNode* node, const glm::mat4& parentTransform)
@@ -288,11 +305,16 @@ namespace Dog
             newMesh.mOcclusionTextureData
         );
 
-        // Your *engine* can now check the paths
+        // Using the same texture; just use one
         if (!newMesh.metalnessTexturePath.empty() && newMesh.metalnessTexturePath == newMesh.roughnessTexturePath)
         {
-            // The paths are identical!
-            // This could be an ORM texture (Occlusion-Roughness-Metalness) if glTF
+            newMesh.mMetallicRoughnessCombined = true;
+            newMesh.roughnessTexturePath.clear();
+        }
+        else if (!newMesh.mMetalnessTextureData.empty() && newMesh.mMetalnessTextureData == newMesh.mRoughnessTextureData)
+        {
+            newMesh.mMetallicRoughnessCombined = true;
+            newMesh.mRoughnessTextureData.clear();
         }
     }
         
