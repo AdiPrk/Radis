@@ -3,35 +3,34 @@
 
 namespace Dog
 {
-    PlayerManager::PlayerManager() : idCounter(0) {}
-
+    PlayerManager::PlayerManager() : mIdCounter(0) {}
     PlayerManager::~PlayerManager() {}
 
-    std::string PlayerManager::pushPlayer(ENetPeer* peer) {
-        players[peer] = std::to_string(idCounter++);
-        return players[peer];
+    std::string PlayerManager::PushPlayer(ENetPeer* peer) 
+    {
+        mPlayers[peer] = std::to_string(mIdCounter++);
+        return mPlayers[peer];
     }
 
-    void PlayerManager::popPlayer(ENetPeer* peer) {
-        auto it = players.find(peer);
-        if (it != players.end()) {
-            players.erase(it);
+    void PlayerManager::PopPlayer(ENetPeer* peer) 
+    {
+        auto it = mPlayers.find(peer);
+        if (it != mPlayers.end()) {
+            mPlayers.erase(it);
         }
     }
 
-    std::string PlayerManager::getPlayerName(ENetPeer* peer) const {
-        auto it = players.find(peer);
-        if (it != players.end()) {
+    std::string PlayerManager::GetPlayerName(ENetPeer* peer) const 
+    {
+        auto it = mPlayers.find(peer);
+        if (it != mPlayers.end()) {
             return it->second;
         }
         return "";
     }
 
-    void PlayerManager::updatePlayerName(ENetPeer* peer, const std::string& newName) {
-        players[peer] = newName;
-    }
-
-    const std::unordered_map<ENetPeer*, std::string>& PlayerManager::getPlayers() const {
-        return players;
+    void PlayerManager::UpdatePlayerName(ENetPeer* peer, const std::string& newName) 
+    {
+        mPlayers[peer] = newName;
     }
 }

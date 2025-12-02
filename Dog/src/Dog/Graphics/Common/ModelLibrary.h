@@ -24,7 +24,7 @@ namespace Dog
 		ModelLibrary(Device& device, TextureLibrary& textureLibrary);
 		~ModelLibrary();
 
-		uint32_t AddModel(const std::string& modelPath);
+        uint32_t AddModel(const std::string& modelPath, bool fromDM = false, bool toDM = false);
         void AddToUnifiedMesh(uint32_t modelIndex);
 
         Model* GetModel(uint32_t index);

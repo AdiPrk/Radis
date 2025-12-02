@@ -13,6 +13,7 @@
 
 #include "TextureLibrary.h"
 #include "../Vulkan/Core/Device.h"
+#include "../Vulkan/VKMesh.h"
 #include "../OpenGL/GLMesh.h"
 #include "Engine.h"
 
@@ -33,7 +34,7 @@ namespace Dog
         mUnifiedMesh->GetUnifiedMesh()->DestroyBuffers();
     }
 
-    uint32_t ModelLibrary::AddModel(const std::string& filePath)
+    uint32_t ModelLibrary::AddModel(const std::string& filePath, bool fromDM, bool toDM)
     {
         auto it = mModelMap.find(filePath);
         if (it != mModelMap.end())
@@ -41,7 +42,7 @@ namespace Dog
             return it->second;
         }
 
-        std::unique_ptr<Model> model = std::make_unique<Model>(mDevice, filePath);
+        std::unique_ptr<Model> model = std::make_unique<Model>(mDevice, filePath, fromDM, toDM);
         for (auto& mesh : model->mMeshes)
         {
             mesh->CreateVertexBuffers(&mDevice);
@@ -55,6 +56,7 @@ namespace Dog
         // std::string mModelName = std::filesystem::path(filePath).stem().string();
         mModelMap[filePath] = modelID;
         mLastModelLoaded = modelID;
+
         
         return modelID;
     }

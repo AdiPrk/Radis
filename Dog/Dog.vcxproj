@@ -80,7 +80,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>PCH/pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.4.321.1\Include;$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glew\include;$(SolutionDir)Dependencies\assimp\include;$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\stb_image\stb;$(SolutionDir)Dependencies\tiny_obj_loader;$(SolutionDir)Dependencies\imgui;$(SolutionDir)Dependencies\glslang\include;$(SolutionDir)Dependencies\entt\include;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\yaml-cpp\include;$(SolutionDir)Dependencies\enet\include;$(SolutionDir)Dependencies\reflect-cpp\include;$(SolutionDir)Dependencies\nlohmann;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.4.321.1\Include;$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glew\include;$(SolutionDir)Dependencies\assimp\include;$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\stb_image\stb;$(SolutionDir)Dependencies\tiny_obj_loader;$(SolutionDir)Dependencies\imgui;$(SolutionDir)Dependencies\glslang\include;$(SolutionDir)Dependencies\entt\include;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\yaml-cpp\include;$(SolutionDir)Dependencies\enet\include;$(SolutionDir)Dependencies\reflect-cpp\include;$(SolutionDir)Dependencies\nlohmann;%(AdditionalIncludeDirectories);$(SolutionDir)Dependencies\KTX-Software\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp23</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
       <ShowIncludes>false</ShowIncludes>
@@ -88,8 +88,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.4.321.1\Lib;$(SolutionDir)Dependencies\glfw\lib;$(SolutionDir)Dependencies\glew\lib\;$(SolutionDir)Dependencies\assimp\lib;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\yaml-cpp\lib;$(SolutionDir)Dependencies\enet\lib;$(SolutionDir)Common\$(Platform)\$(Configuration)\;$(SolutionDir)Dependencies\imgui\lib\;$(SolutionDir)ImGui\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>volkd.lib;Shell32.lib;opengl32.lib;glew32s.lib;winmm.lib;meshoptimizerd.lib;ImGui.lib;Common.lib;enet64.lib;ws2_32.lib;vulkan-1.lib;glfw3d.lib;assimp-vc143-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.4.321.1\Lib;$(SolutionDir)Dependencies\glfw\lib;$(SolutionDir)Dependencies\glew\lib\;$(SolutionDir)Dependencies\assimp\lib;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\yaml-cpp\lib;$(SolutionDir)Dependencies\enet\lib;$(SolutionDir)Common\$(Platform)\$(Configuration)\;$(SolutionDir)Dependencies\imgui\lib\;$(SolutionDir)ImGui\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories);$(SolutionDir)Dependencies\KTX-Software\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ktx.lib;volkd.lib;Shell32.lib;opengl32.lib;glew32s.lib;winmm.lib;meshoptimizerd.lib;ImGui.lib;Common.lib;enet64.lib;ws2_32.lib;vulkan-1.lib;glfw3d.lib;assimp-vc143-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <DelayLoadDLLs>
       </DelayLoadDLLs>
       <AdditionalOptions>/ignore:4099</AdditionalOptions>
@@ -106,6 +106,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\pugixml.dll" "$(OutDir)" /Y
 xcopy "$(SolutionDir)Dependencies\assimp\assimp-vc143-mtd.dll" "$(OutDir)" /Y
 xcopy "$(SolutionDir)Dependencies\assimp\zlibd1.dll" "$(OutDir)" /Y
 xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
+xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
 
 :: Conditional copying for Debug vs Release
 :: IF "$(ConfigurationName)"=="Debug" (
@@ -125,7 +126,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>PCH/pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.4.321.1\Include;$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glew\include;$(SolutionDir)Dependencies\assimp\include;$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\stb_image\stb;$(SolutionDir)Dependencies\tiny_obj_loader;$(SolutionDir)Dependencies\imgui;$(SolutionDir)Dependencies\glslang\include;$(SolutionDir)Dependencies\entt\include;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\yaml-cpp\include;$(SolutionDir)Common\Dependencies\enet\include;$(SolutionDir)Dependencies\reflect-cpp\include;$(SolutionDir)Dependencies\nlohmann;$(SolutionDir)Dependencies\enet\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.4.321.1\Include;$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glew\include;$(SolutionDir)Dependencies\assimp\include;$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\stb_image\stb;$(SolutionDir)Dependencies\tiny_obj_loader;$(SolutionDir)Dependencies\imgui;$(SolutionDir)Dependencies\glslang\include;$(SolutionDir)Dependencies\entt\include;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\yaml-cpp\include;$(SolutionDir)Common\Dependencies\enet\include;$(SolutionDir)Dependencies\reflect-cpp\include;$(SolutionDir)Dependencies\nlohmann;$(SolutionDir)Dependencies\enet\include;%(AdditionalIncludeDirectories);$(SolutionDir)Dependencies\KTX-Software\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp23</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
       <ShowIncludes>false</ShowIncludes>
@@ -135,8 +136,8 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.4.321.1\Lib;$(SolutionDir)Dependencies\glfw\lib;$(SolutionDir)Dependencies\glew\lib\;$(SolutionDir)Dependencies\assimp\lib;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\yaml-cpp\lib;$(SolutionDir)Dependencies\enet\lib;$(SolutionDir)Common\$(Platform)\$(Configuration)\;$(SolutionDir)ImGui\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>volk.lib;Shell32.lib;opengl32.lib;glew32s.lib;winmm.lib;meshoptimizer.lib;ImGui.lib;Common.lib;enet64.lib;ws2_32.lib;vulkan-1.lib;glfw3.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.4.321.1\Lib;$(SolutionDir)Dependencies\glfw\lib;$(SolutionDir)Dependencies\glew\lib\;$(SolutionDir)Dependencies\assimp\lib;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\yaml-cpp\lib;$(SolutionDir)Dependencies\enet\lib;$(SolutionDir)Common\$(Platform)\$(Configuration)\;$(SolutionDir)ImGui\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories);$(SolutionDir)Dependencies\KTX-Software\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ktx.lib;volk.lib;Shell32.lib;opengl32.lib;glew32s.lib;winmm.lib;meshoptimizer.lib;ImGui.lib;Common.lib;enet64.lib;ws2_32.lib;vulkan-1.lib;glfw3.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099</AdditionalOptions>
     </Link>
     <PreBuildEvent>
@@ -150,6 +151,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\minizip.dll" "$(OutDir)" /Y
 xcopy "$(SolutionDir)Dependencies\assimp\pugixml.dll" "$(OutDir)" /Y
 xcopy "$(SolutionDir)Dependencies\assimp\assimp-vc143-mt.dll" "$(OutDir)" /Y
 xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
+xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
 
 :: Conditional copying for Debug vs Release
 ::IF "$(ConfigurationName)"=="Debug" (
@@ -169,7 +171,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>PCH/pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.4.321.1\Include;$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glew\include;$(SolutionDir)Dependencies\assimp\include;$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\stb_image\stb;$(SolutionDir)Dependencies\tiny_obj_loader;$(SolutionDir)Dependencies\imgui;$(SolutionDir)Dependencies\glslang\include;$(SolutionDir)Dependencies\entt\include;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\yaml-cpp\include;$(SolutionDir)Common\Dependencies\enet\include;$(SolutionDir)Dependencies\reflect-cpp\include;$(SolutionDir)Dependencies\nlohmann;$(SolutionDir)Dependencies\enet\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.4.321.1\Include;$(SolutionDir)Dependencies\glfw\include;$(SolutionDir)Dependencies\glew\include;$(SolutionDir)Dependencies\assimp\include;$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\stb_image\stb;$(SolutionDir)Dependencies\tiny_obj_loader;$(SolutionDir)Dependencies\imgui;$(SolutionDir)Dependencies\glslang\include;$(SolutionDir)Dependencies\entt\include;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\yaml-cpp\include;$(SolutionDir)Common\Dependencies\enet\include;$(SolutionDir)Dependencies\reflect-cpp\include;$(SolutionDir)Dependencies\nlohmann;$(SolutionDir)Dependencies\enet\include;%(AdditionalIncludeDirectories);$(SolutionDir)Dependencies\KTX-Software\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp23</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
       <ShowIncludes>false</ShowIncludes>
@@ -181,8 +183,8 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.4.321.1\Lib;$(SolutionDir)Dependencies\glfw\lib;$(SolutionDir)Dependencies\glew\lib\;$(SolutionDir)Dependencies\assimp\lib;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\enet\lib;$(SolutionDir)Common\$(Platform)\$(Configuration)\;$(SolutionDir)ImGui\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>volk.lib;Shell32.lib;opengl32.lib;glew32s.lib;winmm.lib;meshoptimizer.lib;ImGui.lib;Common.lib;enet64.lib;ws2_32.lib;vulkan-1.lib;glfw3.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.4.321.1\Lib;$(SolutionDir)Dependencies\glfw\lib;$(SolutionDir)Dependencies\glew\lib\;$(SolutionDir)Dependencies\assimp\lib;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\enet\lib;$(SolutionDir)Common\$(Platform)\$(Configuration)\;$(SolutionDir)ImGui\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories);$(SolutionDir)Dependencies\KTX-Software\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ktx.lib;volk.lib;Shell32.lib;opengl32.lib;glew32s.lib;winmm.lib;meshoptimizer.lib;ImGui.lib;Common.lib;enet64.lib;ws2_32.lib;vulkan-1.lib;glfw3.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099</AdditionalOptions>
     </Link>
     <PreBuildEvent>
@@ -196,6 +198,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\minizip.dll" "$(OutDir)" /Y
 xcopy "$(SolutionDir)Dependencies\assimp\pugixml.dll" "$(OutDir)" /Y
 xcopy "$(SolutionDir)Dependencies\assimp\assimp-vc143-mt.dll" "$(OutDir)" /Y
 xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
+xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
 
 :: Conditional copying for Debug vs Release
 :: IF "$(ConfigurationName)"=="Debug" (
@@ -208,6 +211,8 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
   <ItemGroup>
     <ClCompile Include="src\Dog\Assets\Assets.cpp" />
     <ClCompile Include="src\Dog\Assets\CaseInsensitiveHash.cpp" />
+    <ClCompile Include="src\Dog\Assets\Serialization\BinaryIO.cpp" />
+    <ClCompile Include="src\Dog\Assets\UUID.cpp" />
     <ClCompile Include="src\Dog\ECS\ECS.cpp" />
     <ClCompile Include="src\Dog\ECS\Components\Components.cpp" />
     <ClCompile Include="src\Dog\ECS\Entities\Entity.cpp" />
@@ -215,11 +220,14 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Dog\ECS\Resources\DebugDrawResource.cpp" />
     <ClCompile Include="src\Dog\ECS\Resources\EditorResource.cpp" />
     <ClCompile Include="src\Dog\ECS\Resources\InputResource.cpp" />
+    <ClCompile Include="src\Dog\ECS\Resources\Networking\NetworkingResource.cpp" />
     <ClCompile Include="src\Dog\ECS\Resources\RaytracingResource.cpp" />
     <ClCompile Include="src\Dog\ECS\Resources\RenderingResource.cpp" />
     <ClCompile Include="src\Dog\ECS\Resources\SerializationResource.cpp" />
     <ClCompile Include="src\Dog\ECS\Resources\SwapRendererResource.cpp" />
+    <ClCompile Include="src\Dog\Assets\Serialization\ModelSerializer.cpp" />
     <ClCompile Include="src\Dog\ECS\Resources\WindowResource.cpp" />
+    <ClCompile Include="src\Dog\ECS\Systems\Editor\Windows\ChatWindow.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\Editor\Windows\MemoryWindow.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\Editor\Windows\ProfilerWindow.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\Graphics\AnimationSystem.cpp" />
@@ -276,6 +284,9 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Dog\Graphics\Vulkan\Uniform\Uniform.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Uniform\UniformData.cpp" />
     <ClCompile Include="src\Dog\Graphics\Vulkan\Uniform\UniformSettings.cpp" />
+    <ClCompile Include="src\Dog\ECS\Resources\Networking\Networking.cpp" />
+    <ClCompile Include="src\Dog\ECS\Resources\Networking\PacketHandler.cpp" />
+    <ClCompile Include="src\Dog\ECS\Resources\Networking\PlayerManager.cpp" />
     <ClCompile Include="src\Dog\Profiler\Profiler.cpp" />
     <ClCompile Include="src\Dog\Utils\FrameRate.cpp" />
     <ClCompile Include="src\Dog\Graphics\IWindow.cpp" />
@@ -318,6 +329,8 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="Dependencies\nlohmann\json.hpp" />
     <ClInclude Include="src\Dog\Assets\Assets.h" />
     <ClInclude Include="src\Dog\Assets\CaseInsensitiveHash.h" />
+    <ClInclude Include="src\Dog\Assets\Serialization\BinaryIO.h" />
+    <ClInclude Include="src\Dog\Assets\UUID.h" />
     <ClInclude Include="src\Dog\ECS\ECS.h" />
     <ClInclude Include="src\Dog\ECS\Components\Components.h" />
     <ClInclude Include="src\Dog\ECS\Entities\Entity.h" />
@@ -326,11 +339,14 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Dog\ECS\Resources\EditorResource.h" />
     <ClInclude Include="src\Dog\ECS\Resources\InputResource.h" />
     <ClInclude Include="src\Dog\ECS\Resources\IResource.h" />
+    <ClInclude Include="src\Dog\ECS\Resources\Networking\NetworkingResource.h" />
     <ClInclude Include="src\Dog\ECS\Resources\RaytracingResource.h" />
     <ClInclude Include="src\Dog\ECS\Resources\RenderingResource.h" />
     <ClInclude Include="src\Dog\ECS\Resources\SerializationResource.h" />
     <ClInclude Include="src\Dog\ECS\Resources\SwapRendererResource.h" />
+    <ClInclude Include="src\Dog\Assets\Serialization\ModelSerializer.h" />
     <ClInclude Include="src\Dog\ECS\Resources\WindowResource.h" />
+    <ClInclude Include="src\Dog\ECS\Systems\Editor\Windows\ChatWindow.h" />
     <ClInclude Include="src\Dog\ECS\Systems\Editor\Windows\MemoryWindow.h" />
     <ClInclude Include="src\Dog\ECS\Systems\Editor\Windows\ProfilerWindow.h" />
     <ClInclude Include="src\Dog\ECS\Systems\Graphics\AnimationSystem.h" />
@@ -368,7 +384,6 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Dog\Graphics\Vulkan\Core\Device.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Core\SwapChain.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Core\Synchronization.h" />
-    <ClInclude Include="src\Dog\Graphics\Vulkan\Core\VulkanFunctions.h" />
     <ClInclude Include="src\Dog\Graphics\Common\Animation\Animation.h" />
     <ClInclude Include="src\Dog\Graphics\Common\Animation\AnimationLibrary.h" />
     <ClInclude Include="src\Dog\Graphics\Common\Animation\Animator.h" />
@@ -389,6 +404,9 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Dog\Graphics\Vulkan\Uniform\Uniform.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Uniform\UniformData.h" />
     <ClInclude Include="src\Dog\Graphics\Vulkan\Uniform\UniformSettings.h" />
+    <ClInclude Include="src\Dog\ECS\Resources\Networking\Networking.h" />
+    <ClInclude Include="src\Dog\ECS\Resources\Networking\PacketHandler.h" />
+    <ClInclude Include="src\Dog\ECS\Resources\Networking\PlayerManager.h" />
     <ClInclude Include="src\Dog\Profiler\Profiler.h" />
     <ClInclude Include="src\Dog\Utils\FrameRate.h" />
     <ClInclude Include="src\Dog\Graphics\IWindow.h" />

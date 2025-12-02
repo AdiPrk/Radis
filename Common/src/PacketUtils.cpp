@@ -3,106 +3,99 @@
 #include <stdarg.h>
 #include <cstdio>
 #include <cstring>
+#include <vector>
 
 namespace Dog
 {
-    // Helper: Create an ENetPacket using a formatted string.
-    ENetPacket* createFormattedPacket(const char* format, va_list args) {
-        char buffer[Dog::PACKET_BUFFER_SIZE];
-        vsnprintf(buffer, PACKET_BUFFER_SIZE, format, args);
-        size_t len = strlen(buffer) + 1;
-        return enet_packet_create(buffer, len, ENET_PACKET_FLAG_RELIABLE);
-    }
+    // Encode a NetMessage into an ENetPacket
+    ENetPacket* PacketUtils::encode(const NetMessage& msg) const
+    {
+        std::vector<std::uint8_t> payload = nlohmann::json::to_msgpack(msg.body);
 
-    // Overloaded helper that accepts variadic arguments.
-    ENetPacket* createFormattedPacket(const char* format, ...) {
-        va_list args;
-        va_start(args, format);
-        ENetPacket* packet = createFormattedPacket(format, args);
-        va_end(args);
-        return packet;
-    }
+        PacketHeader header{};
+        header.packetId = static_cast<std::uint16_t>(msg.id);
+        header.flags = 0;
 
-    // Generic broadcast helper that takes a lambda which sends a packet to a peer.
-    template<typename Fn>
-    void broadcastHelper(ENetHost* host, ENetPeer* sender, Fn sendFunc) {
-        for (size_t i = 0; i < host->peerCount; ++i) {
-            ENetPeer* currentPeer = &host->peers[i];
-            if (currentPeer->state != ENET_PEER_STATE_CONNECTED || currentPeer == sender)
-                continue;
-            sendFunc(currentPeer);
+        const std::size_t totalSize = sizeof(PacketHeader) + payload.size();
+        std::vector<std::uint8_t> buffer(totalSize);
+
+        std::memcpy(buffer.data(), &header, sizeof(PacketHeader));
+
+        if (!payload.empty())
+        {
+            std::memcpy(buffer.data() + sizeof(PacketHeader), payload.data(), payload.size());
         }
+
+        return enet_packet_create(buffer.data(), buffer.size(), ENET_PACKET_FLAG_RELIABLE);
     }
 
-    PacketUtils::PacketUtils() {}
-    PacketUtils::~PacketUtils() {}
+    // Decode an ENetPacket into a NetMessage
+    bool PacketUtils::decode(const ENetPacket* packet, NetMessage& outMsg) const
+    {
+        if (!packet || packet->dataLength < sizeof(PacketHeader))
+        {
+            std::printf("Packet too small for header.\n");
+            return false;
+        }
 
-    // --- Sending functions ---
+        PacketHeader header{};
+        std::memcpy(&header, packet->data, sizeof(PacketHeader));
 
-    void PacketUtils::sendPacket(ENetPeer* peer, PacketID packetID) {
+        const auto* payloadBegin = reinterpret_cast<const std::uint8_t*>(packet->data) + sizeof(PacketHeader);
+        const auto* payloadEnd = reinterpret_cast<const std::uint8_t*>(packet->data) + packet->dataLength;
+
+        try
+        {
+            outMsg.body = nlohmann::json::from_msgpack(payloadBegin, payloadEnd);
+        }
+        catch (const std::exception& e)
+        {
+            std::printf("Failed to decode msgpack: %s\n", e.what());
+            return false;
+        }
+
+        outMsg.id = static_cast<PacketID>(header.packetId);
+        return true;
+    }
+
+    void PacketUtils::send(ENetPeer* peer, const NetMessage& msg) const
+    {
         if (!peer) return;
-        ENetPacket* packet = createFormattedPacket("%d", packetID);
-        enet_peer_send(peer, 0, packet);
+        ENetPacket* pkt = encode(msg);
+        enet_peer_send(peer, 0, pkt);
     }
 
-    void PacketUtils::sendPacket(ENetPeer* peer, PacketID packetID, const char* data) {
+    void PacketUtils::send(ENetPeer* peer, PacketID id, const nlohmann::json& body) const
+    {
         if (!peer) return;
-        ENetPacket* packet = createFormattedPacket("%d %s", packetID, data);
-        enet_peer_send(peer, 0, packet);
+        NetMessage msg{ id, body };
+        ENetPacket* pkt = encode(msg);
+        enet_peer_send(peer, 0, pkt);
     }
 
-    void PacketUtils::sendPacketInt(ENetPeer* peer, PacketID packetID, int data) {
+    void PacketUtils::sendWithBinary(ENetPeer* peer, PacketID id, nlohmann::json meta, const std::vector<std::uint8_t>& blob, std::string_view fieldName) const
+    {
         if (!peer) return;
-        ENetPacket* packet = createFormattedPacket("%d %i", packetID, data);
-        enet_peer_send(peer, 0, packet);
+
+        meta[std::string(fieldName)] = nlohmann::json::binary(blob);
+        NetMessage msg{ id, std::move(meta) };
+
+        ENetPacket* pkt = encode(msg);
+        enet_peer_send(peer, 0, pkt);
     }
 
-    void PacketUtils::sendPacketVec2(ENetPeer* peer, PacketID packetID, float x, float y) {
-        if (!peer) return;
-        ENetPacket* packet = createFormattedPacket("%d %f %f", packetID, x, y);
-        enet_peer_send(peer, 0, packet);
-    }
-
-    void PacketUtils::sendPacketVec3(ENetPeer* peer, PacketID packetID, float x, float y, float z) {
-        if (!peer) return;
-        ENetPacket* packet = createFormattedPacket("%d %f %f %f", packetID, x, y, z);
-        enet_peer_send(peer, 0, packet);
-    }
-
-    // --- Broadcasting functions ---
-
-    void PacketUtils::broadcastPacket(ENetHost* host, ENetPeer* sender, PacketID packetID) {
-        if (!host) return;
-        broadcastHelper(host, sender, [this, packetID](ENetPeer* p) {
-            sendPacket(p, packetID);
+    void PacketUtils::broadcast(ENetHost* host, ENetPeer* sender, const NetMessage& msg) const
+    {
+        ForEachOtherPeer(host, sender, [this, &msg](ENetPeer* p) 
+        {
+            send(p, msg);
         });
     }
 
-    void PacketUtils::broadcastPacket(ENetHost* host, ENetPeer* sender, PacketID packetID, const char* data) {
-        if (!host) return;
-        broadcastHelper(host, sender, [this, packetID, data](ENetPeer* p) {
-            sendPacket(p, packetID, data);
-        });
+    void PacketUtils::broadcast(ENetHost* host, ENetPeer* sender, PacketID id, const nlohmann::json& body) const
+    {
+        NetMessage msg{ id, body };
+        broadcast(host, sender, msg);
     }
 
-    void PacketUtils::broadcastPacketInt(ENetHost* host, ENetPeer* sender, PacketID packetID, int data) {
-        if (!host) return;
-        broadcastHelper(host, sender, [this, packetID, data](ENetPeer* p) {
-            sendPacketInt(p, packetID, data);
-        });
-    }
-
-    void PacketUtils::broadcastPacketVec2(ENetHost* host, ENetPeer* sender, PacketID packetID, float x, float y) {
-        if (!host) return;
-        broadcastHelper(host, sender, [this, packetID, x, y](ENetPeer* p) {
-            sendPacketVec2(p, packetID, x, y);
-        });
-    }
-
-    void PacketUtils::broadcastPacketVec3(ENetHost* host, ENetPeer* sender, PacketID packetID, float x, float y, float z) {
-        if (!host) return;
-        broadcastHelper(host, sender, [this, packetID, x, y, z](ENetPeer* p) {
-            sendPacketVec3(p, packetID, x, y, z);
-        }); 
-    }
-}
+} // namespace Dog
