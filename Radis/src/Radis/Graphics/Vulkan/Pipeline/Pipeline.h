@@ -2,7 +2,7 @@
 
 #include "../Core/Device.h"
 
-namespace Dog
+namespace Radis
 {
 	class Uniform;
 	class Device;

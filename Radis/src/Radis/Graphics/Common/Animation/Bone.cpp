@@ -3,7 +3,7 @@
 #include <concepts>
 
 /*reads keyframes from aiNodeAnim*/
-namespace Dog
+namespace Radis
 {
     // default ctor required for some stl containers
     Bone::Bone()

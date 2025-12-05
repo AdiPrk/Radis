@@ -1,7 +1,7 @@
 #include <PCH/pch.h>
 #include "GLTexture.h"
 
-namespace Dog {
+namespace Radis {
 
     GLuint GLTexture::CurrentTextureID = 0;
 

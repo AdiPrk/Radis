@@ -2,7 +2,7 @@
 
 #include "Graphics/RHI/ITexture.h"
 
-namespace Dog
+namespace Radis
 {
 	class Device;
 

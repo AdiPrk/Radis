@@ -6,7 +6,7 @@
 #include "../Uniform/Descriptors.h"
 #include "VKShader.h"
 
-namespace Dog
+namespace Radis
 {
 	RaytracingPipeline::RaytracingPipeline(Device& device, const std::vector<Uniform*>& uniforms)
 		: device(device)

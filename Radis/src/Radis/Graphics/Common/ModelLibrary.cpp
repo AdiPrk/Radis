@@ -17,7 +17,7 @@
 #include "../OpenGL/GLMesh.h"
 #include "Engine.h"
 
-namespace Dog
+namespace Radis
 {
     const uint32_t ModelLibrary::INVALID_MODEL_INDEX = 10001;
 

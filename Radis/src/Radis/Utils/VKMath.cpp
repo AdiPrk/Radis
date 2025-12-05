@@ -1,10 +1,10 @@
 #include <PCH/pch.h>
 #include "VKMath.h"
 
-namespace Dog
+namespace Radis
 {
 
-    VkTransformMatrixKHR Dog::toTransformMatrixKHR(const glm::mat4& m)
+    VkTransformMatrixKHR Radis::toTransformMatrixKHR(const glm::mat4& m)
     {
         VkTransformMatrixKHR t;
         glm::mat4 tmp = glm::transpose(m);

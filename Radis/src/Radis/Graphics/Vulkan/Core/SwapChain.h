@@ -2,7 +2,7 @@
 
 #include <PCH/pch.h>
 
-namespace Dog
+namespace Radis
 {
     class Device;
     struct RenderingResource;

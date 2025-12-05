@@ -3,7 +3,7 @@
 
 #if PROFILING_ENABLED
 
-namespace Dog
+namespace Radis
 {
 
     using Clock = std::chrono::steady_clock;

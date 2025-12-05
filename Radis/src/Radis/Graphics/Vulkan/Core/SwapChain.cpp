@@ -5,7 +5,7 @@
 #include "Synchronization.h"
 #include "ECS/Resources/RenderingResource.h"
 
-namespace Dog
+namespace Radis
 {
     SwapChain::SwapChain(Device& deviceRef, glm::uvec2 extent)
         : mDevice{ deviceRef }

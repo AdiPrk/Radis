@@ -22,7 +22,7 @@
 #include "ECS/Components/Components.h"
 #include "ECS/Entities/Entity.h"
 
-namespace Dog
+namespace Radis
 {
     RaytracingResource::RaytracingResource()
     {

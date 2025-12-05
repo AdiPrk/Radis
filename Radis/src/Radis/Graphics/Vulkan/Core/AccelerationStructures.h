@@ -2,7 +2,7 @@
 
 #include "Buffer.h"
 
-namespace Dog
+namespace Radis
 {
     struct AccelerationStructure
     {

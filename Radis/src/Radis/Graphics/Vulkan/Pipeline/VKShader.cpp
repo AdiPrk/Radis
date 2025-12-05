@@ -9,7 +9,7 @@
 
 #include "Engine.h"
 
-namespace Dog
+namespace Radis
 {
 	bool Shader::CompileShader(const std::string& shaderPath)
 	{

@@ -5,7 +5,7 @@
 #include "SwapChain.h"
 #include "ECS/Resources/RenderingResource.h"
 
-namespace Dog
+namespace Radis
 {
     Synchronizer::Synchronizer(VkDevice device, size_t swapChainImageCount)
         : mDevice(device)
@@ -88,4 +88,4 @@ namespace Dog
         mCurrentFrame = (mCurrentFrame + 1) % SwapChain::MAX_FRAMES_IN_FLIGHT;
     }
 
-} // namespace Dog
+} // namespace Radis

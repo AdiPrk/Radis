@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Dog {
+namespace Radis {
 
 	class UUID
 	{
@@ -30,9 +30,9 @@ namespace std {
 	template <typename T> struct hash;
 
 	template<>
-	struct hash<Dog::UUID>
+	struct hash<Radis::UUID>
 	{
-		std::size_t operator()(const Dog::UUID& uuid) const
+		std::size_t operator()(const Radis::UUID& uuid) const
 		{
 			return (uint64_t)uuid;
 		}

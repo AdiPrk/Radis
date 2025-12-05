@@ -3,7 +3,7 @@
 #include "../Common/Animation/Bone.h"
 #include "../RHI/IMesh.h"
 
-namespace Dog
+namespace Radis
 {
     class ModelSerializer;
 

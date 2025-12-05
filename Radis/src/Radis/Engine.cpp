@@ -29,7 +29,7 @@
 
 #include "Graphics/RHI/RHI.h"
 
-namespace Dog 
+namespace Radis 
 {
     bool Engine::mDevBuild = false;
     GraphicsAPI Engine::mGraphicsAPI = GraphicsAPI::None;
@@ -148,4 +148,4 @@ namespace Dog
         return EXIT_SUCCESS;
     }
 
-} // namespace Dog
+} // namespace Radis

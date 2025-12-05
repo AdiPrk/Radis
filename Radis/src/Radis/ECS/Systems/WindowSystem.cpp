@@ -5,7 +5,7 @@
 #include "ECS/ECS.h"
 #include "Graphics/IWindow.h"
 
-namespace Dog
+namespace Radis
 {
     void WindowSystem::Update(float dt)
     {

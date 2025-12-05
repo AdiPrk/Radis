@@ -36,7 +36,7 @@
 #include "Graphics/OpenGL/GLTexture.h"
 
 
-namespace Dog
+namespace Radis
 {
     RenderSystem::RenderSystem() : ISystem("RenderSystem") {}
     RenderSystem::~RenderSystem() {}

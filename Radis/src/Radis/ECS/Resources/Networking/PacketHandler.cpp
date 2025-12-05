@@ -4,7 +4,7 @@
 #include "ECS/Systems/Editor/Windows/ChatWindow.h"
 #include "Engine.h"
 
-namespace Dog
+namespace Radis
 {
     PacketHandler::PacketHandler(PacketUtils& utils) : packetUtils(utils) {}
     PacketHandler::~PacketHandler() {}

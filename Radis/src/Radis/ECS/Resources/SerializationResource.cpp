@@ -8,7 +8,7 @@
 #include "rfl.hpp"
 #include "Utils/SerializationOperators.h"
 
-namespace Dog
+namespace Radis
 {
 
     template <typename... Types, typename Func>

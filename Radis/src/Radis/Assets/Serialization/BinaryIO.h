@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Dog
+namespace Radis
 {
     // Little-endian binary writer/reader with automatic endian swap
     struct BinaryEndian

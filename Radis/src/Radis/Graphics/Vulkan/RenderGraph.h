@@ -1,6 +1,6 @@
  #pragma once
 
-namespace Dog
+namespace Radis
 {
     // Opaque handle to a resource managed by the render graph.
     // This abstracts away the underlying VkImage/VkBuffer.

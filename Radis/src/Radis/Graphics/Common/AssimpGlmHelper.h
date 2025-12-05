@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Dog
+namespace Radis
 {
 
     constexpr glm::vec3 aiVecToGlm(const aiVector3D& from) noexcept {

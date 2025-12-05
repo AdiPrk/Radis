@@ -11,7 +11,7 @@
 #include "../Vulkan/Core/Device.h"
 #include "Assets/CaseInsensitiveHash.h"
 
-namespace Dog
+namespace Radis
 {
 	class Model;
 	class Uniform;
@@ -55,4 +55,4 @@ namespace Dog
         uint32_t mLastModelLoaded = INVALID_MODEL_INDEX;
 	};
 
-} // namespace Dog
+} // namespace Radis

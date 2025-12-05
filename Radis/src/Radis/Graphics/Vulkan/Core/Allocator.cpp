@@ -3,7 +3,7 @@
 
 #include "../Core/device.h"
 
-namespace Dog 
+namespace Radis 
 {
     Device* Allocator::mDevice = nullptr;
     VmaAllocator Allocator::mAllocator = nullptr;

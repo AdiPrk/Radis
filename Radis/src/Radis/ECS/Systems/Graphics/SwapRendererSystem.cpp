@@ -14,7 +14,7 @@
 #include "Graphics/Common/ModelLibrary.h"
 #include "Graphics/Common/TextureLibrary.h"
 
-namespace Dog
+namespace Radis
 {
     void SwapRendererSystem::Init()
     {

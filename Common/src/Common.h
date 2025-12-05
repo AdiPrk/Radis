@@ -1,10 +1,10 @@
-#ifndef DOG_COMMON_H
-#define DOG_COMMON_H
+#ifndef RADIS_COMMON_H
+#define RADIS_COMMON_H
 
 #include "json.hpp"
 #include <cstddef>
 
-namespace Dog
+namespace Radis
 {
     const size_t PACKET_BUFFER_SIZE = 256;
     //const char SERVER_IP[10] = "localhost";

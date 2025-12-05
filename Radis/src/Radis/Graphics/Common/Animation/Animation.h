@@ -12,7 +12,7 @@
 #include "Graphics/Common/Model.h"
 #include "Bone.h"
 
-namespace Dog
+namespace Radis
 {
     // This struct is used when creating the animation data
     struct AnimationNode

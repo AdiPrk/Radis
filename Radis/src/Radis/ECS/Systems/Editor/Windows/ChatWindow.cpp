@@ -3,7 +3,7 @@
 #include "Engine.h"
 #include "ECS/Resources/Networking/Networking.h"
 
-namespace Dog
+namespace Radis
 {
     // Example message struct for clarity:
     struct ChatMessage

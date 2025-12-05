@@ -4,7 +4,7 @@
 
 #include "ECS/Systems/Editor/Windows/ChatWindow.h"
 
-namespace Dog
+namespace Radis
 {
     NetworkingResource::NetworkingResource(const std::string& address, uint16_t port)
     {

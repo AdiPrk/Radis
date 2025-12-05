@@ -2,7 +2,7 @@
 #include "RHI.h"
 #include "IMesh.h"
 
-namespace Dog
+namespace Radis
 {
     bool RHI::RHI_Init(GraphicsAPI backend)
     {

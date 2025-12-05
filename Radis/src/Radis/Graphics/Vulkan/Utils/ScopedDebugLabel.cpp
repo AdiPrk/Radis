@@ -2,7 +2,7 @@
 #include "ScopedDebugLabel.h"
 #include "../Core/Device.h"
 
-namespace Dog
+namespace Radis
 {
     ScopedDebugLabel::ScopedDebugLabel(Device* device, VkCommandBuffer cmd, const char* labelName, const glm::vec4& color)
         : mDevice(device), mCmd(cmd)

@@ -4,7 +4,7 @@
 #include "ArcLengthTable.h"
 #include "SpeedControl.h"
 
-namespace Dog
+namespace Radis
 {
     /**
      * @struct PathSample

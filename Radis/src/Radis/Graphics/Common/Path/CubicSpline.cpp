@@ -1,7 +1,7 @@
 #include <PCH/pch.h>
 #include "CubicSpline.h"
 
-namespace Dog
+namespace Radis
 {
     void CubicSpline::SetControlPoints(const std::vector<glm::vec3>& points)
     {

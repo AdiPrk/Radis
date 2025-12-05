@@ -11,7 +11,7 @@
 
 #include "../Core/Buffer.h"
 
-namespace Dog
+namespace Radis
 {
     //Forward declarations
     class Device;
@@ -85,6 +85,6 @@ namespace Dog
         std::vector<VkDescriptorSetLayoutBinding> rayTracingBindings;
     };
 
-} // namespace Dog
+} // namespace Radis
 
 #include "Uniform.inl"

@@ -9,7 +9,7 @@
 #include "ECS/Components/Components.h"
 #include "Engine.h"
 
-namespace Dog
+namespace Radis
 {
     namespace EditorWindows
     {

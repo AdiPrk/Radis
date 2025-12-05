@@ -6,7 +6,7 @@
 #include "Graphics/Vulkan/Uniform/ShaderTypes.h"
 #include "Graphics/Common/TextureLibrary.h"
 
-namespace Dog {
+namespace Radis {
 
     float GLShader::iTime = 0.0f;
     GLuint GLShader::uboMatrices = 0;

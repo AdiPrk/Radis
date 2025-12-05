@@ -4,7 +4,7 @@
 #include "Graphics/Vulkan/Core/AccelerationStructures.h"
 #include "Graphics/Vulkan/Uniform/ShaderTypes.h"
 
-namespace Dog
+namespace Radis
 {
     struct RaytracingResource : public IResource
     {

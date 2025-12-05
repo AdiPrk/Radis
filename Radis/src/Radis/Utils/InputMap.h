@@ -7,7 +7,7 @@
 
 #pragma once
 
-namespace Dog {
+namespace Radis {
 
     enum class Key
     {
@@ -139,4 +139,4 @@ namespace Dog {
         LAST = 8
     };
 
-} // namespace Dog
+} // namespace Radis

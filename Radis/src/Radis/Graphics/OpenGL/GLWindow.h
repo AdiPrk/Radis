@@ -2,7 +2,7 @@
 
 #include "../IWindow.h"
 
-namespace Dog 
+namespace Radis 
 {
 	class GLWindow : public IWindow {
 	public:
@@ -18,4 +18,4 @@ namespace Dog
 		void SwapBuffers() override;
 	};
 
-} // namespace Dog
+} // namespace Radis

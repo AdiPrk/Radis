@@ -6,7 +6,7 @@
 #include "../Vulkan/Core/Buffer.h"
 #include "Engine.h"
 
-namespace Dog
+namespace Radis
 {
     UnifiedMeshes::UnifiedMeshes()
     {
@@ -42,4 +42,4 @@ namespace Dog
         mMeshInfos[mesh.mMeshID] = meshInfo;
     }
 
-} // namespace Dog
+} // namespace Radis

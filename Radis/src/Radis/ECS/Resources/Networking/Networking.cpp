@@ -3,7 +3,7 @@
 #include "ECS/Systems/Editor/Windows/ChatWindow.h"
 #include "Engine.h"
 
-namespace Dog {
+namespace Radis {
 
     // Function definitions
     void Networking::InitializeENet()
@@ -175,4 +175,4 @@ namespace Dog {
         }
     }
 
-} // namespace Dog
+} // namespace Radis

@@ -5,7 +5,7 @@
 #include "ECS/ECS.h"
 #include "ECS/Components/Components.h"
 
-namespace Dog
+namespace Radis
 {
     static float AngleDiffDeg(float from, float to) {
         // returns shortest signed difference in degrees (to - from) in range [-180,180)

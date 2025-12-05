@@ -2,7 +2,7 @@
 #include "AnimationLibrary.h"
 #include "Animator.h"
 
-namespace Dog
+namespace Radis
 {
     const uint32_t AnimationLibrary::INVALID_ANIMATION_INDEX = 10001;
 

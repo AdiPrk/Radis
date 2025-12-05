@@ -1,7 +1,7 @@
 ﻿#include <PCH/pch.h>
 #include "Animation.h"
 
-namespace Dog
+namespace Radis
 {
     Animation::Animation()
         : mDuration(0.0f)
@@ -125,4 +125,4 @@ namespace Dog
         }
     }
 
-} // namespace Dog
+} // namespace Radis

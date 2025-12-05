@@ -2,7 +2,7 @@
 #include "GLWindow.h"
 #include "Utils/Utils.h"
 
-namespace Dog {
+namespace Radis {
 
 #define DEBUG_OPENGL_OUTPUT 1
 
@@ -118,4 +118,4 @@ namespace Dog {
         glfwSwapBuffers(mWindow);
     }
 
-} // namespace Dog
+} // namespace Radis

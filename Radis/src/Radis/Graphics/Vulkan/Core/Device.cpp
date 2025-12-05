@@ -2,7 +2,7 @@
 #include "Device.h"
 #include "Graphics/Vulkan/VulkanWindow.h"
 
-namespace Dog 
+namespace Radis 
 {
     // local callback functions
     static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
@@ -150,9 +150,9 @@ namespace Dog
 
         VkApplicationInfo appInfo = {};
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        appInfo.pApplicationName = "Dog";
+        appInfo.pApplicationName = "Radis";
         appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-        appInfo.pEngineName = "Dog";
+        appInfo.pEngineName = "Radis";
         appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
         appInfo.apiVersion = VK_API_VERSION_1_4;
 
@@ -782,4 +782,4 @@ namespace Dog
         vkCmdEndDebugUtilsLabelEXT(commandBuffer);
     }
 
-} // namespace Dog
+} // namespace Radis

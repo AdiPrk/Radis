@@ -3,7 +3,7 @@
 #include "Graphics/RHI/ITexture.h"
 #include "TextureLoader.h"
 
-namespace Dog
+namespace Radis
 {
     class Device;
 	class ITexture;
@@ -71,4 +71,4 @@ namespace Dog
         bool mNeedTextureDescriptorUpdate = false;
 	};
 
-} // namespace Dog
+} // namespace Radis

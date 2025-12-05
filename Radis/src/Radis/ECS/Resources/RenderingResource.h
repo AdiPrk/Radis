@@ -4,7 +4,7 @@
 #include "Graphics/Vulkan/Core/AccelerationStructures.h"
 #include "Graphics/OpenGL/GLShader.h"
 
-namespace Dog
+namespace Radis
 {
     class IWindow;
     class Device;

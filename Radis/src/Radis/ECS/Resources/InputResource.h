@@ -4,7 +4,7 @@
 
 struct GLFWwindow;
 
-namespace Dog
+namespace Radis
 {
     struct InputResource : public IResource
     {

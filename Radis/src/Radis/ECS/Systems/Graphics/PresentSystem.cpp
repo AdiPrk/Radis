@@ -18,7 +18,7 @@
 
 #include "Engine.h"
 
-namespace Dog
+namespace Radis
 {
 	void PresentSystem::Init()
 	{

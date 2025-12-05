@@ -1,7 +1,7 @@
 #include <PCH/pch.h>
 #include "SpeedControl.h"
 
-namespace Dog
+namespace Radis
 {
     void SpeedControl::SetProfile(double t_easeIn, double t_easeOut)
     {

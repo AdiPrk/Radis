@@ -13,7 +13,7 @@
 #include "TextureLoader.h"
 #include "Engine.h"
 
-namespace Dog
+namespace Radis
 {
     const uint32_t TextureLibrary::MAX_TEXTURE_COUNT = 500;
     const uint32_t TextureLibrary::INVALID_TEXTURE_INDEX = 10001;

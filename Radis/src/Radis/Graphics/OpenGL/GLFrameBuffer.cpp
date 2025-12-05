@@ -2,7 +2,7 @@
 #include "GLFrameBuffer.h"
 
 
-namespace Dog {
+namespace Radis {
 
 	GLFrameBuffer::GLFrameBuffer(const FrameBufferSpecification& spec)
 		: specification(spec)
@@ -128,4 +128,4 @@ namespace Dog {
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthAttachment, 0);
 	}
 
-} // namespace Dog
+} // namespace Radis

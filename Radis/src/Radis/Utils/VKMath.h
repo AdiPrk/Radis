@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Dog
+namespace Radis
 {
     VkTransformMatrixKHR toTransformMatrixKHR(const glm::mat4& m);
 }

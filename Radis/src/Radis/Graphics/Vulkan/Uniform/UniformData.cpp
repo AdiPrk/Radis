@@ -10,7 +10,7 @@
 
 #include "../Texture/VKTexture.h"
 
-namespace Dog
+namespace Radis
 {
     void CameraUniformInit(Uniform& uniform, RenderingResource& renderData)
     {

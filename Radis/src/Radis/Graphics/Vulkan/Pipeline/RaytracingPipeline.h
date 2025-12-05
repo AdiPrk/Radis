@@ -2,7 +2,7 @@
 
 #include "../Core/Buffer.h"
 
-namespace Dog
+namespace Radis
 {
     class Device;
     class Uniform;
