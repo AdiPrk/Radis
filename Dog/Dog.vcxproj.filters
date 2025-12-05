@@ -90,6 +90,7 @@
     <ClCompile Include="src\Dog\ECS\Resources\Networking\Networking.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\Editor\Windows\ChatWindow.cpp" />
     <ClCompile Include="src\Dog\ECS\Resources\Networking\NetworkingResource.cpp" />
+    <ClCompile Include="src\Dog\ECS\Systems\Physics\PhysicsSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\nlohmann\json.hpp" />
@@ -201,8 +202,18 @@
     <ClInclude Include="src\Dog\ECS\Resources\Networking\Networking.h" />
     <ClInclude Include="src\Dog\ECS\Systems\Editor\Windows\ChatWindow.h" />
     <ClInclude Include="src\Dog\ECS\Resources\Networking\NetworkingResource.h" />
+    <ClInclude Include="src\Dog\ECS\Resources\Physics\PhysicsResource.h" />
+    <ClInclude Include="src\Dog\ECS\Systems\Physics\PhysicsSystem.h" />
   </ItemGroup>
   <ItemGroup>
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
