@@ -8,7 +8,7 @@
 #include "../Uniform/Uniform.h"
 #include "../Uniform/Descriptors.h"
 
-namespace Dog
+namespace Radis
 {
 	Pipeline::Pipeline(Device& device, VkFormat colorFormat, VkFormat depthFormat, const std::vector<Uniform*>& uniforms, bool wireframe, const std::string& vertFile, const std::string& fragFile)
 		: device(device)

@@ -3,7 +3,7 @@
 #include "../ISystem.h"
 
 
-namespace Dog
+namespace Radis
 {
     class SwapRendererSystem : public ISystem
     {

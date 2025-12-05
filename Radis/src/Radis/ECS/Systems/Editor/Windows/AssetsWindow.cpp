@@ -5,7 +5,7 @@
 #include "Engine.h"
 #include "Utils/Utils.h"
 
-namespace Dog 
+namespace Radis 
 {
     namespace EditorWindows
     {

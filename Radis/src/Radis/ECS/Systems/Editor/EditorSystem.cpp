@@ -34,7 +34,7 @@
 
 #include "imgui_internal.h"
 
-namespace Dog
+namespace Radis
 {
     void EditorSystem::Init()
     {

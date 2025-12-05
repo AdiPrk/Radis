@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Dog
+namespace Radis
 {
     struct LowerCaseString {
         std::string s;

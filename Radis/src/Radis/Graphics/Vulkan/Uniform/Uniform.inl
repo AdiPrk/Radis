@@ -12,7 +12,7 @@
 #include "../Core/Buffer.h"
 #include "../Core/AccelerationStructures.h"
 
-namespace Dog 
+namespace Radis 
 {
     template<typename T>
     void Uniform::SetUniformData(const T& data, int bindingIndex, int frameIndex)

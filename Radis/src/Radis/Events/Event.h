@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Dog 
+namespace Radis 
 {
     namespace Event {
         // Window events
@@ -95,4 +95,4 @@ namespace Dog
 #define PUBLISH_EVENT(EVENT_TYPE, ...) \
     Events::Publish(EVENT_TYPE{__VA_ARGS__})
 
-} // namespace Dog
+} // namespace Radis

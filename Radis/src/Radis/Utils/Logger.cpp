@@ -5,7 +5,7 @@
 #include <cstdio>         // stdout/stderr
 #include <utility>
 
-using namespace Dog;
+using namespace Radis;
 
 // Default ANSI color scheme
 static Logger::ColorScheme default_colors()
@@ -107,8 +107,8 @@ void Logger::log(Level lvl, const char* func, int line, std::string&& message)
         : "CRITICAL";
 
     const char* display_func = func;
-    if (func && strncmp(func, "Dog::", 5) == 0) {
-        display_func = func + 5; // Move pointer past "Dog::"
+    if (func && strncmp(func, "Radis::", 5) == 0) {
+        display_func = func + 5; // Move pointer past "Radis::"
     }
 
     // Trace-file line (colorless, includes level and logger name)

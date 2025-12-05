@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Dog
+namespace Radis
 {
     // Forward declaration
     class SwapChain;
@@ -43,4 +43,4 @@ namespace Dog
 
         size_t mCurrentFrame = 0;                           // Current frame being rendered
     };
-} // namespace Dog
+} // namespace Radis

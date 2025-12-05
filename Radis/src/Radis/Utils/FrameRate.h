@@ -2,7 +2,7 @@
 
 // Simple frame rate controller.
 
-namespace Dog {
+namespace Radis {
 
     class FrameRateController {
     public:
@@ -21,4 +21,4 @@ namespace Dog {
         std::chrono::duration<double> mTargetFrameDuration;
     };
 
-} // namespace Dog
+} // namespace Radis

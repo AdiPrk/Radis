@@ -4,7 +4,7 @@
 
 #include <GLFW/glfw3.h>
 
-namespace Dog {
+namespace Radis {
 
     VulkanWindow::VulkanWindow(int w, int h, std::wstring_view name) 
         : IWindow(w, h, name, GraphicsAPI::Vulkan)
@@ -38,4 +38,4 @@ namespace Dog {
         return glfwGetRequiredInstanceExtensions(count);
     }
 
-} // namespace Dog
+} // namespace Radis

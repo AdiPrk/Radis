@@ -10,7 +10,7 @@
 #include "../Core/AccelerationStructures.h"
 
 
-namespace Dog
+namespace Radis
 {
     Uniform::Uniform(Device& device, RenderingResource& renderData, const UniformSettings& settings)
         : mDevice(device)

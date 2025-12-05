@@ -1,7 +1,7 @@
 #include <PCH/pch.h>
 #include "RenderGraph.h"
 
-namespace Dog
+namespace Radis
 {
     void RGPassBuilder::writes(const std::string& handleName)
     {

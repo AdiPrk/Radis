@@ -2,7 +2,7 @@
 #include "IWindow.h"
 #include "Utils/Utils.h"
 
-namespace Dog
+namespace Radis
 {
     int IWindow::mWidth = 800;
     int IWindow::mHeight = 600;

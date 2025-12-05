@@ -21,7 +21,7 @@
 
 #include "Engine.h"
 
-namespace Dog
+namespace Radis
 {
     void AnimationSystem::Update(float dt)
     {

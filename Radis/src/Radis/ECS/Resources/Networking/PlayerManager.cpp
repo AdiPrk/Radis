@@ -1,7 +1,7 @@
 #include <PCH/pch.h>
 #include "PlayerManager.h"
 
-namespace Dog
+namespace Radis
 {
     PlayerManager::PlayerManager() {}
     PlayerManager::~PlayerManager() {}

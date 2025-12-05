@@ -2,7 +2,7 @@
 
 #include "Allocator.h"
 
-namespace Dog {
+namespace Radis {
 
     class VulkanWindow;
 
@@ -131,4 +131,4 @@ namespace Dog {
         bool mDebugFuncsAvailable = true;
     };
 
-} // namespace Dog
+} // namespace Radis

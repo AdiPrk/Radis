@@ -7,7 +7,7 @@
 struct GLFWwindow;
 struct GLFWcursor;
 
-namespace Dog
+namespace Radis
 {
     class InputSystem : public ISystem
     {

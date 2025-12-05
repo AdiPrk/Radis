@@ -2,7 +2,7 @@
 
 #include "Graphics/Common/Animation/AnimationLibrary.h" // For AnimationLibrary::INVALID_ANIMATION_INDEX
 
-namespace Dog {
+namespace Radis {
 
 	struct TagComponent
 	{

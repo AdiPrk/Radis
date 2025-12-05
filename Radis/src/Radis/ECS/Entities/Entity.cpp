@@ -2,7 +2,7 @@
 
 #include "Entity.h"
 
-namespace Dog 
+namespace Radis 
 {
     Entity::Entity()
     {

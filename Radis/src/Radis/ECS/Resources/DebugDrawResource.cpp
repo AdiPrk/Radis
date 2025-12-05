@@ -6,7 +6,7 @@
 #include "Graphics/Common/TextureLibrary.h"
 #include "Graphics/Common/Model.h"
 
-namespace Dog
+namespace Radis
 {
     std::vector<DebugDrawResource::Line> DebugDrawResource::lines{};
     std::vector<DebugDrawResource::Rect> DebugDrawResource::rects{};

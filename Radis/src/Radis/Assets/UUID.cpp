@@ -1,7 +1,7 @@
 #include <PCH/pch.h>
 #include "UUID.h"
 
-namespace Dog {
+namespace Radis {
 
 	static std::random_device s_RandomDevice;
 	static std::mt19937_64 s_RandomEngine(s_RandomDevice());

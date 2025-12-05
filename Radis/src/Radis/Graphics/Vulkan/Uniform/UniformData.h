@@ -5,7 +5,7 @@
 
 #include "Graphics/Common/TextureLibrary.h" // For TextureLibrary::MAX_TEXTURE_COUNT
 
-namespace Dog
+namespace Radis
 {
     void CameraUniformInit(Uniform& uniform, RenderingResource& renderData);
     void RTUniformInit(Uniform& uniform, RenderingResource& renderData);

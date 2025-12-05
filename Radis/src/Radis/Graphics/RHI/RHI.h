@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Dog
+namespace Radis
 {
     // this is simply unused :((((((((((
     // Hopefully i get back to this some day

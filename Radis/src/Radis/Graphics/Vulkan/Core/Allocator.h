@@ -2,7 +2,7 @@
 
 #include "AccelerationStructures.h"
 
-namespace Dog
+namespace Radis
 {
 	class Device;
 

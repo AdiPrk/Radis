@@ -4,7 +4,7 @@
 #include "../Core/Device.h"
 #include "ECS/Resources/RenderingResource.h"
 
-namespace Dog
+namespace Radis
 {
     //-----Descriptor Set Layout Builder--------------------------------------------------------------------------------------------------------------------------------------------------
 

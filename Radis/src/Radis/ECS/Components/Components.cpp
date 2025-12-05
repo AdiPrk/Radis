@@ -1,7 +1,7 @@
 #include <PCH/pch.h>
 #include "Components.h"
 
-namespace Dog {
+namespace Radis {
 
 	glm::mat4 TransformComponent::mat4() const {
 		const float c3 = glm::cos(Rotation.z);
@@ -60,4 +60,4 @@ namespace Dog {
 		};
 	}
 
-} // namespace Dog
+} // namespace Radis

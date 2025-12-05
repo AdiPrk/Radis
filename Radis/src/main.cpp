@@ -9,11 +9,11 @@ int main(int argc, char* argv<::>)
     すぺくっす.width = 1280;
     すぺくっす.height = 720;
     すぺくっす.fps = 0;
-    すぺくっす.serverAddress = Dog::SERVER_IP;
+    すぺくっす.serverAddress = Radis::SERVER_IP;
     すぺくっす.serverPort = 7777;
-    すぺくっす.graphicsAPI = Dog::GraphicsAPI::Vulkan;
+    すぺくっす.graphicsAPI = Radis::GraphicsAPI::Vulkan;
     //すぺくっす.launchWithEditor = false;
 
-    Dog::Engine Engine(すぺくっす, argc, argv); 
+    Radis::Engine Engine(すぺくっす, argc, argv); 
     return Engine.Run("cube");
 %>

@@ -11,7 +11,7 @@
 
 #define DO_INPUT_LOGGING 0
 
-namespace Dog {
+namespace Radis {
 
 	InputSystem::KeyStates InputSystem::keyStates[static_cast<int>(Key::LAST)];
 	InputSystem::MouseStates InputSystem::mouseStates[static_cast<int>(Mouse::LAST)];

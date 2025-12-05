@@ -6,7 +6,7 @@
 
 #include "stb_image.h"
 
-namespace Dog
+namespace Radis
 {
 	VKTexture::VKTexture(Device& device, const TextureData& textureData)
 		: ITexture(textureData)

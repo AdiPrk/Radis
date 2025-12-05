@@ -2,7 +2,7 @@
 
 #include "IResource.h"
 
-namespace Dog
+namespace Radis
 {
     class IWindow;
 

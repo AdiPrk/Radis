@@ -9,13 +9,13 @@ namespace RadisLaunch
 
     struct EngineSpec
     {
-        std::wstring name = L"Dog Engine";             // The name of the window.
+        std::wstring name = L"Radis Engine";             // The name of the window.
         unsigned width = 1280;                         // The width of the window.
         unsigned height = 720;                         // The height of the window.
         unsigned fps = 120;			                   // The target frames per second.
-        std::string serverAddress = Dog::SERVER_IP;    // The address of the server. Defaults to online VPS server.
+        std::string serverAddress = Radis::SERVER_IP;    // The address of the server. Defaults to online VPS server.
         uint16_t serverPort = 7777;                    // The port of the server.
-        Dog::GraphicsAPI graphicsAPI = Dog::GraphicsAPI::Vulkan; // The graphics API to use.
+        Radis::GraphicsAPI graphicsAPI = Radis::GraphicsAPI::Vulkan; // The graphics API to use.
 
         std::string workingDirectory = "";              // The working directory of the engine.
         bool launchWithEditor = true;                   // Whether to launch the engine with the editor.

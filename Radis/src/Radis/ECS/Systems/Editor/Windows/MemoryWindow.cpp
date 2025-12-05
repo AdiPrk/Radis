@@ -3,7 +3,7 @@
 #include "Graphics/Vulkan/Core/Allocator.h"
 #include "Engine.h"
 
-namespace Dog::EditorWindows
+namespace Radis::EditorWindows
 {
     using json = nlohmann::json;
 
@@ -327,4 +327,4 @@ namespace Dog::EditorWindows
         ImGui::End();
     }
 
-} // namespace Dog::EditorWindows
+} // namespace Radis::EditorWindows

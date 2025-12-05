@@ -3,7 +3,7 @@
 #include "Graphics/RHI/RHI.h"
 #include "Graphics/Vulkan/Core/AccelerationStructures.h"
 
-namespace Dog
+namespace Radis
 {
     class Device;
 

@@ -4,7 +4,7 @@
 
 using namespace std::chrono;
 
-namespace Dog {
+namespace Radis {
 
     FrameRateController::FrameRateController(unsigned int targetFrameRate)
         : mTargetFPS(targetFrameRate) 

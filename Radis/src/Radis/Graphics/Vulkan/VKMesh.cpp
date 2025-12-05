@@ -5,7 +5,7 @@
 #include "Core/Buffer.h"
 #include "Uniform/ShaderTypes.h"
 
-namespace Dog
+namespace Radis
 {
     VKMesh::VKMesh(bool assignID)
         : IMesh(assignID)

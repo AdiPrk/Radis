@@ -3,7 +3,7 @@
 #include "IResource.h"
 #include "ECS/Entities/Entity.h"
 
-namespace Dog
+namespace Radis
 {
     class Device;
     class SwapChain;

@@ -7,7 +7,7 @@
 #include "ECS/Components/Components.h"
 
 
-namespace Dog
+namespace Radis
 {
 
     Animator::Animator(Animation* animation)
@@ -103,4 +103,4 @@ namespace Dog
         }
     }
 
-} // namespace Dog
+} // namespace Radis

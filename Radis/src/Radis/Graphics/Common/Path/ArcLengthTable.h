@@ -2,7 +2,7 @@
 
 #include "CubicSpline.h"
 
-namespace Dog
+namespace Radis
 {
     /**
      * @class ArcLengthTable

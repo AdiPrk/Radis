@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Dog {
+namespace Radis {
 
 	enum class FBAttachment {
 		None = 0,
@@ -59,4 +59,4 @@ namespace Dog {
 		Events::Handle<Event::SceneResize> eventSceneResize;
 	};
 
-} // namespace Dog
+} // namespace Radis

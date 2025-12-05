@@ -27,7 +27,7 @@
 
 #include "Assets/Serialization/ModelSerializer.h"
 
-namespace Dog
+namespace Radis
 {
     RenderingResource::RenderingResource(IWindow* window)
     {

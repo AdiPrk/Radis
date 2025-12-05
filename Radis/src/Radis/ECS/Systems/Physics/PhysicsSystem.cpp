@@ -5,7 +5,7 @@
 
 #include "ECS/Resources/DebugDrawResource.h"
 
-namespace Dog
+namespace Radis
 {
     void PhysicsSystem::Init()
     {

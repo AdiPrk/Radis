@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Dog
+namespace Radis
 {
     std::string WStringToUTF8(const std::wstring& wstr);
     

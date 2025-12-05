@@ -5,7 +5,7 @@
 #include "ECS/Components/Components.h"
 #include "ECS/ECS.h"
 
-namespace Dog
+namespace Radis
 {
     namespace EditorWindows
     {

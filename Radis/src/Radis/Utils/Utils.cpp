@@ -4,7 +4,7 @@
 #include <tchar.h>
 #include <shellapi.h> // For ShellExecuteA
 
-namespace Dog
+namespace Radis
 {
     // --- Helper function to parse argv ---
     std::string GetArg(int argc, char* argv[], const std::string& flag)

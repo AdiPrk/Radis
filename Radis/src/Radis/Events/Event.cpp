@@ -1,7 +1,7 @@
 #include <PCH/pch.h>
 #include "Event.h"
 
-namespace Dog 
+namespace Radis 
 {
 
-} // namespace Dog
+} // namespace Radis

@@ -5,7 +5,7 @@
 #include "ECS/ECS.h"
 #include "ECS/Resources/IResource.h"
 
-namespace Dog 
+namespace Radis 
 {
 	class Engine {
 	public:
@@ -49,4 +49,4 @@ namespace Dog
 		static bool mEditorEnabled;
 	};
 
-} // namespace Dog
+} // namespace Radis

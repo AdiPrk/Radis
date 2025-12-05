@@ -3,7 +3,7 @@
 #include "Systems/ISystem.h"
 #include "Entities/Entity.h"
 
-namespace Dog
+namespace Radis
 {
     class Entity;
     struct IResource;
@@ -35,7 +35,7 @@ namespace Dog
 
         template<typename T, typename... Args>
         void AddResource(Args&&... args) {
-            static_assert(std::is_base_of<IResource, T>::value, "Resource type must inherit from Dog::IResource");
+            static_assert(std::is_base_of<IResource, T>::value, "Resource type must inherit from Radis::IResource");
 
             const auto typeId = std::type_index(typeid(T));
 

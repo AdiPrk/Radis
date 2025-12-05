@@ -7,7 +7,7 @@
 // ktx2
 #include "ktx.h"
 
-namespace Dog
+namespace Radis
 {
     bool TextureLoader::IsKTX2Path(const std::string& path)
     {

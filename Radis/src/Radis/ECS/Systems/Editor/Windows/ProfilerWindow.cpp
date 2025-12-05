@@ -9,7 +9,7 @@
 #include <cstdio>
 #include <cmath>
 
-namespace Dog
+namespace Radis
 {
     namespace EditorWindows
     {

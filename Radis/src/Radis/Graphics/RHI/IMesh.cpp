@@ -2,7 +2,7 @@
 #include "IMesh.h"
 #include "Graphics/Vulkan/Core/Buffer.h"
 
-namespace Dog
+namespace Radis
 {
     int IMesh::uniqueMeshIndex = 0;
 

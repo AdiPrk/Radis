@@ -6,7 +6,7 @@
 
 #if PROFILING_ENABLED
 
-namespace Dog
+namespace Radis
 {
     struct ProfilerSnapshotNode {
         int32_t nameId = -1;

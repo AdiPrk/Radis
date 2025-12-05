@@ -1,7 +1,7 @@
 #include <PCH/pch.h>
 #include "ArcLengthTable.h"
 
-namespace Dog
+namespace Radis
 {
     void ArcLengthTable::Build(const CubicSpline& spline, int segIdx, double epsilon, double delta)
     {

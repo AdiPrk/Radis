@@ -1,7 +1,7 @@
 #include <PCH/pch.h>
 #include "PathFollower.h"
 
-namespace Dog
+namespace Radis
 {
     void PathFollower::BuildPath(const std::vector<glm::vec3>& controlPoints,
         double arcLengthEpsilon,

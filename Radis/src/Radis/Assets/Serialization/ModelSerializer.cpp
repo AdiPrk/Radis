@@ -8,7 +8,7 @@
 #include "BinaryIO.h"
 #include "Engine.h"
 
-using namespace Dog;
+using namespace Radis;
 
 const std::string ModelSerializer::DOG_MODEL_FILE_PATH = "assets/models/dm/";
 const std::string ModelSerializer::DOG_MODEL_EXTENTION = ".dm";

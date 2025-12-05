@@ -1,7 +1,7 @@
 #include <PCH/pch.h>
 #include "InputResource.h"
 
-namespace Dog
+namespace Radis
 {
     InputResource::InputResource(GLFWwindow* win)
         : window(win)

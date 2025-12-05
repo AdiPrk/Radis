@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Dog
+namespace Radis
 {
 	class IWindow {
 	public:
@@ -59,4 +59,4 @@ namespace Dog
         GraphicsAPI mAPI = GraphicsAPI::None;
     };
 
-} // namespace Dog
+} // namespace Radis

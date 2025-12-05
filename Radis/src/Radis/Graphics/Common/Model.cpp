@@ -11,7 +11,7 @@
 
 #include "Assets/Serialization/ModelSerializer.h"
 
-namespace Dog
+namespace Radis
 {
     Model::Model(Device& device, const std::string& filePath, bool fromDM, bool toDM)
     {

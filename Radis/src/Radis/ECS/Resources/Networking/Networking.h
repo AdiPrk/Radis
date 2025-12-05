@@ -4,7 +4,7 @@
 #include "PacketHandler.h"
 #include "PlayerManager.h"
 
-namespace Dog
+namespace Radis
 {
     class Networking
     {

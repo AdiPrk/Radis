@@ -4,7 +4,7 @@
 #include "Graphics/OpenGL/GLWindow.h"
 #include "Engine.h"
 
-namespace Dog
+namespace Radis
 {
     WindowResource::WindowResource(int w, int h, std::wstring_view name)
     {

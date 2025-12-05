@@ -13,7 +13,7 @@
 #include "Assets/Assets.h"
 #include "Engine.h"
 
-namespace Dog
+namespace Radis
 {
     EditorResource::EditorResource(Device* device, SwapChain* swapChain, GLFWwindow* glfwWindow, float dpiScale)
     {

@@ -4,7 +4,7 @@
 #include "Graphics/Vulkan/Uniform/ShaderTypes.h"
 #include "GLShader.h"
 
-namespace Dog
+namespace Radis
 {
     GLMesh::GLMesh(bool assignID)
         : IMesh(assignID)

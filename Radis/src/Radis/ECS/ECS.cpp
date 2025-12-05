@@ -5,7 +5,7 @@
 #include "Entities/Entity.h"
 #include "Components/Components.h"
 
-namespace Dog
+namespace Radis
 {
     ECS::ECS()
         : mSystems()

@@ -2,7 +2,7 @@
 
 #include "../ISystem.h"
 
-namespace Dog
+namespace Radis
 {
     class EditorSystem : public ISystem
     {

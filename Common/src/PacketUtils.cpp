@@ -5,7 +5,7 @@
 #include <cstring>
 #include <vector>
 
-namespace Dog
+namespace Radis
 {
     // Encode a NetMessage into an ENetPacket
     ENetPacket* PacketUtils::encode(const NetMessage& msg) const
@@ -98,4 +98,4 @@ namespace Dog
         broadcast(host, sender, msg);
     }
 
-} // namespace Dog
+} // namespace Radis

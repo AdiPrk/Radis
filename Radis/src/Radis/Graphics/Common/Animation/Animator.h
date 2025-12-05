@@ -11,7 +11,7 @@
 
 #include "Animation.h"
 
-namespace Dog
+namespace Radis
 {
     class Animator
     {
@@ -37,4 +37,4 @@ namespace Dog
         bool mIsPlaying = true;
     };
 
-} // namespace Dog
+} // namespace Radis

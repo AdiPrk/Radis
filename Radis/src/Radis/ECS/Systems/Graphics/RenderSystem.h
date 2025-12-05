@@ -3,7 +3,7 @@
 #include "../ISystem.h"
 #include "Graphics/Vulkan/Uniform/ShaderTypes.h"
 
-namespace Dog
+namespace Radis
 {
     class RenderSystem : public ISystem
     {

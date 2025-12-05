@@ -2,7 +2,7 @@
 
 #include "Graphics/RHI/IMesh.h"
 
-namespace Dog
+namespace Radis
 {
     // Forward reference
     class Device;

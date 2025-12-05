@@ -1,7 +1,7 @@
 #include <PCH/pch.h>
 #include "AnimationResource.h"
 
-namespace Dog
+namespace Radis
 {
     AnimationResource::AnimationResource()
     {

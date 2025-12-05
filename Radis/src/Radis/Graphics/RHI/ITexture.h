@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Dog
+namespace Radis
 {
     /*
         for stb: isCompressed = false, mipLevels = 1, mipInfos can stay empty.

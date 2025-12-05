@@ -1,7 +1,7 @@
 #include <PCH/pch.h>
 #include "ITexture.h"
 
-namespace Dog
+namespace Radis
 {
     ITexture::ITexture(const TextureData& data)
         : mData(data)
