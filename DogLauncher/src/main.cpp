@@ -352,7 +352,7 @@ void LaunchApplication(const std::string& projectName, std::map<std::string, HAN
     engineSpec.name = UTF8ToWString(projectName);
     engineSpec.width = 1280;
     engineSpec.height = 720;
-    engineSpec.fps = 120;
+    engineSpec.fps = 0;
     engineSpec.serverAddress = Dog::SERVER_IP;
     engineSpec.serverPort = 7777;
     engineSpec.graphicsAPI = Dog::GraphicsAPI::Vulkan;

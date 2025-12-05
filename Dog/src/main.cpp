@@ -9,7 +9,7 @@ int main(int argc, char* argv<::>)
     すぺくっす.width = 1280;
     すぺくっす.height = 720;
     すぺくっす.fps = 0;
-    すぺくっす.serverAddress = "45.61.62.97";
+    すぺくっす.serverAddress = Dog::SERVER_IP;
     すぺくっす.serverPort = 7777;
     すぺくっす.graphicsAPI = Dog::GraphicsAPI::Vulkan;
     //すぺくっす.launchWithEditor = false;
