@@ -9,6 +9,7 @@
 #include "ECS/Systems/CameraSystem.h"
 #include "ECS/Systems/Graphics/RenderSystem.h"
 #include "ECS/Systems/Graphics/SwapRendererSystem.h"
+#include "ECS/Systems/Physics/PhysicsSystem.h"
 
 #include "ECS/Resources/InputResource.h"
 #include "ECS/Resources/WindowResource.h"
@@ -56,6 +57,7 @@ namespace Dog
         mEcs.AddSystem<SwapRendererSystem>();
         mEcs.AddSystem<AnimationSystem>();
         mEcs.AddSystem<PresentSystem>();
+        mEcs.AddSystem<PhysicsSystem>();
         mEcs.AddSystem<RenderSystem>();
         if (mEditorEnabled)
         {
@@ -65,7 +67,7 @@ namespace Dog
         // ---------------------------------
 
         // Resources -----------------------
-        mEcs.AddResource<NetworkingResource>(mSpecs.serverAddress, mSpecs.serverPort);
+        // mEcs.AddResource<NetworkingResource>(mSpecs.serverAddress, mSpecs.serverPort);
         mEcs.AddResource<SwapRendererResource>();
         mEcs.AddResource<WindowResource>(mSpecs.width, mSpecs.height, mSpecs.name);
 

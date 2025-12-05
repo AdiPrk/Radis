@@ -5,6 +5,7 @@
 #include "ECS/Resources/RenderingResource.h"
 #include "ECS/Resources/WindowResource.h"
 #include "ECS/Resources/EditorResource.h"
+#include "ECS/Resources/DebugDrawResource.h"
 
 #include "Graphics/Vulkan/Core/Device.h"
 #include "Graphics/Vulkan/Core/SwapChain.h"
@@ -44,6 +45,8 @@ namespace Dog
         {
             return;
         }
+
+        DebugDrawResource::Clear();
 
         auto rr = ecs->GetResource<RenderingResource>();
         auto wr = ecs->GetResource<WindowResource>();

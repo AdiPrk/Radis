@@ -116,7 +116,6 @@ namespace Dog
             rr->textureLibrary->UpdateRTUniform(*rr);
         }
 
-        DebugDrawResource::Clear();
         DebugDrawResource::DrawEditorGrid(50, 1.0f);
 
         // Heh

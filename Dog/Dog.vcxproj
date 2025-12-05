@@ -242,6 +242,7 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Dog\ECS\Systems\Graphics\PresentSystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\Graphics\RenderSystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\Graphics\SwapRendererSystem.cpp" />
+    <ClCompile Include="src\Dog\ECS\Systems\Physics\PhysicsSystem.cpp" />
     <ClCompile Include="src\Dog\ECS\Systems\WindowSystem.cpp" />
     <ClCompile Include="src\Dog\Engine.cpp" />
     <ClCompile Include="src\Dog\Events\Event.cpp" />
@@ -340,6 +341,7 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Dog\ECS\Resources\InputResource.h" />
     <ClInclude Include="src\Dog\ECS\Resources\IResource.h" />
     <ClInclude Include="src\Dog\ECS\Resources\Networking\NetworkingResource.h" />
+    <ClInclude Include="src\Dog\ECS\Resources\Physics\PhysicsResource.h" />
     <ClInclude Include="src\Dog\ECS\Resources\RaytracingResource.h" />
     <ClInclude Include="src\Dog\ECS\Resources\RenderingResource.h" />
     <ClInclude Include="src\Dog\ECS\Resources\SerializationResource.h" />
@@ -361,6 +363,7 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Dog\ECS\Systems\Graphics\PresentSystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\Graphics\RenderSystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\Graphics\SwapRendererSystem.h" />
+    <ClInclude Include="src\Dog\ECS\Systems\Physics\PhysicsSystem.h" />
     <ClInclude Include="src\Dog\ECS\Systems\WindowSystem.h" />
     <ClInclude Include="src\Dog\Engine.h" />
     <ClInclude Include="src\Dog\Events\Event.h" />

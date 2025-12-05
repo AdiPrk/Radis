@@ -105,4 +105,43 @@ namespace Dog {
 		float OuterCone{ glm::radians(60.f) }; // for spot
 		LightType Type{ POINT };
 	};
+
+	struct SoftBodyParticle
+	{
+		glm::vec3 position{ 0.0f };
+		glm::vec3 velocity{ 0.0f };
+
+		/// Inverse mass (0.0f => infinite mass / static).
+		float inverseMass = 1.0f;
+
+		bool isAnchor = false;
+		glm::vec3 anchorPosition{ 0.0f };
+	};
+
+	struct SoftBodySpring
+	{
+		std::uint32_t a = 0; // Index of first particle
+		std::uint32_t b = 0; // Index of second particle
+
+		float restLength = 0.0f;
+		float stiffness = 0.0f; // Hooke stiffness (k)
+		float damping = 0.0f; // Spring damping (c)
+	};
+
+	struct SoftBodyComponent
+	{
+		std::vector<SoftBodyParticle> particles;
+		std::vector<SoftBodySpring>   springs;
+
+		// Global settings (can be overridden per-entity if you want).
+		glm::vec3 gravity{ 0.0f, 0.0f, 0.0f };
+
+		float globalStiffness = 50.0f;
+		float globalDamping = 10.0f;
+
+		// If you want to know the logical layout (for anchors/interaction).
+		std::uint32_t gridNx = 0;
+		std::uint32_t gridNy = 0;
+		std::uint32_t gridNz = 0;
+	};
 }
