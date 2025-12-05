@@ -18,7 +18,7 @@ namespace Radis
     {
         if (!model)
         {
-            DOG_WARN("Model is null, cannot add animation from path: {0}", animPath);
+            RADIS_WARN("Model is null, cannot add animation from path: {0}", animPath);
             return INVALID_ANIMATION_INDEX;
         }
 
@@ -73,7 +73,7 @@ namespace Radis
     {
         if (index >= mAnimators.size())
         {
-            //DOG_WARN("Animator ID {0} is out of range!", index);
+            //RADIS_WARN("Animator ID {0} is out of range!", index);
             return nullptr;
         }
         return mAnimators[index].get();

@@ -102,10 +102,10 @@ namespace Radis
             return false;
         }
 
-        DOG_INFO("Loading {0} queued textures...", mPendingTextureLoads.size());
+        RADIS_INFO("Loading {0} queued textures...", mPendingTextureLoads.size());
         TextureLoader::LoadMT(mPendingTextureLoads);
 
-        DOG_INFO("Finished loading textures. Creating GPU resources...");
+        RADIS_INFO("Finished loading textures. Creating GPU resources...");
         mNeedTextureDescriptorUpdate = true;
         if (mTextures.size() < mNextIndex)
         {
@@ -133,7 +133,7 @@ namespace Radis
             mTextures[index] = std::move(newTexture);
         }
 
-        DOG_INFO("All queued textures loaded successfully!");
+        RADIS_INFO("All queued textures loaded successfully!");
         mPendingTextureLoads.clear();
         return true;
     }
@@ -142,7 +142,7 @@ namespace Radis
     {
         if (Engine::GetGraphicsAPI() != GraphicsAPI::Vulkan)
         {
-            DOG_ERROR("CreateImage called for non-Vulkan API");
+            RADIS_ERROR("CreateImage called for non-Vulkan API");
             return INVALID_TEXTURE_INDEX;
         }
 
@@ -205,7 +205,7 @@ namespace Radis
     {
         if (Engine::GetGraphicsAPI() != GraphicsAPI::Vulkan)
         {
-            DOG_ERROR("CreateTexture called for non-Vulkan API");
+            RADIS_ERROR("CreateTexture called for non-Vulkan API");
             return INVALID_TEXTURE_INDEX;
         }
 
@@ -296,7 +296,7 @@ namespace Radis
             return mTextures[index].get();
         }
 
-        DOG_ERROR("Texture index out of range: {0}", index);
+        RADIS_ERROR("Texture index out of range: {0}", index);
         return mTextures[0].get();
     }
 
@@ -304,7 +304,7 @@ namespace Radis
     {
         if (Engine::GetGraphicsAPI() != GraphicsAPI::Vulkan)
         {
-            //DOG_WARN("CreateTextureSampler called for non-Vulkan API");
+            //RADIS_WARN("CreateTextureSampler called for non-Vulkan API");
             return;
         }
 
@@ -333,7 +333,7 @@ namespace Radis
 
         if (vkCreateSampler(device->GetDevice(), &samplerInfo, nullptr, &mTextureSampler) != VK_SUCCESS)
         {
-            DOG_CRITICAL("Failed to create texture sampler");
+            RADIS_CRITICAL("Failed to create texture sampler");
         }
     }
 
@@ -341,7 +341,7 @@ namespace Radis
     {
         if (Engine::GetGraphicsAPI() != GraphicsAPI::Vulkan)
         {
-            //DOG_WARN("CreateTextureSampler called for non-Vulkan API");
+            //RADIS_WARN("CreateTextureSampler called for non-Vulkan API");
             return;
         }
 

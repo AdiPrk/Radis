@@ -65,7 +65,7 @@ namespace Radis
             std::ofstream srcFile(tempSrcPath, std::ios::binary);
             if (!srcFile)
             {
-                DOG_CRITICAL("Failed to create temp texture file: %s", tempSrcPath.string().c_str());
+                RADIS_CRITICAL("Failed to create temp texture file: %s", tempSrcPath.string().c_str());
                 return;
             }
 
@@ -95,7 +95,7 @@ namespace Radis
     {
         if (!std::filesystem::exists(path))
         {
-            DOG_ERROR("Texture file not found: {0}", path);
+            RADIS_ERROR("Texture file not found: {0}", path);
             return false;
         }
 
@@ -117,7 +117,7 @@ namespace Radis
 
         if (result != KTX_SUCCESS || !kTexture)
         {
-            DOG_ERROR("Failed to load KTX2 texture: {} (error {})", path, (int)result);
+            RADIS_ERROR("Failed to load KTX2 texture: {} (error {})", path, (int)result);
             return false;
         }
 
@@ -128,7 +128,7 @@ namespace Radis
 
             if (result != KTX_SUCCESS)
             {
-                DOG_ERROR("Failed to transcode KTX2 texture: {} (error {})", path, (int)result);
+                RADIS_ERROR("Failed to transcode KTX2 texture: {} (error {})", path, (int)result);
                 ktxTexture_Destroy(ktxTexture(kTexture));
                 return false;
             }
@@ -161,7 +161,7 @@ namespace Radis
 
             if (result != KTX_SUCCESS)
             {
-                DOG_ERROR("Failed to get image offset for KTX2 texture: {} (level {}, error {})", path, level, (int)result);
+                RADIS_ERROR("Failed to get image offset for KTX2 texture: {} (level {}, error {})", path, level, (int)result);
                 ktxTexture_Destroy(ktxTexture(kTexture));
                 return false;
             }
@@ -188,7 +188,7 @@ namespace Radis
         unsigned char* data = stbi_load(path.c_str(), &width, &height, &outTexture.channels, STBI_rgb_alpha);
         if (!data)
         {
-            DOG_ERROR("Failed to load texture: {0}", path);
+            RADIS_ERROR("Failed to load texture: {0}", path);
             return false;
         }
 
@@ -210,7 +210,7 @@ namespace Radis
     {
         if (!textureData || textureSize == 0)
         {
-            DOG_ERROR("Invalid texture data provided");
+            RADIS_ERROR("Invalid texture data provided");
             return false;
         }
 
@@ -219,7 +219,7 @@ namespace Radis
         unsigned char* data = stbi_load_from_memory(textureData, textureSize, &width, &height, &channels, STBI_rgb_alpha);
         if (!data)
         {
-            DOG_ERROR("Failed to load texture from memory");
+            RADIS_ERROR("Failed to load texture from memory");
             return false;
         }
 

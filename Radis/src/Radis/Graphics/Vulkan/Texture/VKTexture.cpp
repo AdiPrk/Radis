@@ -79,7 +79,7 @@ namespace Radis
 		VkResult result = vmaCreateImage(Allocator::GetAllocator(), &imageInfo, &allocInfo, &mTextureImage, &mTextureImageAllocation, nullptr);
 		if (result != VK_SUCCESS)
 		{
-			DOG_CRITICAL("VMA failed to create special image");
+			RADIS_CRITICAL("VMA failed to create special image");
 		}
         Allocator::SetAllocationName(mTextureImageAllocation, "Special Texture Image");
 
@@ -118,7 +118,7 @@ namespace Radis
 
 		if (vkCreateImageView(mDevice, &sampledViewInfo, nullptr, &mTextureImageView) != VK_SUCCESS)
 		{
-			DOG_CRITICAL("Failed to create special image view");
+			RADIS_CRITICAL("Failed to create special image view");
 		}
 	}
 
@@ -138,7 +138,7 @@ namespace Radis
 
 		if (!stagingBuffer.mapping)
 		{
-			DOG_ERROR("No Mapping found for staging buffer when creating compressed texture image!");
+			RADIS_ERROR("No Mapping found for staging buffer when creating compressed texture image!");
 			return;
 		}
 
@@ -261,7 +261,7 @@ namespace Radis
 		}
 		else
 		{
-            DOG_ERROR("No Mapping found for staging buffer when creating texture image!");
+            RADIS_ERROR("No Mapping found for staging buffer when creating texture image!");
 			return;
 		}
 
@@ -394,7 +394,7 @@ namespace Radis
 		// Use VMA to create image and allocate memory in one step
 		if (vmaCreateImage(Allocator::GetAllocator(), &imageInfo, &allocInfo, &mTextureImage, &mTextureImageAllocation, nullptr) != VK_SUCCESS)
 		{
-            DOG_CRITICAL("Failed to create and allocate image using VMA!");
+            RADIS_CRITICAL("Failed to create and allocate image using VMA!");
 		}
 
         std::string dbgName = "Tex_" + mData.name;
@@ -437,7 +437,7 @@ namespace Radis
 
 		if (!(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT))
 		{
-            DOG_CRITICAL("texture image format does not support linear blitting!");
+            RADIS_CRITICAL("texture image format does not support linear blitting!");
 		}
 
 		VkCommandBuffer commandBuffer = mDevice.BeginSingleTimeCommands();
@@ -539,7 +539,7 @@ namespace Radis
 		VkImageView imageView;
 		if (vkCreateImageView(mDevice.GetDevice(), &viewInfo, nullptr, &imageView) != VK_SUCCESS)
 		{
-            DOG_CRITICAL("Failed to create texture image view!");
+            RADIS_CRITICAL("Failed to create texture image view!");
 		}
 
 		return imageView;

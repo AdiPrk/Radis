@@ -156,7 +156,7 @@ namespace Radis
 
         if (textureCount == 0)
         {
-            DOG_ERROR("Should have loaded square.png by here!!!");
+            RADIS_ERROR("Should have loaded square.png by here!!!");
         }
 
         std::vector<VkDescriptorImageInfo> imageInfos(TextureLibrary::MAX_TEXTURE_COUNT);

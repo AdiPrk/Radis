@@ -21,7 +21,7 @@ namespace Radis
 
         if (fromDM)
         {
-            DOG_INFO("Loading {} from .dm model...", mModelName.c_str());
+            RADIS_INFO("Loading {} from .dm model...", mModelName.c_str());
             ModelSerializer::load(*this, Assets::ModelsPath + "dm/" + mModelName + ".dm");
         }
         else
@@ -33,7 +33,7 @@ namespace Radis
         
         if (toDM)
         {
-            DOG_INFO("Saving {} to .dm model...", mModelName.c_str());
+            RADIS_INFO("Saving {} to .dm model...", mModelName.c_str());
             ModelSerializer::save(*this, Assets::ModelsPath + "dm/" + mModelName + ".dm", 0x0);
         }
     }
@@ -49,7 +49,7 @@ namespace Radis
         // Check if the scene was loaded successfully
         if (!mScene || mScene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !mScene->mRootNode)
         {
-            DOG_CRITICAL("Assimp Error: {}", importer.GetErrorString());
+            RADIS_CRITICAL("Assimp Error: {}", importer.GetErrorString());
             return;
         }
 
@@ -221,7 +221,7 @@ namespace Radis
         }
         
         
-        DOG_CRITICAL("Model has weird embedded texture data (?)?(?) what does this even mean");
+        RADIS_CRITICAL("Model has weird embedded texture data (?)?(?) what does this even mean");
         outEmbeddedData.clear();
         return "";
     }

@@ -77,7 +77,7 @@ namespace Radis
         }
         else
         {
-            DOG_CRITICAL("Failed to open ray tracing shader SPV files!");
+            RADIS_CRITICAL("Failed to open ray tracing shader SPV files!");
             return;
         }
 
@@ -155,7 +155,7 @@ namespace Radis
         rtPipelineInfo.layout = mRtPipelineLayout;
         vkCreateRayTracingPipelinesKHR(device.GetDevice(), {}, {}, 1, &rtPipelineInfo, nullptr, &mRtPipeline);
 
-        DOG_INFO("Ray tracing pipeline layout created successfully");
+        RADIS_INFO("Ray tracing pipeline layout created successfully");
 
         // Create the shader binding table for this pipeline
         CreateShaderBindingTable(rtPipelineInfo);
@@ -275,7 +275,7 @@ namespace Radis
         mCallableRegion.stride = 0;
         mCallableRegion.size = 0;
 
-        DOG_INFO("Shader binding table created and populated");
+        RADIS_INFO("Shader binding table created and populated");
     }
 
     void RaytracingPipeline::Bind(VkCommandBuffer cmd)

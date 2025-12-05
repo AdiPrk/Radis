@@ -10,8 +10,8 @@
 
 using namespace Radis;
 
-const std::string ModelSerializer::DOG_MODEL_FILE_PATH = "assets/models/dm/";
-const std::string ModelSerializer::DOG_MODEL_EXTENTION = ".dm";
+const std::string ModelSerializer::RADIS_MODEL_FILE_PATH = "assets/models/dm/";
+const std::string ModelSerializer::RADIS_MODEL_EXTENTION = ".dm";
 
 bool ModelSerializer::validateHeader(std::ifstream& file) {
     BinaryReaderLE reader(file);
@@ -22,7 +22,7 @@ bool ModelSerializer::validateHeader(std::ifstream& file) {
 
     if (magic != MAGIC_NUMBER || version != VERSION)
     {
-        DOG_ERROR("Invalid file format or version.");
+        RADIS_ERROR("Invalid file format or version.");
         return false;
     }
 
@@ -210,7 +210,7 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
     std::ofstream file(filename, std::ios::binary);
     if (!file)
     {
-        DOG_CRITICAL("Could not open file for writing.");
+        RADIS_CRITICAL("Could not open file for writing.");
         return;
     }
 
@@ -333,14 +333,14 @@ bool ModelSerializer::load(Model& model, const std::string& filename)
     std::string tempRaw;
     if (!DecompressForReadLZ4(filename, tempRaw))
     {
-        DOG_CRITICAL("Failed to decompress model file.");
+        RADIS_CRITICAL("Failed to decompress model file.");
         return false;
     }
 
     std::ifstream file(tempRaw, std::ios::binary);
     if (!file)
     {
-        DOG_CRITICAL("Could not open decompressed file.");
+        RADIS_CRITICAL("Could not open decompressed file.");
         std::filesystem::remove(tempRaw);
         return false;
     }

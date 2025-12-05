@@ -24,7 +24,7 @@ namespace Radis {
         // check if those files exist
         std::ifstream sFile(path + ".glsl");
         if (!sFile.good()) {
-            DOG_CRITICAL("GLShader files not found: {0}", (path + ".glsl"));
+            RADIS_CRITICAL("GLShader files not found: {0}", (path + ".glsl"));
 
             return false;
         }
@@ -47,7 +47,7 @@ namespace Radis {
         std::ifstream fragFile(fragPath);
         if (!vertFile.good() || !fragFile.good())
         {
-            DOG_CRITICAL("GLShader files not found:\n  Vert: {0}\n  Frag: {1}", vertPath, fragPath);
+            RADIS_CRITICAL("GLShader files not found:\n  Vert: {0}\n  Frag: {1}", vertPath, fragPath);
             return false;
         }
 
@@ -70,7 +70,7 @@ namespace Radis {
         // --- 4. Compile and link ---
         if (!Compile(vShaderCode, fShaderCode))
         {
-            DOG_CRITICAL("Failed to compile shader:\n  Vert: {0}\n  Frag: {1}", vertPath, fragPath);
+            RADIS_CRITICAL("Failed to compile shader:\n  Vert: {0}\n  Frag: {1}", vertPath, fragPath);
             return false;
         }
 
@@ -132,7 +132,7 @@ namespace Radis {
         }
         catch (std::exception e)
         {
-            DOG_CRITICAL("Failed to read shader files");
+            RADIS_CRITICAL("Failed to read shader files");
             return false;
         }
         const char* vShaderCode = vertexCode.c_str();
@@ -329,8 +329,8 @@ namespace Radis {
                     << infoLog << "\n -- --------------------------------------------------- -- "
                     << std::endl;
 
-                DOG_CRITICAL("GLShader Compile-time error: Type: {0}", type);
-                DOG_CRITICAL("{0}", infoLog);
+                RADIS_CRITICAL("GLShader Compile-time error: Type: {0}", type);
+                RADIS_CRITICAL("{0}", infoLog);
                 return false;
             }
         }
@@ -344,8 +344,8 @@ namespace Radis {
                     << infoLog << "\n -- --------------------------------------------------- -- "
                     << std::endl;
 
-                DOG_CRITICAL("GLShader Link-time error: Type: {0}", type);
-                DOG_CRITICAL("{0}", infoLog);
+                RADIS_CRITICAL("GLShader Link-time error: Type: {0}", type);
+                RADIS_CRITICAL("{0}", infoLog);
                 return false;
             }
         }

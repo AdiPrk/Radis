@@ -13,7 +13,7 @@ namespace Radis
         //Make sure binding is unique in map of bindings
         if (mBindings.count(binding) != 0)
         {
-            DOG_CRITICAL("Binding already in use");
+            RADIS_CRITICAL("Binding already in use");
         }
 
         //Create binding layout
@@ -35,7 +35,7 @@ namespace Radis
         //Make sure binding is unique in map of bindings
         if (mBindings.count(binding.binding) != 0)
         {
-            DOG_CRITICAL("Binding already in use");
+            RADIS_CRITICAL("Binding already in use");
         }
 
         //Add to map of bindings
@@ -73,7 +73,7 @@ namespace Radis
         if (vkCreateDescriptorSetLayout(mDevice.GetDevice(), &descriptorSetLayoutInfo, nullptr, &mDescriptorSetLayout) != VK_SUCCESS)
         {
             //If failed throw error
-            DOG_CRITICAL("Failed to create descriptor set layout");
+            RADIS_CRITICAL("Failed to create descriptor set layout");
         }
     }
 
@@ -128,7 +128,7 @@ namespace Radis
         if (vkCreateDescriptorPool(mDevice.GetDevice(), &descriptorPoolInfo, nullptr, &mDescriptorPool) != VK_SUCCESS)
         {
             //If failed throw error
-            DOG_CRITICAL("Failed to create descriptor pool");
+            RADIS_CRITICAL("Failed to create descriptor pool");
         }
     }
 
@@ -182,7 +182,7 @@ namespace Radis
         //Make sure this binding index is within map of bindings
         if (mSetLayout.mBindings.count(binding) != 1)
         {
-            DOG_CRITICAL("Layout does not contain specified binding");
+            RADIS_CRITICAL("Layout does not contain specified binding");
         }
 
         //Get the binding data of the descriptor set at binding index
@@ -191,7 +191,7 @@ namespace Radis
         //Make sure that binding is only wants one descriptor set
         if (bindingDescription.descriptorCount != count)
         {
-            DOG_CRITICAL("Binding single descriptor info, but binding expects multiple");
+            RADIS_CRITICAL("Binding single descriptor info, but binding expects multiple");
         }
 
         //Struct for write all info
@@ -214,7 +214,7 @@ namespace Radis
         //Make sure this binding index is within map of bindings
         if (mSetLayout.mBindings.count(binding) != 1)
         {
-            DOG_CRITICAL("Layout does not contain specified binding");
+            RADIS_CRITICAL("Layout does not contain specified binding");
         }
 
         //Get the binding data of the descriptor set at binding index
@@ -223,7 +223,7 @@ namespace Radis
         //Make sure that binding is only wants one descriptor set
         if (bindingDescription.descriptorCount != imageCount)
         {
-            DOG_CRITICAL("Binding single descriptor info, but binding expects multiple");
+            RADIS_CRITICAL("Binding single descriptor info, but binding expects multiple");
         }
 
         //Struct for write all info
@@ -246,7 +246,7 @@ namespace Radis
         // Make sure this binding index exists
         if (mSetLayout.mBindings.count(binding) != 1)
         {
-            DOG_CRITICAL("Layout does not contain specified binding");
+            RADIS_CRITICAL("Layout does not contain specified binding");
         }
 
         VkDescriptorSetLayoutBinding& bindingDescription = mSetLayout.mBindings[binding];
@@ -254,7 +254,7 @@ namespace Radis
         // Make sure descriptor type matches
         if (bindingDescription.descriptorType != VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR)
         {
-            DOG_CRITICAL("Binding is not an acceleration structure type");
+            RADIS_CRITICAL("Binding is not an acceleration structure type");
         }
 
         // Fill a VkWriteDescriptorSet that points to the AS struct

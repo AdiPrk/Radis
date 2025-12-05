@@ -54,14 +54,14 @@ namespace Radis
                 vkCreateSemaphore(mDevice, &semaphoreInfo, nullptr, &mComputeFinishedSemaphores[i]) != VK_SUCCESS ||
                 vkCreateFence(mDevice, &fenceInfo, nullptr, &mCommandBuffInFlightFences[i]) != VK_SUCCESS)
             {
-                DOG_CRITICAL("Failed to create synchronization objects for a frame");
+                RADIS_CRITICAL("Failed to create synchronization objects for a frame");
             }
         }
 
         for (uint32_t i = 0; i < mSwapChainImageCount; i++) {
             if (vkCreateSemaphore(mDevice, &semaphoreInfo, nullptr, &mRenderFinishedSemaphores[i]) != VK_SUCCESS)
             {
-                DOG_CRITICAL("Failed to create synchronization objects for a frame");
+                RADIS_CRITICAL("Failed to create synchronization objects for a frame");
             }
         }
     }

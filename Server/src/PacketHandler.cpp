@@ -3,7 +3,7 @@
 #include "PlayerManager.h"
 #include "Server.h"
 
-namespace Dog
+namespace Radis
 {
     PacketHandler::PacketHandler(PacketUtils& utils) : packetUtils(utils) {}
     PacketHandler::~PacketHandler() {}

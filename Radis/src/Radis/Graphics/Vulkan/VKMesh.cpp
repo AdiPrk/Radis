@@ -41,7 +41,7 @@ namespace Radis
         // Copy vertex data to staging buffer
         if (!staging.mapping)
         {
-            DOG_CRITICAL("Failed to map vertex buffer staging memory!");
+            RADIS_CRITICAL("Failed to map vertex buffer staging memory!");
             return;
         }
         memcpy(staging.mapping, mVertices.data(), static_cast<size_t>(bufferSize));
@@ -88,7 +88,7 @@ namespace Radis
 
         if (!staging.mapping)
         {
-            DOG_CRITICAL("Failed to map index buffer staging memory!");
+            RADIS_CRITICAL("Failed to map index buffer staging memory!");
             return;
         }
         memcpy(staging.mapping, mIndices.data(), static_cast<size_t>(bufferSize));
@@ -124,13 +124,13 @@ namespace Radis
     {
         if (!commandBuffer)
         {
-            DOG_CRITICAL("No command buffer passed to bind mesh!");
+            RADIS_CRITICAL("No command buffer passed to bind mesh!");
             return;
         }
 
         if (!mHasIndexBuffer)
         {
-            DOG_CRITICAL("Binding but no index buffer! Should not be happening");
+            RADIS_CRITICAL("Binding but no index buffer! Should not be happening");
             return;
         }
 
@@ -144,7 +144,7 @@ namespace Radis
     {
         if (!mHasIndexBuffer)
         {
-            DOG_CRITICAL("Drawing with no index buffer! Should not be happening");
+            RADIS_CRITICAL("Drawing with no index buffer! Should not be happening");
             return;
         }
 

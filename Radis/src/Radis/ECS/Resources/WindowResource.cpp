@@ -10,7 +10,7 @@ namespace Radis
     {
         if (!glfwInit())
         {
-            DOG_CRITICAL("Failed to initialize GLFW");
+            RADIS_CRITICAL("Failed to initialize GLFW");
         }
 
         Create(w, h, name);
@@ -33,7 +33,7 @@ namespace Radis
         }
         else
         {
-            DOG_CRITICAL("Unsupported Graphics API!");
+            RADIS_CRITICAL("Unsupported Graphics API!");
         }
     }
 

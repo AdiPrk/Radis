@@ -1,5 +1,5 @@
-#ifndef DOG_PCH_H
-#define DOG_PCH_H
+#ifndef RADIS_PCH_H
+#define RADIS_PCH_H
 
 #define _CRT_SECURE_NO_WARNINGS
 
@@ -17,4 +17,4 @@
 #include <cstdio>
 #include <sstream>
 
-#endif // DOG_PCH_H
+#endif // RADIS_PCH_H

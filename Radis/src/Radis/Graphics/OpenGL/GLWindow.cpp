@@ -74,7 +74,7 @@ namespace Radis {
         }
 
         InitializeDebugCallbacks();
-        DOG_INFO("OpenGL Version: {}", reinterpret_cast<const char*>(glGetString(GL_VERSION)));
+        RADIS_INFO("OpenGL Version: {}", reinterpret_cast<const char*>(glGetString(GL_VERSION)));
 
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LEQUAL);

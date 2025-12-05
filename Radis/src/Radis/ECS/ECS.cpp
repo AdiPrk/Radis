@@ -100,7 +100,7 @@ namespace Radis
         auto it = mEntityMap.find(name);
         if (it == mEntityMap.end())
         {
-            DOG_WARN("Entity with name '{0}' not found!", name);
+            RADIS_WARN("Entity with name '{0}' not found!", name);
             return Entity();
         }
 
@@ -127,7 +127,7 @@ namespace Radis
         auto it = mEntityMap.find(name);
         if (it == mEntityMap.end())
         {
-            DOG_WARN("Entity with name '{0}' not found!", name);
+            RADIS_WARN("Entity with name '{0}' not found!", name);
             return;
         }
         mRegistry.destroy(it->second);

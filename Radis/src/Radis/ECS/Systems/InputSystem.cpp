@@ -228,7 +228,7 @@ namespace Radis {
 		// check if imgui is capturing the keyboard
 		if (keyInputLocked) {
 #if DO_INPUT_LOGGING
-			DOG_INFO("Key {0} Ignored - ImGui is capturing it.", key);
+			RADIS_INFO("Key {0} Ignored - ImGui is capturing it.", key);
 #endif
 			return;
 		}
@@ -240,14 +240,14 @@ namespace Radis {
 		{
 			keyStates[key].keyDown = true;
 #if DO_INPUT_LOGGING
-			DOG_INFO("Key Pressed: {0}", key);
+			RADIS_INFO("Key Pressed: {0}", key);
 #endif
 		}
 		else if (action == GLFW_RELEASE)
 		{
 			keyStates[key].keyDown = false;
 #if DO_INPUT_LOGGING
-			DOG_INFO("Key Released: {0}", key);
+			RADIS_INFO("Key Released: {0}", key);
 #endif
 		}
 	}
@@ -266,14 +266,14 @@ namespace Radis {
 		{
 			mouseStates[mouseButton].mouseDown = true;
 #if DO_INPUT_LOGGING
-			DOG_INFO("Mouse Pressed: {0}", mouseButton);
+			RADIS_INFO("Mouse Pressed: {0}", mouseButton);
 #endif
 		}
 		else if (action == GLFW_RELEASE)
 		{
 			mouseStates[mouseButton].mouseDown = false;
 #if DO_INPUT_LOGGING
-			DOG_INFO("Mouse Released: {0}", mouseButton);
+			RADIS_INFO("Mouse Released: {0}", mouseButton);
 #endif
 		}
 	}
@@ -286,7 +286,7 @@ namespace Radis {
 
 		if (mouseInputLocked) {
 #if DO_INPUT_LOGGING
-			DOG_INFO("Mouse Scroll Ignored - ImGui is capturing it.");
+			RADIS_INFO("Mouse Scroll Ignored - ImGui is capturing it.");
 #endif
 			return;
 		}
@@ -294,7 +294,7 @@ namespace Radis {
 		scrollX += float(xoffset);
 		scrollY += float(yoffset);
 #if DO_INPUT_LOGGING
-		//DOG_INFO("Mouse Scrolled: {0}", degree);
+		//RADIS_INFO("Mouse Scrolled: {0}", degree);
 #endif
 	}
 
@@ -311,13 +311,13 @@ namespace Radis {
 
 		if (charInputLocked) {
 #if DO_INPUT_LOGGING
-			DOG_INFO("Character Input Ignored - ImGui is capturing it.");
+			RADIS_INFO("Character Input Ignored - ImGui is capturing it.");
 #endif
 			return;
 		}
 
 #if DO_INPUT_LOGGING
-		DOG_INFO("Character Input: {0}", codepoint);
+		RADIS_INFO("Character Input: {0}", codepoint);
 #endif
 	}
 

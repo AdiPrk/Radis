@@ -79,7 +79,7 @@ namespace Radis
 
         if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
         {
-            DOG_CRITICAL("Failed to present swap chain image");
+            RADIS_CRITICAL("Failed to present swap chain image");
         }
 
         // If image is in flight, wait for its fence
@@ -160,7 +160,7 @@ namespace Radis
 
         if (!rr)
         {
-            DOG_CRITICAL("RenderingResource not found in PresentSystem");
+            RADIS_CRITICAL("RenderingResource not found in PresentSystem");
             return;
         }
 
@@ -194,7 +194,7 @@ namespace Radis
         VkResult result = vkQueueSubmit(rr->device->GetGraphicsQueue(), 1, &submitInfo, rr->syncObjects->GetCommandBufferInFlightFence());
         if (result != VK_SUCCESS)
         {
-            DOG_CRITICAL("Failed to submit draw command buffer!");
+            RADIS_CRITICAL("Failed to submit draw command buffer!");
             return;
         }
 

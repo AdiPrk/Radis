@@ -15,12 +15,12 @@ namespace Radis
         }
         case GraphicsAPI::OpenGL:
         {
-            DOG_INFO("Initialized RHI with OpenGL backend");
+            RADIS_INFO("Initialized RHI with OpenGL backend");
             return true;
         }
         default:
         {
-            DOG_ERROR("Failed to initialize RHI: Unsupported Graphics API backend");
+            RADIS_ERROR("Failed to initialize RHI: Unsupported Graphics API backend");
             return false;
         }
         }

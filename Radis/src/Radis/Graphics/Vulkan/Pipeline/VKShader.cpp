@@ -60,11 +60,11 @@ namespace Radis
         int result = std::system(command.c_str());
         if (result != 0)
         {
-            DOG_ERROR("Shader compilation failed: {}", path.filename().string());
+            RADIS_ERROR("Shader compilation failed: {}", path.filename().string());
             return false;
         }
 
-        DOG_INFO("Shader compiled: {}", path.filename().string());
+        RADIS_INFO("Shader compiled: {}", path.filename().string());
         return true;
 	}
 
@@ -86,7 +86,7 @@ namespace Radis
 		if (vkCreateShaderModule(device, &createInfo, nullptr, shaderModule) != VK_SUCCESS)
 		{
 			//Throw error if failed
-			DOG_CRITICAL("Failed to create shader module");
+			RADIS_CRITICAL("Failed to create shader module");
 		}
 	}
 }

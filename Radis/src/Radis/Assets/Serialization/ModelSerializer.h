@@ -14,8 +14,8 @@ namespace Radis
         static void save(const Model& model, const std::string& filename, uint32_t hash);
         static bool load(Model& model, const std::string& filename);
 
-        static const std::string DOG_MODEL_FILE_PATH;
-        static const std::string DOG_MODEL_EXTENTION;
+        static const std::string RADIS_MODEL_FILE_PATH;
+        static const std::string RADIS_MODEL_EXTENTION;
 
     private:
         // Magic number for format verification

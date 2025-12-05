@@ -117,21 +117,21 @@ namespace Radis
 
 // Macros: unchanged call-sites — macros inject function & line automatically.
 #ifndef _SHIP
-#define DOG_ASSERT(x, ...) { if(!(x)) { DOG_CRITICAL(__FUNCTION__, __LINE__, "Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }
-#define DOG_STATIC_ASSERT(x, ...) static_assert(x, __VA_ARGS__)
+#define RADIS_ASSERT(x, ...) { if(!(x)) { RADIS_CRITICAL(__FUNCTION__, __LINE__, "Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }
+#define RADIS_STATIC_ASSERT(x, ...) static_assert(x, __VA_ARGS__)
 
-#define DOG_TRACE(...)    ::Radis::Logger::GetLogger()->trace(__FUNCTION__, __LINE__, __VA_ARGS__)
-#define DOG_INFO(...)     ::Radis::Logger::GetLogger()->info(__FUNCTION__, __LINE__, __VA_ARGS__)
-#define DOG_WARN(...)     ::Radis::Logger::GetLogger()->warn(__FUNCTION__, __LINE__, __VA_ARGS__)
-#define DOG_ERROR(...)    ::Radis::Logger::GetLogger()->error(__FUNCTION__, __LINE__, __VA_ARGS__)
-#define DOG_CRITICAL(...) ::Radis::Logger::GetLogger()->critical(__FUNCTION__, __LINE__, __VA_ARGS__)
+#define RADIS_TRACE(...)    ::Radis::Logger::GetLogger()->trace(__FUNCTION__, __LINE__, __VA_ARGS__)
+#define RADIS_INFO(...)     ::Radis::Logger::GetLogger()->info(__FUNCTION__, __LINE__, __VA_ARGS__)
+#define RADIS_WARN(...)     ::Radis::Logger::GetLogger()->warn(__FUNCTION__, __LINE__, __VA_ARGS__)
+#define RADIS_ERROR(...)    ::Radis::Logger::GetLogger()->error(__FUNCTION__, __LINE__, __VA_ARGS__)
+#define RADIS_CRITICAL(...) ::Radis::Logger::GetLogger()->critical(__FUNCTION__, __LINE__, __VA_ARGS__)
 #else
-#define DOG_ASSERT(...)
-#define DOG_STATIC_ASSERT(...)
-#define DOG_TRACE(...)
-#define DOG_INFO(...)
-#define DOG_WARN(...)
+#define RADIS_ASSERT(...)
+#define RADIS_STATIC_ASSERT(...)
+#define RADIS_TRACE(...)
+#define RADIS_INFO(...)
+#define RADIS_WARN(...)
 // Keep ERROR and CRITICAL for release builds as well
-#define DOG_ERROR(...)    ::Radis::Logger::GetLogger()->error(__FUNCTION__, __LINE__, __VA_ARGS__)
-#define DOG_CRITICAL(...) ::Radis::Logger::GetLogger()->critical(__FUNCTION__, __LINE__, __VA_ARGS__)
+#define RADIS_ERROR(...)    ::Radis::Logger::GetLogger()->error(__FUNCTION__, __LINE__, __VA_ARGS__)
+#define RADIS_CRITICAL(...) ::Radis::Logger::GetLogger()->critical(__FUNCTION__, __LINE__, __VA_ARGS__)
 #endif

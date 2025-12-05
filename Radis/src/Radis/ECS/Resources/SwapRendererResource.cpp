@@ -35,7 +35,7 @@ namespace Radis
             bool vulkanSupported = Engine::GetVulkanSupported();
             if (!vulkanSupported)
             {
-                DOG_WARN("Cannot switch to Vulkan; No suitable GPUs!");
+                RADIS_WARN("Cannot switch to Vulkan; No suitable GPUs!");
                 return;
             }
 

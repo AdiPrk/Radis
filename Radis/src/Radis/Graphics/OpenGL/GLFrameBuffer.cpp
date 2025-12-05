@@ -38,7 +38,7 @@ namespace Radis {
 
 		//Shader::SetResolutionUBO(glm::vec2(event.width, event.height));
 
-		//DOG_INFO("GLFrameBuffer::OnSceneResize({}, {})", specification.width, specification.height);
+		//RADIS_INFO("GLFrameBuffer::OnSceneResize({}, {})", specification.width, specification.height);
 
 		Create();
 	}
@@ -67,7 +67,7 @@ namespace Radis {
 				break;
 			default:
 			{
-                DOG_CRITICAL("Unsupported FBAttachment format!: {}", (int)ca);
+                RADIS_CRITICAL("Unsupported FBAttachment format!: {}", (int)ca);
 				break;
 			}
 			}
@@ -80,7 +80,7 @@ namespace Radis {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, depthAttachment, 0);
 
-		DOG_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer is incomplete!");
+		RADIS_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer is incomplete!");
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
@@ -101,7 +101,7 @@ namespace Radis {
 	void GLFrameBuffer::AddColorAttachment(const FBAttachment& format)
 	{
 		unsigned nColorAttachments = (unsigned)colorAttachments.size();
-		DOG_ASSERT(nColorAttachments < 4, "Too many color attachments!");
+		RADIS_ASSERT(nColorAttachments < 4, "Too many color attachments!");
 		colorAttachments.push_back(0);
 
 		GLint glFormat = static_cast<GLint>(format);
@@ -116,7 +116,7 @@ namespace Radis {
 
 	void GLFrameBuffer::AddDepthAttachment(const FBAttachment& format)
 	{
-		DOG_ASSERT(depthAttachment == 0, "Depth attachment already exists!");
+		RADIS_ASSERT(depthAttachment == 0, "Depth attachment already exists!");
 
 		GLint glFormat = static_cast<GLint>(format);
 

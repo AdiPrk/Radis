@@ -28,7 +28,7 @@ namespace Radis {
 
 		unsigned GetColorAttachmentID(unsigned index) const {
 			if (index >= colorAttachments.size()) {
-				DOG_ASSERT(false, "Index out of bounds.");
+				RADIS_ASSERT(false, "Index out of bounds.");
 				return 0;
 			}
 			return colorAttachments[index];
