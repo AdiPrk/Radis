@@ -7,8 +7,8 @@
 namespace Dog
 {
     const size_t PACKET_BUFFER_SIZE = 256;
-    const char SERVER_IP[10] = "localhost";
-    //const char SERVER_IP[12] = "45.61.62.97";
+    //const char SERVER_IP[10] = "localhost";
+    const char SERVER_IP[12] = "45.61.62.97";
 
     enum PacketID {
         // Player join/leave packets
