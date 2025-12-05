@@ -156,7 +156,7 @@ namespace Radis
         rr->blasAccel.resize(numMeshes);
 
         // For now, just log that we're ready to build BLAS
-        DOG_INFO("Ready to build {} bottom-level acceleration structures", numMeshes);
+        RADIS_INFO("Ready to build {} bottom-level acceleration structures", numMeshes);
 
         for (uint32_t i = 0; i < ml->GetModelCount(); ++i)
         {
@@ -223,7 +223,7 @@ namespace Radis
             VkDeviceSize bufferSize = std::span<VkAccelerationStructureInstanceKHR const>(tlasInstances).size_bytes();
             if (bufferSize == 0)
             {
-                DOG_WARN("No TLAS instances to build!");
+                RADIS_WARN("No TLAS instances to build!");
                 return;
             }
 
@@ -312,7 +312,7 @@ namespace Radis
             }
         }
 
-        DOG_INFO("Top-level AS built with {} instances!", tlasInstances.size());
+        RADIS_INFO("Top-level AS built with {} instances!", tlasInstances.size());
 
         // Cleanup staging and instance buffers
         Allocator::DestroyBuffer(stagingBuffer);
@@ -324,7 +324,7 @@ namespace Radis
         auto rr = ecs->GetResource<RenderingResource>();
         if (instances.empty())
         {
-            DOG_WARN("UpdateTopLevelASImmediate: no instances to build/update.");
+            RADIS_WARN("UpdateTopLevelASImmediate: no instances to build/update.");
             return;
         }
 

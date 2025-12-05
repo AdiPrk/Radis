@@ -254,7 +254,7 @@ namespace Radis
             return { it->second };
         }
 
-        DOG_ERROR("Requested resource {0} not found in RenderGraph!", name);
+        RADIS_ERROR("Requested resource {0} not found in RenderGraph!", name);
         return { UINT32_MAX };
     }
 }

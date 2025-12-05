@@ -112,7 +112,7 @@ namespace Radis
 		if (vkCreatePipelineLayout(device.GetDevice(), &pipelineLayoutCreateInfo, nullptr, &mPipelineLayout) != VK_SUCCESS)
 		{
 			//If failed throw error
-            DOG_CRITICAL("Failed to create pipeline layout");
+            RADIS_CRITICAL("Failed to create pipeline layout");
 		}
 	}
 
@@ -121,7 +121,7 @@ namespace Radis
 		//Make sure everything needed exists
 		if (mPipelineLayout == nullptr)
 		{
-            DOG_CRITICAL("Cannot create pipeline before pipeline layout");
+            RADIS_CRITICAL("Cannot create pipeline before pipeline layout");
 		}
 
 		//Get a defualt pipeline configuration
@@ -285,7 +285,7 @@ namespace Radis
 		//Make sure layout and renderpass are real
 		if (configInfo.pipeLineLayout == VK_NULL_HANDLE)
 		{
-            DOG_CRITICAL("Cannot create graphics pipeline: no pipelineLayout provided in configInfo");
+            RADIS_CRITICAL("Cannot create graphics pipeline: no pipelineLayout provided in configInfo");
 		}
 
 		// Read code files
@@ -401,7 +401,7 @@ namespace Radis
 		//Create the pipeline          not using pipeline cashe vvvvvvvvvv     no allocation callbacks vvvvv
 		if (vkCreateGraphicsPipelines(device.GetDevice(), VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &mGraphicsPipeline) != VK_SUCCESS)
 		{
-            DOG_ERROR("Failed to create graphics pipeline");
+            RADIS_ERROR("Failed to create graphics pipeline");
 		}
 	}
 }

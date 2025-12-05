@@ -7,7 +7,7 @@ namespace Radis
     {
         if (t_easeIn < 0.0 || t_easeOut > 1.0 || t_easeIn >= t_easeOut)
         {
-            DOG_CRITICAL("Invalid ease-in/out times: t_easeIn = {}, t_easeOut = {}", t_easeIn, t_easeOut);
+            RADIS_CRITICAL("Invalid ease-in/out times: t_easeIn = {}, t_easeOut = {}", t_easeIn, t_easeOut);
             throw std::invalid_argument("Invalid ease-in/out times.");
         }
 

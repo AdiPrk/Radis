@@ -69,7 +69,7 @@ namespace Radis
         if (result != VK_SUCCESS)
         {
             // Handle allocation failure
-            DOG_CRITICAL("Failed to create buffer");
+            RADIS_CRITICAL("Failed to create buffer");
             return result;
         }
 
@@ -160,7 +160,7 @@ namespace Radis
         if (result != VK_SUCCESS)
         {
             DestroyBuffer(accel.buffer);
-            DOG_ERROR("Failed to create acceleration structure");
+            RADIS_ERROR("Failed to create acceleration structure");
             return result;
         }
 
@@ -193,7 +193,7 @@ namespace Radis
         // Create the image and allocate memory using VMA
         if (vmaCreateImage(mAllocator, &imageInfo, &allocInfo, &image, &imageAllocation, nullptr) != VK_SUCCESS)
         {
-            DOG_CRITICAL("failed to create image with VMA!");
+            RADIS_CRITICAL("failed to create image with VMA!");
         }
     }
 

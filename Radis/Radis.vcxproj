@@ -18,7 +18,7 @@
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{4d2ed8e4-ea0a-44a3-bdc2-d52582f4dfe7}</ProjectGuid>
-    <RootNamespace>Dog</RootNamespace>
+    <RootNamespace>Radis</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ProjectName>Radis</ProjectName>
   </PropertyGroup>

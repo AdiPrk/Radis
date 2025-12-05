@@ -1,7 +1,7 @@
 #include <PCH/pch.h>
 #include "Server.h"
 
-namespace Dog
+namespace Radis
 {
 
     Server::Server(unsigned short port)
@@ -138,4 +138,4 @@ namespace Dog
         mPlayerManager.PopPlayer(event.peer);
     }
 
-} // namespace Dog
+} // namespace Radis

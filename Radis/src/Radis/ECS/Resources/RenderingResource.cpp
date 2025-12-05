@@ -304,7 +304,7 @@ namespace Radis
             swapChain = std::make_unique<SwapChain>(*device, extent, oldSwapChain);
 
             if (!oldSwapChain->CompareSwapFormats(*swapChain.get())) {
-                DOG_ERROR("Swap chain image(or depth) format has changed!");
+                RADIS_ERROR("Swap chain image(or depth) format has changed!");
             }
         }
     }
@@ -323,7 +323,7 @@ namespace Radis
         //Allocate the command buffers
         if (vkAllocateCommandBuffers(device->GetDevice(), &allocInfo, commandBuffers.data()) != VK_SUCCESS)
         {
-            DOG_CRITICAL("Failed to allocate command buffers");
+            RADIS_CRITICAL("Failed to allocate command buffers");
         }
     }
 
@@ -336,7 +336,7 @@ namespace Radis
             return VK_FORMAT_B8G8R8A8_UNORM;
         }
 
-        DOG_CRITICAL("Unsupported format for sRGB conversion");
+        RADIS_CRITICAL("Unsupported format for sRGB conversion");
         return format;
     }
 

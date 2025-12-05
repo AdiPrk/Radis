@@ -57,11 +57,11 @@ namespace Radis
         {
             file << entitiesJson.dump();
             file.close();
-            DOG_INFO("Scene serialized to {0}", filepath);
+            RADIS_INFO("Scene serialized to {0}", filepath);
         }
         else
         {
-            DOG_ERROR("Failed to open file {0} for writing", filepath);
+            RADIS_ERROR("Failed to open file {0} for writing", filepath);
         }
     }
 
@@ -74,7 +74,7 @@ namespace Radis
         std::ifstream file(filepath);
         if (!file.is_open())
         {
-            DOG_ERROR("Failed to open scene file for deserialization: {0}", filepath);
+            RADIS_ERROR("Failed to open scene file for deserialization: {0}", filepath);
             return;
         }
 
@@ -85,13 +85,13 @@ namespace Radis
         }
         catch (nlohmann::json::parse_error& e)
         {
-            DOG_ERROR("Failed to parse scene file {0}: {1}", filepath, e.what());
+            RADIS_ERROR("Failed to parse scene file {0}: {1}", filepath, e.what());
             return;
         }
 
         if (!j.contains("Entities"))
         {
-            DOG_WARN("No 'Entities' found in scene file: {0}", filepath);
+            RADIS_WARN("No 'Entities' found in scene file: {0}", filepath);
             return;
         }
 
@@ -155,7 +155,7 @@ namespace Radis
                 {
                     if (!componentDataArray.is_array() || componentDataArray.empty())
                     {
-                        DOG_WARN("Component '{0}' for entity '{1}' has invalid data.", componentName, entityTag);
+                        RADIS_WARN("Component '{0}' for entity '{1}' has invalid data.", componentName, entityTag);
                         continue;
                     }
                     const nlohmann::json& componentObject = componentDataArray[0];
@@ -165,11 +165,11 @@ namespace Radis
                 }
                 else
                 {
-                    DOG_WARN("Unknown component type during deserialization: {0}", componentName);
+                    RADIS_WARN("Unknown component type during deserialization: {0}", componentName);
                 }
             }
         }
 
-        DOG_INFO("Scene deserialized successfully from {0}", filepath);
+        RADIS_INFO("Scene deserialized successfully from {0}", filepath);
     }
 }

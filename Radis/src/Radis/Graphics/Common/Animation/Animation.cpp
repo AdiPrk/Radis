@@ -102,7 +102,7 @@ namespace Radis
 
             if (mNameToIDMap.find(boneName) == mNameToIDMap.end())
             {
-                DOG_WARN("Animation::ReadMissingBones: Node name '{}' not found in hierarchy, but requested for keyframes", boneName);
+                RADIS_WARN("Animation::ReadMissingBones: Node name '{}' not found in hierarchy, but requested for keyframes", boneName);
             }
 
             int nodeId = mNameToIDMap[boneName];

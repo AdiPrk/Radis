@@ -56,7 +56,7 @@ namespace Radis
             auto handle = std::unique_ptr<std::function<void(const EventType&)>, HandleDeleter<EventType>>(new std::function<void(const EventType&)>(listener));
             listeners.push_back(handle.get());
 
-            DOG_INFO("Subscribed to event of type {0}.", typeid(EventType).name());
+            RADIS_INFO("Subscribed to event of type {0}.", typeid(EventType).name());
 
             return handle;
         }
@@ -66,7 +66,7 @@ namespace Radis
             auto& listeners = GetListeners<EventType>();
             listeners.erase(std::remove(listeners.begin(), listeners.end(), listener), listeners.end());
 
-            DOG_INFO("Unsubscribed from event of type {0}.", typeid(EventType).name());
+            RADIS_INFO("Unsubscribed from event of type {0}.", typeid(EventType).name());
         }
 
         template <typename EventType>

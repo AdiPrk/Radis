@@ -130,7 +130,7 @@ namespace Radis
             auto rr = ecs->GetResource<RenderingResource>();
             if (!rr)
             {
-                DOG_CRITICAL("No rendering resource in editor system");
+                RADIS_CRITICAL("No rendering resource in editor system");
                 return;
             }
 
@@ -414,7 +414,7 @@ namespace Radis
         auto rr = ecs->GetResource<RenderingResource>();
         if (!rr)
         {
-            DOG_CRITICAL("No rendering resource in editor system");
+            RADIS_CRITICAL("No rendering resource in editor system");
             ImGui::Text("No rendering resource found.");
             ImGui::End();
             return;

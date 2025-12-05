@@ -216,7 +216,7 @@ namespace Radis
         if (vkCreateSwapchainKHR(mDevice.GetDevice(), &swapChainCreateInfo, nullptr, &mSwapChain) != VK_SUCCESS)
         {
             //If failed throw error
-            DOG_CRITICAL("Failed to create swap chain");
+            RADIS_CRITICAL("Failed to create swap chain");
         }
 
         //We only specified a minimum number of images in the swap chain, so the implementation is
@@ -255,7 +255,7 @@ namespace Radis
             //Create the image view
             if (vkCreateImageView(mDevice.GetDevice(), &viewCreateInfo, nullptr, &mSwapChainImageViews[i]) != VK_SUCCESS)
             {
-                DOG_CRITICAL("Failed to create texture image view");
+                RADIS_CRITICAL("Failed to create texture image view");
             }
         }
     }
@@ -332,7 +332,7 @@ namespace Radis
         //Create render pass
         if (vkCreateRenderPass(mDevice.GetDevice(), &renderPassInfo, nullptr, &mRenderPass) != VK_SUCCESS)
         {
-            DOG_CRITICAL("Failed to create render pass");
+            RADIS_CRITICAL("Failed to create render pass");
         }
     }
 
@@ -363,7 +363,7 @@ namespace Radis
             //Create framebufffer
             if (vkCreateFramebuffer(mDevice.GetDevice(), &framebufferInfo, nullptr, &mSwapChainFramebuffers[i]) != VK_SUCCESS)
             {
-                DOG_CRITICAL("Failed to create framebuffer");
+                RADIS_CRITICAL("Failed to create framebuffer");
             }
         }
     }
@@ -428,7 +428,7 @@ namespace Radis
             //Create image view
             if (vkCreateImageView(mDevice.GetDevice(), &viewInfo, nullptr, &mDepthImageViews[i]) != VK_SUCCESS)
             {
-                DOG_CRITICAL("Failed to create texture image view");
+                RADIS_CRITICAL("Failed to create texture image view");
             }
         }
     }
@@ -459,7 +459,7 @@ namespace Radis
             if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR)
             {
                 //Use this present mode and print out what present mode we are using
-                DOG_INFO("Present mode: Mailbox");
+                RADIS_INFO("Present mode: Mailbox");
                 return availablePresentMode;
             }
         }
@@ -478,7 +478,7 @@ namespace Radis
 
         //If cant find wanted present mode use V-sync and print what we are using
 
-        DOG_INFO("Present mode: V-Sync");
+        RADIS_INFO("Present mode: V-Sync");
         return VK_PRESENT_MODE_FIFO_KHR;
     }
 

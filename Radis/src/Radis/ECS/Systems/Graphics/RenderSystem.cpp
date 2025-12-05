@@ -167,7 +167,7 @@ namespace Radis
             }
             else
             {
-                DOG_WARN("Too many instances for debug draw render!");
+                RADIS_WARN("Too many instances for debug draw render!");
             }
         }
 

@@ -23,7 +23,7 @@ namespace Radis
             }
         }
 
-        DOG_ERROR("validation layer: {}", pCallbackData->pMessage);
+        RADIS_ERROR("validation layer: {}", pCallbackData->pMessage);
 
         return VK_FALSE;
     }
@@ -62,7 +62,7 @@ namespace Radis
     {
         if (volkInitialize() != VK_SUCCESS)
         {
-            DOG_ERROR("Failed to initialize volk.");
+            RADIS_ERROR("Failed to initialize volk.");
             mSupportsVulkan = false;
             return;
         }
@@ -145,7 +145,7 @@ namespace Radis
         if (enableValidationLayers && !checkValidationLayerSupport()) 
         {
             enableValidationLayers = false;
-            DOG_WARN("Validation layers not available!");
+            RADIS_WARN("Validation layers not available!");
         }
 
         VkApplicationInfo appInfo = {};
@@ -209,10 +209,10 @@ namespace Radis
         vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
         if (deviceCount == 0) 
         {
-            DOG_CRITICAL("No Vulkan-supported GPUs found!");
+            RADIS_CRITICAL("No Vulkan-supported GPUs found!");
             return false;
         }
-        DOG_INFO("Found {} physical devices.", deviceCount);
+        RADIS_INFO("Found {} physical devices.", deviceCount);
 
         std::vector<VkPhysicalDevice> devices(deviceCount);
         vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
@@ -226,13 +226,13 @@ namespace Radis
 
         if (physicalDevice == VK_NULL_HANDLE)
         {
-            DOG_CRITICAL("Failed to find a suitable GPU!");
+            RADIS_CRITICAL("Failed to find a suitable GPU!");
             return false;
         }
 
         vkGetPhysicalDeviceProperties(physicalDevice, &properties);
 
-        DOG_INFO("Using GPU: {}", properties.deviceName);
+        RADIS_INFO("Using GPU: {}", properties.deviceName);
 
         return true;
     }
@@ -241,7 +241,7 @@ namespace Radis
     {
         if (physicalDevice == VK_NULL_HANDLE)
         {
-            DOG_ERROR("physicalDevice is VK_NULL_HANDLE - cannot create logical device.");
+            RADIS_ERROR("physicalDevice is VK_NULL_HANDLE - cannot create logical device.");
             return false;
         }
 
@@ -253,12 +253,12 @@ namespace Radis
         constexpr uint32_t INVALID_INDEX = std::numeric_limits<uint32_t>::max();
         if (indices.graphicsFamily == INVALID_INDEX)
         {
-            DOG_ERROR("Graphics queue family not found.");
+            RADIS_ERROR("Graphics queue family not found.");
             return false;
         }
         if (indices.presentFamily == INVALID_INDEX)
         {
-            DOG_ERROR("Present queue family not found - continuing, but present operations may fail.");
+            RADIS_ERROR("Present queue family not found - continuing, but present operations may fail.");
             return false;
         }
 
@@ -267,18 +267,18 @@ namespace Radis
         vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
         if (queueFamilyCount == 0) 
         {
-            DOG_ERROR("vkGetPhysicalDeviceQueueFamilyProperties returned count == 0.");
+            RADIS_ERROR("vkGetPhysicalDeviceQueueFamilyProperties returned count == 0.");
             return false;
         }
         std::vector<VkQueueFamilyProperties> queueProps(queueFamilyCount);
         vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueProps.data());
 
         if (indices.graphicsFamily >= queueFamilyCount) {
-            DOG_ERROR("graphicsFamily index out of range: {0}", indices.graphicsFamily);
+            RADIS_ERROR("graphicsFamily index out of range: {0}", indices.graphicsFamily);
             return false;
         }
         if (indices.presentFamily != INVALID_INDEX && indices.presentFamily >= queueFamilyCount) {
-            DOG_ERROR("presentFamily index out of range: {0}", indices.presentFamily);
+            RADIS_ERROR("presentFamily index out of range: {0}", indices.presentFamily);
             return false;
         }
 
@@ -294,7 +294,7 @@ namespace Radis
         float queuePriority = 1.0f; // pointer must remain valid until vkCreateDevice returns
         for (uint32_t queueFamily : uniqueQueueFamilies) {
             if (queueFamily >= queueProps.size()) {
-                DOG_ERROR("QueueFamily {0} not present in queue properties.", queueFamily);
+                RADIS_ERROR("QueueFamily {0} not present in queue properties.", queueFamily);
                 return false;
             }
 
@@ -337,7 +337,7 @@ namespace Radis
         if (SupportedStruct.FeatureName) { \
             OutStruct.FeatureName = VK_TRUE; \
         } else { \
-            DOG_WARN("Requested feature {} is NOT supported. Disabling.", #FeatureName); \
+            RADIS_WARN("Requested feature {} is NOT supported. Disabling.", #FeatureName); \
             supportsAllRequestedFeatures = false; \
         }
 
@@ -389,7 +389,7 @@ namespace Radis
 
         if (!supportsAllRequestedFeatures) 
         {
-            DOG_ERROR("Not all requested features are supported by the physical device.");
+            RADIS_ERROR("Not all requested features are supported by the physical device.");
             return false;
         }
 
@@ -422,13 +422,13 @@ namespace Radis
 
         // Sanity checks before vkCreateDevice
         if (createInfo.queueCreateInfoCount == 0) {
-            DOG_ERROR("No queue create infos prepared; cannot create device.");
+            RADIS_ERROR("No queue create infos prepared; cannot create device.");
             return false;
         }
 
         VkResult res = vkCreateDevice(physicalDevice, &createInfo, nullptr, &device_);
         if (res != VK_SUCCESS) {
-            DOG_ERROR("vkCreateDevice failed with error code {0}", static_cast<int>(res));
+            RADIS_ERROR("vkCreateDevice failed with error code {0}", static_cast<int>(res));
             return false;
         }
 
@@ -436,7 +436,7 @@ namespace Radis
         vkGetDeviceQueue(device_, indices.graphicsFamily, 0, &graphicsQueue_);
         vkGetDeviceQueue(device_, indices.presentFamily, 0, &presentQueue_);
 
-        DOG_INFO("Logical device created successfully.");
+        RADIS_INFO("Logical device created successfully.");
         return true;
     }
 
@@ -468,7 +468,7 @@ namespace Radis
 
         // Check for specific feature support
         if (!supportedFeatures.drawIndirectCount) {
-            DOG_ERROR("drawIndirectCount is not supported on this GPU!");
+            RADIS_ERROR("drawIndirectCount is not supported on this GPU!");
         }
     }
 
@@ -476,7 +476,7 @@ namespace Radis
 
     bool Device::isDeviceSuitable(VkPhysicalDevice device)
     {
-        DOG_INFO("Evaluating device suitability: {}", [&]() {
+        RADIS_INFO("Evaluating device suitability: {}", [&]() {
             VkPhysicalDeviceProperties deviceProperties;
             vkGetPhysicalDeviceProperties(device, &deviceProperties);
             return std::string(deviceProperties.deviceName);
@@ -497,12 +497,12 @@ namespace Radis
 
         if (indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy) 
         {
-            DOG_INFO("Device is suitable!");
+            RADIS_INFO("Device is suitable!");
         }
         else 
         {
-            DOG_WARN("Device is NOT suitable.");
-            DOG_WARN("Indices complete: {}, Extensions supported: {}, Swap chain adequate: {}, Sampler anisotropy: {}",
+            RADIS_WARN("Device is NOT suitable.");
+            RADIS_WARN("Indices complete: {}, Extensions supported: {}, Swap chain adequate: {}, Sampler anisotropy: {}",
                 indices.isComplete() ? "Yes" : "No",
                 extensionsSupported ? "Yes" : "No",
                 swapChainAdequate ? "Yes" : "No",
@@ -620,7 +620,7 @@ namespace Radis
 
         // print all missing extensions
         for (const auto& ext : requiredExtensions) {
-            DOG_WARN("Missing required device extension: {}", ext);
+            RADIS_WARN("Missing required device extension: {}", ext);
         }
 
         return requiredExtensions.empty();

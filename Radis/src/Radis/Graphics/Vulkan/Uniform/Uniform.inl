@@ -43,4 +43,4 @@ namespace Radis
         memcpy(buffer.mapping, data.data(), N * sizeof(T));
     }
 
-} // namespace Dog
+} // namespace Radis

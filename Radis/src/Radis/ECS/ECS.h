@@ -42,7 +42,7 @@ namespace Radis
             auto [it, inserted] = mResources.try_emplace(typeId, std::make_unique<T>(std::forward<Args>(args)...));
 
             if (!inserted) {
-                DOG_ERROR("Resource of type '{0}' already exists.", typeid(T).name());
+                RADIS_ERROR("Resource of type '{0}' already exists.", typeid(T).name());
             }
         }
 
