@@ -1,7 +1,7 @@
-#ifndef DOG_GRAPHICS_APIS_H
-#define DOG_GRAPHICS_APIS_H
+#ifndef RADIS_GRAPHICS_APIS_H
+#define RADIS_GRAPHICS_APIS_H
 
-namespace Dog
+namespace Radis
 {
 	enum class GraphicsAPI {
 		None,
@@ -11,4 +11,4 @@ namespace Dog
 	};
 }
 
-#endif // DOG_GRAPHICS_APIS_H
+#endif // RADIS_GRAPHICS_APIS_H

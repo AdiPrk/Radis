@@ -2,11 +2,11 @@
 #include "enet/enet.h"
 #include "Common.h"
 
-namespace Dog
+namespace Radis
 {
     struct PacketHeader
     {
-        std::uint16_t packetId; // Dog::PacketID
+        std::uint16_t packetId; // Radis::PacketID
         std::uint16_t flags;    // reserved (compression, etc.)
     };
 
