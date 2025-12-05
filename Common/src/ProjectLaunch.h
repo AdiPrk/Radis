@@ -4,7 +4,7 @@
 #include "Common.h"
 
 // Use a namespace to avoid collisions
-namespace DogLaunch
+namespace RadisLaunch
 {
 
     struct EngineSpec
@@ -47,4 +47,4 @@ namespace DogLaunch
         j.at("launchWithEditor").get_to(args.launchWithEditor);
     }
 
-} // namespace DogLaunch
+} // namespace RadisLaunch

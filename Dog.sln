@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.0.11217.181
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Dog", "Dog\Dog.vcxproj", "{4D2ED8E4-EA0A-44A3-BDC2-D52582F4DFE7}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Radis", "Radis\Radis.vcxproj", "{4D2ED8E4-EA0A-44A3-BDC2-D52582F4DFE7}"
 	ProjectSection(ProjectDependencies) = postProject
 		{2ED3B17C-6D74-4B7C-96FB-6F208FEA6977} = {2ED3B17C-6D74-4B7C-96FB-6F208FEA6977}
 		{DED0125C-6302-436F-994A-6573A648DA35} = {DED0125C-6302-436F-994A-6573A648DA35}
@@ -18,7 +18,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Common", "Common\Common.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ImGui", "ImGui\ImGui.vcxproj", "{DED0125C-6302-436F-994A-6573A648DA35}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DogLauncher", "DogLauncher\DogLauncher.vcxproj", "{7B1AF591-6005-423C-9BF4-3613B4501798}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RadisLauncher", "RadisLauncher\RadisLauncher.vcxproj", "{7B1AF591-6005-423C-9BF4-3613B4501798}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
