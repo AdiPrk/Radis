@@ -3,7 +3,7 @@
 #include "PlayerManager.h"
 #include "PacketHandler.h"
 
-namespace Dog
+namespace Radis
 {
 
     class Server {
