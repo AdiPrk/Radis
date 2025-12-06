@@ -18,8 +18,8 @@ namespace Radis
         static bool first = true;
         if (first)
         {
-            /*float cursorX = 0.0f;
-            int maxN = 15;
+            float cursorX = 0.0f;
+            int maxN = 8;
             for (int i = 0; i < maxN - 1; ++i)
             {
                 int n = 2 + i;
@@ -29,8 +29,8 @@ namespace Radis
                 CreateSoftBodyCube(n, glm::vec3(centerX, 0.0f, 0.0f), "SBCube" + nS + "x" + nS + "x" + nS);
 
                 cursorX += width + 0.1f;
-            }*/
-            CreateSoftBodyCube(12);
+            }
+            //CreateSoftBodyCube(12, glm::vec3(0.0f, 0.0f, 0.0f), "SBCube12x12x12");
 
             first = false;
         }
