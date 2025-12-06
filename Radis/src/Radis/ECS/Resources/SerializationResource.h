@@ -10,7 +10,7 @@ namespace Radis
     struct CameraComponent;
     struct AnimationComponent;
     struct LightComponent;
-
+    
     struct SerializationResource : public IResource
     {
         entt::type_list<TagComponent, TransformComponent, ModelComponent, CameraComponent, AnimationComponent, LightComponent> types;

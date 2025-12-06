@@ -135,6 +135,7 @@ namespace Radis {
 
 		// Global settings (can be overridden per-entity if you want).
 		glm::vec3 gravity{ 0.0f, 0.0f, 0.0f };
+        glm::vec3 globalOffset{ 0.0f, 0.0f, 0.0f };
 
 		float globalStiffness = 50.0f;
 		float globalDamping = 10.0f;
@@ -143,5 +144,8 @@ namespace Radis {
 		std::uint32_t gridNx = 0;
 		std::uint32_t gridNy = 0;
 		std::uint32_t gridNz = 0;
+		
+		// sync with transform
+		glm::vec3 lastTransformPosition{ 0.0f, 0.0f, 0.0f };
 	};
 }

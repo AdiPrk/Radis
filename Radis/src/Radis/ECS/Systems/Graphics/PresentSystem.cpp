@@ -41,12 +41,12 @@ namespace Radis
 
 	void PresentSystem::FrameStart()
 	{
+        DebugDrawResource::Clear();
+
         if (Engine::GetGraphicsAPI() != GraphicsAPI::Vulkan)
         {
             return;
         }
-
-        DebugDrawResource::Clear();
 
         auto rr = ecs->GetResource<RenderingResource>();
         auto wr = ecs->GetResource<WindowResource>();

@@ -5,6 +5,7 @@
 namespace Radis
 {
     struct SoftBodyComponent;
+    struct TransformComponent;
 
     class PhysicsSystem : public ISystem
     {
@@ -16,11 +17,13 @@ namespace Radis
         void Update(float dt) override;
         void FrameEnd() override;
 
+        void SyncSoftBodyWithTransform(SoftBodyComponent& softBody, TransformComponent& transform);
+
         // Creation helpers ----------------------------------------------------
-        void CreateSoftBodyCube();
+        void CreateSoftBodyCube(int n, glm::vec3 position = glm::vec3(0.0f), std::string debugName = "");
 
         // Integration / force computation ------------------------------------
-        void IntegrateSoftBodyRK2(SoftBodyComponent& softBody, float dt);
+        void IntegrateSoftBodyRK4(SoftBodyComponent& softBody, float dt);
         void ComputeAccelerations(const SoftBodyComponent& softBody, const std::vector<glm::vec3>& positions, const std::vector<glm::vec3>& velocities, std::vector<glm::vec3>& outAccelerations);
 
         // Utility functions ---------------------------------------------------
@@ -30,7 +33,6 @@ namespace Radis
     private:
         void InitializeSoftBodyParticles(SoftBodyComponent& softBody, uint32_t nx, uint32_t ny, uint32_t nz, float spacing, float massPerPoint);
         void BuildSoftBodySprings(SoftBodyComponent& softBody);
-        void DebugDrawSoftBody(const SoftBodyComponent& softBody);
         void DebugDrawSoftBodyFancy(const SoftBodyComponent& softBody);
 
         // Used to animate anchor points for environment interaction.
@@ -44,5 +46,8 @@ namespace Radis
         std::vector<glm::vec3> mXMid;
         std::vector<glm::vec3> mVMid;
         std::vector<glm::vec3> mAMid;
+
+        std::vector<glm::vec3> mK1x, mK2x, mK3x, mK4x;
+        std::vector<glm::vec3> mK1v, mK2v, mK3v, mK4v;
     };
 }
