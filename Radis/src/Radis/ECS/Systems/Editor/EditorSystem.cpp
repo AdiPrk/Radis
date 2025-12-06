@@ -607,183 +607,180 @@ namespace Radis
         });
 
         DrawComponentUI<SoftBodyComponent>("Soft Body", selectedEnt, [&](SoftBodyComponent& component)
+        {
+            const auto& particles = component.particles;
+            const auto& springs = component.springs;
+
+            // ------------------------------------------------------------
+            // Summary / read-only info
+            // ------------------------------------------------------------
+            ImGui::Text("Particles: %zu", particles.size());
+            ImGui::SameLine();
+            ImGui::Text("Springs: %zu", springs.size());
+
+            if (component.gridNx > 0 && component.gridNy > 0 && component.gridNz > 0)
             {
-                const auto& particles = component.particles;
-                const auto& springs = component.springs;
+                ImGui::Text("Grid: %u x %u x %u",
+                    component.gridNx, component.gridNy, component.gridNz);
+            }
 
-                // ------------------------------------------------------------
-                // Summary / read-only info
-                // ------------------------------------------------------------
-                ImGui::Text("Particles: %zu", particles.size());
-                ImGui::SameLine();
-                ImGui::Text("Springs: %zu", springs.size());
+            // Simple runtime stats
+            std::size_t anchorCount = 0;
+            float maxSpeed = 0.0f;
+            float avgSpeed = 0.0f;
 
-                if (component.gridNx > 0 && component.gridNy > 0 && component.gridNz > 0)
+            if (!particles.empty())
+            {
+                float speedSum = 0.0f;
+                for (const SoftBodyParticle& p : particles)
                 {
-                    ImGui::Text("Grid: %u x %u x %u",
-                        component.gridNx, component.gridNy, component.gridNz);
+                    if (p.isAnchor)
+                        ++anchorCount;
+
+                    float speed = glm::length(p.velocity);
+                    speedSum += speed;
+                    if (speed > maxSpeed)
+                        maxSpeed = speed;
                 }
+                avgSpeed = speedSum / static_cast<float>(particles.size());
+            }
 
-                // Simple runtime stats
-                std::size_t anchorCount = 0;
-                float maxSpeed = 0.0f;
-                float avgSpeed = 0.0f;
+            ImGui::Text("Anchors: %zu", anchorCount);
+            ImGui::Text("Avg speed: %.4f  |  Max speed: %.4f", avgSpeed, maxSpeed);
 
-                if (!particles.empty())
+            ImGui::SeparatorText("Simulation");
+
+            // ------------------------------------------------------------
+            // Simulation parameters
+            // ------------------------------------------------------------
+            ImGui::DragFloat3("Gravity", glm::value_ptr(component.gravity), 0.1f, -50.0f, 50.0f);
+            ImGui::DragFloat("Global Stiffness", &component.globalStiffness, 1.0f, 0.0f, 2000.0f);
+            ImGui::DragFloat("Global Damping", &component.globalDamping, 0.1f, 0.0f, 200.0f);
+
+            if (ImGui::Button("Apply Global Stiffness/Damping to Springs"))
+            {
+                for (auto& s : component.springs)
                 {
-                    float speedSum = 0.0f;
-                    for (const SoftBodyParticle& p : particles)
-                    {
-                        if (p.isAnchor)
-                            ++anchorCount;
+                    s.stiffness = component.globalStiffness;
+                    s.damping = component.globalDamping;
+                }
+            }
 
-                        float speed = glm::length(p.velocity);
-                        speedSum += speed;
-                        if (speed > maxSpeed)
-                            maxSpeed = speed;
+            ImGui::SameLine();
+            if (ImGui::Button("Zero All Velocities"))
+            {
+                for (auto& p : component.particles) p.velocity = glm::vec3(0.0f);
+            }
+
+            // ------------------------------------------------------------
+            // Anchors
+            // ------------------------------------------------------------
+            ImGui::SeparatorText("Anchors");
+
+            auto& particlesNonConst = component.particles;
+
+            // ---------- Global anchor offset (move all anchors together) ----------
+            ImGui::TextDisabled("Move all anchor targets together (relative offset).");
+
+            glm::vec3 newOffset = component.globalOffset;
+
+            if (ImGui::DragFloat3("Global Anchor Offset", glm::value_ptr(newOffset), 0.01f))
+            {
+                glm::vec3 delta = newOffset - component.globalOffset;
+                component.globalOffset = newOffset;
+
+                for (auto& p : particlesNonConst)
+                {
+                    if (!p.isAnchor) continue;
+
+                    p.anchorPosition += delta;
+
+                    // For static anchors, keep particle snapped to its target
+                    if (p.inverseMass == 0.0f)
+                    {
+                        p.position = p.anchorPosition;
+                        p.velocity = glm::vec3(0.0f);
                     }
-                    avgSpeed = speedSum / static_cast<float>(particles.size());
                 }
+            }
 
-                ImGui::Text("Anchors: %zu", anchorCount);
-                ImGui::Text("Avg speed: %.4f  |  Max speed: %.4f", avgSpeed, maxSpeed);
+            if (ImGui::Button("Reset Global Anchor Offset"))
+            {
+                glm::vec3 delta = -component.globalOffset;
+                component.globalOffset = glm::vec3(0.0f);
 
-                ImGui::SeparatorText("Simulation");
-
-                // ------------------------------------------------------------
-                // Simulation parameters
-                // ------------------------------------------------------------
-                ImGui::DragFloat3("Gravity", glm::value_ptr(component.gravity), 0.1f, -50.0f, 50.0f);
-                ImGui::DragFloat("Global Stiffness", &component.globalStiffness, 1.0f, 0.0f, 2000.0f);
-                ImGui::DragFloat("Global Damping", &component.globalDamping, 0.1f, 0.0f, 200.0f);
-
-                if (ImGui::Button("Apply Global Stiffness/Damping to Springs"))
+                for (auto& p : particlesNonConst)
                 {
-                    for (auto& s : component.springs)
+                    if (!p.isAnchor) continue;
+
+                    p.anchorPosition += delta;
+
+                    if (p.inverseMass == 0.0f)
                     {
-                        s.stiffness = component.globalStiffness;
-                        s.damping = component.globalDamping;
+                        p.position = p.anchorPosition;
+                        p.velocity = glm::vec3(0.0f);
                     }
                 }
+            }
 
-                ImGui::SameLine();
-                if (ImGui::Button("Zero All Velocities"))
+            // ---------- Per-anchor positions (collapsible list) ----------
+            ImGui::SeparatorText("Per-Anchor Positions");
+
+            // Count anchors
+            std::size_t totalAnchors = 0;
+            for (const auto& p : particlesNonConst)
+                if (p.isAnchor) ++totalAnchors;
+
+            if (totalAnchors == 0)
+            {
+                ImGui::TextDisabled("No anchors in this soft body.");
+                return;
+            }
+
+            // Scrollable child so we don't blow up the panel for big soft bodies.
+            ImGui::BeginChild("AnchorsList", ImVec2(0, 220.0f), true);
+
+            std::size_t anchorIndex = 0;
+            for (std::size_t i = 0; i < particlesNonConst.size(); ++i)
+            {
+                SoftBodyParticle& p = particlesNonConst[i];
+                if (!p.isAnchor)
+                    continue;
+
+                ImGui::PushID(static_cast<int>(i));
+
+                // Label example: "Anchor 0 (particle 12)"
+                std::string header =
+                    "Anchor " + std::to_string(anchorIndex) +
+                    " (particle " + std::to_string(i) + ")";
+
+                if (ImGui::TreeNode(header.c_str()))
                 {
-                    for (auto& p : component.particles) p.velocity = glm::vec3(0.0f);
-                }
-
-                // ------------------------------------------------------------
-                // Anchors
-                // ------------------------------------------------------------
-                ImGui::SeparatorText("Anchors");
-
-                auto& particlesNonConst = component.particles;
-
-                // ---------- Global anchor offset (move all anchors together) ----------
-                ImGui::TextDisabled("Move all anchor targets together (relative offset).");
-
-                static glm::vec3 globalAnchorOffset(0.0f);
-                glm::vec3 newOffset = globalAnchorOffset;
-
-                if (ImGui::DragFloat3("Global Anchor Offset", glm::value_ptr(newOffset), 0.01f))
-                {
-                    glm::vec3 delta = newOffset - globalAnchorOffset;
-                    globalAnchorOffset = newOffset;
-
-                    for (auto& p : particlesNonConst)
+                    // Editable anchor target position
+                    glm::vec3 anchorPos = p.anchorPosition;
+                    if (ImGui::DragFloat3("Anchor Target", glm::value_ptr(anchorPos), 0.01f))
                     {
-                        if (!p.isAnchor)
-                            continue;
+                        p.anchorPosition = anchorPos;
 
-                        p.anchorPosition += delta;
-
-                        // For static anchors, keep particle snapped to its target
+                        // Snap static anchors to their new target
                         if (p.inverseMass == 0.0f)
                         {
                             p.position = p.anchorPosition;
                             p.velocity = glm::vec3(0.0f);
                         }
                     }
+
+                    ImGui::TreePop();
                 }
 
-                if (ImGui::Button("Reset Global Anchor Offset"))
-                {
-                    glm::vec3 delta = -globalAnchorOffset;
-                    globalAnchorOffset = glm::vec3(0.0f);
+                ImGui::Separator();
+                ImGui::PopID();
 
-                    for (auto& p : particlesNonConst)
-                    {
-                        if (!p.isAnchor)
-                            continue;
+                ++anchorIndex;
+            }
 
-                        p.anchorPosition += delta;
-
-                        if (p.inverseMass == 0.0f)
-                        {
-                            p.position = p.anchorPosition;
-                            p.velocity = glm::vec3(0.0f);
-                        }
-                    }
-                }
-
-                // ---------- Per-anchor positions (collapsible list) ----------
-                ImGui::SeparatorText("Per-Anchor Positions");
-
-                // Count anchors
-                std::size_t totalAnchors = 0;
-                for (const auto& p : particlesNonConst)
-                    if (p.isAnchor) ++totalAnchors;
-
-                if (totalAnchors == 0)
-                {
-                    ImGui::TextDisabled("No anchors in this soft body.");
-                    return;
-                }
-
-                // Scrollable child so we don't blow up the panel for big soft bodies.
-                ImGui::BeginChild("AnchorsList", ImVec2(0, 220.0f), true);
-
-                std::size_t anchorIndex = 0;
-                for (std::size_t i = 0; i < particlesNonConst.size(); ++i)
-                {
-                    SoftBodyParticle& p = particlesNonConst[i];
-                    if (!p.isAnchor)
-                        continue;
-
-                    ImGui::PushID(static_cast<int>(i));
-
-                    // Label example: "Anchor 0 (particle 12)"
-                    std::string header =
-                        "Anchor " + std::to_string(anchorIndex) +
-                        " (particle " + std::to_string(i) + ")";
-
-                    if (ImGui::TreeNode(header.c_str()))
-                    {
-                        // Editable anchor target position
-                        glm::vec3 anchorPos = p.anchorPosition;
-                        if (ImGui::DragFloat3("Anchor Target", glm::value_ptr(anchorPos), 0.01f))
-                        {
-                            p.anchorPosition = anchorPos;
-
-                            // Snap static anchors to their new target
-                            if (p.inverseMass == 0.0f)
-                            {
-                                p.position = p.anchorPosition;
-                                p.velocity = glm::vec3(0.0f);
-                            }
-                        }
-
-                        ImGui::TreePop();
-                    }
-
-                    ImGui::Separator();
-                    ImGui::PopID();
-
-                    ++anchorIndex;
-                }
-
-                ImGui::EndChild();
-            });
+            ImGui::EndChild();
+        });
 
 
         ImGui::EndChild(); // End of ComponentsRegion
