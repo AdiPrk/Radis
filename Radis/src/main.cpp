@@ -15,5 +15,5 @@ int main(int argc, char* argv<::>)
     //すぺくっす.launchWithEditor = false;
 
     Radis::Engine Engine(すぺくっす, argc, argv); 
-    return Engine.Run("cube");
+    return Engine.Run("sponza");
 %>

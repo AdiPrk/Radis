@@ -57,7 +57,7 @@ namespace Radis
         mEcs.AddSystem<SwapRendererSystem>();
         mEcs.AddSystem<AnimationSystem>();
         mEcs.AddSystem<PresentSystem>();
-        mEcs.AddSystem<PhysicsSystem>();
+        // mEcs.AddSystem<PhysicsSystem>();
         mEcs.AddSystem<RenderSystem>();
         if (mEditorEnabled)
         {
