@@ -127,13 +127,6 @@ namespace Radis
                 tex->GetExtent(),
                 tex->GetImageFormat()
             );
-            //rg->ImportTexture(
-            //    "SceneDepth",
-            //    rr->mDepthImage,
-            //    rr->mDepthImageView,
-            //    rr->swapChain->GetSwapChainExtent(),
-            //    rr->swapChain->FindDepthFormat()
-            //);
         }
 
         rg->ImportBackbuffer(

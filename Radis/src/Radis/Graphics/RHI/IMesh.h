@@ -80,6 +80,8 @@ namespace Radis
         std::string roughnessTexturePath{};
         std::string occlusionTexturePath{};
         std::string emissiveTexturePath{};
+
+        // Indicies sent to GPU
         uint32_t albedoTextureIndex = 10001;
         uint32_t normalTextureIndex = 10001;
         uint32_t metalnessTextureIndex = 10001;

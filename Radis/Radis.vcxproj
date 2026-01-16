@@ -247,6 +247,7 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Radis\ECS\Systems\Editor\Windows\AssetsWindow.cpp" />
     <ClCompile Include="src\Radis\ECS\Systems\Editor\Windows\ChatWindow.cpp" />
     <ClCompile Include="src\Radis\ECS\Systems\Editor\Windows\EntitiesWindow.cpp" />
+    <ClCompile Include="src\Radis\ECS\Systems\Editor\Windows\Inspector\InspectorWindow.cpp" />
     <ClCompile Include="src\Radis\ECS\Systems\Editor\Windows\MemoryWindow.cpp" />
     <ClCompile Include="src\Radis\ECS\Systems\Editor\Windows\ProfilerWindow.cpp" />
     <ClCompile Include="src\Radis\ECS\Systems\Editor\Windows\SceneWindow.cpp" />
@@ -358,6 +359,7 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Radis\ECS\Systems\Editor\Windows\AssetsWindow.h" />
     <ClInclude Include="src\Radis\ECS\Systems\Editor\Windows\ChatWindow.h" />
     <ClInclude Include="src\Radis\ECS\Systems\Editor\Windows\EntitiesWindow.h" />
+    <ClInclude Include="src\Radis\ECS\Systems\Editor\Windows\Inspector\InspectorWindow.h" />
     <ClInclude Include="src\Radis\ECS\Systems\Editor\Windows\MemoryWindow.h" />
     <ClInclude Include="src\Radis\ECS\Systems\Editor\Windows\ProfilerWindow.h" />
     <ClInclude Include="src\Radis\ECS\Systems\Editor\Windows\SceneWindow.h" />

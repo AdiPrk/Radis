@@ -194,6 +194,16 @@ namespace Radis
                 float oldRoughnessFactor = mesh->roughnessFactor;
                 glm::vec4 oldEmissiveFactor = mesh->emissiveFactor;
 
+                // Preserve the missing properties
+                bool oldMetallicRoughnessCombined = mesh->mMetallicRoughnessCombined;
+                std::string oldAlbedoPath = mesh->albedoTexturePath;
+                std::string oldNormalPath = mesh->normalTexturePath;
+                std::string oldMetalnessPath = mesh->metalnessTexturePath;
+                std::string oldRoughnessPath = mesh->roughnessTexturePath;
+                std::string oldOcclusionPath = mesh->occlusionTexturePath;
+                std::string oldEmissivePath = mesh->emissiveTexturePath;
+                bool oldLoadedTextures = mesh->loadedTextures;
+
                 mesh.reset();
 
                 if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
@@ -218,6 +228,16 @@ namespace Radis
                 mesh->metallicFactor = oldMetallicFactor;
                 mesh->roughnessFactor = oldRoughnessFactor;
                 mesh->emissiveFactor = oldEmissiveFactor;
+
+                // Restore the missing properties
+                mesh->mMetallicRoughnessCombined = oldMetallicRoughnessCombined;
+                mesh->albedoTexturePath = oldAlbedoPath;
+                mesh->normalTexturePath = oldNormalPath;
+                mesh->metalnessTexturePath = oldMetalnessPath;
+                mesh->roughnessTexturePath = oldRoughnessPath;
+                mesh->occlusionTexturePath = oldOcclusionPath;
+                mesh->emissiveTexturePath = oldEmissivePath;
+                mesh->loadedTextures = oldLoadedTextures;
 
                 mesh->CreateVertexBuffers(device);
                 mesh->CreateIndexBuffers(device);
