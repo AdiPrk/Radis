@@ -29,7 +29,7 @@
 #include "Windows/ProfilerWindow.h"
 #include "Windows/MemoryWindow.h"
 #include "Windows/ChatWindow.h"
-#include "Windows/Inspector/InspectorWindow.h"
+#include "Windows/InspectorWindow.h"
 
 #include "Utils/Utils.h"
 
@@ -112,13 +112,19 @@ namespace Radis
             InputSystem::SetMouseInputLocked(mLockMouse);
         }
 
-        if (er->selectedEntity)
+        if (!er->selectedEntities.empty() && ImGui::GetIO().KeyCtrl && InputSystem::isKeyTriggered(Key::D))
         {
-            if (ImGui::GetIO().KeyCtrl && InputSystem::isKeyTriggered(Key::D))
+            // clone all entities
+            std::vector<Entity> newEntities;
+            newEntities.reserve(er->selectedEntities.size());
+
+            for (const auto& entity : er->selectedEntities)
             {
-                Entity newEntity = ecs->CloneEntity(er->selectedEntity);
-                er->selectedEntity = newEntity;
+                Entity newEntity = ecs->CloneEntity(entity);
+                newEntities.push_back(newEntity);
             }
+
+            er->selectedEntities = newEntities;
         }
 
         // If clicking anywhere outside "Entities" window, deselect entity

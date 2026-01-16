@@ -48,15 +48,25 @@ namespace Radis
     void SwapRendererSystem::FrameEnd()
     {
         auto er = ecs->GetResource<EditorResource>();
-        if (er->entityToDelete)
+        if (!er->entitiesToDelete.empty())
         {
-            if (er->selectedEntity == er->entityToDelete)
+            // Remove entities to delete from selected entities list
+            for (const auto& entityToDelete : er->entitiesToDelete)
             {
-                er->selectedEntity = {};
+                er->selectedEntities.erase(
+                    std::remove_if(
+                        er->selectedEntities.begin(),
+                        er->selectedEntities.end(),
+                        [&](const Entity& selectedEntity)
+                        {
+                            return selectedEntity == entityToDelete;
+                        }),
+                    er->selectedEntities.end());
+                
+                ecs->RemoveEntity(entityToDelete);
             }
 
-            ecs->RemoveEntity(er->entityToDelete);
-            er->entityToDelete = {};
+            er->entitiesToDelete.clear();
         }
     }
 }

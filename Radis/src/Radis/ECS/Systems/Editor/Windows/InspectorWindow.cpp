@@ -1,0 +1,510 @@
+#include <PCH/pch.h>
+#include "InspectorWindow.h"
+
+#include "ECS/Resources/EditorResource.h"
+#include "ECS/Resources/RenderingResource.h"
+#include "ECS/Components/Components.h"
+#include "ECS/ECS.h"
+
+#include "Graphics/Common/ModelLibrary.h"
+#include "Graphics/Common/Model.h"
+#include "Utils/Utils.h"
+
+
+namespace Radis
+{
+    namespace EditorWindows
+    {
+        template<typename T, typename UIFunction>
+        static void DrawComponentUI(const char* name, Entity entity, UIFunction uiFunction)
+        {
+            // Ensure the entity has the component before proceeding
+            if (!entity.HasComponent<T>())
+            {
+                return;
+            }
+
+            const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen
+                | ImGuiTreeNodeFlags_Framed
+                | ImGuiTreeNodeFlags_SpanAvailWidth
+                | ImGuiTreeNodeFlags_AllowItemOverlap
+                | ImGuiTreeNodeFlags_FramePadding;
+
+            T& component = entity.GetComponent<T>();
+
+            // Create a collapsible header for the component
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 4, 4 });
+            float lineHeight = ImGui::GetFrameHeight();
+            ImGui::Separator();
+            bool open = ImGui::TreeNodeEx((void*)typeid(T).hash_code(), treeNodeFlags, name);
+            ImGui::PopStyleVar();
+
+            // --- Component Settings Menu ---
+            ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
+            ImGui::SameLine(contentRegionAvailable.x - lineHeight * 0.5f);
+            if (ImGui::Button("...", ImVec2{ lineHeight, lineHeight }))
+            {
+                ImGui::OpenPopup("ComponentSettings");
+            }
+
+            bool componentRemoved = false;
+            if (ImGui::BeginPopup("ComponentSettings"))
+            {
+                if (ImGui::MenuItem("Remove Component"))
+                {
+                    componentRemoved = true;
+                }
+                ImGui::EndPopup();
+            }
+
+            // If the collapsible header is open, draw the component's properties
+            if (open)
+            {
+                uiFunction(component);
+                ImGui::TreePop();
+            }
+
+            // Remove component if needed
+            if (componentRemoved)
+            {
+                // Avoid removal of Tag
+                if constexpr (!std::is_same_v<T, TagComponent>/* && !std::is_same_v<T, TransformComponent>*/)
+                {
+                    entity.RemoveComponent<T>();
+                }
+            }
+        }
+
+        // Helper for the "Add Component" dropdown
+        template<typename T>
+        void DisplayAddComponentEntry(const char* name, Entity entity)
+        {
+            if (!entity.HasComponent<T>())
+            {
+                if (ImGui::MenuItem(name))
+                {
+                    entity.AddComponent<T>();
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+        }
+
+        void RenderInspectorWindow(ECS* ecs)
+        {
+            PROFILE_SCOPE("Inspector");
+
+            ImGui::Begin("Inspector");
+
+            auto selectedEntities = ecs->GetResource<EditorResource>()->selectedEntities;
+            if (selectedEntities.empty())
+            {
+                ImGui::Text("No entity selected.");
+                ImGui::End();
+                return;
+            }
+
+            Entity selectedEnt = ecs->GetResource<EditorResource>()->selectedEntities[0];
+
+            // Handle the case where no entity is selected
+            if (!selectedEnt)
+            {
+                ImGui::Text("No entity selected.");
+                ImGui::End();
+                return;
+            }
+
+            auto rr = ecs->GetResource<RenderingResource>();
+            if (!rr)
+            {
+                RADIS_CRITICAL("No rendering resource in editor system");
+                ImGui::Text("No rendering resource found.");
+                ImGui::End();
+                return;
+            }
+
+            // --- Tag Component (Special case, always at the top) ---
+            if (selectedEnt.HasComponent<TagComponent>())
+            {
+                auto& tag = selectedEnt.GetComponent<TagComponent>();
+                ImGui::InputText("##Tag", &tag.Tag);
+            }
+
+            // --- Scrolling Component Region ---
+            // We create a child window to house the components. This allows the component list to
+            // scroll while the footer with the 'Add Component' and 'Add Entity' buttons remains fixed.
+            // The negative height tells ImGui to use all available space minus the specified amount.
+            const float footerHeight = ImGui::GetFrameHeightWithSpacing() * 1.1f;
+            ImGui::BeginChild("ComponentsRegion", ImVec2(0, -footerHeight), false, ImGuiWindowFlags_HorizontalScrollbar);
+
+            DrawComponentUI<TransformComponent>("Transform", selectedEnt, [](auto& component)
+            {
+                // Displaying rotation in degrees
+                glm::vec3 rotationDegrees = glm::degrees(component.Rotation);
+
+                ImGui::DragFloat3("Translation", glm::value_ptr(component.Translation), 0.1f);
+                if (ImGui::DragFloat3("Rotation", glm::value_ptr(rotationDegrees), 0.1f))
+                {
+                    component.Rotation = glm::radians(rotationDegrees);
+                }
+                ImGui::DragFloat3("Scale", glm::value_ptr(component.Scale), 0.1f);
+            });
+
+            DrawComponentUI<CameraComponent>("CameraComponent", selectedEnt, [](auto& component)
+            {
+                // Displaying rotation in degrees
+                ImGui::DragFloat("FOV", &component.FOV, 0.1f, 1.0f, 120.0f);
+                ImGui::DragFloat("Near", &component.Near, 0.01f, 0.01f, 100.0f);
+                ImGui::DragFloat("Far", &component.Far, 1.0f, 10.0f, 10000.0f);
+                ImGui::DragFloat("Move Speed", &component.MoveSpeed, 0.1f, 0.1f, 100.0f);
+                ImGui::DragFloat("Mouse Sensitivity", &component.MouseSensitivity, 0.01f, 0.01f, 10.0f);
+                ImGui::DragFloat("Yaw", &component.Yaw, 0.1f, -360.0f, 360.0f);
+                ImGui::DragFloat("Pitch", &component.Pitch, 0.1f, -89.0f, 89.0f);
+            });
+
+            DrawComponentUI<ModelComponent>("Model", selectedEnt, [&](ModelComponent& component)
+            {
+                const std::vector<std::string> modelExtensions = { ".fbx", ".glb", ".obj", ".gltf" };
+                std::vector<std::string> modelFiles = GetFilesWithExtensions("Assets/Models/", modelExtensions);
+                modelFiles.push_back("Assets/Models/TravisLocomotion/TravisLocomotion.fbx"); // Extra
+
+                auto rr = ecs->GetResource<RenderingResource>();
+                auto& mc = rr->modelLibrary;
+
+                Model* currentModel = mc->GetModel(component.ModelPath);
+                std::string currPath = currentModel ? currentModel->GetName() : "None";
+
+                if (ImGui::BeginCombo("Model", currPath.c_str()))
+                {
+                    for (int i = 0; i < modelFiles.size(); ++i)
+                    {
+                        const std::string& modelPath = modelFiles[i];
+                        const bool isSelected = currPath == modelPath;
+                        if (ImGui::Selectable(modelPath.c_str(), isSelected))
+                        {
+                            std::string lowerModelPath = modelPath;
+                            std::transform(lowerModelPath.begin(), lowerModelPath.end(), lowerModelPath.begin(), ::tolower);
+
+                            component.ModelPath = lowerModelPath;
+                        }
+                        if (isSelected)
+                        {
+                            ImGui::SetItemDefaultFocus();
+                        }
+
+                    }
+
+                    ImGui::EndCombo();
+                }
+
+                //ImGui::InputText("Model Path", &component.ModelPath);
+
+                if (ImGui::BeginDragDropTarget())
+                {
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Model"))
+                    {
+                        std::string path = std::string((char*)payload->Data, payload->DataSize - 1); // -1 to remove null terminator
+                        component.ModelPath = path;
+                    }
+
+                    ImGui::EndDragDropTarget();
+                }
+
+                ImGui::ColorEdit4("Tint Color", glm::value_ptr(component.tintColor));
+
+                // Checkbox with slider + input field for metallic and roughness overrides
+                ImGui::Checkbox("Override Metallic", &component.useMetallicOverride);
+                if (component.useMetallicOverride)
+                {
+                    ImGui::DragFloat("Metallic Override", &component.metallicOverride, 0.01f, 0.0f, 1.0f);
+                }
+                ImGui::Checkbox("Override Roughness", &component.useRoughnessOverride);
+                if (component.useRoughnessOverride)
+                {
+                    ImGui::DragFloat("Roughness Override", &component.roughnessOverride, 0.01f, 0.0f, 1.0f);
+                }
+            });
+
+            DrawComponentUI<AnimationComponent>("Animation", selectedEnt, [&](AnimationComponent& component)
+            {
+                auto& animationLibrary = rr->animationLibrary;
+                static int selectedAnimationIndex = -1;
+
+                Entity ent(&ecs->GetRegistry(), selectedEnt);
+                bool hasModel = ent.HasComponent<ModelComponent>();
+
+                if (!hasModel)
+                {
+                    ImGui::Text("No model assigned to entity for animations!");
+                    return;
+                }
+
+                const auto& mc = ent.GetComponent<ModelComponent>();
+                Model* model = rr->modelLibrary->GetModel(mc.ModelPath);
+                if (!model)
+                {
+                    ImGui::Text("Invalid model for animations!");
+                    return;
+                }
+
+                const std::string animationsPath = model->GetDir();
+                const std::vector<std::string> animationExtensions = { ".fbx", ".glb" };
+                auto animationFiles = GetFilesWithExtensions(animationsPath, animationExtensions);
+
+                // --- Animation Selection Dropdown ---
+                const auto& animName = animationLibrary->GetAnimationName(component.AnimationIndex);
+                std::string cutName = animName;
+                if (animName.find('|') != std::string::npos)
+                {
+                    cutName = animName.substr(animName.find('|') + 1);
+                }
+
+                if (ImGui::BeginCombo("Animation", cutName.c_str()))
+                {
+                    for (int i = 0; i < animationFiles.size(); ++i)
+                    {
+                        const bool isSelected = (selectedAnimationIndex == i);
+                        if (ImGui::Selectable(animationFiles[i].c_str(), isSelected))
+                        {
+                            selectedAnimationIndex = i;
+
+                            // remove the first part up to the "|" from animName
+                            uint32_t animationIndex = animationLibrary->GetAnimationIndex(model->GetName(), animationFiles[i]);
+                            component.AnimationIndex = animationIndex;
+
+                            if (animationIndex == AnimationLibrary::INVALID_ANIMATION_INDEX)
+                            {
+                                std::string newName = animationFiles[i];
+                                uint32_t newIndex = animationLibrary->AddAnimation(animationsPath + newName, model);
+                                component.AnimationIndex = newIndex;
+                            }
+                        }
+                        if (isSelected)
+                        {
+                            ImGui::SetItemDefaultFocus();
+                        }
+                    }
+                    ImGui::EndCombo();
+                }
+
+                ImGui::InputInt("Animation Index", (int*)&component.AnimationIndex);
+                ImGui::Checkbox("In Place", &component.inPlace);
+                ImGui::Checkbox("Is Playing", &component.IsPlaying);
+                ImGui::DragFloat("Animation Time", &component.AnimationTime, 0.05f, 0.0f, FLT_MAX);
+            });
+
+            DrawComponentUI<LightComponent>("Light", selectedEnt, [](LightComponent& component)
+            {
+                ImGui::ColorEdit3("Light Color", glm::value_ptr(component.Color));
+                ImGui::DragFloat("Light Intensity", &component.Intensity, 0.1f, 0.0f, 100.0f);
+                ImGui::DragFloat3("Light Direction", glm::value_ptr(component.Direction), 0.1f);
+                ImGui::DragFloat("Light Radius", &component.Radius, 0.1f, 0.0f, 100.0f);
+                ImGui::DragFloat("Inner Cone", &component.InnerCone, 0.01f, 0.0f, glm::pi<float>());
+                ImGui::DragFloat("Outer Cone", &component.OuterCone, 0.01f, 0.0f, glm::pi<float>());
+                const char* lightTypes[] = { "DIRECTIONAL", "POINT", "SPOT" };
+                int currentType = static_cast<int>(component.Type);
+                if (ImGui::Combo("Light Type", &currentType, lightTypes, IM_ARRAYSIZE(lightTypes)))
+                {
+                    component.Type = static_cast<LightComponent::LightType>(currentType);
+                }
+            });
+
+            DrawComponentUI<SoftBodyComponent>("Soft Body", selectedEnt, [&](SoftBodyComponent& component)
+            {
+                const auto& particles = component.particles;
+                const auto& springs = component.springs;
+
+                // ------------------------------------------------------------
+                // Summary / read-only info
+                // ------------------------------------------------------------
+                ImGui::Text("Particles: %zu", particles.size());
+                ImGui::SameLine();
+                ImGui::Text("Springs: %zu", springs.size());
+
+                if (component.gridNx > 0 && component.gridNy > 0 && component.gridNz > 0)
+                {
+                    ImGui::Text("Grid: %u x %u x %u",
+                        component.gridNx, component.gridNy, component.gridNz);
+                }
+
+                // Simple runtime stats
+                std::size_t anchorCount = 0;
+                float maxSpeed = 0.0f;
+                float avgSpeed = 0.0f;
+
+                if (!particles.empty())
+                {
+                    float speedSum = 0.0f;
+                    for (const SoftBodyParticle& p : particles)
+                    {
+                        if (p.isAnchor)
+                            ++anchorCount;
+
+                        float speed = glm::length(p.velocity);
+                        speedSum += speed;
+                        if (speed > maxSpeed)
+                            maxSpeed = speed;
+                    }
+                    avgSpeed = speedSum / static_cast<float>(particles.size());
+                }
+
+                ImGui::Text("Anchors: %zu", anchorCount);
+                ImGui::Text("Avg speed: %.4f  |  Max speed: %.4f", avgSpeed, maxSpeed);
+
+                ImGui::SeparatorText("Simulation");
+
+                // ------------------------------------------------------------
+                // Simulation parameters
+                // ------------------------------------------------------------
+                ImGui::DragFloat3("Gravity", glm::value_ptr(component.gravity), 0.1f, -50.0f, 50.0f);
+                ImGui::DragFloat("Global Stiffness", &component.globalStiffness, 1.0f, 0.0f, 2000.0f);
+                ImGui::DragFloat("Global Damping", &component.globalDamping, 0.1f, 0.0f, 200.0f);
+
+                if (ImGui::Button("Apply Global Stiffness/Damping to Springs"))
+                {
+                    for (auto& s : component.springs)
+                    {
+                        s.stiffness = component.globalStiffness;
+                        s.damping = component.globalDamping;
+                    }
+                }
+
+                ImGui::SameLine();
+                if (ImGui::Button("Zero All Velocities"))
+                {
+                    for (auto& p : component.particles) p.velocity = glm::vec3(0.0f);
+                }
+
+                // ------------------------------------------------------------
+                // Anchors
+                // ------------------------------------------------------------
+                ImGui::SeparatorText("Anchors");
+
+                auto& particlesNonConst = component.particles;
+
+                // ---------- Global anchor offset (move all anchors together) ----------
+                ImGui::TextDisabled("Move all anchor targets together (relative offset).");
+
+                glm::vec3 newOffset = component.globalOffset;
+
+                if (ImGui::DragFloat3("Global Anchor Offset", glm::value_ptr(newOffset), 0.01f))
+                {
+                    glm::vec3 delta = newOffset - component.globalOffset;
+                    component.globalOffset = newOffset;
+
+                    for (auto& p : particlesNonConst)
+                    {
+                        if (!p.isAnchor) continue;
+
+                        p.anchorPosition += delta;
+
+                        // For static anchors, keep particle snapped to its target
+                        if (p.inverseMass == 0.0f)
+                        {
+                            p.position = p.anchorPosition;
+                            p.velocity = glm::vec3(0.0f);
+                        }
+                    }
+                }
+
+                if (ImGui::Button("Reset Global Anchor Offset"))
+                {
+                    glm::vec3 delta = -component.globalOffset;
+                    component.globalOffset = glm::vec3(0.0f);
+
+                    for (auto& p : particlesNonConst)
+                    {
+                        if (!p.isAnchor) continue;
+
+                        p.anchorPosition += delta;
+
+                        if (p.inverseMass == 0.0f)
+                        {
+                            p.position = p.anchorPosition;
+                            p.velocity = glm::vec3(0.0f);
+                        }
+                    }
+                }
+
+                // ---------- Per-anchor positions (collapsible list) ----------
+                ImGui::SeparatorText("Per-Anchor Positions");
+
+                // Count anchors
+                std::size_t totalAnchors = 0;
+                for (const auto& p : particlesNonConst)
+                    if (p.isAnchor) ++totalAnchors;
+
+                if (totalAnchors == 0)
+                {
+                    ImGui::TextDisabled("No anchors in this soft body.");
+                    return;
+                }
+
+                // Scrollable child so we don't blow up the panel for big soft bodies.
+                ImGui::BeginChild("AnchorsList", ImVec2(0, 220.0f), true);
+
+                std::size_t anchorIndex = 0;
+                for (std::size_t i = 0; i < particlesNonConst.size(); ++i)
+                {
+                    SoftBodyParticle& p = particlesNonConst[i];
+                    if (!p.isAnchor)
+                        continue;
+
+                    ImGui::PushID(static_cast<int>(i));
+
+                    // Label example: "Anchor 0 (particle 12)"
+                    std::string header =
+                        "Anchor " + std::to_string(anchorIndex) +
+                        " (particle " + std::to_string(i) + ")";
+
+                    if (ImGui::TreeNode(header.c_str()))
+                    {
+                        // Editable anchor target position
+                        glm::vec3 anchorPos = p.anchorPosition;
+                        if (ImGui::DragFloat3("Anchor Target", glm::value_ptr(anchorPos), 0.01f))
+                        {
+                            p.anchorPosition = anchorPos;
+
+                            // Snap static anchors to their new target
+                            if (p.inverseMass == 0.0f)
+                            {
+                                p.position = p.anchorPosition;
+                                p.velocity = glm::vec3(0.0f);
+                            }
+                        }
+
+                        ImGui::TreePop();
+                    }
+
+                    ImGui::Separator();
+                    ImGui::PopID();
+
+                    ++anchorIndex;
+                }
+
+                ImGui::EndChild();
+            });
+
+            ImGui::EndChild(); // End of ComponentsRegion
+
+            // --- Fixed Footer Region ---
+            ImGui::Separator();
+
+            // Button to add a new component to the selected entity
+            if (ImGui::Button("Add Component", ImVec2(-1, 0)))
+            {
+                ImGui::OpenPopup("AddComponentPopup");
+            }
+
+            if (ImGui::BeginPopup("AddComponentPopup"))
+            {
+                DisplayAddComponentEntry<ModelComponent>("Model", selectedEnt);
+                DisplayAddComponentEntry<AnimationComponent>("Animation", selectedEnt);
+                DisplayAddComponentEntry<LightComponent>("Light", selectedEnt);
+                // Add more component types here!
+                ImGui::EndPopup();
+            }
+
+            ImGui::End(); // End of Inspector window
+        }
+    }
+}
