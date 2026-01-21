@@ -159,7 +159,7 @@ namespace Radis
         mLightData.clear();
         const auto& debugData = DebugDrawResource::GetInstanceData();
         
-        if (!rr->useRaytracing)
+        if (rr->renderMode != RenderMode::Raytracing)
         {
             if (mInstanceData.size() + debugData.size() < InstanceUniforms::MAX_INSTANCES)
             {
@@ -255,7 +255,7 @@ namespace Radis
             auto& rg = rr->renderGraph;
             if (Engine::GetEditorEnabled()) 
             {
-                if (rr->useRaytracing)
+                if (rr->renderMode == RenderMode::Raytracing)
                 {
                     rg->AddPass(
                         "ScenePass",

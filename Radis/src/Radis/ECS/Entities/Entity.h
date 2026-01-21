@@ -30,7 +30,7 @@ namespace Radis {
         }
 
         template<typename T>
-        bool HasComponent() {
+        bool HasComponent() const {
             return entities->all_of<T>(handle);
         }
 

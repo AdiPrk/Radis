@@ -1,5 +1,6 @@
 #include <PCH/pch.h>
 #include "RenderGraph.h"
+#include "Graphics/Vulkan/Texture/VKTexture.h"
 
 namespace Radis
 {
@@ -11,6 +12,17 @@ namespace Radis
     void RGPassBuilder::reads(const std::string& handleName)
     {
         m_pass.readTargets.push_back(handleName);
+    }
+
+    RGResourceHandle RenderGraph::ImportTexture(const char* name, VKTexture* tex, bool backBuffer)
+    {
+        if (!tex)
+        {
+            RADIS_CRITICAL("RenderGraph::ImportTexture: VKTexture pointer is null for resource '{}'", name);
+            return { UINT32_MAX };
+        }
+
+        ImportTexture(name, tex->GetImage(), tex->GetImageView(), tex->GetExtent(), tex->GetImageFormat(), backBuffer);
     }
 
     RGResourceHandle RenderGraph::ImportTexture(const char* name, VkImage image, VkImageView view, VkExtent2D extent, VkFormat format, bool backBuffer)
@@ -27,6 +39,11 @@ namespace Radis
         mResources.push_back(resource);
         mResourceLookup[name] = static_cast<uint32_t>(mResources.size() - 1);
         return { static_cast<uint32_t>(mResources.size() - 1) };
+    }
+
+    RGResourceHandle RenderGraph::ImportBackbuffer(const char* name, VKTexture* tex)
+    {
+        return ImportTexture(name, tex, true);
     }
 
     RGResourceHandle RenderGraph::ImportBackbuffer(const char* name, VkImage image, VkImageView view, VkExtent2D extent, VkFormat format)

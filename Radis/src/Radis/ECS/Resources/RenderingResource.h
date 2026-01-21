@@ -3,6 +3,7 @@
 #include "IResource.h"
 #include "Graphics/Vulkan/Core/AccelerationStructures.h"
 #include "Graphics/OpenGL/GLShader.h"
+#include "Graphics/Common/RenderMode.h"
 
 namespace Radis
 {
@@ -50,19 +51,30 @@ namespace Radis
 
         // Scene textures ----------------
         VkImage sceneImage{ VK_NULL_HANDLE };
-        VmaAllocation sceneImageAllocation{ VK_NULL_HANDLE };
         VkImageView sceneImageView{ VK_NULL_HANDLE };
         
         VkImage mDepthImage{ VK_NULL_HANDLE };
-        VmaAllocation mDepthImageAllocation{ VK_NULL_HANDLE };
         VkImageView mDepthImageView{ VK_NULL_HANDLE };
 
         VkDescriptorSet sceneTextureDescriptorSet{ VK_NULL_HANDLE };
         // --------------------------------
 
+        // G-Buffer textures ----------------
+        VkImage gAlbedoImage{ VK_NULL_HANDLE };
+        VkImage gNormalImage{ VK_NULL_HANDLE };
+        VkImage gPBRImage{ VK_NULL_HANDLE };
+        VkImage gEmissiveImage{ VK_NULL_HANDLE };
+        VkImageView gAlbedoImageView{ VK_NULL_HANDLE };
+        VkImageView gNormalImageView{ VK_NULL_HANDLE };
+        VkImageView gPBRImageView{ VK_NULL_HANDLE };
+        VkImageView gEmissiveImageView{ VK_NULL_HANDLE };
+        // --------------------------------
+
         // Pipelines
         std::unique_ptr<Pipeline> pipeline;
         std::unique_ptr<Pipeline> wireframePipeline;
+        std::unique_ptr<Pipeline> deferredPipeline;
+        std::unique_ptr<Pipeline> deferredWireframePipeline;
         std::unique_ptr<RaytracingPipeline> raytracingPipeline;
         // -----------
 
@@ -76,8 +88,9 @@ namespace Radis
         AccelerationStructure tlasAccel;              // Top Level Acceleration Structure
         // --
 
+        // Render Mode
+        RenderMode renderMode = RenderMode::Forward;
         bool renderWireframe = false;
-        bool useRaytracing = false;
 
         bool supportsVulkan = true;
 

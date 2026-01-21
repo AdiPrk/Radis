@@ -386,6 +386,7 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Radis\Graphics\Common\Path\CubicSpline.h" />
     <ClInclude Include="src\Radis\Graphics\Common\Path\PathFollower.h" />
     <ClInclude Include="src\Radis\Graphics\Common\Path\SpeedControl.h" />
+    <ClInclude Include="src\Radis\Graphics\Common\RenderMode.h" />
     <ClInclude Include="src\Radis\Graphics\Common\TextureLibrary.h" />
     <ClInclude Include="src\Radis\Graphics\Common\TextureLoader.h" />
     <ClInclude Include="src\Radis\Graphics\Common\UnifiedMesh.h" />

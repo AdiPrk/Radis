@@ -156,8 +156,7 @@ namespace Radis
             // Create scene and depth textures
             textureLibrary->CreateTexture(
                 "SceneTexture",                 // name
-                extent.width,                   // width
-                extent.height,                  // height
+                extent.width, extent.height,    // width/height
                 device->GetLinearFormat(),      // format
                 VK_IMAGE_TILING_OPTIMAL,        // tiling
                 VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, // usage
@@ -165,12 +164,43 @@ namespace Radis
             );
             textureLibrary->CreateTexture(
                 "SceneDepth",                 // name
-                extent.width,                 // width
-                extent.height,                // height
+                extent.width, extent.height,  // width/height
                 swapChain->FindDepthFormat(), // format
                 VK_IMAGE_TILING_OPTIMAL,      // tiling
                 VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, // usage
                 VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL // final layout
+            );
+            textureLibrary->CreateTexture(
+                "gAlbedo",
+                extent.width, extent.height,
+                VK_FORMAT_R8G8B8A8_SRGB,
+                VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            );
+            textureLibrary->CreateTexture(
+                "gNormal",
+                extent.width, extent.height,
+                VK_FORMAT_R16G16B16A16_SFLOAT,
+                VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            );
+            textureLibrary->CreateTexture(
+                "gPBR",
+                extent.width, extent.height,
+                VK_FORMAT_R8G8B8A8_UNORM,
+                VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            );
+            textureLibrary->CreateTexture(
+                "gEmissive",
+                extent.width, extent.height,
+                VK_FORMAT_R8G8B8A8_UNORM,
+                VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             );
         }
 

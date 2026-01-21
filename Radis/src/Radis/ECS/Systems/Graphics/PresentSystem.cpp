@@ -35,6 +35,10 @@ namespace Radis
                 tl->ResizeStorageImage("RTHeatmapImage_1", extent.width, extent.height);
                 tl->ResizeTexture("SceneTexture", extent.width, extent.height);
                 tl->ResizeTexture("SceneDepth", extent.width, extent.height);
+                tl->ResizeTexture("gAlbedo", extent.width, extent.height);
+                tl->ResizeTexture("gNormal", extent.width, extent.height);
+                tl->ResizeTexture("gPBR", extent.width, extent.height);
+                tl->ResizeTexture("gEmissive", extent.width, extent.height);
             }
         }
 	}
@@ -73,6 +77,10 @@ namespace Radis
                 tl->ResizeStorageImage("RTHeatmapImage_1", extent.width, extent.height);
                 tl->ResizeTexture("SceneTexture", extent.width, extent.height);
                 tl->ResizeTexture("SceneDepth", extent.width, extent.height);
+                tl->ResizeTexture("gAlbedo", extent.width, extent.height);
+                tl->ResizeTexture("gNormal", extent.width, extent.height);
+                tl->ResizeTexture("gPBR", extent.width, extent.height);
+                tl->ResizeTexture("gEmissive", extent.width, extent.height);
             }
             return;
         }
@@ -108,26 +116,14 @@ namespace Radis
         auto tl = rr->textureLibrary.get();
         if (Engine::GetEditorEnabled()) 
         {
-            VKTexture* tex = (VKTexture*)tl->GetTexture("SceneTexture");
-            rg->ImportTexture(
-                "SceneColor",
-                tex->GetImage(),//rr->sceneImage,
-                tex->GetImageView(),//rr->sceneImageView,
-                tex->GetExtent(), //rr->swapChain->GetSwapChainExtent(),
-                tex->GetImageFormat() //rr->swapChain->GetImageFormat()
-            );
+            rg->ImportTexture("SceneColor", (VKTexture*)tl->GetTexture("SceneTexture"));
         }
 
-        {
-            VKTexture* tex = (VKTexture*)tl->GetTexture("SceneDepth");
-            rg->ImportTexture(
-                "SceneDepth",
-                tex->GetImage(),
-                tex->GetImageView(),
-                tex->GetExtent(),
-                tex->GetImageFormat()
-            );
-        }
+        rg->ImportTexture("SceneDepth", (VKTexture*)tl->GetTexture("SceneDepth"));
+        rg->ImportTexture("gAlbedo", (VKTexture*)tl->GetTexture("gAlbedo"));
+        rg->ImportTexture("gNormal", (VKTexture*)tl->GetTexture("gNormal"));
+        rg->ImportTexture("gPBR", (VKTexture*)tl->GetTexture("gPBR"));
+        rg->ImportTexture("gEmissive", (VKTexture*)tl->GetTexture("gEmissive"));
 
         rg->ImportBackbuffer(
             "BackBuffer",

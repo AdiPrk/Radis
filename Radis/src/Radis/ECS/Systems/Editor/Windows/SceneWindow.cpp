@@ -26,7 +26,7 @@ namespace Radis
             void* sceneTexturePtr;
             if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
             {
-                if (rr->useRaytracing)
+                if (rr->renderMode == RenderMode::Raytracing)
                 {
                     uint32_t frameIndex = rr->currentFrameIndex;
                     if (er->renderRaytracingHeatmap)

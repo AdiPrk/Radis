@@ -82,9 +82,18 @@ namespace Radis
         }
         
         ImGui::BeginDisabled(Engine::GetGraphicsAPI() != GraphicsAPI::Vulkan);
-        ImGui::Checkbox("Raytracing", &rr->useRaytracing);
+
+        ImGui::Text("Render Mode:");
+        const char* renderModeItems[] = { "Forward", "Deferred", "Raytracing" };
+        int currentRenderMode = static_cast<int>(rr->renderMode);
+        if (ImGui::Combo("##RenderMode", &currentRenderMode, renderModeItems, IM_ARRAYSIZE(renderModeItems)))
+        {
+            rr->renderMode = static_cast<RenderMode>(currentRenderMode);
+        }
+
         ImGui::EndDisabled();
-        ImGui::BeginDisabled(!rr->useRaytracing);
+
+        ImGui::BeginDisabled(rr->renderMode != RenderMode::Raytracing);
         ImGui::Checkbox("Raytracing Heatmap Estimation", &er->renderRaytracingHeatmap);
         ImGui::EndDisabled();
         ImGui::End();
