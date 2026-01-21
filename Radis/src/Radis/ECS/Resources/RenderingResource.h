@@ -90,7 +90,7 @@ namespace Radis
         // --
 
         // Render Mode
-        RenderMode renderMode = RenderMode::Forward;
+        RenderMode renderMode = RenderMode::Deferred;
         bool renderWireframe = false;
 
         bool supportsVulkan = true;

@@ -62,41 +62,23 @@ namespace Radis
         {
             PROFILE_SCOPE("Windows");
 
-            EditorWindows::RenderSceneWindow(ecs);
-            EditorWindows::RenderEntitiesWindow(ecs);
-            EditorWindows::RenderTextureBrowser(ecs);
-            EditorWindows::RenderProfilerWindow();
-            EditorWindows::RenderMemoryWindow();
-            EditorWindows::UpdateAssetsWindow(tl.get());
-            ChatWindow::Get().Render();
-            EditorWindows::RenderInspectorWindow(ecs);
+            if (EditorWindows::RenderTextureBrowser(ecs))
+            {
+                float flipY = static_cast<float>(Engine::GetGraphicsAPI() != GraphicsAPI::OpenGL);
+                EditorWindows::RenderFullscreenViewer(tl.get(), flipY);
+            }
+            else 
+            {
+                EditorWindows::RenderSceneWindow(ecs);
+                EditorWindows::RenderEntitiesWindow(ecs);
+                EditorWindows::RenderProfilerWindow();
+                EditorWindows::RenderMemoryWindow();
+                EditorWindows::UpdateAssetsWindow(tl.get());
+                ChatWindow::Get().Render();
+                EditorWindows::RenderInspectorWindow(ecs);
+                RenderDebugWindow();
+            }
         }
-
-
-        ImGui::Begin("Debug");
-        ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
-        ImGui::Checkbox("Wireframe", &rr->renderWireframe);
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
-        {
-            glPolygonMode(GL_FRONT_AND_BACK, rr->renderWireframe ? GL_LINE : GL_FILL);
-        }
-        
-        ImGui::BeginDisabled(Engine::GetGraphicsAPI() != GraphicsAPI::Vulkan);
-
-        ImGui::Text("Render Mode:");
-        const char* renderModeItems[] = { "Forward", "Deferred", "Raytracing" };
-        int currentRenderMode = static_cast<int>(rr->renderMode);
-        if (ImGui::Combo("##RenderMode", &currentRenderMode, renderModeItems, IM_ARRAYSIZE(renderModeItems)))
-        {
-            rr->renderMode = static_cast<RenderMode>(currentRenderMode);
-        }
-
-        ImGui::EndDisabled();
-
-        ImGui::BeginDisabled(rr->renderMode != RenderMode::Raytracing);
-        ImGui::Checkbox("Raytracing Heatmap Estimation", &er->renderRaytracingHeatmap);
-        ImGui::EndDisabled();
-        ImGui::End();
 
         // Handle mouse lock for ImGui windows (excluding "Viewport")
         {
@@ -200,6 +182,37 @@ namespace Radis
         if      (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan) ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
         else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL) ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	}
+
+    void EditorSystem::RenderDebugWindow()
+    {
+        auto rr = ecs->GetResource<RenderingResource>();
+        auto er = ecs->GetResource<EditorResource>();
+
+        ImGui::Begin("Debug");
+        ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+        ImGui::Checkbox("Wireframe", &rr->renderWireframe);
+        if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
+        {
+            glPolygonMode(GL_FRONT_AND_BACK, rr->renderWireframe ? GL_LINE : GL_FILL);
+        }
+
+        ImGui::BeginDisabled(Engine::GetGraphicsAPI() != GraphicsAPI::Vulkan);
+
+        ImGui::Text("Render Mode:");
+        const char* renderModeItems[] = { "Forward", "Deferred", "Raytracing" };
+        int currentRenderMode = static_cast<int>(rr->renderMode);
+        if (ImGui::Combo("##RenderMode", &currentRenderMode, renderModeItems, IM_ARRAYSIZE(renderModeItems)))
+        {
+            rr->renderMode = static_cast<RenderMode>(currentRenderMode);
+        }
+
+        ImGui::EndDisabled();
+
+        ImGui::BeginDisabled(rr->renderMode != RenderMode::Raytracing);
+        ImGui::Checkbox("Raytracing Heatmap Estimation", &er->renderRaytracingHeatmap);
+        ImGui::EndDisabled();
+        ImGui::End();
+    }
 
     void EditorSystem::RenderMainMenuBar()
     {
