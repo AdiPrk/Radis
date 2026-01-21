@@ -29,7 +29,6 @@ namespace Radis
 			dynamicStateEnables(),
             pipeLineLayout(nullptr),
             renderPass(nullptr),
-            colorFormat(VK_FORMAT_UNDEFINED),
             depthFormat(VK_FORMAT_UNDEFINED),
             subpass(0)
 		{
@@ -46,7 +45,7 @@ namespace Radis
 		std::vector<VkDynamicState> dynamicStateEnables;
 		VkPipelineLayout pipeLineLayout = nullptr;
 		VkRenderPass renderPass = nullptr;
-		VkFormat colorFormat;
+		std::vector<VkFormat> colorFormats;
 		VkFormat depthFormat;
 		uint32_t subpass = 0;
 	};
@@ -58,8 +57,9 @@ namespace Radis
 		inline static const std::string ShaderDir = "Assets/shaders/";
 		inline static const std::string SpvDir = "Assets/shaders/spv/";
 
-		Pipeline(Device& device, VkFormat colorFormat, VkFormat depthFormat, const std::vector<Uniform*>& uniforms, bool wireframe, const std::string& vertFile, const std::string& fragFile);
-		Pipeline(Device& device, VkFormat colorFormat, VkFormat depthFormat, const std::vector<Uniform*>& uniforms, bool wireframe, const std::string& vertFile, const std::string& fragFile, const std::string& tescFile, const std::string& teseFile);
+		Pipeline(Device& device, const std::vector<VkFormat>& colorFormats, VkFormat depthFormat, const std::vector<Uniform*>& uniforms, bool wireframe, const std::string& vertFile, const std::string& fragFile, bool useVertexInput = true);
+		Pipeline(Device& device, VkFormat colorFormat, VkFormat depthFormat, const std::vector<Uniform*>& uniforms, bool wireframe, const std::string& vertFile, const std::string& fragFile, bool useVertexInput = true);
+		Pipeline(Device& device, VkFormat colorFormat, VkFormat depthFormat, const std::vector<Uniform*>& uniforms, bool wireframe, const std::string& vertFile, const std::string& fragFile, const std::string& tescFile, const std::string& teseFile, bool useVertexInput = true);
 
 		void DestroyPipeline();
 		void Recreate();
@@ -72,6 +72,8 @@ namespace Radis
 		void Bind(VkCommandBuffer commandBuffer);
 
 		VkPipelineLayout& GetLayout() { return mPipelineLayout; };
+		const std::vector<VkFormat>& GetColorFormats() const { return mColorFormats; }
+		uint32_t GetColorAttachmentCount() const { return static_cast<uint32_t>(mColorFormats.size()); }
 
 	private:
 		void CreatePipelineLayout(const std::vector<Uniform*>& uniforms);
@@ -99,9 +101,10 @@ namespace Radis
 		std::string mSpvTesePath;
 
 		// Pipeline info
-        VkFormat mColorFormat;
+        std::vector<VkFormat> mColorFormats;
         VkFormat mDepthFormat;
         bool mIsWireframe;
+        bool mUseVertexInput = true;
         const std::vector<Uniform*>& mUniforms;
 	};
 }

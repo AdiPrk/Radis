@@ -251,42 +251,64 @@ namespace Radis
             rr->cameraUniform->SetUniformData(mInstanceData, 1, rr->currentFrameIndex); // Set Instance Data
             rr->cameraUniform->SetUniformData(mLightBuffer, 4, rr->currentFrameIndex);  // Set Light Data
 
+            if (rr->deferredLightingUniform)
+            {
+                rr->deferredLightingUniform->SetUniformData(camData, 0, rr->currentFrameIndex);      // Camera data
+                rr->deferredLightingUniform->SetUniformData(mLightBuffer, 6, rr->currentFrameIndex); // Light data
+            }
+
             // Add the scene render pass
             auto& rg = rr->renderGraph;
-            if (Engine::GetEditorEnabled()) 
+            std::string colorWriteTarget = Engine::GetEditorEnabled() ? "SceneColor" : "BackBuffer";
+
+            switch (rr->renderMode)
             {
-                if (rr->renderMode == RenderMode::Raytracing)
-                {
-                    rg->AddPass(
-                        "ScenePass",
-                        [&](RGPassBuilder& builder) {},
-                        std::bind(&RenderSystem::RaytraceSceneVK, this, std::placeholders::_1)
-                    );
-                }
-                else
-                {
-                    rg->AddPass(
-                        "ScenePass",
-                        [&](RGPassBuilder& builder) 
-                        {
-                            builder.writes("SceneColor");
-                            builder.writes("SceneDepth");
-                        },
-                        std::bind(&RenderSystem::RenderSceneVK, this, std::placeholders::_1)
-                    );
-                }
-            }
-            else
-            {
+            case RenderMode::Forward: {
                 rg->AddPass(
                     "ScenePass",
-                    [&](RGPassBuilder& builder) 
+                    [&](RGPassBuilder& builder)
                     {
-                        builder.writes("BackBuffer");
+                        builder.writes(colorWriteTarget);
                         builder.writes("SceneDepth");
                     },
                     std::bind(&RenderSystem::RenderSceneVK, this, std::placeholders::_1)
                 );
+                break;
+            }
+            case RenderMode::Deferred: {
+                rg->AddPass("GBufferPass",
+                    [&](RGPassBuilder& builder) {
+                        builder.writes("gAlbedo");
+                        builder.writes("gNormal");
+                        builder.writes("gPBR");
+                        builder.writes("gEmissive");
+                        builder.writes("SceneDepth");
+                    },
+                    std::bind(&RenderSystem::RenderSceneDeferredGeometryVK, this, std::placeholders::_1)
+                );
+
+                rg->AddPass("LightingPass",
+                    [&](RGPassBuilder& builder) {
+                        builder.reads("gAlbedo");
+                        builder.reads("gNormal");
+                        builder.reads("gPBR");
+                        builder.reads("gEmissive");
+                        builder.reads("SceneDepth");
+                        builder.writes("SceneColor");
+                    },
+                    std::bind(&RenderSystem::RenderSceneDeferredLightingVK, this, std::placeholders::_1)
+                );
+                
+                break;
+            }
+            case RenderMode::Raytracing: {
+                rg->AddPass(
+                    "ScenePass",
+                    [&](RGPassBuilder& builder) {},
+                    std::bind(&RenderSystem::RaytraceSceneVK, this, std::placeholders::_1)
+                );
+                break;
+            }
             }
         }
         else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
@@ -352,6 +374,101 @@ namespace Radis
                 ++baseIndex;
             }
         }
+    }
+
+    void RenderSystem::RenderSceneDeferredGeometryVK(VkCommandBuffer cmd)
+    {
+        auto rr = ecs->GetResource<RenderingResource>();
+        AnimationLibrary* al = rr->animationLibrary.get();
+        ModelLibrary* ml = rr->modelLibrary.get();
+
+        ScopedDebugLabel sceneDebugLabel(rr->device.get(), cmd, "Deferred G-Buffer Pass", glm::vec4(0.2f, 0.8f, 0.2f, 1.0f));
+
+        // Bind the G-Buffer pipeline
+        rr->gBufferPipeline->Bind(cmd);
+        VkPipelineLayout pipelineLayout = rr->gBufferPipeline->GetLayout();
+
+        // Bind the camera uniform (contains instance data, textures, etc.)
+        rr->cameraUniform->Bind(cmd, pipelineLayout, rr->currentFrameIndex);
+
+        // Set viewport and scissor
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(rr->swapChain->GetSwapChainExtent().width);
+        viewport.height = static_cast<float>(rr->swapChain->GetSwapChainExtent().height);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(cmd, 0, 1, &viewport);
+
+        VkRect2D scissor{ {0, 0}, rr->swapChain->GetSwapChainExtent() };
+        vkCmdSetScissor(cmd, 0, 1, &scissor);
+
+        auto& registry = ecs->GetRegistry();
+
+        // Bind the unified mesh (vertex + index buffers)
+        UnifiedMeshes* uMeshes = rr->modelLibrary->GetUnifiedMesh();
+        uMeshes->GetUnifiedMesh()->Bind(cmd);
+
+        int baseIndex = 0;
+
+        // Draw debug geometry (grid, etc.)
+        Model* cubeModel = ml->TryAddGetModel("Assets/Models/cube.obj");
+        if (cubeModel)
+        {
+            auto& cubeMeshData = uMeshes->GetMeshInfo(cubeModel->mMeshes[0]->GetID());
+            uint32_t debugDrawCount = DebugDrawResource::GetInstanceDataSize();
+            vkCmdDrawIndexed(cmd, cubeMeshData.indexCount, debugDrawCount, cubeMeshData.firstIndex, cubeMeshData.vertexOffset, baseIndex);
+            baseIndex += debugDrawCount;
+        }
+
+        // Draw all entities with ModelComponent
+        auto entityView = registry.view<ModelComponent, TransformComponent>();
+        for (auto& entityHandle : entityView)
+        {
+            Entity entity(&registry, entityHandle);
+            ModelComponent& mc = entity.GetComponent<ModelComponent>();
+            Model* model = rr->modelLibrary->GetModel(mc.ModelPath);
+            if (!model) continue;
+
+            for (auto& mesh : model->mMeshes)
+            {
+                auto& meshData = uMeshes->GetMeshInfo(mesh->GetID());
+                vkCmdDrawIndexed(cmd, meshData.indexCount, 1, meshData.firstIndex, meshData.vertexOffset, baseIndex);
+                ++baseIndex;
+            }
+        }
+    }
+
+    void RenderSystem::RenderSceneDeferredLightingVK(VkCommandBuffer cmd)
+    {
+        auto rr = ecs->GetResource<RenderingResource>();
+
+        ScopedDebugLabel sceneDebugLabel(rr->device.get(), cmd, "Deferred Lighting Pass", glm::vec4(0.8f, 0.8f, 0.2f, 1.0f));
+
+        // Bind the deferred lighting pipeline
+        rr->deferredLightingPipeline->Bind(cmd);
+        VkPipelineLayout pipelineLayout = rr->deferredLightingPipeline->GetLayout();
+
+        // Bind the deferred lighting uniform (contains G-Buffer textures and light data)
+        rr->deferredLightingUniform->Bind(cmd, pipelineLayout, rr->currentFrameIndex);
+
+        // Set viewport and scissor
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(rr->swapChain->GetSwapChainExtent().width);
+        viewport.height = static_cast<float>(rr->swapChain->GetSwapChainExtent().height);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(cmd, 0, 1, &viewport);
+
+        VkRect2D scissor{ {0, 0}, rr->swapChain->GetSwapChainExtent() };
+        vkCmdSetScissor(cmd, 0, 1, &scissor);
+
+        // Draw fullscreen triangle (3 vertices, 1 instance, no vertex buffer needed)
+        // The vertex shader generates the triangle procedurally using gl_VertexIndex
+        vkCmdDraw(cmd, 3, 1, 0, 0);
     }
 
     void RenderSystem::RenderSceneGL()

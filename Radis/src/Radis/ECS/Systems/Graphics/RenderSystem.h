@@ -20,6 +20,8 @@ namespace Radis
 
     private:
         void RenderSceneVK(VkCommandBuffer cmd);
+        void RenderSceneDeferredGeometryVK(VkCommandBuffer cmd);
+        void RenderSceneDeferredLightingVK(VkCommandBuffer cmd);
         void RaytraceSceneVK(VkCommandBuffer cmd);
         void RenderSceneGL();
 

@@ -65,7 +65,7 @@ namespace Radis
         {
             GLShader::SetupUBO();
             shader = std::make_unique<GLShader>();
-            shader->load("Assets/shaders/verysimple.vert", "Assets/shaders/verysimple.frag");
+            shader->load("Assets/shaders/foward.vert", "Assets/shaders/foward.frag");
 
             FrameBufferSpecification fbSpec;
             fbSpec.width = 1280;
@@ -213,35 +213,25 @@ namespace Radis
 
             cameraUniform = std::make_unique<Uniform>(*device, *this, cameraUniformSettings);
             rtUniform = std::make_unique<Uniform>(*device, *this, rayTracingUniformSettings);
+            deferredLightingUniform = std::make_unique<Uniform>(*device, *this, deferredLightingUniformSettings);
 
-            std::vector<Uniform*> unis{
-                cameraUniform.get(),
-            };
-            std::vector<Uniform*> rtunis{
-                cameraUniform.get(),
-                rtUniform.get()
-            };
+            std::vector<Uniform*> unis{ cameraUniform.get() };
+            std::vector<Uniform*> rtunis{ cameraUniform.get(), rtUniform.get() };
+            std::vector<Uniform*> deferredLightingUnis{ deferredLightingUniform.get() };
 
-            pipeline = std::make_unique<Pipeline>(
-                *device,
-                swapChain->GetImageFormat(), swapChain->FindDepthFormat(),
-                unis,
-                false,
-                "verysimple.vert", "verysimple.frag"
-            );
+            VkFormat imageFormat = swapChain->GetImageFormat();
+            VkFormat depthFormat = swapChain->FindDepthFormat();
+            VkFormat albedoFormat = VK_FORMAT_R8G8B8A8_SRGB;
+            VkFormat normalFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+            VkFormat pbrFormat = VK_FORMAT_R8G8B8A8_UNORM;
+            VkFormat emissiveFormat = VK_FORMAT_R8G8B8A8_UNORM;
+            std::vector<VkFormat> gBufferFormats = { albedoFormat, normalFormat, pbrFormat, emissiveFormat };
 
-            wireframePipeline = std::make_unique<Pipeline>(
-                *device,
-                swapChain->GetImageFormat(), swapChain->FindDepthFormat(),
-                unis,
-                true,
-                "verysimple.vert", "verysimple.frag"
-            );
-
-            raytracingPipeline = std::make_unique<RaytracingPipeline>(
-                *device,
-                rtunis
-            );
+            pipeline = std::make_unique<Pipeline>(*device, imageFormat, depthFormat, unis, false, "forward.vert", "forward.frag");
+            wireframePipeline = std::make_unique<Pipeline>(*device, imageFormat, depthFormat, unis, true, "forward.vert", "forward.frag");
+            gBufferPipeline = std::make_unique<Pipeline>(*device, gBufferFormats, depthFormat, unis, false, "deferred.vert", "deferred.frag");
+            deferredLightingPipeline = std::make_unique<Pipeline>(*device, imageFormat, VK_FORMAT_UNDEFINED, deferredLightingUnis, false, "deferredLight.vert", "deferredLight.frag", false);
+            raytracingPipeline = std::make_unique<RaytracingPipeline>(*device, rtunis);
         }
     }
 
@@ -282,8 +272,11 @@ namespace Radis
             renderGraph.reset();
             cameraUniform.reset();
             rtUniform.reset();
+            deferredLightingUniform.reset();
             pipeline.reset();
             wireframePipeline.reset();
+            gBufferPipeline.reset();
+            deferredLightingPipeline.reset();
             raytracingPipeline.reset();
             syncObjects.reset();
 

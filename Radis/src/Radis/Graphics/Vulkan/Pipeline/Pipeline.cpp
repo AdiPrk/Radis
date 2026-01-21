@@ -10,16 +10,17 @@
 
 namespace Radis
 {
-	Pipeline::Pipeline(Device& device, VkFormat colorFormat, VkFormat depthFormat, const std::vector<Uniform*>& uniforms, bool wireframe, const std::string& vertFile, const std::string& fragFile)
+	Pipeline::Pipeline(Device& device, const std::vector<VkFormat>& colorFormats, VkFormat depthFormat, const std::vector<Uniform*>& uniforms, bool wireframe, const std::string& vertFile, const std::string& fragFile, bool useVertexInput)
 		: device(device)
 		, isWireframe(wireframe)
 		, mVertPath(ShaderDir + vertFile)
 		, mFragPath(ShaderDir + fragFile)
 		, mTescPath("")
 		, mTesePath("")
-        , mColorFormat(colorFormat)
-        , mDepthFormat(depthFormat)
-        , mUniforms(uniforms)
+		, mColorFormats(colorFormats)
+		, mDepthFormat(depthFormat)
+		, mUniforms(uniforms)
+		, mUseVertexInput(useVertexInput)
 	{
 		mSpvVertPath = SpvDir + vertFile + ".spv";
 		mSpvFragPath = SpvDir + fragFile + ".spv";
@@ -28,16 +29,36 @@ namespace Radis
 		CreatePipeline();
 	}
 
-	Pipeline::Pipeline(Device& device, VkFormat colorFormat, VkFormat depthFormat, const std::vector<Uniform*>& uniforms, bool wireframe, const std::string& vertFile, const std::string& fragFile, const std::string& tescFile, const std::string& teseFile)
+	Pipeline::Pipeline(Device& device, VkFormat colorFormat, VkFormat depthFormat, const std::vector<Uniform*>& uniforms, bool wireframe, const std::string& vertFile, const std::string& fragFile, bool useVertexInput)
+		: device(device)
+		, isWireframe(wireframe)
+		, mVertPath(ShaderDir + vertFile)
+		, mFragPath(ShaderDir + fragFile)
+		, mTescPath("")
+		, mTesePath("")
+		, mColorFormats({ colorFormat })  // Wrap single format in vector
+		, mDepthFormat(depthFormat)
+		, mUniforms(uniforms)
+		, mUseVertexInput(useVertexInput)
+	{
+		mSpvVertPath = SpvDir + vertFile + ".spv";
+		mSpvFragPath = SpvDir + fragFile + ".spv";
+
+		CreatePipelineLayout(uniforms);
+		CreatePipeline();
+	}
+
+	Pipeline::Pipeline(Device& device, VkFormat colorFormat, VkFormat depthFormat, const std::vector<Uniform*>& uniforms, bool wireframe, const std::string& vertFile, const std::string& fragFile, const std::string& tescFile, const std::string& teseFile, bool useVertexInput)
 		: device(device)
 		, isWireframe(wireframe)
 		, mVertPath(ShaderDir + vertFile)
 		, mFragPath(ShaderDir + fragFile)
 		, mTescPath(ShaderDir + tescFile)
 		, mTesePath(ShaderDir + teseFile)
-		, mColorFormat(colorFormat)
+		, mColorFormats({ colorFormat })  // Wrap single format in vector
 		, mDepthFormat(depthFormat)
 		, mUniforms(uniforms)
+        , mUseVertexInput(useVertexInput)
 	{
 		mSpvVertPath = SpvDir + vertFile + ".spv";
 		mSpvFragPath = SpvDir + fragFile + ".spv";
@@ -141,7 +162,7 @@ namespace Radis
 		pipelineConfig.pipeLineLayout = mPipelineLayout;
 
 		//Formats
-        pipelineConfig.colorFormat = mColorFormat;
+        pipelineConfig.colorFormats = mColorFormats;
         pipelineConfig.depthFormat = mDepthFormat;
 
 		//Create the pipeline
@@ -336,23 +357,52 @@ namespace Radis
 		shaderStages[1].pSpecializationInfo = nullptr;
 
 		//Make create info for vertex input (data to be drawn input)
-
-		//VkPipelineVertexInputStateCreateInfo vertexInputCreateInfo{};
-		//vertexInputCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-		//vertexInputCreateInfo.vertexBindingDescriptionCount = 0;
-		//vertexInputCreateInfo.pVertexBindingDescriptions = nullptr; // Optional
-		//vertexInputCreateInfo.vertexAttributeDescriptionCount = 0;
-		//vertexInputCreateInfo.pVertexAttributeDescriptions = nullptr; // Optional
-
 		auto vertBindingDescriptions = Vertex::GetBindingDescriptions();
 		auto vertAttributeDescriptions = Vertex::GetAttributeDescriptions();
 		VkPipelineVertexInputStateCreateInfo vertexInputCreateInfo{};
 		vertexInputCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;                     //Set what will be crated to a vertex input
-		vertexInputCreateInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertAttributeDescriptions.size()); //Counts for attribute desciptions of vertex buffers
-		vertexInputCreateInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(vertBindingDescriptions.size());     //Counts for binding  desciptions of vertex buffers
-		vertexInputCreateInfo.pVertexAttributeDescriptions = vertAttributeDescriptions.data();                           //Attribute desciptions of vertex buffers
-		vertexInputCreateInfo.pVertexBindingDescriptions = vertBindingDescriptions.data();                               //Binding desciptions of vertex buffers
 		
+		if (mUseVertexInput) {
+			vertexInputCreateInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertAttributeDescriptions.size()); //Counts for attribute desciptions of vertex buffers
+			vertexInputCreateInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(vertBindingDescriptions.size());     //Counts for binding  desciptions of vertex buffers
+			vertexInputCreateInfo.pVertexAttributeDescriptions = vertAttributeDescriptions.data();                           //Attribute desciptions of vertex buffers
+			vertexInputCreateInfo.pVertexBindingDescriptions = vertBindingDescriptions.data();                               //Binding desciptions of vertex buffers
+		}
+		else
+		{
+			vertexInputCreateInfo.vertexAttributeDescriptionCount = 0; //Counts for attribute desciptions of vertex buffers
+			vertexInputCreateInfo.vertexBindingDescriptionCount = 0;     //Counts for binding  desciptions of vertex buffers
+			vertexInputCreateInfo.pVertexAttributeDescriptions = nullptr;                           //Attribute desciptions of vertex buffers
+			vertexInputCreateInfo.pVertexBindingDescriptions = nullptr;                               //Binding desciptions of vertex buffers
+        }
+
+		// --- MRT: Create blend attachments for each color format ---
+		std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments(configInfo.colorFormats.size());
+		for (size_t i = 0; i < configInfo.colorFormats.size(); ++i)
+		{
+			colorBlendAttachments[i].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+			// For G-Buffer passes, we typically don't want blending - just overwrite
+			colorBlendAttachments[i].blendEnable = (configInfo.colorFormats.size() == 1) ? VK_TRUE : VK_FALSE;
+			colorBlendAttachments[i].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+			colorBlendAttachments[i].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+			colorBlendAttachments[i].colorBlendOp = VK_BLEND_OP_ADD;
+			colorBlendAttachments[i].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+			colorBlendAttachments[i].dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+			colorBlendAttachments[i].alphaBlendOp = VK_BLEND_OP_ADD;
+		}
+
+		// Update color blend state for MRT
+		VkPipelineColorBlendStateCreateInfo colorBlendCreateInfo{};
+		colorBlendCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+		colorBlendCreateInfo.logicOpEnable = VK_FALSE;
+		colorBlendCreateInfo.logicOp = VK_LOGIC_OP_COPY;
+		colorBlendCreateInfo.attachmentCount = static_cast<uint32_t>(colorBlendAttachments.size());
+		colorBlendCreateInfo.pAttachments = colorBlendAttachments.data();
+		colorBlendCreateInfo.blendConstants[0] = 0.0f;
+		colorBlendCreateInfo.blendConstants[1] = 0.0f;
+		colorBlendCreateInfo.blendConstants[2] = 0.0f;
+		colorBlendCreateInfo.blendConstants[3] = 0.0f;
+
 		//Create pipeline object using everything we have set up
 		VkGraphicsPipelineCreateInfo pipelineCreateInfo{};
 		pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;		//Set what will be created to a graphics pipeline
@@ -364,26 +414,14 @@ namespace Radis
 		pipelineCreateInfo.pViewportState = &configInfo.viewportCreateInfo;					  //Set data from config
 		pipelineCreateInfo.pRasterizationState = &configInfo.rasterizationCreateInfo; //Set data from config
 		pipelineCreateInfo.pMultisampleState = &configInfo.multisampleCreateInfo;     //Set data from config
-		pipelineCreateInfo.pColorBlendState = &configInfo.colorBlendCreateInfo;				//Set data from config
+		pipelineCreateInfo.pColorBlendState = &colorBlendCreateInfo;                  //Use our MRT-aware blend state
 		pipelineCreateInfo.pDepthStencilState = &configInfo.depthStencilCreateInfo;   //Set data from config
 
-		//If heightmap pipeline
-		//VkPipelineTessellationStateCreateInfo pipelineTessellationStateCreateInfo{};
-		//if (isHeightmap)
-		//{
-		//	//Add a tessellation state to the pipeline
-		//	pipelineTessellationStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
-		//	pipelineTessellationStateCreateInfo.patchControlPoints = 4;
-		//	pipelineCreateInfo.pTessellationState = &pipelineTessellationStateCreateInfo;
-		//}
-
-		// Provide information for dynamic rendering
+		// Provide information for dynamic rendering with MRT support
 		VkPipelineRenderingCreateInfoKHR pipeline_create{ VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO };
 		pipeline_create.pNext = VK_NULL_HANDLE;
-		pipeline_create.colorAttachmentCount = 1;
-
-		VkFormat uNormalFormat = device.GetLinearFormat();
-		pipeline_create.pColorAttachmentFormats = &uNormalFormat;// &configInfo.colorFormat;
+		pipeline_create.colorAttachmentCount = static_cast<uint32_t>(configInfo.colorFormats.size());
+		pipeline_create.pColorAttachmentFormats = configInfo.colorFormats.data();
         pipeline_create.depthAttachmentFormat = configInfo.depthFormat;
         pipeline_create.stencilAttachmentFormat = VK_FORMAT_UNDEFINED;
 

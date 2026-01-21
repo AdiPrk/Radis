@@ -42,6 +42,7 @@ namespace Radis
         // Uniforms ----------------
         std::unique_ptr<Uniform> cameraUniform;
         std::unique_ptr<Uniform> rtUniform;
+        std::unique_ptr<Uniform> deferredLightingUniform;
         //std::unique_ptr<Uniform> instanceUniform;
         // -------------------------
 
@@ -73,8 +74,8 @@ namespace Radis
         // Pipelines
         std::unique_ptr<Pipeline> pipeline;
         std::unique_ptr<Pipeline> wireframePipeline;
-        std::unique_ptr<Pipeline> deferredPipeline;
-        std::unique_ptr<Pipeline> deferredWireframePipeline;
+        std::unique_ptr<Pipeline> gBufferPipeline;
+        std::unique_ptr<Pipeline> deferredLightingPipeline;
         std::unique_ptr<RaytracingPipeline> raytracingPipeline;
         // -----------
 
