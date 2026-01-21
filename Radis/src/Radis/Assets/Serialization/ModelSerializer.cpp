@@ -61,6 +61,8 @@ bool DecompressForReadLZ4(const std::string& filename, std::string& outTemp)
         "\"" + outTemp + "\"";   // OUTPUT (raw)
 
     std::string command = "\"" + inner + "\"";
+    command += " > NUL 2>&1";
+    
     int result = std::system(command.c_str());
 
     return result == 0;
