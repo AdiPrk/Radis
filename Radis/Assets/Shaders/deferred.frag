@@ -19,10 +19,10 @@ layout(location = 9) flat in uint instanceIndex;
 layout(location = 10) in vec3 fragWorldPos;
 
 // G-Buffer outputs (MRT)
-layout(location = 0) out vec4 gAlbedo;    // RGB = albedo, A = alpha
-layout(location = 1) out vec4 gNormal;    // RGB = world normal (encoded), A = unused
-layout(location = 2) out vec4 gPBR;       // R = metallic, G = roughness, B = AO, A = unused
-layout(location = 3) out vec4 gEmissive;  // RGB = emissive color, A = unused
+layout(location = 0) out vec4 gAlbedo;    // R8G8B8A8_SRGB  - RGB = albedo, A = alpha
+layout(location = 1) out vec2 gNormal;    // R16G16_SFLOAT  - Octahedral encoded normal
+layout(location = 2) out vec4 gPBR;       // R8G8B8A8_UNORM - R = metallic, G = roughness, B = AO, A = unused
+layout(location = 3) out vec3 gEmissive;  // B10G11R11_UFLOAT_PACK32 - HDR emissive
 
 const uint INVALID_TEXTURE_INDEX = 10001;
 
@@ -57,10 +57,23 @@ vec4 SampleTexture(uint texIndex, vec2 uv)
 #endif
 }
 
-// Encode normal from [-1,1] to [0,1] for storage
-vec3 EncodeNormal(vec3 n)
+// Octahedral normal encoding
+// Encodes a unit normal vector to a 2D octahedral representation
+// Reference: "A Survey of Efficient Representations for Independent Unit Vectors"
+vec2 OctEncode(vec3 n)
 {
-    return n * 0.5 + 0.5;
+    // Project to octahedron
+    n /= (abs(n.x) + abs(n.y) + abs(n.z));
+    
+    // Wrap the bottom hemisphere
+    if (n.z < 0.0)
+    {
+        vec2 wrapped = (1.0 - abs(n.yx)) * vec2(n.x >= 0.0 ? 1.0 : -1.0, n.y >= 0.0 ? 1.0 : -1.0);
+        n.xy = wrapped;
+    }
+    
+    // Map from [-1, 1] to [0, 1] for storage
+    return n.xy * 0.5 + 0.5;
 }
 
 void main()
@@ -104,7 +117,7 @@ void main()
         ao = clamp(SampleTexture(textureIndicies2.x, fragTexCoord).r, 0.0, 1.0);
     }
 
-    // --- Emissive ---
+    // --- Emissive (HDR) ---
     vec3 emissive = emissiveFactor.rgb;
     if (textureIndicies2.y != INVALID_TEXTURE_INDEX)
     {
@@ -113,7 +126,7 @@ void main()
 
     // --- Write to G-Buffer ---
     gAlbedo = vec4(baseColor.rgb, baseColor.a);
-    gNormal = vec4(EncodeNormal(N), 1.0);
+    gNormal = OctEncode(N);                        // Octahedral encoded normal (R16G16)
     gPBR = vec4(metallic, roughness, ao, 1.0);
-    gEmissive = vec4(emissive, 1.0);
+    gEmissive = emissive;                          // HDR emissive (B10G11R11)
 }

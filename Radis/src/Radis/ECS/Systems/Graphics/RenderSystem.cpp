@@ -222,6 +222,8 @@ namespace Radis
                 const MeshInfo& meshInfo = uMeshes->GetMeshInfo(mesh->GetID());
                 float meshMetallic = mc.useMetallicOverride ? mc.metallicOverride : mesh->metallicFactor;
                 float meshRoughness = mc.useRoughnessOverride ? mc.roughnessOverride : mesh->roughnessFactor;
+                glm::vec4 meshEmissive = mc.useEmissiveOverride ? mc.emissiveOverride : mesh->emissiveFactor;
+
                 uint32_t metallicIndex = mc.useMetallicOverride ? TextureLibrary::INVALID_TEXTURE_INDEX : mesh->metalnessTextureIndex;
                 uint32_t roughnessIndex = mc.useRoughnessOverride ? TextureLibrary::INVALID_TEXTURE_INDEX : mesh->roughnessTextureIndex;
                 if (mesh->mMetallicRoughnessCombined) roughnessIndex = metallicIndex;
@@ -232,7 +234,7 @@ namespace Radis
                 data.boneOffset = boneOffset;
                 data.baseColorFactor = mesh->baseColorFactor;
                 data.metallicRoughnessFactor = glm::vec4(meshMetallic, meshRoughness, 0.f, 0.f);
-                data.emissiveFactor = mesh->emissiveFactor;
+                data.emissiveFactor = meshEmissive;
                 data.indexOffset = meshInfo.firstIndex;
                 data.vertexOffset = meshInfo.vertexOffset;
                 data.meshID = mesh->GetID();

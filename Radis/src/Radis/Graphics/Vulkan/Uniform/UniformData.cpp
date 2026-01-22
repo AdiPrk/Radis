@@ -230,4 +230,88 @@ namespace Radis
             writer.Build(uniform.GetDescriptorSets()[frameIndex]);
         }
     }
+
+    void DeferredLightingUniformUpdate(Uniform& uniform, RenderingResource& renderData)
+    {
+        VkSampler defaultSampler = renderData.textureLibrary->GetSampler();
+
+        // Get G-Buffer textures (with new image views after resize)
+        VKTexture* gAlbedoTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("gAlbedo"));
+        VKTexture* gNormalTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("gNormal"));
+        VKTexture* gPBRTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("gPBR"));
+        VKTexture* gEmissiveTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("gEmissive"));
+        VKTexture* gDepthTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("SceneDepth"));
+
+        if (!gAlbedoTex || !gNormalTex || !gPBRTex || !gEmissiveTex || !gDepthTex)
+        {
+            RADIS_ERROR("One or more G-Buffer textures not found!");
+            return;
+        }
+
+        // Update descriptor sets for each frame with new image views
+        for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex)
+        {
+            DescriptorWriter writer(*uniform.GetDescriptorLayout(), *uniform.GetDescriptorPool());
+
+            // Binding 0: Camera UBO
+            const Buffer& cameraBuffer = uniform.GetUniformBuffer(0, frameIndex);
+            VkDescriptorBufferInfo cameraBufferInfo{
+                .buffer = cameraBuffer.buffer,
+                .offset = 0,
+                .range = cameraBuffer.bufferSize
+            };
+            writer.WriteBuffer(0, &cameraBufferInfo);
+
+            // Binding 1: G-Buffer Albedo
+            VkDescriptorImageInfo albedoImageInfo{
+                .sampler = defaultSampler,
+                .imageView = gAlbedoTex->GetImageView(),
+                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            };
+            writer.WriteImage(1, &albedoImageInfo);
+
+            // Binding 2: G-Buffer Normal
+            VkDescriptorImageInfo normalImageInfo{
+                .sampler = defaultSampler,
+                .imageView = gNormalTex->GetImageView(),
+                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            };
+            writer.WriteImage(2, &normalImageInfo);
+
+            // Binding 3: G-Buffer PBR
+            VkDescriptorImageInfo pbrImageInfo{
+                .sampler = defaultSampler,
+                .imageView = gPBRTex->GetImageView(),
+                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            };
+            writer.WriteImage(3, &pbrImageInfo);
+
+            // Binding 4: G-Buffer Emissive
+            VkDescriptorImageInfo emissiveImageInfo{
+                .sampler = defaultSampler,
+                .imageView = gEmissiveTex->GetImageView(),
+                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            };
+            writer.WriteImage(4, &emissiveImageInfo);
+
+            // Binding 5: G-Buffer Depth
+            VkDescriptorImageInfo depthImageInfo{
+                .sampler = defaultSampler,
+                .imageView = gDepthTex->GetImageView(),
+                .imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
+            };
+            writer.WriteImage(5, &depthImageInfo);
+
+            // Binding 6: Light SSBO
+            const Buffer& lightBuffer = uniform.GetUniformBuffer(6, frameIndex);
+            VkDescriptorBufferInfo lightBufferInfo{
+                .buffer = lightBuffer.buffer,
+                .offset = 0,
+                .range = lightBuffer.bufferSize
+            };
+            writer.WriteBuffer(6, &lightBufferInfo);
+
+            writer.Overwrite(uniform.GetDescriptorSets()[frameIndex]);
+        }
+    }
 }

@@ -24,10 +24,10 @@ UBO_LAYOUT(0, 0) uniform Uniforms
 } uniforms;
 
 // G-Buffer textures
-layout(set = 0, binding = 1) uniform sampler2D gAlbedo;
-layout(set = 0, binding = 2) uniform sampler2D gNormal;
-layout(set = 0, binding = 3) uniform sampler2D gPBR;
-layout(set = 0, binding = 4) uniform sampler2D gEmissive;
+layout(set = 0, binding = 1) uniform sampler2D gAlbedo;   // R8G8B8A8_SRGB
+layout(set = 0, binding = 2) uniform sampler2D gNormal;   // R16G16_SFLOAT (octahedral)
+layout(set = 0, binding = 3) uniform sampler2D gPBR;      // R8G8B8A8_UNORM
+layout(set = 0, binding = 4) uniform sampler2D gEmissive; // B10G11R11_UFLOAT_PACK32 (HDR)
 layout(set = 0, binding = 5) uniform sampler2D gDepth;
 
 // Light data
@@ -117,19 +117,33 @@ vec3 ReconstructWorldPos(vec2 uv, float depth)
     return worldPos.xyz / worldPos.w;
 }
 
-// Decode normal from [0,1] to [-1,1]
-vec3 DecodeNormal(vec3 encoded)
+// Octahedral normal decoding
+// Decodes a 2D octahedral representation back to a unit normal vector
+vec3 OctDecode(vec2 f)
 {
-    return encoded * 2.0 - 1.0;
+    // Map from [0, 1] to [-1, 1]
+    f = f * 2.0 - 1.0;
+    
+    // Reconstruct Z
+    vec3 n = vec3(f.x, f.y, 1.0 - abs(f.x) - abs(f.y));
+    
+    // Unwrap the bottom hemisphere
+    if (n.z < 0.0)
+    {
+        vec2 wrapped = (1.0 - abs(n.yx)) * vec2(n.x >= 0.0 ? 1.0 : -1.0, n.y >= 0.0 ? 1.0 : -1.0);
+        n.xy = wrapped;
+    }
+    
+    return normalize(n);
 }
 
 void main()
 {
     // Sample G-Buffer
     vec4 albedoSample = texture(gAlbedo, fragTexCoord);
-    vec4 normalSample = texture(gNormal, fragTexCoord);
+    vec2 normalSample = texture(gNormal, fragTexCoord).rg;  // R16G16 octahedral
     vec4 pbrSample = texture(gPBR, fragTexCoord);
-    vec4 emissiveSample = texture(gEmissive, fragTexCoord);
+    vec3 emissiveSample = texture(gEmissive, fragTexCoord).rgb;  // HDR emissive
     float depth = texture(gDepth, fragTexCoord).r;
 
     // Early out for sky/background (no geometry)
@@ -141,11 +155,11 @@ void main()
 
     // Unpack G-Buffer data
     vec3 albedo = albedoSample.rgb;
-    vec3 N = normalize(DecodeNormal(normalSample.rgb));
+    vec3 N = OctDecode(normalSample);  // Decode octahedral normal
     float metallic = pbrSample.r;
     float roughness = pbrSample.g;
     float ao = pbrSample.b;
-    vec3 emissive = emissiveSample.rgb;
+    vec3 emissive = emissiveSample;  // Already HDR
 
     // Reconstruct world position from depth
     vec3 worldPos = ReconstructWorldPos(fragTexCoord, depth);
@@ -192,7 +206,7 @@ void main()
     // Ambient lighting with AO
     vec3 ambient = vec3(0.03) * albedo * ao;
     
-    // Final color
+    // Final color (HDR)
     vec3 color = (Lo * ao) + ambient + emissive;
 
     // Tone mapping (Reinhard)

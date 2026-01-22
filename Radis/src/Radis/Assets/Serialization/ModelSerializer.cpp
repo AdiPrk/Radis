@@ -297,6 +297,11 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
         WriteTexturePathEntry(refs.tex[5]);
 
         w.U32(refs.metallicRoughnessCombined);
+
+        w.Vec4(mesh.baseColorFactor);
+        w.F32(mesh.metallicFactor);
+        w.F32(mesh.roughnessFactor);
+        w.Vec4(mesh.emissiveFactor);
     }
 
     // Bones / animation
@@ -434,6 +439,11 @@ bool ModelSerializer::load(Model& model, const std::string& filename)
 
         uint32_t combined = r.U32();
         mesh.mMetallicRoughnessCombined = (combined != 0);
+
+        mesh.baseColorFactor = r.Vec4();
+        mesh.metallicFactor = r.F32();
+        mesh.roughnessFactor = r.F32();
+        mesh.emissiveFactor = r.Vec4();
     }
 
     // Bones / animation

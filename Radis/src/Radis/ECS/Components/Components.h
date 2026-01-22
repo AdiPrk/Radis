@@ -34,8 +34,10 @@ namespace Radis {
 
         bool useMetallicOverride = false;
         bool useRoughnessOverride = false;
+        bool useEmissiveOverride = false;
 		float metallicOverride = 1.0f;
         float roughnessOverride = 1.0f;
+		glm::vec4 emissiveOverride{};
 	};
 
 	struct AnimationComponent

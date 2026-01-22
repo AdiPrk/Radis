@@ -106,6 +106,19 @@ namespace Radis
             m_os.write(reinterpret_cast<const char*>(&tmp), sizeof(tmp));
         }
 
+        void Vec4(const glm::vec4& v)
+        {
+            glm::vec4 tmp = v;
+            if constexpr (BinaryEndian::NeedsSwap)
+            {
+                tmp.x = BinaryEndian::SwapFloat(tmp.x);
+                tmp.y = BinaryEndian::SwapFloat(tmp.y);
+                tmp.z = BinaryEndian::SwapFloat(tmp.z);
+                tmp.w = BinaryEndian::SwapFloat(tmp.w);
+            }
+            m_os.write(reinterpret_cast<const char*>(&tmp), sizeof(tmp));
+        }
+
         void Mat4(const glm::mat4& m)
         {
             glm::mat4 tmp = m;
@@ -203,6 +216,20 @@ namespace Radis
                 v.x = BinaryEndian::SwapFloat(v.x);
                 v.y = BinaryEndian::SwapFloat(v.y);
                 v.z = BinaryEndian::SwapFloat(v.z);
+            }
+            return v;
+        }
+
+        glm::vec4 Vec4()
+        {
+            glm::vec4 v;
+            m_is.read(reinterpret_cast<char*>(&v), sizeof(v));
+            if constexpr (BinaryEndian::NeedsSwap)
+            {
+                v.x = BinaryEndian::SwapFloat(v.x);
+                v.y = BinaryEndian::SwapFloat(v.y);
+                v.z = BinaryEndian::SwapFloat(v.z);
+                v.w = BinaryEndian::SwapFloat(v.w);
             }
             return v;
         }

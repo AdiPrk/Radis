@@ -106,6 +106,7 @@ namespace Radis
             modelLibrary->AddModel(Assets::ModelsPath + "cube.obj", true);
             modelLibrary->AddModel(Assets::ModelsPath + "quad.obj", true);
             modelLibrary->AddModel(Assets::ModelsPath + "sphere.glb", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "pbrreference.glb", true);
             // modelLibrary->AddModel(Assets::ModelsPath + "trotting_cat.glb");
             modelLibrary->AddModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx", true);
             modelLibrary->AddModel(Assets::ModelsPath + "jack_samba.glb", true);
@@ -181,7 +182,7 @@ namespace Radis
             textureLibrary->CreateTexture(
                 "gNormal",
                 extent.width, extent.height,
-                VK_FORMAT_R16G16B16A16_SFLOAT,
+                VK_FORMAT_R16G16_SFLOAT,
                 VK_IMAGE_TILING_OPTIMAL,
                 VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
@@ -197,7 +198,7 @@ namespace Radis
             textureLibrary->CreateTexture(
                 "gEmissive",
                 extent.width, extent.height,
-                VK_FORMAT_R8G8B8A8_UNORM,
+                VK_FORMAT_B10G11R11_UFLOAT_PACK32,
                 VK_IMAGE_TILING_OPTIMAL,
                 VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
@@ -222,9 +223,9 @@ namespace Radis
             VkFormat imageFormat = swapChain->GetImageFormat();
             VkFormat depthFormat = swapChain->FindDepthFormat();
             VkFormat albedoFormat = VK_FORMAT_R8G8B8A8_SRGB;
-            VkFormat normalFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+            VkFormat normalFormat = VK_FORMAT_R16G16_SFLOAT;
             VkFormat pbrFormat = VK_FORMAT_R8G8B8A8_UNORM;
-            VkFormat emissiveFormat = VK_FORMAT_R8G8B8A8_UNORM;
+            VkFormat emissiveFormat = VK_FORMAT_B10G11R11_UFLOAT_PACK32;
             std::vector<VkFormat> gBufferFormats = { albedoFormat, normalFormat, pbrFormat, emissiveFormat };
 
             pipeline = std::make_unique<Pipeline>(*device, imageFormat, depthFormat, unis, false, "forward.vert", "forward.frag");

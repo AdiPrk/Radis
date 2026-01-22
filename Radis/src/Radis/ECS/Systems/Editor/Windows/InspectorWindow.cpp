@@ -222,6 +222,11 @@ namespace Radis
                 {
                     ImGui::DragFloat("Roughness Override", &component.roughnessOverride, 0.01f, 0.0f, 1.0f);
                 }
+                ImGui::Checkbox("Override Emissive", &component.useEmissiveOverride);
+                if (component.useEmissiveOverride)
+                {
+                    ImGui::ColorEdit4("Emissive Override", glm::value_ptr(component.emissiveOverride));
+                }
             });
 
             DrawComponentUI<AnimationComponent>("Animation", selectedEnt, [&](AnimationComponent& component)

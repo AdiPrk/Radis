@@ -10,6 +10,7 @@ namespace Radis
     void CameraUniformInit(Uniform& uniform, RenderingResource& renderData);
     void RTUniformInit(Uniform& uniform, RenderingResource& renderData);
     void DeferredLightingUniformInit(Uniform& uniform, RenderingResource& renderData);
+    void DeferredLightingUniformUpdate(Uniform& uniform, RenderingResource& renderData);
 
     // Called camera uniform but it's just everything until rhi is better set up
     inline VkShaderStageFlags rtFlags = VK_SHADER_STAGE_RAYGEN_BIT_KHR |
