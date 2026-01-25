@@ -33,6 +33,35 @@ namespace Radis
                 Entity newEntity = ecs->AddEntity("New Entity");
                 er->selectedEntities = { newEntity };
             }
+            if (ImGui::Button("Debug +"))
+            {
+                for (int x = 0; x < 10; x++)
+                {
+                    for (int y = 0; y < 10; y++)
+                    {
+                        for (int z = 0; z < 10; z++)
+                        {
+                            Entity debugEntity = ecs->AddEntity("l" + std::to_string(x) + "_" + std::to_string(y) + "_" + std::to_string(z));
+                            auto& transform = debugEntity.AddComponent<TransformComponent>();
+                            transform.Translation = glm::vec3((float)x * 2.f, (float)y * 2.f, (float)z * 2.f);
+
+                            // add model
+                            auto& mc = debugEntity.AddComponent<ModelComponent>("assets/models/sphere.glb");
+                            
+                            // add light
+                            auto& lc = debugEntity.AddComponent<LightComponent>();
+                            lc.Radius = 10.f;
+
+                            // Color based on position
+                            lc.Color = glm::vec3(
+                                (float)x / 10.f,
+                                (float)y / 10.f,
+                                (float)z / 10.f
+                            );
+                        }
+                    }
+                }
+            }
             if (ImGui::IsItemHovered())
             {
                 ImGui::SetTooltip("Add New Entity");

@@ -48,6 +48,8 @@ namespace Radis
     void SwapRendererSystem::FrameEnd()
     {
         auto er = ecs->GetResource<EditorResource>();
+        if (!er) return;
+
         if (!er->entitiesToDelete.empty())
         {
             // Remove entities to delete from selected entities list

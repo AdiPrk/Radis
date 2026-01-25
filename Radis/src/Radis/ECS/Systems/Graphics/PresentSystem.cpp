@@ -111,13 +111,13 @@ namespace Radis
         // Import resources!
         auto tl = rr->textureLibrary.get();
 
-        rg->ImportTexture("SceneColor", (VKTexture*)tl->GetTexture("SceneTexture"));
+        rg->ImportTexture("SceneTexture", (VKTexture*)tl->GetTexture("SceneTexture"));
         rg->ImportTexture("SceneDepth", (VKTexture*)tl->GetTexture("SceneDepth"));
         rg->ImportTexture("gAlbedo", (VKTexture*)tl->GetTexture("gAlbedo"));
         rg->ImportTexture("gNormal", (VKTexture*)tl->GetTexture("gNormal"));
         rg->ImportTexture("gPBR", (VKTexture*)tl->GetTexture("gPBR"));
         rg->ImportTexture("gEmissive", (VKTexture*)tl->GetTexture("gEmissive"));
-
+        
         rg->ImportBackbuffer(
             "BackBuffer",
             rr->swapChain->GetImage(),

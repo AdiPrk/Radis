@@ -10,6 +10,7 @@
 
 #include "../InputSystem.h"
 
+#include "Graphics/Vulkan/Uniform/UniformData.h"
 #include "Graphics/Vulkan/Core/Device.h"
 #include "Graphics/Vulkan/Core/SwapChain.h"
 #include "Graphics/Common/ModelLibrary.h"
@@ -261,7 +262,7 @@ namespace Radis
 
             // Add the scene render pass
             auto& rg = rr->renderGraph;
-            std::string colorWriteTarget = Engine::GetEditorEnabled() ? "SceneColor" : "BackBuffer";
+            std::string colorWriteTarget = Engine::GetEditorEnabled() ? "SceneTexture" : "BackBuffer";
 
             switch (rr->renderMode)
             {
@@ -278,6 +279,7 @@ namespace Radis
                 break;
             }
             case RenderMode::Deferred: {
+                // G-Buffer pass
                 rg->AddPass("GBufferPass",
                     [&](RGPassBuilder& builder) {
                         builder.writes("gAlbedo");
@@ -289,6 +291,7 @@ namespace Radis
                     std::bind(&RenderSystem::RenderSceneDeferredGeometryVK, this, std::placeholders::_1)
                 );
 
+                // Lighting pass - outputs to SceneHDR
                 rg->AddPass("LightingPass",
                     [&](RGPassBuilder& builder) {
                         builder.reads("gAlbedo");
@@ -296,11 +299,11 @@ namespace Radis
                         builder.reads("gPBR");
                         builder.reads("gEmissive");
                         builder.reads("SceneDepth");
-                        builder.writes("SceneColor");
+                        builder.writes(colorWriteTarget);
                     },
                     std::bind(&RenderSystem::RenderSceneDeferredLightingVK, this, std::placeholders::_1)
                 );
-                
+
                 break;
             }
             case RenderMode::Raytracing: {

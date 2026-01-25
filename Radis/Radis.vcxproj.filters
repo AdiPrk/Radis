@@ -209,9 +209,14 @@
     <ClInclude Include="src\Radis\Graphics\Common\RenderMode.h" />
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="Assets\Shaders\basic_model.vert" />
+    <CustomBuild Include="Assets\Shaders\bloomUpsample.frag" />
+    <CustomBuild Include="Assets\Shaders\composite.frag" />
+    <CustomBuild Include="Assets\Shaders\deferred.frag" />
+    <CustomBuild Include="Assets\Shaders\deferred.vert" />
+    <CustomBuild Include="Assets\Shaders\deferredLight.frag" />
     <CustomBuild Include="Assets\Shaders\forward.frag" />
     <CustomBuild Include="Assets\Shaders\forward.vert" />
+    <CustomBuild Include="Assets\Shaders\fullscreen.vert" />
     <CustomBuild Include="Assets\Shaders\raytrace.rahit" />
     <CustomBuild Include="Assets\Shaders\raytrace.rchit" />
     <CustomBuild Include="Assets\Shaders\raytrace.rgen" />
@@ -385,6 +390,42 @@
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\bloomUpsample.frag" />
+    <CustomBuild Include="Assets\Shaders\composite.frag" />
+    <CustomBuild Include="Assets\Shaders\deferred.frag" />
+    <CustomBuild Include="Assets\Shaders\deferred.vert" />
+    <CustomBuild Include="Assets\Shaders\deferredLight.frag" />
+    <CustomBuild Include="Assets\Shaders\forward.frag" />
+    <CustomBuild Include="Assets\Shaders\forward.vert" />
+    <CustomBuild Include="Assets\Shaders\fullscreen.vert" />
+    <CustomBuild Include="Assets\Shaders\raytrace.rahit" />
+    <CustomBuild Include="Assets\Shaders\raytrace.rchit" />
+    <CustomBuild Include="Assets\Shaders\raytrace.rgen" />
+    <CustomBuild Include="Assets\Shaders\raytrace.rmiss" />
+    <CustomBuild Include="Assets\Shaders\shadow.rmiss" />
+    <CustomBuild Include="Assets\Shaders\bloomUpsample.frag" />
+    <CustomBuild Include="Assets\Shaders\composite.frag" />
+    <CustomBuild Include="Assets\Shaders\deferred.frag" />
+    <CustomBuild Include="Assets\Shaders\deferred.vert" />
+    <CustomBuild Include="Assets\Shaders\deferredLight.frag" />
+    <CustomBuild Include="Assets\Shaders\forward.frag" />
+    <CustomBuild Include="Assets\Shaders\forward.vert" />
+    <CustomBuild Include="Assets\Shaders\fullscreen.vert" />
+    <CustomBuild Include="Assets\Shaders\raytrace.rahit" />
+    <CustomBuild Include="Assets\Shaders\raytrace.rchit" />
+    <CustomBuild Include="Assets\Shaders\raytrace.rgen" />
+    <CustomBuild Include="Assets\Shaders\raytrace.rmiss" />
+    <CustomBuild Include="Assets\Shaders\shadow.rmiss" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
   </ItemGroup>
   <ItemGroup>
@@ -392,12 +433,5 @@
     <None Include="Assets\Scenes\sponza.json" />
     <None Include="Assets\Scenes\lighttest.json" />
     <None Include="Assets\Scenes\cube.json" />
-    <None Include="Assets\Shaders\forward.frag" />
-    <None Include="Assets\Shaders\forward.vert" />
-    <None Include="Assets\Shaders\raytrace.rahit" />
-    <None Include="Assets\Shaders\raytrace.rchit" />
-    <None Include="Assets\Shaders\raytrace.rgen" />
-    <None Include="Assets\Shaders\raytrace.rmiss" />
-    <None Include="Assets\Shaders\shadow.rmiss" />
   </ItemGroup>
 </Project>

@@ -108,7 +108,7 @@ namespace Radis
 		init_info.CheckVkResultFn = nullptr;
 		ImGui_ImplVulkan_Init(&init_info);
 
-		ImGui::StyleColorsDark();
+		// ImGui::StyleColorsDark();
 
 		SetupFonts(dpiScale);
 	}
@@ -128,7 +128,7 @@ namespace Radis
 		ImGui_ImplGlfw_InitForOpenGL(glfwWindow, false);  // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
 		ImGui_ImplOpenGL3_Init();
 
-		ImGui::StyleColorsDark();
+		// ImGui::StyleColorsDark();
 
 		SetupFonts(dpiScale);
 	}
