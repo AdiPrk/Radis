@@ -20,6 +20,7 @@ UBO_LAYOUT(0, 0) uniform Uniforms
     mat4 projectionView;
     mat4 projection;
     mat4 view;
+    mat4 invProjView;
     vec3 cameraPos;
 } uniforms;
 
@@ -30,17 +31,12 @@ layout(set = 0, binding = 3) uniform sampler2D gPBR;      // R8G8B8A8_UNORM
 layout(set = 0, binding = 4) uniform sampler2D gEmissive; // B10G11R11_UFLOAT_PACK32 (HDR)
 layout(set = 0, binding = 5) uniform sampler2D gDepth;
 
-// Light data
+// Compressed Light data (64 bytes instead of 80)
 struct Light {
-    vec3 position;
-    float radius;
-    vec3 color;
-    float intensity;
-    vec3 direction;
-    float innerCone;
-    float outerCone;
-    int type;          // 0=dir, 1=point, 2=spot
-    uint _padding[2];
+    vec4 positionRadius;    // xyz = position, w = radius
+    vec4 colorIntensity;    // xyz = color, w = intensity
+    vec4 directionInner;    // xyz = direction, w = innerCone
+    vec4 outerConeType;     // x = outerCone, y = type (0=dir, 1=point, 2=spot), zw = padding
 };
 
 #define MAX_LIGHTS 10000
@@ -107,33 +103,21 @@ vec3 computePBRLight(vec3 albedo, float metallic, float roughness, vec3 N, vec3 
 // Reconstruct world position from depth
 vec3 ReconstructWorldPos(vec2 uv, float depth)
 {
-    // Convert UV to NDC
-    vec4 clipPos = vec4(uv * 2.0 - 1.0, depth, 1.0);
-    
-    // Inverse projection-view to get world position
-    mat4 invProjView = inverse(uniforms.projectionView);
-    vec4 worldPos = invProjView * clipPos;
-    
+    vec4 clipPos = vec4(uv * 2.0 - 1.0, depth, 1.0);    
+    vec4 worldPos = uniforms.invProjView * clipPos;
     return worldPos.xyz / worldPos.w;
 }
 
 // Octahedral normal decoding
-// Decodes a 2D octahedral representation back to a unit normal vector
 vec3 OctDecode(vec2 f)
 {
-    // Map from [0, 1] to [-1, 1]
     f = f * 2.0 - 1.0;
-    
-    // Reconstruct Z
     vec3 n = vec3(f.x, f.y, 1.0 - abs(f.x) - abs(f.y));
-    
-    // Unwrap the bottom hemisphere
     if (n.z < 0.0)
     {
         vec2 wrapped = (1.0 - abs(n.yx)) * vec2(n.x >= 0.0 ? 1.0 : -1.0, n.y >= 0.0 ? 1.0 : -1.0);
         n.xy = wrapped;
     }
-    
     return normalize(n);
 }
 
@@ -141,12 +125,12 @@ void main()
 {
     // Sample G-Buffer
     vec4 albedoSample = texture(gAlbedo, fragTexCoord);
-    vec2 normalSample = texture(gNormal, fragTexCoord).rg;  // R16G16 octahedral
+    vec2 normalSample = texture(gNormal, fragTexCoord).rg;
     vec4 pbrSample = texture(gPBR, fragTexCoord);
-    vec3 emissiveSample = texture(gEmissive, fragTexCoord).rgb;  // HDR emissive
+    vec3 emissiveSample = texture(gEmissive, fragTexCoord).rgb;
     float depth = texture(gDepth, fragTexCoord).r;
 
-    // Early out for sky/background (no geometry)
+    // Early out for sky/background
     if (depth >= 1.0)
     {
         outColor = vec4(0.0, 0.0, 0.0, 1.0);
@@ -155,11 +139,11 @@ void main()
 
     // Unpack G-Buffer data
     vec3 albedo = albedoSample.rgb;
-    vec3 N = OctDecode(normalSample);  // Decode octahedral normal
+    vec3 N = OctDecode(normalSample);
     float metallic = pbrSample.r;
     float roughness = pbrSample.g;
     float ao = pbrSample.b;
-    vec3 emissive = emissiveSample;  // Already HDR
+    vec3 emissive = emissiveSample;
 
     // Reconstruct world position from depth
     vec3 worldPos = ReconstructWorldPos(fragTexCoord, depth);
@@ -173,33 +157,50 @@ void main()
     for (uint i = 0; i < lightData.lightCount; ++i)
     {
         Light light = lightData.lights[i];
+        
+        vec3 lightPos = light.positionRadius.xyz;
+        float lightRadius = light.positionRadius.w;
+        vec3 lightColor = light.colorIntensity.xyz;
+        float lightIntensity = light.colorIntensity.w;
+        vec3 lightDir = light.directionInner.xyz;
+        float innerCone = light.directionInner.w;
+        float outerCone = light.outerConeType.x;
+        int lightType = int(light.outerConeType.y);
+        
         vec3 L;
         float attenuation = 1.0;
 
-        if (light.type == 0) 
+        if (lightType == 0) 
         {
             // Directional light
-            L = normalize(-light.direction);
+            L = normalize(-lightDir);
         }
         else 
         {
             // Point / Spot light
-            vec3 toLight = light.position - worldPos;
+            vec3 toLight = lightPos - worldPos;
             float dist = length(toLight);
-            L = normalize(toLight);
-            attenuation = clamp(1.0 - dist / light.radius, 0.0, 1.0);
-            attenuation *= attenuation; // Quadratic falloff
+            
+            // Early out if outside light radius
+            if (dist >= lightRadius)
+                continue;
+                
+            L = toLight / dist;
+            attenuation = 1.0 - dist / lightRadius;
+            attenuation *= attenuation;
         }
 
-        if (light.type == 2) 
+        if (lightType == 2) 
         {
             // Spot light cone attenuation
-            float spotFactor = dot(L, normalize(-light.direction));
-            float smoothS = smoothstep(light.outerCone, light.innerCone, spotFactor);
+            float spotFactor = dot(L, normalize(-lightDir));
+            if (spotFactor < outerCone)
+                continue;
+            float smoothS = smoothstep(outerCone, innerCone, spotFactor);
             attenuation *= smoothS;
         }
 
-        vec3 lightCol = light.color * light.intensity * attenuation;
+        vec3 lightCol = lightColor * lightIntensity * attenuation;
         Lo += computePBRLight(albedo, metallic, roughness, N, V, L, lightCol);
     }
 

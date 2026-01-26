@@ -11,25 +11,40 @@ namespace Radis {
 
 	struct TransformComponent
 	{
+        // DO NOT MODIFY MANUALLY! Use SetTranslation/SetRotation/SetScale instead to mark dirty.
 		glm::vec3 Translation = { 0.0f, 0.0f, 0.0f };
 		glm::vec3 Rotation = { 0.0f, 0.0f, 0.0f };
 		glm::vec3 Scale = { 1.0f, 1.0f, 1.0f };
+		
+		glm::mat4 CachedTransform{};
+		bool isDirty = true;
 
-		glm::mat4 GetTransform() const
+		glm::mat4 GetTransform()
 		{
-			// SRT - Translate * Rotate * Scale
-			return glm::translate(glm::mat4(1.0f), Translation) *
-				   glm::toMat4(glm::quat(Rotation)) *
-				   glm::scale(glm::mat4(1.0f), Scale);
+			if (!isDirty) return CachedTransform;
+
+			isDirty = false;
+			CachedTransform = glm::translate(glm::mat4(1.0f), Translation) * glm::toMat4(glm::quat(Rotation)) * glm::scale(glm::mat4(1.0f), Scale);
+
+			return CachedTransform;
 		}
 
-		glm::mat4 mat4() const;
+		void SetTranslation(float x, float y, float z);
+		void SetTranslation(const glm::vec3& tr);
+        void SetRotation(float x, float y, float z);
+        void SetRotation(const glm::vec3& rot);
+        void SetScale(float x, float y, float z);
+        void SetScale(const glm::vec3& scale);
+		void SetScale(float s);
+
 		glm::mat3 normalMatrix() const;
 	};
 
 	struct ModelComponent
 	{
 		std::string ModelPath = "";
+        uint32_t modelID = 0;
+		bool updateModelID = true;
         glm::vec4 tintColor = glm::vec4(1.0f);
 
         bool useMetallicOverride = false;

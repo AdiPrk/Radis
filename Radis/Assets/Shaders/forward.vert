@@ -47,6 +47,7 @@ UBO_LAYOUT(0, 0) uniform Uniforms
     mat4 projectionView;
     mat4 projection;
     mat4 view;
+    mat4 invProjView;
     vec3 cameraPos;
 } uniforms;
 

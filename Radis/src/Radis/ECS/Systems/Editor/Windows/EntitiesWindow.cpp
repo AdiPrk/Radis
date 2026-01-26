@@ -33,7 +33,7 @@ namespace Radis
                 Entity newEntity = ecs->AddEntity("New Entity");
                 er->selectedEntities = { newEntity };
             }
-            if (ImGui::Button("Debug +"))
+            if (ImGui::Button("LightTest+"))
             {
                 for (int x = 0; x < 10; x++)
                 {
@@ -42,8 +42,8 @@ namespace Radis
                         for (int z = 0; z < 10; z++)
                         {
                             Entity debugEntity = ecs->AddEntity("l" + std::to_string(x) + "_" + std::to_string(y) + "_" + std::to_string(z));
-                            auto& transform = debugEntity.AddComponent<TransformComponent>();
-                            transform.Translation = glm::vec3((float)x * 2.f, (float)y * 2.f, (float)z * 2.f);
+                            auto& transform = debugEntity.GetComponent<TransformComponent>();
+                            transform.SetTranslation((float)x * 2.f, (float)y * 2.f, (float)z * 2.f);
 
                             // add model
                             auto& mc = debugEntity.AddComponent<ModelComponent>("assets/models/sphere.glb");
@@ -57,6 +57,37 @@ namespace Radis
                                 (float)x / 10.f,
                                 (float)y / 10.f,
                                 (float)z / 10.f
+                            );
+                        }
+                    }
+                }
+            }
+            if (ImGui::Button("SpamTest+"))
+            {
+                int n = 25;
+                for (int x = 0; x < n; x++)
+                {
+                    for (int y = 0; y < n; y++)
+                    {
+                        for (int z = 0; z < n; z++)
+                        {
+                            Entity debugEntity = ecs->AddEntity("l" + std::to_string(x) + "_" + std::to_string(y) + "_" + std::to_string(z));
+                            auto& transform = debugEntity.GetComponent<TransformComponent>();
+                            
+                            // add little offsets in tx ty and tz to make it not completely uniform 
+                            float tx = ((float)x - (float)(n / 2)) * 1.5f + (glm::fract(glm::sin((float)(x * y * z + 1)) * 43758.5453f) - 0.5f);
+                            float ty = ((float)y - (float)(n / 2)) * 1.5f + (glm::fract(glm::sin((float)(x * y * z + 2)) * 43758.5453f) - 0.5f);
+                            float tz = ((float)z - (float)(n / 2)) * 1.5f + (glm::fract(glm::sin((float)(x * y * z + 3)) * 43758.5453f) - 0.5f);
+                            transform.SetTranslation(tx, ty, tz);
+                            transform.SetScale(0.5f);
+
+                            // add model
+                            auto& mc = debugEntity.AddComponent<ModelComponent>("assets/models/sphere.glb");
+                            mc.tintColor = glm::vec4(
+                                (float)x / (float)n,
+                                (float)y / (float)n,
+                                (float)z / (float)n,
+                                1.0f
                             );
                         }
                     }

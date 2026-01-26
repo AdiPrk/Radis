@@ -36,7 +36,6 @@
 #include "Graphics/OpenGL/GLFrameBuffer.h"
 #include "Graphics/OpenGL/GLTexture.h"
 
-
 namespace Radis
 {
     RenderSystem::RenderSystem() : ISystem("RenderSystem") {}
@@ -44,6 +43,11 @@ namespace Radis
 
     void RenderSystem::Init()
     {
+        // Pre-allocate reasonable initial capacity to avoid early reallocations
+        mInstanceData.reserve(1024);
+        mDrawCalls.reserve(128);
+        mLightData.reserve(64);
+        mMeshInstanceCounts.reserve(128);
     }
 
     void RenderSystem::Exit()
@@ -155,37 +159,24 @@ namespace Radis
 
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan) camData.projection[1][1] *= -1;
         camData.projectionView = camData.projection * camData.view;
+        camData.inverseProjView = glm::inverse(camData.projectionView);
 
-        mInstanceData.clear();
+        // Collect light data
         mLightData.clear();
-        const auto& debugData = DebugDrawResource::GetInstanceData();
-        
-        if (rr->renderMode != RenderMode::Raytracing)
-        {
-            if (mInstanceData.size() + debugData.size() < InstanceUniforms::MAX_INSTANCES)
-            {
-                mInstanceData.insert(mInstanceData.end(), debugData.begin(), debugData.end());
-            }
-            else
-            {
-                RADIS_WARN("Too many instances for debug draw render!");
-            }
-        }
-
         auto& registry = ecs->GetRegistry();
         registry.view<LightComponent, TransformComponent>().each([&](auto entity, LightComponent& lc, TransformComponent& tc)
         {
+            // Fun little pattern for light1000 scene
+            // float tx += glm::sin(static_cast<float>(totaltime + (uint32_t)entity)) * 0.01f;
+            // float ty += glm::cos(static_cast<float>(totaltime + (uint32_t)entity)) * 0.01f;
+            // float tz += glm::sin(static_cast<float>(totaltime + (uint32_t)entity)) * 0.02f;
+            // tc.SetTranslation(tx, ty, tz);
+
             LightUniform lu{};
-            lu.position = glm::vec4(tc.Translation, 1.0f);
-            lu.radius = lc.Radius;
-            lu.color = lc.Color;
-            lu.intensity = lc.Intensity;
-            lu.direction = glm::normalize(lc.Direction);
-            lu.innerCone = lc.InnerCone;
-            lu.outerCone = lc.OuterCone;
-            lu.type = static_cast<int>(lc.Type);
-            lu._padding[0] = 777;
-            lu._padding[1] = 777;
+            lu.positionRadius = glm::vec4(tc.Translation, lc.Radius);
+            lu.colorIntensity = glm::vec4(lc.Color, lc.Intensity);
+            lu.directionInner = glm::vec4(glm::normalize(lc.Direction), lc.InnerCone);
+            lu.outerConeType = glm::vec4(lc.OuterCone, static_cast<float>(lc.Type), 0.0f, 0.0f);
             mLightData.push_back(lu);
         });
 
@@ -193,11 +184,87 @@ namespace Radis
         ModelLibrary* ml = rr->modelLibrary.get();
         UnifiedMeshes* uMeshes = ml->GetUnifiedMesh();
 
-        uint32_t indexOffset = 0;
-        uint32_t vertexOffset = 0;
-        registry.view<ModelComponent, TransformComponent>().each([&](auto entity, ModelComponent& mc, TransformComponent& tc)
+        // ============================================================
+        // Two-pass instancing: Count first, then fill
+        for (auto& [meshID, count] : mMeshInstanceCounts)
         {
-            Model* model = rr->modelLibrary->TryAddGetModel(mc.ModelPath);
+            count = 0;
+        }
+
+        // Debug draw instances (all use cube mesh)
+        const auto& debugData = DebugDrawResource::GetInstanceData();
+        uint32_t debugDrawCount = 0;
+        uint32_t cubeMeshID = 0;
+        Model* cubeModel = nullptr;
+
+        if (rr->renderMode != RenderMode::Raytracing && !debugData.empty())
+        {
+            cubeModel = ml->TryAddGetModel("Assets/Models/cube.obj");
+            if (cubeModel && !cubeModel->mMeshes.empty())
+            {
+                cubeMeshID = cubeModel->mMeshes[0]->GetID();
+                debugDrawCount = static_cast<uint32_t>(debugData.size());
+                mMeshInstanceCounts[cubeMeshID] += debugDrawCount;
+            }
+        }
+
+        // Pass 1: Count instances per mesh
+        auto modelTransformEntities = registry.view<ModelComponent, TransformComponent>();
+        modelTransformEntities.each([&](auto entity, ModelComponent& mc, TransformComponent& tc)
+        {
+            Model* model = ml->TryAddGetModel(mc);
+            if (!model) return;
+
+            for (auto& mesh : model->mMeshes)
+            {
+                mMeshInstanceCounts[mesh->GetID()]++;
+            }
+        });
+
+        // Calculate total instances and build draw calls with offsets
+        uint32_t totalInstances = 0;
+        mDrawCalls.clear();
+
+        for (auto& [meshID, count] : mMeshInstanceCounts)
+        {
+            if (count == 0) continue;
+
+            const MeshInfo& meshInfo = uMeshes->GetMeshInfo(meshID);
+
+            InstancedDrawCall& drawCall = mDrawCalls.emplace_back();
+            drawCall.meshID = meshID;
+            drawCall.indexCount = meshInfo.indexCount;
+            drawCall.firstIndex = meshInfo.firstIndex;
+            drawCall.vertexOffset = meshInfo.vertexOffset;
+            drawCall.instanceCount = count;
+            drawCall.firstInstance = totalInstances;
+
+            totalInstances += count;
+        }
+
+        // Resize instance buffer (only reallocates if capacity exceeded)
+        mInstanceData.resize(totalInstances);
+
+        // Build a map from meshID -> current write index
+        std::unordered_map<uint32_t, uint32_t> meshWriteIndex;
+        meshWriteIndex.reserve(mDrawCalls.size());
+        for (const auto& drawCall : mDrawCalls)
+        {
+            meshWriteIndex[drawCall.meshID] = drawCall.firstInstance;
+        }
+
+        // Pass 2: Fill debug draw instances
+        if (debugDrawCount > 0 && cubeModel)
+        {
+            uint32_t writeIdx = meshWriteIndex[cubeMeshID];
+            std::memcpy(&mInstanceData[writeIdx], debugData.data(), debugDrawCount * sizeof(InstanceUniforms));
+            meshWriteIndex[cubeMeshID] += debugDrawCount;
+        }
+
+        // Pass 2: Fill entity instances directly into final positions
+        modelTransformEntities.each([&](auto entity, ModelComponent& mc, TransformComponent& tc)
+        {
+            Model* model = ml->GetModel(mc);
             if (!model) return;
 
             AnimationComponent* ac = registry.try_get<AnimationComponent>(entity);
@@ -210,7 +277,11 @@ namespace Radis
 
             for (auto& mesh : model->mMeshes)
             {
-                InstanceUniforms& data = mInstanceData.emplace_back();
+                uint32_t meshID = mesh->GetID();
+                uint32_t writeIdx = meshWriteIndex[meshID]++;
+
+                InstanceUniforms& data = mInstanceData[writeIdx];
+
                 if (boneOffset == AnimationLibrary::INVALID_ANIMATION_INDEX)
                 {
                     data.model = tc.GetTransform() * model->GetNormalizationMatrix();
@@ -220,7 +291,7 @@ namespace Radis
                     data.model = tc.GetTransform();
                 }
                 
-                const MeshInfo& meshInfo = uMeshes->GetMeshInfo(mesh->GetID());
+                const MeshInfo& meshInfo = uMeshes->GetMeshInfo(meshID);
                 float meshMetallic = mc.useMetallicOverride ? mc.metallicOverride : mesh->metallicFactor;
                 float meshRoughness = mc.useRoughnessOverride ? mc.roughnessOverride : mesh->roughnessFactor;
                 glm::vec4 meshEmissive = mc.useEmissiveOverride ? mc.emissiveOverride : mesh->emissiveFactor;
@@ -238,7 +309,7 @@ namespace Radis
                 data.emissiveFactor = meshEmissive;
                 data.indexOffset = meshInfo.firstIndex;
                 data.vertexOffset = meshInfo.vertexOffset;
-                data.meshID = mesh->GetID();
+                data.meshID = meshID;
             }
         });
 
@@ -327,11 +398,24 @@ namespace Radis
     {
     }
 
+    void RenderSystem::ExecuteInstancedDrawCalls(VkCommandBuffer cmd)
+    {
+        for (const auto& drawCall : mDrawCalls)
+        {
+            vkCmdDrawIndexed(
+                cmd,
+                drawCall.indexCount,
+                drawCall.instanceCount,
+                drawCall.firstIndex,
+                drawCall.vertexOffset,
+                drawCall.firstInstance
+            );
+        }
+    }
+
     void RenderSystem::RenderSceneVK(VkCommandBuffer cmd)
     {
         auto rr = ecs->GetResource<RenderingResource>();
-        AnimationLibrary* al = rr->animationLibrary.get();
-        ModelLibrary* ml = rr->modelLibrary.get();
 
         ScopedDebugLabel sceneDebugLabel(rr->device.get(), cmd, "Render Scene", glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
 
@@ -350,53 +434,23 @@ namespace Radis
         VkRect2D scissor{ {0, 0}, rr->swapChain->GetSwapChainExtent() };
         vkCmdSetScissor(cmd, 0, 1, &scissor);
 
-        auto& registry = ecs->GetRegistry();
-
         UnifiedMeshes* uMeshes = rr->modelLibrary->GetUnifiedMesh();
         uMeshes->GetUnifiedMesh()->Bind(cmd);
 
-        int baseIndex = 0;
-        Model* cubeModel = ml->TryAddGetModel("Assets/Models/cube.obj");
-        auto& cubeMeshData = uMeshes->GetMeshInfo(cubeModel->mMeshes[0]->GetID());
-        
-        uint32_t debugDrawCount = DebugDrawResource::GetInstanceDataSize();
-        vkCmdDrawIndexed(cmd, cubeMeshData.indexCount, debugDrawCount, cubeMeshData.firstIndex, cubeMeshData.vertexOffset, baseIndex);
-        baseIndex += debugDrawCount;
-        
-        auto entityView = registry.view<ModelComponent, TransformComponent>();
-        for (auto& entityHandle : entityView)
-        {
-            Entity entity(&registry, entityHandle);
-            ModelComponent& mc = entity.GetComponent<ModelComponent>();
-            Model* model = rr->modelLibrary->GetModel(mc.ModelPath);
-            if (!model) continue;
-
-            for (auto& mesh : model->mMeshes)
-            {
-                auto& meshData = uMeshes->GetMeshInfo(mesh->GetID());
-                vkCmdDrawIndexed(cmd, meshData.indexCount, 1, meshData.firstIndex, meshData.vertexOffset, baseIndex);
-
-                ++baseIndex;
-            }
-        }
+        ExecuteInstancedDrawCalls(cmd);
     }
 
     void RenderSystem::RenderSceneDeferredGeometryVK(VkCommandBuffer cmd)
     {
         auto rr = ecs->GetResource<RenderingResource>();
-        AnimationLibrary* al = rr->animationLibrary.get();
-        ModelLibrary* ml = rr->modelLibrary.get();
 
         ScopedDebugLabel sceneDebugLabel(rr->device.get(), cmd, "Deferred G-Buffer Pass", glm::vec4(0.2f, 0.8f, 0.2f, 1.0f));
 
-        // Bind the G-Buffer pipeline
         rr->gBufferPipeline->Bind(cmd);
         VkPipelineLayout pipelineLayout = rr->gBufferPipeline->GetLayout();
 
-        // Bind the camera uniform (contains instance data, textures, etc.)
         rr->cameraUniform->Bind(cmd, pipelineLayout, rr->currentFrameIndex);
 
-        // Set viewport and scissor
         VkViewport viewport{};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
@@ -409,40 +463,10 @@ namespace Radis
         VkRect2D scissor{ {0, 0}, rr->swapChain->GetSwapChainExtent() };
         vkCmdSetScissor(cmd, 0, 1, &scissor);
 
-        auto& registry = ecs->GetRegistry();
-
-        // Bind the unified mesh (vertex + index buffers)
         UnifiedMeshes* uMeshes = rr->modelLibrary->GetUnifiedMesh();
         uMeshes->GetUnifiedMesh()->Bind(cmd);
 
-        int baseIndex = 0;
-
-        // Draw debug geometry (grid, etc.)
-        Model* cubeModel = ml->TryAddGetModel("Assets/Models/cube.obj");
-        if (cubeModel)
-        {
-            auto& cubeMeshData = uMeshes->GetMeshInfo(cubeModel->mMeshes[0]->GetID());
-            uint32_t debugDrawCount = DebugDrawResource::GetInstanceDataSize();
-            vkCmdDrawIndexed(cmd, cubeMeshData.indexCount, debugDrawCount, cubeMeshData.firstIndex, cubeMeshData.vertexOffset, baseIndex);
-            baseIndex += debugDrawCount;
-        }
-
-        // Draw all entities with ModelComponent
-        auto entityView = registry.view<ModelComponent, TransformComponent>();
-        for (auto& entityHandle : entityView)
-        {
-            Entity entity(&registry, entityHandle);
-            ModelComponent& mc = entity.GetComponent<ModelComponent>();
-            Model* model = rr->modelLibrary->GetModel(mc.ModelPath);
-            if (!model) continue;
-
-            for (auto& mesh : model->mMeshes)
-            {
-                auto& meshData = uMeshes->GetMeshInfo(mesh->GetID());
-                vkCmdDrawIndexed(cmd, meshData.indexCount, 1, meshData.firstIndex, meshData.vertexOffset, baseIndex);
-                ++baseIndex;
-            }
-        }
+        ExecuteInstancedDrawCalls(cmd);
     }
 
     void RenderSystem::RenderSceneDeferredLightingVK(VkCommandBuffer cmd)
@@ -451,14 +475,11 @@ namespace Radis
 
         ScopedDebugLabel sceneDebugLabel(rr->device.get(), cmd, "Deferred Lighting Pass", glm::vec4(0.8f, 0.8f, 0.2f, 1.0f));
 
-        // Bind the deferred lighting pipeline
         rr->deferredLightingPipeline->Bind(cmd);
         VkPipelineLayout pipelineLayout = rr->deferredLightingPipeline->GetLayout();
 
-        // Bind the deferred lighting uniform (contains G-Buffer textures and light data)
         rr->deferredLightingUniform->Bind(cmd, pipelineLayout, rr->currentFrameIndex);
 
-        // Set viewport and scissor
         VkViewport viewport{};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
@@ -471,8 +492,6 @@ namespace Radis
         VkRect2D scissor{ {0, 0}, rr->swapChain->GetSwapChainExtent() };
         vkCmdSetScissor(cmd, 0, 1, &scissor);
 
-        // Draw fullscreen triangle (3 vertices, 1 instance, no vertex buffer needed)
-        // The vertex shader generates the triangle procedurally using gl_VertexIndex
         vkCmdDraw(cmd, 3, 1, 0, 0);
     }
 
@@ -480,8 +499,6 @@ namespace Radis
     {
         auto rr = ecs->GetResource<RenderingResource>();
         auto er = ecs->GetResource<EditorResource>();
-        AnimationLibrary* al = rr->animationLibrary.get();
-        ModelLibrary* ml = rr->modelLibrary.get();
 
         rr->shader->Use();
 
@@ -504,7 +521,6 @@ namespace Radis
             }
         }
 
-
         GLShader::SetupInstanceSSBO();
         GLuint iSSBO = GLShader::GetInstanceSSBO();
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, iSSBO);
@@ -526,44 +542,18 @@ namespace Radis
         UnifiedMeshes* uMeshes = rr->modelLibrary->GetUnifiedMesh();
         uMeshes->GetUnifiedMesh()->Bind();
 
-        int baseIndex = 0;
-        Model* cubeModel = ml->GetModel("Assets/Models/cube.obj");
-        auto& cubeMeshData = uMeshes->GetMeshInfo(cubeModel->mMeshes[0]->GetID());
-
-        uint32_t debugDrawCount = DebugDrawResource::GetInstanceDataSize();
-        glDrawElementsInstancedBaseVertexBaseInstance(
-            GL_TRIANGLES,
-            static_cast<GLsizei>(cubeMeshData.indexCount),
-            GL_UNSIGNED_INT,
-            (void*)(sizeof(uint32_t) * cubeMeshData.firstIndex),
-            debugDrawCount,
-            cubeMeshData.vertexOffset,
-            baseIndex
-        );
-        baseIndex += debugDrawCount;
-        
-        auto& registry = ecs->GetRegistry();
-        registry.view<ModelComponent, TransformComponent>().each([&](auto entityHandle, ModelComponent& mc, TransformComponent& tc)
+        for (const auto& drawCall : mDrawCalls)
         {
-            Model* model = rr->modelLibrary->GetModel(mc.ModelPath);
-            if (!model) return;
-
-            for (auto& mesh : model->mMeshes)
-            {
-                auto& meshData = uMeshes->GetMeshInfo(mesh->GetID());
-                glDrawElementsInstancedBaseVertexBaseInstance(
-                    GL_TRIANGLES,
-                    static_cast<GLsizei>(meshData.indexCount),
-                    GL_UNSIGNED_INT,
-                    (void*)(sizeof(uint32_t) * meshData.firstIndex),
-                    1,
-                    meshData.vertexOffset,
-                    baseIndex
-                );
-
-                ++baseIndex;
-            }
-        });
+            glDrawElementsInstancedBaseVertexBaseInstance(
+                GL_TRIANGLES,
+                static_cast<GLsizei>(drawCall.indexCount),
+                GL_UNSIGNED_INT,
+                (void*)(sizeof(uint32_t) * drawCall.firstIndex),
+                drawCall.instanceCount,
+                drawCall.vertexOffset,
+                drawCall.firstInstance
+            );
+        }
 
         if (Engine::GetEditorEnabled())
         {
@@ -586,18 +576,17 @@ namespace Radis
             {
                 const auto& instanceData = mInstanceData[i];
                 VkAccelerationStructureInstanceKHR asInstance{};
-                asInstance.transform = toTransformMatrixKHR(instanceData.model);  // Position of the instance
-                asInstance.instanceCustomIndex = static_cast<uint32_t>(i); // gl_InstanceCustomIndexEXT
+                asInstance.transform = toTransformMatrixKHR(instanceData.model);
+                asInstance.instanceCustomIndex = static_cast<uint32_t>(i);
                 asInstance.accelerationStructureReference = rr->blasAccel[instanceData.meshID].address;
-                asInstance.instanceShaderBindingTableRecordOffset = 0;  // We will use the same hit group for all objects
-                asInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;  // No culling - double sided
+                asInstance.instanceShaderBindingTableRecordOffset = 0;
+                asInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
                 asInstance.mask = 0xFF;
                 tlasInstances.emplace_back(asInstance);
             }
 
             if (tlasInstances.empty())
             {
-                // Empty tlas, maybe if we need it
                 VkAccelerationStructureInstanceKHR asInstance{};
                 asInstance.transform = toTransformMatrixKHR(glm::mat4(0.0f));
                 asInstance.instanceCustomIndex = 0;
@@ -608,19 +597,15 @@ namespace Radis
                 tlasInstances.emplace_back(asInstance);
             }
 
-            // update!!
             auto rtr = ecs->GetResource<RaytracingResource>();
             rtr->UpdateTopLevelASImmediate(tlasInstances);
         }
         
-        // Ray trace pipeline
         vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, rp->GetPipeline());
 
-        // Bind the descriptor sets for the graphics pipeline (making textures available to the shaders)
         rr->cameraUniform->Bind(cmd, rp->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR);
         rr->rtUniform->Bind(cmd, rp->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR);
 
-        // Ray trace
         const VkExtent2D& size = rr->swapChain->GetSwapChainExtent();
         vkCmdTraceRaysKHR(cmd, &rp->GetRaygenRegion(), &rp->GetMissRegion(), &rp->GetHitRegion(), &rp->GetCallableRegion(), size.width, size.height, 1);
 

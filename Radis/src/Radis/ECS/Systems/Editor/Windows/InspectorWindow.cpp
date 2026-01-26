@@ -141,12 +141,20 @@ namespace Radis
                 // Displaying rotation in degrees
                 glm::vec3 rotationDegrees = glm::degrees(component.Rotation);
 
-                ImGui::DragFloat3("Translation", glm::value_ptr(component.Translation), 0.1f);
+                bool modified = false;
+
+                modified |= ImGui::DragFloat3("Translation", glm::value_ptr(component.Translation), 0.1f);
                 if (ImGui::DragFloat3("Rotation", glm::value_ptr(rotationDegrees), 0.1f))
                 {
                     component.Rotation = glm::radians(rotationDegrees);
+                    modified = true;
                 }
-                ImGui::DragFloat3("Scale", glm::value_ptr(component.Scale), 0.1f);
+                modified |= ImGui::DragFloat3("Scale", glm::value_ptr(component.Scale), 0.1f);
+
+                if (modified)
+                {
+                    component.isDirty = true;
+                }
             });
 
             DrawComponentUI<CameraComponent>("CameraComponent", selectedEnt, [](auto& component)
@@ -185,6 +193,7 @@ namespace Radis
                             std::transform(lowerModelPath.begin(), lowerModelPath.end(), lowerModelPath.begin(), ::tolower);
 
                             component.ModelPath = lowerModelPath;
+                            component.updateModelID = true;
                         }
                         if (isSelected)
                         {
@@ -204,6 +213,7 @@ namespace Radis
                     {
                         std::string path = std::string((char*)payload->Data, payload->DataSize - 1); // -1 to remove null terminator
                         component.ModelPath = path;
+                        component.updateModelID = true;
                     }
 
                     ImGui::EndDragDropTarget();

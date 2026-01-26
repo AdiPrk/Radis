@@ -10,6 +10,7 @@
 #include "ModelLibrary.h"
 #include "Model.h"
 #include "UnifiedMesh.h"
+#include "ECS/Components/Components.h"
 
 #include "TextureLibrary.h"
 #include "../Vulkan/Core/Device.h"
@@ -112,6 +113,50 @@ namespace Radis
             return GetModel(newModelIndex);
         }
         return GetModel(it->second);
+    }
+
+    Model* ModelLibrary::GetModel(ModelComponent& mc)
+    {
+        if (mc.updateModelID)
+        {
+            mc.updateModelID = false;
+            Model* model = GetModel(mc.ModelPath);
+            if (model)
+            {
+                mc.modelID = GetModelIndex(mc.ModelPath);
+            }
+            else
+            {
+                mc.modelID = INVALID_MODEL_INDEX;
+            }
+            return model;
+        }
+        else
+        {
+            return GetModel(mc.modelID);
+        }
+    }
+
+    Model* ModelLibrary::TryAddGetModel(ModelComponent& mc)
+    {
+        if (mc.updateModelID)
+        {
+            mc.updateModelID = false;
+            Model* model = TryAddGetModel(mc.ModelPath);
+            if (model)
+            {
+                mc.modelID = GetModelIndex(mc.ModelPath);
+            }
+            else
+            {
+                mc.modelID = INVALID_MODEL_INDEX;
+            }
+            return model;
+        }
+        else
+        {
+            return GetModel(mc.modelID);
+        }
     }
 
     uint32_t ModelLibrary::GetModelIndex(const std::string& modelPath)

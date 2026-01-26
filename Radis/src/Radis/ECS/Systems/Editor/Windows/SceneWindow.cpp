@@ -136,6 +136,7 @@ namespace Radis
                 transformComponent.Translation = newTranslation;
                 transformComponent.Rotation = glm::radians(newRotation);
                 transformComponent.Scale = newScale;
+                transformComponent.isDirty = true;
             }
         }
     }

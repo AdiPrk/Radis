@@ -35,6 +35,7 @@ UBO_LAYOUT(0, 0) uniform Uniforms
     mat4 projectionView;
     mat4 projection;
     mat4 view;
+    mat4 invProjView;
     vec3 cameraPos;
 } uniforms;
 
@@ -46,15 +47,12 @@ UBO_LAYOUT(0, 0) uniform Uniforms
 	} texHandles;
 #endif
 
+// Compressed Light data (64 bytes instead of 80)
 struct Light {
-    vec3 position;
-    float radius;      // For point/spot attenuation
-    vec3 color;
-    float intensity;
-    vec3 direction;
-    float innerCone;   // for spot
-    float outerCone;   // for spot
-    int type;          // 0=dir, 1=point, 2=spot
+    vec4 positionRadius;    // xyz = position, w = radius
+    vec4 colorIntensity;    // xyz = color, w = intensity
+    vec4 directionInner;    // xyz = direction, w = innerCone
+    vec4 outerConeType;     // x = outerCone, y = type (0=dir, 1=point, 2=spot), zw = padding
 };
 
 #define MAX_LIGHTS 10000
@@ -74,7 +72,7 @@ float DistributionGGX(float NdotH, float roughness)
     float num = a2;
     float den = (NdotH2 * (a2 - 1.0) + 1.0);
     den = PI * den * den;
-    return num / (den + 0.0001); // Epsilon
+    return num / (den + 0.0001);
 }
 
 // Schlick-GGX
@@ -107,7 +105,6 @@ vec3 computePBRLight(vec3 albedo, float metallic, float roughness, vec3 N, vec3 
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
     vec3 H = normalize(V + L);
 
-    // Cook-Torrance BRDF
     float NdotL = max(dot(N, L), 0.0);
     float NdotV = max(dot(N, V), 0.0);
     float NdotH = max(dot(N, H), 0.0);
@@ -121,7 +118,6 @@ vec3 computePBRLight(vec3 albedo, float metallic, float roughness, vec3 N, vec3 
     vec3 kD = (1.0 - F) * (1.0 - metallic);
     vec3 diffuse = kD * albedo / PI;
 
-    // Final radiance
     return (diffuse + specular) * NdotL * lightColor;
 }
 
@@ -194,30 +190,51 @@ void main()
     for (uint i = 0; i < lightData.lightCount; ++i)
     {
         Light light = lightData.lights[i];
+        
+        // Unpack compressed light data
+        vec3 lightPos = light.positionRadius.xyz;
+        float lightRadius = light.positionRadius.w;
+        vec3 lightColor = light.colorIntensity.xyz;
+        float lightIntensity = light.colorIntensity.w;
+        vec3 lightDir = light.directionInner.xyz;
+        float innerCone = light.directionInner.w;
+        float outerCone = light.outerConeType.x;
+        int lightType = int(light.outerConeType.y);
+        
         vec3 L;
         float attenuation = 1.0;
 
-        if (light.type == 0) {
+        if (lightType == 0) 
+        {
             // Directional light
-            L = normalize(-light.direction);
+            L = normalize(-lightDir);
         }
-        else {
-            // Point / Spot
-            vec3 toLight = light.position - fragWorldPos;
+        else 
+        {
+            // Point / Spot light
+            vec3 toLight = lightPos - fragWorldPos;
             float dist = length(toLight);
-            L = normalize(toLight);
-            attenuation = clamp(1.0 - dist / light.radius, 0.0, 1.0);
-            attenuation *= attenuation; // smoother
+            
+            // Early out if outside light radius
+            if (dist >= lightRadius)
+                continue;
+                
+            L = toLight / dist;
+            attenuation = 1.0 - dist / lightRadius;
+            attenuation *= attenuation;
         }
 
-        if (light.type == 2) {
-            // Spot light cone
-            float spotFactor = dot(L, -light.direction);
-            float smoothS = smoothstep(light.outerCone, light.innerCone, spotFactor);
+        if (lightType == 2) 
+        {
+            // Spot light cone attenuation
+            float spotFactor = dot(L, normalize(-lightDir));
+            if (spotFactor < outerCone)
+                continue;
+            float smoothS = smoothstep(outerCone, innerCone, spotFactor);
             attenuation *= smoothS;
         }
 
-        vec3 lightCol = light.color * light.intensity * attenuation;
+        vec3 lightCol = lightColor * lightIntensity * attenuation;
         Lo += computePBRLight(albedo, metallic, roughness, N, V, L, lightCol);
     }
 

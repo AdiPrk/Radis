@@ -1,35 +1,48 @@
 #include <PCH/pch.h>
 #include "Components.h"
 
-namespace Radis {
+namespace Radis 
+{
+	void TransformComponent::SetTranslation(float x, float y, float z)
+	{
+        Translation = glm::vec3(x, y, z);
+        isDirty = true;
+	}
 
-	glm::mat4 TransformComponent::mat4() const {
-		const float c3 = glm::cos(Rotation.z);
-		const float s3 = glm::sin(Rotation.z);
-		const float c2 = glm::cos(Rotation.x);
-		const float s2 = glm::sin(Rotation.x);
-		const float c1 = glm::cos(Rotation.y);
-		const float s1 = glm::sin(Rotation.y);
-		return glm::mat4{
-			{
-				Scale.x * (c1 * c3 + s1 * s2 * s3),
-				Scale.x * (c2 * s3),
-				Scale.x * (c1 * s2 * s3 - c3 * s1),
-				0.0f,
-			},
-			{
-				Scale.y * (c3 * s1 * s2 - c1 * s3),
-				Scale.y * (c2 * c3),
-				Scale.y * (c1 * c3 * s2 + s1 * s3),
-				0.0f,
-			},
-			{
-				Scale.z * (c2 * s1),
-				Scale.z * (-s2),
-				Scale.z * (c1 * c2),
-				0.0f,
-			},
-			{Translation.x, Translation.y, Translation.z, 1.0f} };
+	void TransformComponent::SetTranslation(const glm::vec3& tr)
+	{
+		Translation = tr;
+        isDirty = true;
+	}
+
+	void TransformComponent::SetRotation(float x, float y, float z)
+	{
+		Rotation = glm::vec3(x, y, z);
+        isDirty = true;
+	}
+	
+	void TransformComponent::SetRotation(const glm::vec3& rot)
+	{
+		Rotation = rot;
+        isDirty = true;
+	}
+	
+	void TransformComponent::SetScale(float x, float y, float z)
+	{
+		Scale = glm::vec3(x, y, z);
+        isDirty = true;
+	}
+	
+	void TransformComponent::SetScale(const glm::vec3& scale)
+	{
+		Scale = scale;
+        isDirty = true;
+	}
+
+	void TransformComponent::SetScale(float s)
+	{
+		Scale = glm::vec3(s, s, s);
+        isDirty = true;
 	}
 
 	glm::mat3 TransformComponent::normalMatrix() const {

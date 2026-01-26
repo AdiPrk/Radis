@@ -240,7 +240,7 @@ namespace Radis
             gBufferPipeline = std::make_unique<Pipeline>(*device, gBufferFormats, depthFormat, unis, false, "deferred.vert", "deferred.frag");
 
             // Deferred lighting outputs to HDR texture
-            deferredLightingPipeline = std::make_unique<Pipeline>(*device, hdrFormat, VK_FORMAT_UNDEFINED, deferredLightingUnis, false, "deferredLight.vert", "deferredLight.frag", false);
+            deferredLightingPipeline = std::make_unique<Pipeline>(*device, hdrFormat, VK_FORMAT_UNDEFINED, deferredLightingUnis, false, "fullscreen.vert", "deferredLight.frag", false);
 
             raytracingPipeline = std::make_unique<RaytracingPipeline>(*device, rtunis);
         }

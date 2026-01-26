@@ -48,4 +48,24 @@ namespace glm
         j.at(3).get_to(v.w);
     }
 
+    // Serializer for glm::mat4
+    inline void to_json(nlohmann::json& j, const glm::mat4& m) {
+        j = nlohmann::json::array();
+        for (int i = 0; i < 4; ++i) {
+            nlohmann::json col = nlohmann::json::array();
+            for (int j_idx = 0; j_idx < 4; ++j_idx) {
+                col.push_back(m[i][j_idx]);
+            }
+            j.push_back(col);
+        }
+    }
+
+    inline void from_json(const nlohmann::json& j, glm::mat4& m) {
+        for (int i = 0; i < 4; ++i) {
+            for (int j_idx = 0; j_idx < 4; ++j_idx) {
+                m[i][j_idx] = j.at(i).at(j_idx).get<float>();
+            }
+        }
+    }
+
 }

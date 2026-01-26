@@ -159,7 +159,7 @@ namespace Radis
                 camera.SmoothedPosition = glm::mix(camera.SmoothedPosition, desiredPos, posAlpha);
 
                 // write smoothed position back to transform
-                transform.Translation = camera.SmoothedPosition;
+                transform.SetTranslation(camera.SmoothedPosition);
             }
             else
             {
@@ -167,7 +167,7 @@ namespace Radis
                 const float posK = camera.PositionSmoothness;
                 float posAlpha = 1.0f - std::exp(-posK * dt);
                 camera.SmoothedPosition = glm::mix(camera.SmoothedPosition, transform.Translation, posAlpha);
-                transform.Translation = camera.SmoothedPosition;
+                transform.SetTranslation(camera.SmoothedPosition);
             }
         }
     }

@@ -386,6 +386,12 @@ namespace Radis {
         glBufferSubData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
     }
 
+    void GLShader::SetInverseProjectionView(const glm::mat4& inversePV)
+    {
+        glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
+        glBufferSubData(GL_UNIFORM_BUFFER, 3 * sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(inversePV));
+    }
+
     void GLShader::SetCameraUBO(const CameraUniforms& uniformData)
     {
         glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
