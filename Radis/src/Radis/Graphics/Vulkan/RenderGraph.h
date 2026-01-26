@@ -63,7 +63,9 @@ namespace Radis
         RenderGraph() = default;
 
         // Imports an existing, externally managed image (like the swapchain) into the graph.
+        RGResourceHandle ImportTexture(const char* name, class VKTexture* tex, bool backBuffer = false);
         RGResourceHandle ImportTexture(const char* name, VkImage image, VkImageView view, VkExtent2D extent, VkFormat format, bool backBuffer = false);
+        RGResourceHandle ImportBackbuffer(const char* name, class VKTexture* tex);
         RGResourceHandle ImportBackbuffer(const char* name, VkImage image, VkImageView view, VkExtent2D extent, VkFormat format);
 
         // Adds a new pass to the graph. The setup callback declares dependencies.

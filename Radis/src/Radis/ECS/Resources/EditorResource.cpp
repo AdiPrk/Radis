@@ -63,7 +63,7 @@ namespace Radis
 		samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		samplerLayoutBinding.descriptorCount = 1;
 		samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-		samplerLayoutBinding.pImmutableSamplers = nullptr;  // Use your own sampler
+		samplerLayoutBinding.pImmutableSamplers = nullptr;
 
 		VkDescriptorSetLayoutCreateInfo layoutInfo{};
 		layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -78,37 +78,39 @@ namespace Radis
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
 		ImGuiIO& io = ImGui::GetIO();
-		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable keyboard controls
-		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;      // Enable docking
-		// io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable multi-viewport / platform windows
+		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
 		ImGui_ImplGlfw_InitForVulkan(glfwWindow, false);
-		ImGui_ImplVulkan_InitInfo init_info = {};
+
+		ImGui_ImplVulkan_InitInfo init_info{};
+		init_info.ApiVersion = VK_API_VERSION_1_4;
 		init_info.Instance = device->GetInstance();
 		init_info.PhysicalDevice = device->GetPhysicalDevice();
 		init_info.Device = device->GetDevice();
 		init_info.QueueFamily = device->GetGraphicsFamily();
 		init_info.Queue = device->GetGraphicsQueue();
 		init_info.PipelineCache = VK_NULL_HANDLE;
-		init_info.DescriptorPool = descriptorPool;// device.getImGuiDescriptorPool();
-		init_info.UseDynamicRendering = VK_TRUE;
-		init_info.RenderPass = VK_NULL_HANDLE;
-		init_info.Subpass = 0;
-
-		VkFormat colorFormat = swapChain->GetImageFormat();
-		init_info.PipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
-		init_info.PipelineRenderingCreateInfo.colorAttachmentCount = 1;
-		init_info.PipelineRenderingCreateInfo.pColorAttachmentFormats = &colorFormat;
-		init_info.PipelineRenderingCreateInfo.depthAttachmentFormat = swapChain->GetDepthFormat();
-		init_info.PipelineRenderingCreateInfo.stencilAttachmentFormat = VK_FORMAT_UNDEFINED;
-
-		init_info.Allocator = nullptr;
+		init_info.DescriptorPool = descriptorPool;
 		init_info.MinImageCount = SwapChain::MAX_FRAMES_IN_FLIGHT;
 		init_info.ImageCount = static_cast<uint32_t>(swapChain->ImageCount());
-		init_info.CheckVkResultFn = nullptr;
-		ImGui_ImplVulkan_Init(&init_info);
+		
+		init_info.UseDynamicRendering = true;
+		init_info.PipelineInfoMain.RenderPass = VK_NULL_HANDLE;
+		init_info.PipelineInfoMain.Subpass = 0;
+		
+		VkFormat colorFormat = swapChain->GetImageFormat();
+		init_info.PipelineInfoMain.PipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
+		init_info.PipelineInfoMain.PipelineRenderingCreateInfo.pNext = nullptr;
+		init_info.PipelineInfoMain.PipelineRenderingCreateInfo.colorAttachmentCount = 1;
+		init_info.PipelineInfoMain.PipelineRenderingCreateInfo.pColorAttachmentFormats = &colorFormat;
+		init_info.PipelineInfoMain.PipelineRenderingCreateInfo.depthAttachmentFormat = swapChain->GetDepthFormat();
+		init_info.PipelineInfoMain.PipelineRenderingCreateInfo.stencilAttachmentFormat = VK_FORMAT_UNDEFINED;
 
-		ImGui::StyleColorsDark();
+		RADIS_INFO("vkGetDeviceProcAddr ptr = {}", (void*)vkGetDeviceProcAddr);
+		RADIS_INFO("vkCmdBeginRendering ptr (volk global) = {}", (void*)vkCmdBeginRendering);
+
+		ImGui_ImplVulkan_Init(&init_info);
 
 		SetupFonts(dpiScale);
 	}
@@ -120,15 +122,12 @@ namespace Radis
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
 		ImGuiIO& io = ImGui::GetIO();
-		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-		io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // IF using Docking Branch
+		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+		io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
-		// Setup Platform/Renderer backends
-		ImGui_ImplGlfw_InitForOpenGL(glfwWindow, false);  // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
+		ImGui_ImplGlfw_InitForOpenGL(glfwWindow, false);
 		ImGui_ImplOpenGL3_Init();
-
-		ImGui::StyleColorsDark();
 
 		SetupFonts(dpiScale);
 	}

@@ -26,7 +26,7 @@ namespace Radis
             void* sceneTexturePtr;
             if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
             {
-                if (rr->useRaytracing)
+                if (rr->renderMode == RenderMode::Raytracing)
                 {
                     uint32_t frameIndex = rr->currentFrameIndex;
                     if (er->renderRaytracingHeatmap)
@@ -90,9 +90,12 @@ namespace Radis
         void UpdateImGuizmo(ECS* ecs)
         {
             auto er = ecs->GetResource<EditorResource>();
-            if (!er || !er->selectedEntity) return;
-            if (!er->selectedEntity.HasComponent<TransformComponent>()) return;
-            TransformComponent& transformComponent = er->selectedEntity.GetComponent<TransformComponent>();
+            if (!er || er->selectedEntities.empty()) return;
+
+            Entity selectedEntity = er->selectedEntities[0];
+
+            if (!selectedEntity.HasComponent<TransformComponent>()) return;
+            TransformComponent& transformComponent = selectedEntity.GetComponent<TransformComponent>();
 
             glm::mat4 view = glm::mat4(1.0f);
             glm::mat4 projection = glm::perspective(glm::radians(45.0f), er->sceneWindowWidth / er->sceneWindowHeight, 0.1f, 100.0f);
@@ -133,6 +136,7 @@ namespace Radis
                 transformComponent.Translation = newTranslation;
                 transformComponent.Rotation = glm::radians(newRotation);
                 transformComponent.Scale = newScale;
+                transformComponent.isDirty = true;
             }
         }
     }

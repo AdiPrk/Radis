@@ -3,6 +3,7 @@
 #include "IResource.h"
 #include "Graphics/Vulkan/Core/AccelerationStructures.h"
 #include "Graphics/OpenGL/GLShader.h"
+#include "Graphics/Common/RenderMode.h"
 
 namespace Radis
 {
@@ -37,11 +38,11 @@ namespace Radis
         std::unique_ptr<TextureLibrary> textureLibrary;
         std::unique_ptr<AnimationLibrary> animationLibrary;
         std::unique_ptr<RenderGraph> renderGraph;
-        
+
         // Uniforms ----------------
         std::unique_ptr<Uniform> cameraUniform;
         std::unique_ptr<Uniform> rtUniform;
-        //std::unique_ptr<Uniform> instanceUniform;
+        std::unique_ptr<Uniform> deferredLightingUniform;
         // -------------------------
 
         std::vector<VkCommandBuffer> commandBuffers;
@@ -50,19 +51,30 @@ namespace Radis
 
         // Scene textures ----------------
         VkImage sceneImage{ VK_NULL_HANDLE };
-        VmaAllocation sceneImageAllocation{ VK_NULL_HANDLE };
         VkImageView sceneImageView{ VK_NULL_HANDLE };
-        
+
         VkImage mDepthImage{ VK_NULL_HANDLE };
-        VmaAllocation mDepthImageAllocation{ VK_NULL_HANDLE };
         VkImageView mDepthImageView{ VK_NULL_HANDLE };
 
         VkDescriptorSet sceneTextureDescriptorSet{ VK_NULL_HANDLE };
         // --------------------------------
 
+        // G-Buffer textures ----------------
+        VkImage gAlbedoImage{ VK_NULL_HANDLE };
+        VkImage gNormalImage{ VK_NULL_HANDLE };
+        VkImage gPBRImage{ VK_NULL_HANDLE };
+        VkImage gEmissiveImage{ VK_NULL_HANDLE };
+        VkImageView gAlbedoImageView{ VK_NULL_HANDLE };
+        VkImageView gNormalImageView{ VK_NULL_HANDLE };
+        VkImageView gPBRImageView{ VK_NULL_HANDLE };
+        VkImageView gEmissiveImageView{ VK_NULL_HANDLE };
+        // --------------------------------
+
         // Pipelines
         std::unique_ptr<Pipeline> pipeline;
         std::unique_ptr<Pipeline> wireframePipeline;
+        std::unique_ptr<Pipeline> gBufferPipeline;
+        std::unique_ptr<Pipeline> deferredLightingPipeline;
         std::unique_ptr<RaytracingPipeline> raytracingPipeline;
         // -----------
 
@@ -72,16 +84,16 @@ namespace Radis
         // --------------------------------
 
         // RT
-        std::vector<AccelerationStructure> blasAccel; // Bottom Level Acceleration Structures
-        AccelerationStructure tlasAccel;              // Top Level Acceleration Structure
+        std::vector<AccelerationStructure> blasAccel;
+        AccelerationStructure tlasAccel;
         // --
 
+        // Render Mode
+        RenderMode renderMode = RenderMode::Deferred;
         bool renderWireframe = false;
-        bool useRaytracing = false;
 
         bool supportsVulkan = true;
 
-        // Texture update
         bool SupportsVulkan();
 
     private:
@@ -89,7 +101,7 @@ namespace Radis
         friend class PresentSystem;
         void RecreateSwapChain(IWindow* window);
 
-        void CreateCommandBuffers();        
+        void CreateCommandBuffers();
         VkFormat ToLinearFormat(VkFormat format);
     };
 }

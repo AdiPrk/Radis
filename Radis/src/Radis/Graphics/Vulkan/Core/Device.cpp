@@ -432,6 +432,9 @@ namespace Radis
             return false;
         }
 
+        // Load device-level Vulkan functions with Volk
+        volkLoadDevice(device_);
+
         // 8) Retrieve queues
         vkGetDeviceQueue(device_, indices.graphicsFamily, 0, &graphicsQueue_);
         vkGetDeviceQueue(device_, indices.presentFamily, 0, &presentQueue_);

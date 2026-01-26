@@ -91,6 +91,7 @@
     <ClCompile Include="src\Radis\ECS\Systems\Editor\Windows\ChatWindow.cpp" />
     <ClCompile Include="src\Radis\ECS\Resources\Networking\NetworkingResource.cpp" />
     <ClCompile Include="src\Radis\ECS\Systems\Physics\PhysicsSystem.cpp" />
+    <ClCompile Include="src\Radis\ECS\Systems\Editor\Windows\InspectorWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\nlohmann\json.hpp" />
@@ -204,6 +205,8 @@
     <ClInclude Include="src\Radis\ECS\Resources\Networking\NetworkingResource.h" />
     <ClInclude Include="src\Radis\ECS\Resources\Physics\PhysicsResource.h" />
     <ClInclude Include="src\Radis\ECS\Systems\Physics\PhysicsSystem.h" />
+    <ClInclude Include="src\Radis\ECS\Systems\Editor\Windows\InspectorWindow.h" />
+    <ClInclude Include="src\Radis\Graphics\Common\RenderMode.h" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="Assets\Shaders\*.*" />
@@ -347,6 +350,59 @@
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\bloomUpsample.frag" />
+    <CustomBuild Include="Assets\Shaders\composite.frag" />
+    <CustomBuild Include="Assets\Shaders\deferred.frag" />
+    <CustomBuild Include="Assets\Shaders\deferred.vert" />
+    <CustomBuild Include="Assets\Shaders\deferredLight.frag" />
+    <CustomBuild Include="Assets\Shaders\forward.frag" />
+    <CustomBuild Include="Assets\Shaders\forward.vert" />
+    <CustomBuild Include="Assets\Shaders\fullscreen.vert" />
+    <CustomBuild Include="Assets\Shaders\raytrace.rahit" />
+    <CustomBuild Include="Assets\Shaders\raytrace.rchit" />
+    <CustomBuild Include="Assets\Shaders\raytrace.rgen" />
+    <CustomBuild Include="Assets\Shaders\raytrace.rmiss" />
+    <CustomBuild Include="Assets\Shaders\shadow.rmiss" />
+    <CustomBuild Include="Assets\Shaders\bloomUpsample.frag" />
+    <CustomBuild Include="Assets\Shaders\composite.frag" />
+    <CustomBuild Include="Assets\Shaders\deferred.frag" />
+    <CustomBuild Include="Assets\Shaders\deferred.vert" />
+    <CustomBuild Include="Assets\Shaders\deferredLight.frag" />
+    <CustomBuild Include="Assets\Shaders\forward.frag" />
+    <CustomBuild Include="Assets\Shaders\forward.vert" />
+    <CustomBuild Include="Assets\Shaders\fullscreen.vert" />
+    <CustomBuild Include="Assets\Shaders\raytrace.rahit" />
+    <CustomBuild Include="Assets\Shaders\raytrace.rchit" />
+    <CustomBuild Include="Assets\Shaders\raytrace.rgen" />
+    <CustomBuild Include="Assets\Shaders\raytrace.rmiss" />
+    <CustomBuild Include="Assets\Shaders\shadow.rmiss" />
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />

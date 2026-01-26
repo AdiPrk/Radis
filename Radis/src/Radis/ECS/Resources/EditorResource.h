@@ -28,8 +28,11 @@ namespace Radis
         float sceneWindowHeight = 1.f;
         bool renderRaytracingHeatmap = false;
 
-        Entity selectedEntity;
-        Entity entityToDelete;
+        std::vector<Entity> selectedEntities;
+        std::vector<Entity> entitiesToDelete;
+
+        // Entity selectedEntity;
+        // Entity entityToDelete;
 
         bool GetImGuiInitialized() { return isInitialized; }
 

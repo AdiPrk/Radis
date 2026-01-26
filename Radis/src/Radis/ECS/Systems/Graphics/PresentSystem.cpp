@@ -12,6 +12,7 @@
 #include "Graphics/Vulkan/RenderGraph.h"
 #include "Graphics/Vulkan/Core/Synchronization.h"
 #include "Graphics/Vulkan/VulkanWindow.h"
+#include "Graphics/Vulkan/Uniform/UniformData.h"
 
 #include "Graphics/Common/TextureLibrary.h"
 #include "Graphics/Vulkan/Texture/VKTexture.h"
@@ -20,22 +21,36 @@
 
 namespace Radis
 {
+    // Helper function to resize all textures and update descriptors
+    static void ResizeRenderTargets(RenderingResource* rr)
+    {
+        auto tl = rr->textureLibrary.get();
+        if (!tl) return;
+
+        const auto& extent = rr->swapChain->GetSwapChainExtent();
+        tl->ResizeStorageImage("RTColorImage_0", extent.width, extent.height);
+        tl->ResizeStorageImage("RTColorImage_1", extent.width, extent.height);
+        tl->ResizeStorageImage("RTHeatmapImage_0", extent.width, extent.height);
+        tl->ResizeStorageImage("RTHeatmapImage_1", extent.width, extent.height);
+        tl->ResizeTexture("SceneTexture", extent.width, extent.height);
+        tl->ResizeTexture("SceneDepth", extent.width, extent.height);
+        tl->ResizeTexture("gAlbedo", extent.width, extent.height);
+        tl->ResizeTexture("gNormal", extent.width, extent.height);
+        tl->ResizeTexture("gPBR", extent.width, extent.height);
+        tl->ResizeTexture("gEmissive", extent.width, extent.height);
+
+        if (rr->deferredLightingUniform)
+        {
+            DeferredLightingUniformUpdate(*rr->deferredLightingUniform, *rr);
+        }
+    }
+
 	void PresentSystem::Init()
 	{
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
         {
             auto rr = ecs->GetResource<RenderingResource>();
-            auto tl = rr->textureLibrary.get();
-            if (tl)
-            {
-                const auto& extent = rr->swapChain->GetSwapChainExtent();
-                tl->ResizeStorageImage("RTColorImage_0", extent.width, extent.height);
-                tl->ResizeStorageImage("RTColorImage_1", extent.width, extent.height);
-                tl->ResizeStorageImage("RTHeatmapImage_0", extent.width, extent.height);
-                tl->ResizeStorageImage("RTHeatmapImage_1", extent.width, extent.height);
-                tl->ResizeTexture("SceneTexture", extent.width, extent.height);
-                tl->ResizeTexture("SceneDepth", extent.width, extent.height);
-            }
+            ResizeRenderTargets(rr);
         }
 	}
 
@@ -62,18 +77,7 @@ namespace Radis
         if (result == VK_ERROR_OUT_OF_DATE_KHR)
         {
             rr->RecreateSwapChain(wr->window.get());
-
-            auto tl = rr->textureLibrary.get();
-            if (tl)
-            {
-                const auto& extent = rr->swapChain->GetSwapChainExtent();
-                tl->ResizeStorageImage("RTColorImage_0", extent.width, extent.height);
-                tl->ResizeStorageImage("RTColorImage_1", extent.width, extent.height);
-                tl->ResizeStorageImage("RTHeatmapImage_0", extent.width, extent.height);
-                tl->ResizeStorageImage("RTHeatmapImage_1", extent.width, extent.height);
-                tl->ResizeTexture("SceneTexture", extent.width, extent.height);
-                tl->ResizeTexture("SceneDepth", extent.width, extent.height);
-            }
+            ResizeRenderTargets(rr);
             return;
         }
 
@@ -106,36 +110,14 @@ namespace Radis
 
         // Import resources!
         auto tl = rr->textureLibrary.get();
-        if (Engine::GetEditorEnabled()) 
-        {
-            VKTexture* tex = (VKTexture*)tl->GetTexture("SceneTexture");
-            rg->ImportTexture(
-                "SceneColor",
-                tex->GetImage(),//rr->sceneImage,
-                tex->GetImageView(),//rr->sceneImageView,
-                tex->GetExtent(), //rr->swapChain->GetSwapChainExtent(),
-                tex->GetImageFormat() //rr->swapChain->GetImageFormat()
-            );
-        }
 
-        {
-            VKTexture* tex = (VKTexture*)tl->GetTexture("SceneDepth");
-            rg->ImportTexture(
-                "SceneDepth",
-                tex->GetImage(),
-                tex->GetImageView(),
-                tex->GetExtent(),
-                tex->GetImageFormat()
-            );
-            //rg->ImportTexture(
-            //    "SceneDepth",
-            //    rr->mDepthImage,
-            //    rr->mDepthImageView,
-            //    rr->swapChain->GetSwapChainExtent(),
-            //    rr->swapChain->FindDepthFormat()
-            //);
-        }
-
+        rg->ImportTexture("SceneTexture", (VKTexture*)tl->GetTexture("SceneTexture"));
+        rg->ImportTexture("SceneDepth", (VKTexture*)tl->GetTexture("SceneDepth"));
+        rg->ImportTexture("gAlbedo", (VKTexture*)tl->GetTexture("gAlbedo"));
+        rg->ImportTexture("gNormal", (VKTexture*)tl->GetTexture("gNormal"));
+        rg->ImportTexture("gPBR", (VKTexture*)tl->GetTexture("gPBR"));
+        rg->ImportTexture("gEmissive", (VKTexture*)tl->GetTexture("gEmissive"));
+        
         rg->ImportBackbuffer(
             "BackBuffer",
             rr->swapChain->GetImage(),
@@ -207,19 +189,7 @@ namespace Radis
         {
             wr->window->ResetResizeFlag();
             rr->RecreateSwapChain(wr->window.get());
-            //rr->RecreateAllSceneTextures();
-
-            auto tl = rr->textureLibrary.get();
-            if (tl)
-            {
-                const auto& extent = rr->swapChain->GetSwapChainExtent();
-                tl->ResizeStorageImage("RTColorImage_0", extent.width, extent.height);
-                tl->ResizeStorageImage("RTColorImage_1", extent.width, extent.height);
-                tl->ResizeStorageImage("RTHeatmapImage_0", extent.width, extent.height);
-                tl->ResizeStorageImage("RTHeatmapImage_1", extent.width, extent.height);
-                tl->ResizeTexture("SceneTexture", extent.width, extent.height);
-                tl->ResizeTexture("SceneDepth", extent.width, extent.height);
-            }
+            ResizeRenderTargets(rr);
             rr->syncObjects->ClearImageFences();
         }
         else if (result != VK_SUCCESS) {

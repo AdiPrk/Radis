@@ -38,7 +38,7 @@ namespace Radis
 		ITexture* GetTexture(const std::string& texturePath);
 		ITexture* GetTextureByIndex(uint32_t index);
 
-		uint32_t GetTextureCount() const { return static_cast<uint32_t>(mTextures.size()); }
+		uint32_t GetTextureCount() const { return mNextIndex; }
         VkSampler GetSampler() const { return mTextureSampler; }
 
 		const static uint32_t MAX_TEXTURE_COUNT;

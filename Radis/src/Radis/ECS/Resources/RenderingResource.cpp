@@ -65,7 +65,7 @@ namespace Radis
         {
             GLShader::SetupUBO();
             shader = std::make_unique<GLShader>();
-            shader->load("Assets/shaders/verysimple.vert", "Assets/shaders/verysimple.frag");
+            shader->load("Assets/Shaders/forward.vert", "Assets/shaders/forward.frag");
 
             FrameBufferSpecification fbSpec;
             fbSpec.width = 1280;
@@ -106,6 +106,7 @@ namespace Radis
             modelLibrary->AddModel(Assets::ModelsPath + "cube.obj", true);
             modelLibrary->AddModel(Assets::ModelsPath + "quad.obj", true);
             modelLibrary->AddModel(Assets::ModelsPath + "sphere.glb", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "pbrreference.glb", true);
             // modelLibrary->AddModel(Assets::ModelsPath + "trotting_cat.glb");
             modelLibrary->AddModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx", true);
             modelLibrary->AddModel(Assets::ModelsPath + "jack_samba.glb", true);
@@ -153,24 +154,60 @@ namespace Radis
         {
             VkExtent2D extent = swapChain->GetSwapChainExtent();
 
-            // Create scene and depth textures
+            // HDR format for scene color (before tonemapping)
+            VkFormat hdrFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+
+            // Create HDR scene texture
             textureLibrary->CreateTexture(
-                "SceneTexture",                 // name
-                extent.width,                   // width
-                extent.height,                  // height
-                device->GetLinearFormat(),      // format
-                VK_IMAGE_TILING_OPTIMAL,        // tiling
-                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, // usage
-                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL // final layout
+                "SceneTexture",
+                extent.width, extent.height,
+                hdrFormat,
+                VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            );
+
+            textureLibrary->CreateTexture(
+                "SceneDepth",
+                extent.width, extent.height,
+                swapChain->FindDepthFormat(),
+                VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
+            );
+
+            // G-Buffer textures
+            textureLibrary->CreateTexture(
+                "gAlbedo",
+                extent.width, extent.height,
+                VK_FORMAT_R8G8B8A8_SRGB,
+                VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             );
             textureLibrary->CreateTexture(
-                "SceneDepth",                 // name
-                extent.width,                 // width
-                extent.height,                // height
-                swapChain->FindDepthFormat(), // format
-                VK_IMAGE_TILING_OPTIMAL,      // tiling
-                VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, // usage
-                VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL // final layout
+                "gNormal",
+                extent.width, extent.height,
+                VK_FORMAT_R16G16_SFLOAT,
+                VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            );
+            textureLibrary->CreateTexture(
+                "gPBR",
+                extent.width, extent.height,
+                VK_FORMAT_R8G8B8A8_UNORM,
+                VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            );
+            textureLibrary->CreateTexture(
+                "gEmissive",
+                extent.width, extent.height,
+                VK_FORMAT_B10G11R11_UFLOAT_PACK32,
+                VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             );
         }
 
@@ -183,35 +220,29 @@ namespace Radis
 
             cameraUniform = std::make_unique<Uniform>(*device, *this, cameraUniformSettings);
             rtUniform = std::make_unique<Uniform>(*device, *this, rayTracingUniformSettings);
+            deferredLightingUniform = std::make_unique<Uniform>(*device, *this, deferredLightingUniformSettings);
 
-            std::vector<Uniform*> unis{
-                cameraUniform.get(),
-            };
-            std::vector<Uniform*> rtunis{
-                cameraUniform.get(),
-                rtUniform.get()
-            };
+            std::vector<Uniform*> unis{ cameraUniform.get() };
+            std::vector<Uniform*> rtunis{ cameraUniform.get(), rtUniform.get() };
+            std::vector<Uniform*> deferredLightingUnis{ deferredLightingUniform.get() };
+            
+            VkFormat swapImageFormat = swapChain->GetImageFormat();
+            VkFormat swapDepthFormat = swapChain->FindDepthFormat();
+            VkFormat hdrFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+            VkFormat albedoFormat = VK_FORMAT_R8G8B8A8_SRGB;
+            VkFormat normalFormat = VK_FORMAT_R16G16_SFLOAT;
+            VkFormat pbrFormat = VK_FORMAT_R8G8B8A8_UNORM;
+            VkFormat emissiveFormat = VK_FORMAT_B10G11R11_UFLOAT_PACK32;
+            std::vector<VkFormat> gBufferFormats = { albedoFormat, normalFormat, pbrFormat, emissiveFormat };
 
-            pipeline = std::make_unique<Pipeline>(
-                *device,
-                swapChain->GetImageFormat(), swapChain->FindDepthFormat(),
-                unis,
-                false,
-                "verysimple.vert", "verysimple.frag"
-            );
+            pipeline = std::make_unique<Pipeline>(*device, hdrFormat, swapDepthFormat, unis, false, "forward.vert", "forward.frag");
+            wireframePipeline = std::make_unique<Pipeline>(*device, hdrFormat, swapDepthFormat, unis, true, "forward.vert", "forward.frag");
+            gBufferPipeline = std::make_unique<Pipeline>(*device, gBufferFormats, swapDepthFormat, unis, false, "deferred.vert", "deferred.frag");
 
-            wireframePipeline = std::make_unique<Pipeline>(
-                *device,
-                swapChain->GetImageFormat(), swapChain->FindDepthFormat(),
-                unis,
-                true,
-                "verysimple.vert", "verysimple.frag"
-            );
+            // Deferred lighting outputs to HDR texture
+            deferredLightingPipeline = std::make_unique<Pipeline>(*device, hdrFormat, VK_FORMAT_UNDEFINED, deferredLightingUnis, false, "fullscreen.vert", "deferredLight.frag", false);
 
-            raytracingPipeline = std::make_unique<RaytracingPipeline>(
-                *device,
-                rtunis
-            );
+            raytracingPipeline = std::make_unique<RaytracingPipeline>(*device, rtunis);
         }
     }
 
@@ -252,8 +283,11 @@ namespace Radis
             renderGraph.reset();
             cameraUniform.reset();
             rtUniform.reset();
+            deferredLightingUniform.reset();
             pipeline.reset();
             wireframePipeline.reset();
+            gBufferPipeline.reset();
+            deferredLightingPipeline.reset();
             raytracingPipeline.reset();
             syncObjects.reset();
 
@@ -271,8 +305,6 @@ namespace Radis
         }
         else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
         {
-            //modelLibrary.reset();
-            //textureLibrary.reset();
             if (modelLibrary) modelLibrary->ClearAllBuffers(device.get());
             if (textureLibrary) textureLibrary->ClearAllBuffers(device.get());
             sceneFrameBuffer.reset();
@@ -308,19 +340,17 @@ namespace Radis
             }
         }
     }
+
     void RenderingResource::CreateCommandBuffers()
     {
-        //Resize command buffer to match number of possible frames in flight
         commandBuffers.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
 
-        //Create struct for holding allocation info for this command buffer
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         allocInfo.commandPool = device->GetCommandPool();
         allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
 
-        //Allocate the command buffers
         if (vkAllocateCommandBuffers(device->GetDevice(), &allocInfo, commandBuffers.data()) != VK_SUCCESS)
         {
             RADIS_CRITICAL("Failed to allocate command buffers");
@@ -339,5 +369,4 @@ namespace Radis
         RADIS_CRITICAL("Unsupported format for sRGB conversion");
         return format;
     }
-
 }

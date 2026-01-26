@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-// Windows-only logger (uses only C++ std lib + minimal Win32 from PCH).
+// Windows-only logger
 #include <memory>
 #include <string>
 #include <string_view>

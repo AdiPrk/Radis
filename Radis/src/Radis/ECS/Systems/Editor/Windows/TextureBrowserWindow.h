@@ -3,9 +3,11 @@
 namespace Radis
 {
     class ECS;
+    class TextureLibrary;
 
     namespace EditorWindows
     {
-        void RenderTextureBrowser(ECS* ecs);
+        void RenderFullscreenViewer(TextureLibrary* tl, float flipY);
+        bool RenderTextureBrowser(ECS* ecs);
     }
 }

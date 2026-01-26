@@ -29,6 +29,7 @@
 #include "Windows/ProfilerWindow.h"
 #include "Windows/MemoryWindow.h"
 #include "Windows/ChatWindow.h"
+#include "Windows/InspectorWindow.h"
 
 #include "Utils/Utils.h"
 
@@ -36,12 +37,110 @@
 
 namespace Radis
 {
+    void SetupImGuiStyle()
+    {
+        // Future Dark style by rewrking from ImThemes
+        ImGuiStyle& style = ImGui::GetStyle();
+
+        style.Alpha = 1.0f;
+        style.DisabledAlpha = 1.0f;
+        style.WindowPadding = ImVec2(12.0f, 12.0f);
+        style.WindowRounding = 0.0f;
+        style.WindowBorderSize = 0.0f;
+        style.WindowMinSize = ImVec2(20.0f, 20.0f);
+        style.WindowTitleAlign = ImVec2(0.5f, 0.5f);
+        style.WindowMenuButtonPosition = ImGuiDir_None;
+        style.ChildRounding = 0.0f;
+        style.ChildBorderSize = 1.0f;
+        style.PopupRounding = 0.0f;
+        style.PopupBorderSize = 1.0f;
+        style.FramePadding = ImVec2(6.0f, 6.0f);
+        style.FrameRounding = 0.0f;
+        style.FrameBorderSize = 0.0f;
+        style.ItemSpacing = ImVec2(12.0f, 6.0f);
+        style.ItemInnerSpacing = ImVec2(6.0f, 3.0f);
+        style.CellPadding = ImVec2(12.0f, 6.0f);
+        style.IndentSpacing = 20.0f;
+        style.ColumnsMinSpacing = 6.0f;
+        style.ScrollbarSize = 12.0f;
+        style.ScrollbarRounding = 0.0f;
+        style.GrabMinSize = 12.0f;
+        style.GrabRounding = 0.0f;
+        style.TabRounding = 0.0f;
+        style.TabBorderSize = 0.0f;
+        style.ColorButtonPosition = ImGuiDir_Right;
+        style.ButtonTextAlign = ImVec2(0.5f, 0.5f);
+        style.SelectableTextAlign = ImVec2(0.0f, 0.0f);
+
+        style.Colors[ImGuiCol_Text] = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+        style.Colors[ImGuiCol_TextDisabled] = ImVec4(0.27450982f, 0.31764707f, 0.4509804f, 1.0f);
+        style.Colors[ImGuiCol_WindowBg] = ImVec4(0.078431375f, 0.08627451f, 0.101960786f, 1.0f);
+        style.Colors[ImGuiCol_ChildBg] = ImVec4(0.078431375f, 0.08627451f, 0.101960786f, 1.0f);
+        style.Colors[ImGuiCol_PopupBg] = ImVec4(0.078431375f, 0.08627451f, 0.101960786f, 1.0f);
+        style.Colors[ImGuiCol_Border] = ImVec4(0.15686275f, 0.16862746f, 0.19215687f, 1.0f);
+        style.Colors[ImGuiCol_BorderShadow] = ImVec4(0.078431375f, 0.08627451f, 0.101960786f, 1.0f);
+        style.Colors[ImGuiCol_FrameBg] = ImVec4(0.11764706f, 0.13333334f, 0.14901961f, 1.0f);
+        style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.15686275f, 0.16862746f, 0.19215687f, 1.0f);
+        style.Colors[ImGuiCol_FrameBgActive] = ImVec4(0.23529412f, 0.21568628f, 0.59607846f, 1.0f);
+        style.Colors[ImGuiCol_TitleBg] = ImVec4(0.047058824f, 0.05490196f, 0.07058824f, 1.0f);
+        style.Colors[ImGuiCol_TitleBgActive] = ImVec4(0.047058824f, 0.05490196f, 0.07058824f, 1.0f);
+        style.Colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.078431375f, 0.08627451f, 0.101960786f, 1.0f);
+        style.Colors[ImGuiCol_MenuBarBg] = ImVec4(0.09803922f, 0.105882354f, 0.12156863f, 1.0f);
+        style.Colors[ImGuiCol_ScrollbarBg] = ImVec4(0.047058824f, 0.05490196f, 0.07058824f, 1.0f);
+        style.Colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.11764706f, 0.13333334f, 0.14901961f, 1.0f);
+        style.Colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.15686275f, 0.16862746f, 0.19215687f, 1.0f);
+        style.Colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.11764706f, 0.13333334f, 0.14901961f, 1.0f);
+        style.Colors[ImGuiCol_CheckMark] = ImVec4(0.49803922f, 0.5137255f, 1.0f, 1.0f);
+        style.Colors[ImGuiCol_SliderGrab] = ImVec4(0.49803922f, 0.5137255f, 1.0f, 1.0f);
+        style.Colors[ImGuiCol_SliderGrabActive] = ImVec4(0.5372549f, 0.5529412f, 1.0f, 1.0f);
+        style.Colors[ImGuiCol_Button] = ImVec4(0.11764706f, 0.13333334f, 0.14901961f, 1.0f);
+        style.Colors[ImGuiCol_ButtonHovered] = ImVec4(0.19607843f, 0.1764706f, 0.54509807f, 1.0f);
+        style.Colors[ImGuiCol_ButtonActive] = ImVec4(0.23529412f, 0.21568628f, 0.59607846f, 1.0f);
+        style.Colors[ImGuiCol_Header] = ImVec4(0.11764706f, 0.13333334f, 0.14901961f, 1.0f);
+        style.Colors[ImGuiCol_HeaderHovered] = ImVec4(0.19607843f, 0.1764706f, 0.54509807f, 1.0f);
+        style.Colors[ImGuiCol_HeaderActive] = ImVec4(0.23529412f, 0.21568628f, 0.59607846f, 1.0f);
+        style.Colors[ImGuiCol_Separator] = ImVec4(0.15686275f, 0.18431373f, 0.2509804f, 1.0f);
+        style.Colors[ImGuiCol_SeparatorHovered] = ImVec4(0.15686275f, 0.18431373f, 0.2509804f, 1.0f);
+        style.Colors[ImGuiCol_SeparatorActive] = ImVec4(0.15686275f, 0.18431373f, 0.2509804f, 1.0f);
+        style.Colors[ImGuiCol_ResizeGrip] = ImVec4(0.11764706f, 0.13333334f, 0.14901961f, 1.0f);
+        style.Colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.19607843f, 0.1764706f, 0.54509807f, 1.0f);
+        style.Colors[ImGuiCol_ResizeGripActive] = ImVec4(0.23529412f, 0.21568628f, 0.59607846f, 1.0f);
+        style.Colors[ImGuiCol_Tab] = ImVec4(0.047058824f, 0.05490196f, 0.07058824f, 1.0f);
+        style.Colors[ImGuiCol_TabHovered] = ImVec4(0.11764706f, 0.13333334f, 0.14901961f, 1.0f);
+        style.Colors[ImGuiCol_TabActive] = ImVec4(0.09803922f, 0.105882354f, 0.12156863f, 1.0f);
+        style.Colors[ImGuiCol_TabUnfocused] = ImVec4(0.047058824f, 0.05490196f, 0.07058824f, 1.0f);
+        style.Colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.078431375f, 0.08627451f, 0.101960786f, 1.0f);
+        style.Colors[ImGuiCol_PlotLines] = ImVec4(0.52156866f, 0.6f, 0.7019608f, 1.0f);
+        style.Colors[ImGuiCol_PlotLinesHovered] = ImVec4(0.039215688f, 0.98039216f, 0.98039216f, 1.0f);
+        style.Colors[ImGuiCol_PlotHistogram] = ImVec4(1.0f, 0.2901961f, 0.59607846f, 1.0f);
+        style.Colors[ImGuiCol_PlotHistogramHovered] = ImVec4(0.99607843f, 0.4745098f, 0.69803923f, 1.0f);
+        style.Colors[ImGuiCol_TableHeaderBg] = ImVec4(0.047058824f, 0.05490196f, 0.07058824f, 1.0f);
+        style.Colors[ImGuiCol_TableBorderStrong] = ImVec4(0.047058824f, 0.05490196f, 0.07058824f, 1.0f);
+        style.Colors[ImGuiCol_TableBorderLight] = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+        style.Colors[ImGuiCol_TableRowBg] = ImVec4(0.11764706f, 0.13333334f, 0.14901961f, 1.0f);
+        style.Colors[ImGuiCol_TableRowBgAlt] = ImVec4(0.09803922f, 0.105882354f, 0.12156863f, 1.0f);
+        style.Colors[ImGuiCol_TextSelectedBg] = ImVec4(0.23529412f, 0.21568628f, 0.59607846f, 1.0f);
+        style.Colors[ImGuiCol_DragDropTarget] = ImVec4(0.49803922f, 0.5137255f, 1.0f, 1.0f);
+        style.Colors[ImGuiCol_NavHighlight] = ImVec4(0.49803922f, 0.5137255f, 1.0f, 1.0f);
+        style.Colors[ImGuiCol_NavWindowingHighlight] = ImVec4(0.49803922f, 0.5137255f, 1.0f, 1.0f);
+        style.Colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.19607843f, 0.1764706f, 0.54509807f, 0.5019608f);
+        style.Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.19607843f, 0.1764706f, 0.54509807f, 0.5019608f);
+    }
+
     void EditorSystem::Init()
     {
     }
 
     void EditorSystem::FrameStart()
     {
+        static bool dothing = false;
+        if (dothing == false)
+        {
+            RADIS_INFO("Set up ImGui Style!");
+            SetupImGuiStyle();
+            dothing = true;
+        }
+
         auto rr = ecs->GetResource<RenderingResource>();
         auto er = ecs->GetResource<EditorResource>();
 
@@ -53,6 +152,8 @@ namespace Radis
         ImGui::NewFrame();
         ImGuizmo::BeginFrame();
         
+        SetupImGuiStyle();
+
         RenderMainMenuBar();
 
         ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
@@ -61,32 +162,23 @@ namespace Radis
         {
             PROFILE_SCOPE("Windows");
 
-            EditorWindows::RenderSceneWindow(ecs);
-            EditorWindows::RenderEntitiesWindow(ecs);
-            EditorWindows::RenderTextureBrowser(ecs);
-            EditorWindows::RenderProfilerWindow();
-            EditorWindows::RenderMemoryWindow();
-            EditorWindows::UpdateAssetsWindow(tl.get());
-            ChatWindow::Get().Render();
-            RenderInspectorWindow();
+            if (EditorWindows::RenderTextureBrowser(ecs))
+            {
+                float flipY = static_cast<float>(Engine::GetGraphicsAPI() != GraphicsAPI::OpenGL);
+                EditorWindows::RenderFullscreenViewer(tl.get(), flipY);
+            }
+            else 
+            {
+                EditorWindows::RenderSceneWindow(ecs);
+                EditorWindows::RenderEntitiesWindow(ecs);
+                EditorWindows::RenderProfilerWindow();
+                EditorWindows::RenderMemoryWindow();
+                EditorWindows::UpdateAssetsWindow(tl.get());
+                ChatWindow::Get().Render();
+                EditorWindows::RenderInspectorWindow(ecs);
+                RenderDebugWindow();
+            }
         }
-
-
-        ImGui::Begin("Debug");
-        ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
-        ImGui::Checkbox("Wireframe", &rr->renderWireframe);
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
-        {
-            glPolygonMode(GL_FRONT_AND_BACK, rr->renderWireframe ? GL_LINE : GL_FILL);
-        }
-        
-        ImGui::BeginDisabled(Engine::GetGraphicsAPI() != GraphicsAPI::Vulkan);
-        ImGui::Checkbox("Raytracing", &rr->useRaytracing);
-        ImGui::EndDisabled();
-        ImGui::BeginDisabled(!rr->useRaytracing);
-        ImGui::Checkbox("Raytracing Heatmap Estimation", &er->renderRaytracingHeatmap);
-        ImGui::EndDisabled();
-        ImGui::End();
 
         // Handle mouse lock for ImGui windows (excluding "Viewport")
         {
@@ -111,13 +203,19 @@ namespace Radis
             InputSystem::SetMouseInputLocked(mLockMouse);
         }
 
-        if (er->selectedEntity)
+        if (!er->selectedEntities.empty() && ImGui::GetIO().KeyCtrl && InputSystem::isKeyTriggered(Key::D))
         {
-            if (ImGui::GetIO().KeyCtrl && InputSystem::isKeyTriggered(Key::D))
+            // clone all entities
+            std::vector<Entity> newEntities;
+            newEntities.reserve(er->selectedEntities.size());
+
+            for (const auto& entity : er->selectedEntities)
             {
-                Entity newEntity = ecs->CloneEntity(er->selectedEntity);
-                er->selectedEntity = newEntity;
+                Entity newEntity = ecs->CloneEntity(entity);
+                newEntities.push_back(newEntity);
             }
+
+            er->selectedEntities = newEntities;
         }
 
         // If clicking anywhere outside "Entities" window, deselect entity
@@ -137,7 +235,7 @@ namespace Radis
             rr->renderGraph->AddPass(
                 "ImGuiPass",
                 [&](RGPassBuilder& builder) {
-                    builder.reads("SceneColor");
+                    builder.reads("SceneTexture");
                     builder.writes("BackBuffer");
                 },
                 std::bind(&EditorSystem::RenderImGui, this, std::placeholders::_1)
@@ -182,8 +280,44 @@ namespace Radis
 		ImGui::Render();
 
         if      (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan) ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
-        else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL) ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
+        {
+            // glDisable(GL_FRAMEBUFFER_SRGB);
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+            // glEnable(GL_FRAMEBUFFER_SRGB);
+        }
 	}
+
+    void EditorSystem::RenderDebugWindow()
+    {
+        auto rr = ecs->GetResource<RenderingResource>();
+        auto er = ecs->GetResource<EditorResource>();
+
+        ImGui::Begin("Debug");
+        ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+        ImGui::Checkbox("Wireframe", &rr->renderWireframe);
+        if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
+        {
+            glPolygonMode(GL_FRONT_AND_BACK, rr->renderWireframe ? GL_LINE : GL_FILL);
+        }
+
+        ImGui::BeginDisabled(Engine::GetGraphicsAPI() != GraphicsAPI::Vulkan);
+
+        ImGui::Text("Render Mode:");
+        const char* renderModeItems[] = { "Forward", "Deferred", "Raytracing" };
+        int currentRenderMode = static_cast<int>(rr->renderMode);
+        if (ImGui::Combo("##RenderMode", &currentRenderMode, renderModeItems, IM_ARRAYSIZE(renderModeItems)))
+        {
+            rr->renderMode = static_cast<RenderMode>(currentRenderMode);
+        }
+
+        ImGui::EndDisabled();
+
+        ImGui::BeginDisabled(rr->renderMode != RenderMode::Raytracing);
+        ImGui::Checkbox("Raytracing Heatmap Estimation", &er->renderRaytracingHeatmap);
+        ImGui::EndDisabled();
+        ImGui::End();
+    }
 
     void EditorSystem::RenderMainMenuBar()
     {
@@ -318,491 +452,5 @@ namespace Radis
 
             ImGui::EndPopup();
         }
-    }
-
-    template<typename T, typename UIFunction>
-    static void DrawComponentUI(const char* name, Entity entity, UIFunction uiFunction)
-    {
-        // Ensure the entity has the component before proceeding
-        if (!entity.HasComponent<T>())
-        {
-            return;
-        }
-
-        const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen
-                                               | ImGuiTreeNodeFlags_Framed
-                                               | ImGuiTreeNodeFlags_SpanAvailWidth
-                                               | ImGuiTreeNodeFlags_AllowItemOverlap
-                                               | ImGuiTreeNodeFlags_FramePadding;
-
-        T& component = entity.GetComponent<T>();
-
-        // Create a collapsible header for the component
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 4, 4 });
-        float lineHeight = ImGui::GetFrameHeight();
-        ImGui::Separator();
-        bool open = ImGui::TreeNodeEx((void*)typeid(T).hash_code(), treeNodeFlags, name);
-        ImGui::PopStyleVar();
-
-        // --- Component Settings Menu ---
-        ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
-        ImGui::SameLine(contentRegionAvailable.x - lineHeight * 0.5f);
-        if (ImGui::Button("...", ImVec2{ lineHeight, lineHeight }))
-        {
-            ImGui::OpenPopup("ComponentSettings");
-        }
-
-        bool componentRemoved = false;
-        if (ImGui::BeginPopup("ComponentSettings"))
-        {
-            if (ImGui::MenuItem("Remove Component"))
-            {
-                componentRemoved = true;
-            }
-            ImGui::EndPopup();
-        }
-
-        // If the collapsible header is open, draw the component's properties
-        if (open)
-        {
-            uiFunction(component);
-            ImGui::TreePop();
-        }
-
-        // Remove component if needed
-        if (componentRemoved)
-        {
-            // Avoid removal of Tag
-            if constexpr (!std::is_same_v<T, TagComponent>/* && !std::is_same_v<T, TransformComponent>*/)
-            {
-                entity.RemoveComponent<T>();
-            }
-        }
-    }
-
-    // Helper for the "Add Component" dropdown
-    template<typename T>
-    void DisplayAddComponentEntry(const char* name, Entity entity)
-    {
-        if (!entity.HasComponent<T>())
-        {
-            if (ImGui::MenuItem(name))
-            {
-                entity.AddComponent<T>();
-                ImGui::CloseCurrentPopup();
-            }
-        }
-    }
-
-    // --- Main Inspector Window Function ---
-    void EditorSystem::RenderInspectorWindow()
-    {
-        PROFILE_SCOPE("Inspector");
-
-        ImGui::Begin("Inspector");
-
-        Entity selectedEnt = ecs->GetResource<EditorResource>()->selectedEntity;
-
-        // Handle the case where no entity is selected
-        if (!selectedEnt)
-        {
-            ImGui::Text("No entity selected.");
-            ImGui::End();
-            return;
-        }
-
-        auto rr = ecs->GetResource<RenderingResource>();
-        if (!rr)
-        {
-            RADIS_CRITICAL("No rendering resource in editor system");
-            ImGui::Text("No rendering resource found.");
-            ImGui::End();
-            return;
-        }
-
-        // --- Tag Component (Special case, always at the top) ---
-        if (selectedEnt.HasComponent<TagComponent>())
-        {
-            auto& tag = selectedEnt.GetComponent<TagComponent>();
-            ImGui::InputText("##Tag", &tag.Tag);
-        }
-
-        // --- Scrolling Component Region ---
-        // We create a child window to house the components. This allows the component list to
-        // scroll while the footer with the 'Add Component' and 'Add Entity' buttons remains fixed.
-        // The negative height tells ImGui to use all available space minus the specified amount.
-        const float footerHeight = ImGui::GetFrameHeightWithSpacing() * 1.1f;
-        ImGui::BeginChild("ComponentsRegion", ImVec2(0, -footerHeight), false, ImGuiWindowFlags_HorizontalScrollbar);
-
-        DrawComponentUI<TransformComponent>("Transform", selectedEnt, [](auto& component)
-        {
-            // Displaying rotation in degrees
-            glm::vec3 rotationDegrees = glm::degrees(component.Rotation);
-
-            ImGui::DragFloat3("Translation", glm::value_ptr(component.Translation), 0.1f);
-            if (ImGui::DragFloat3("Rotation", glm::value_ptr(rotationDegrees), 0.1f))
-            {
-                component.Rotation = glm::radians(rotationDegrees);
-            }
-            ImGui::DragFloat3("Scale", glm::value_ptr(component.Scale), 0.1f);
-        });
-
-        DrawComponentUI<CameraComponent>("CameraComponent", selectedEnt, [](auto& component)
-        {
-            // Displaying rotation in degrees
-            ImGui::DragFloat("FOV", &component.FOV, 0.1f, 1.0f, 120.0f);
-            ImGui::DragFloat("Near", &component.Near, 0.01f, 0.01f, 100.0f);
-            ImGui::DragFloat("Far", &component.Far, 1.0f, 10.0f, 10000.0f);
-            ImGui::DragFloat("Move Speed", &component.MoveSpeed, 0.1f, 0.1f, 100.0f);
-            ImGui::DragFloat("Mouse Sensitivity", &component.MouseSensitivity, 0.01f, 0.01f, 10.0f);
-            ImGui::DragFloat("Yaw", &component.Yaw, 0.1f, -360.0f, 360.0f);
-            ImGui::DragFloat("Pitch", &component.Pitch, 0.1f, -89.0f, 89.0f);
-        });
-
-        DrawComponentUI<ModelComponent>("Model", selectedEnt, [&](ModelComponent& component)
-        {
-            const std::vector<std::string> modelExtensions = { ".fbx", ".glb", ".obj", ".gltf" };
-            std::vector<std::string> modelFiles = GetFilesWithExtensions("Assets/Models/", modelExtensions);
-            modelFiles.push_back("Assets/Models/TravisLocomotion/TravisLocomotion.fbx"); // Extra
-
-            auto rr = ecs->GetResource<RenderingResource>();
-            auto& mc = rr->modelLibrary;
-
-            Model* currentModel = mc->GetModel(component.ModelPath);
-            std::string currPath = currentModel ? currentModel->GetName() : "None";
-
-            if (ImGui::BeginCombo("Model", currPath.c_str()))
-            {
-                for (int i = 0; i < modelFiles.size(); ++i)
-                {
-                    const std::string& modelPath = modelFiles[i];
-                    const bool isSelected = currPath == modelPath;
-                    if (ImGui::Selectable(modelPath.c_str(), isSelected))
-                    {
-                        std::string lowerModelPath = modelPath;
-                        std::transform(lowerModelPath.begin(), lowerModelPath.end(), lowerModelPath.begin(), ::tolower);
-
-                        component.ModelPath = lowerModelPath;
-                    }
-                    if (isSelected)
-                    {
-                        ImGui::SetItemDefaultFocus();
-                    }
-
-                }
-                
-                ImGui::EndCombo();
-            }
-
-            //ImGui::InputText("Model Path", &component.ModelPath);
-
-            if (ImGui::BeginDragDropTarget()) 
-            {
-                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Model"))
-                {
-                    std::string path = std::string((char*)payload->Data, payload->DataSize - 1); // -1 to remove null terminator
-                    component.ModelPath = path;
-                }
-
-                ImGui::EndDragDropTarget();
-            }
-
-            ImGui::ColorEdit4("Tint Color", glm::value_ptr(component.tintColor));
-
-            // Checkbox with slider + input field for metallic and roughness overrides
-            ImGui::Checkbox("Override Metallic", &component.useMetallicOverride);
-            if (component.useMetallicOverride)
-            {
-                ImGui::DragFloat("Metallic Override", &component.metallicOverride, 0.01f, 0.0f, 1.0f);
-            }
-            ImGui::Checkbox("Override Roughness", &component.useRoughnessOverride);
-            if (component.useRoughnessOverride)
-            {
-                ImGui::DragFloat("Roughness Override", &component.roughnessOverride, 0.01f, 0.0f, 1.0f);
-            }
-        });
-
-        DrawComponentUI<AnimationComponent>("Animation", selectedEnt, [&](AnimationComponent& component)
-        {
-            auto& animationLibrary = rr->animationLibrary;
-            static int selectedAnimationIndex = -1;
-
-            Entity ent(&ecs->GetRegistry(), selectedEnt);
-            bool hasModel = ent.HasComponent<ModelComponent>();
-
-            if (!hasModel)
-            {
-                ImGui::Text("No model assigned to entity for animations!");
-                return;
-            }
-
-            const auto& mc = ent.GetComponent<ModelComponent>();
-            Model* model = rr->modelLibrary->GetModel(mc.ModelPath);
-            if (!model)
-            {
-                ImGui::Text("Invalid model for animations!");
-                return;
-            }
-
-            const std::string animationsPath = model->GetDir();
-            const std::vector<std::string> animationExtensions = { ".fbx", ".glb" };
-            auto animationFiles = GetFilesWithExtensions(animationsPath, animationExtensions);
-
-            // --- Animation Selection Dropdown ---
-            const auto& animName = animationLibrary->GetAnimationName(component.AnimationIndex);
-            std::string cutName = animName;
-            if (animName.find('|') != std::string::npos)
-            {
-                cutName = animName.substr(animName.find('|') + 1);
-            }
-
-            if (ImGui::BeginCombo("Animation", cutName.c_str()))
-            {
-                for (int i = 0; i < animationFiles.size(); ++i)
-                {
-                    const bool isSelected = (selectedAnimationIndex == i);
-                    if (ImGui::Selectable(animationFiles[i].c_str(), isSelected))
-                    {
-                        selectedAnimationIndex = i;
-
-                        // remove the first part up to the "|" from animName
-                        uint32_t animationIndex = animationLibrary->GetAnimationIndex(model->GetName(), animationFiles[i]);
-                        component.AnimationIndex = animationIndex;
-
-                        if (animationIndex == AnimationLibrary::INVALID_ANIMATION_INDEX)
-                        {
-                            std::string newName = animationFiles[i];
-                            uint32_t newIndex = animationLibrary->AddAnimation(animationsPath + newName, model);
-                            component.AnimationIndex = newIndex;
-                        }
-                    }
-                    if (isSelected)
-                    {
-                        ImGui::SetItemDefaultFocus();
-                    }
-                }
-                ImGui::EndCombo();
-            }            
-
-            ImGui::InputInt("Animation Index", (int*)&component.AnimationIndex);
-            ImGui::Checkbox("In Place", &component.inPlace);
-            ImGui::Checkbox("Is Playing", &component.IsPlaying);
-            ImGui::DragFloat("Animation Time", &component.AnimationTime, 0.05f, 0.0f, FLT_MAX);
-        });
-        
-        DrawComponentUI<LightComponent>("Light", selectedEnt, [](LightComponent& component)
-        {
-            ImGui::ColorEdit3("Light Color", glm::value_ptr(component.Color));
-            ImGui::DragFloat("Light Intensity", &component.Intensity, 0.1f, 0.0f, 100.0f);
-            ImGui::DragFloat3("Light Direction", glm::value_ptr(component.Direction), 0.1f);
-            ImGui::DragFloat("Light Radius", &component.Radius, 0.1f, 0.0f, 100.0f);
-            ImGui::DragFloat("Inner Cone", &component.InnerCone, 0.01f, 0.0f, glm::pi<float>());
-            ImGui::DragFloat("Outer Cone", &component.OuterCone, 0.01f, 0.0f, glm::pi<float>());
-            const char* lightTypes[] = { "DIRECTIONAL", "POINT", "SPOT" };
-            int currentType = static_cast<int>(component.Type);
-            if (ImGui::Combo("Light Type", &currentType, lightTypes, IM_ARRAYSIZE(lightTypes)))
-            {
-                component.Type = static_cast<LightComponent::LightType>(currentType);
-            }
-        });
-
-        DrawComponentUI<SoftBodyComponent>("Soft Body", selectedEnt, [&](SoftBodyComponent& component)
-        {
-            const auto& particles = component.particles;
-            const auto& springs = component.springs;
-
-            // ------------------------------------------------------------
-            // Summary / read-only info
-            // ------------------------------------------------------------
-            ImGui::Text("Particles: %zu", particles.size());
-            ImGui::SameLine();
-            ImGui::Text("Springs: %zu", springs.size());
-
-            if (component.gridNx > 0 && component.gridNy > 0 && component.gridNz > 0)
-            {
-                ImGui::Text("Grid: %u x %u x %u",
-                    component.gridNx, component.gridNy, component.gridNz);
-            }
-
-            // Simple runtime stats
-            std::size_t anchorCount = 0;
-            float maxSpeed = 0.0f;
-            float avgSpeed = 0.0f;
-
-            if (!particles.empty())
-            {
-                float speedSum = 0.0f;
-                for (const SoftBodyParticle& p : particles)
-                {
-                    if (p.isAnchor)
-                        ++anchorCount;
-
-                    float speed = glm::length(p.velocity);
-                    speedSum += speed;
-                    if (speed > maxSpeed)
-                        maxSpeed = speed;
-                }
-                avgSpeed = speedSum / static_cast<float>(particles.size());
-            }
-
-            ImGui::Text("Anchors: %zu", anchorCount);
-            ImGui::Text("Avg speed: %.4f  |  Max speed: %.4f", avgSpeed, maxSpeed);
-
-            ImGui::SeparatorText("Simulation");
-
-            // ------------------------------------------------------------
-            // Simulation parameters
-            // ------------------------------------------------------------
-            ImGui::DragFloat3("Gravity", glm::value_ptr(component.gravity), 0.1f, -50.0f, 50.0f);
-            ImGui::DragFloat("Global Stiffness", &component.globalStiffness, 1.0f, 0.0f, 2000.0f);
-            ImGui::DragFloat("Global Damping", &component.globalDamping, 0.1f, 0.0f, 200.0f);
-
-            if (ImGui::Button("Apply Global Stiffness/Damping to Springs"))
-            {
-                for (auto& s : component.springs)
-                {
-                    s.stiffness = component.globalStiffness;
-                    s.damping = component.globalDamping;
-                }
-            }
-
-            ImGui::SameLine();
-            if (ImGui::Button("Zero All Velocities"))
-            {
-                for (auto& p : component.particles) p.velocity = glm::vec3(0.0f);
-            }
-
-            // ------------------------------------------------------------
-            // Anchors
-            // ------------------------------------------------------------
-            ImGui::SeparatorText("Anchors");
-
-            auto& particlesNonConst = component.particles;
-
-            // ---------- Global anchor offset (move all anchors together) ----------
-            ImGui::TextDisabled("Move all anchor targets together (relative offset).");
-
-            glm::vec3 newOffset = component.globalOffset;
-
-            if (ImGui::DragFloat3("Global Anchor Offset", glm::value_ptr(newOffset), 0.01f))
-            {
-                glm::vec3 delta = newOffset - component.globalOffset;
-                component.globalOffset = newOffset;
-
-                for (auto& p : particlesNonConst)
-                {
-                    if (!p.isAnchor) continue;
-
-                    p.anchorPosition += delta;
-
-                    // For static anchors, keep particle snapped to its target
-                    if (p.inverseMass == 0.0f)
-                    {
-                        p.position = p.anchorPosition;
-                        p.velocity = glm::vec3(0.0f);
-                    }
-                }
-            }
-
-            if (ImGui::Button("Reset Global Anchor Offset"))
-            {
-                glm::vec3 delta = -component.globalOffset;
-                component.globalOffset = glm::vec3(0.0f);
-
-                for (auto& p : particlesNonConst)
-                {
-                    if (!p.isAnchor) continue;
-
-                    p.anchorPosition += delta;
-
-                    if (p.inverseMass == 0.0f)
-                    {
-                        p.position = p.anchorPosition;
-                        p.velocity = glm::vec3(0.0f);
-                    }
-                }
-            }
-
-            // ---------- Per-anchor positions (collapsible list) ----------
-            ImGui::SeparatorText("Per-Anchor Positions");
-
-            // Count anchors
-            std::size_t totalAnchors = 0;
-            for (const auto& p : particlesNonConst)
-                if (p.isAnchor) ++totalAnchors;
-
-            if (totalAnchors == 0)
-            {
-                ImGui::TextDisabled("No anchors in this soft body.");
-                return;
-            }
-
-            // Scrollable child so we don't blow up the panel for big soft bodies.
-            ImGui::BeginChild("AnchorsList", ImVec2(0, 220.0f), true);
-
-            std::size_t anchorIndex = 0;
-            for (std::size_t i = 0; i < particlesNonConst.size(); ++i)
-            {
-                SoftBodyParticle& p = particlesNonConst[i];
-                if (!p.isAnchor)
-                    continue;
-
-                ImGui::PushID(static_cast<int>(i));
-
-                // Label example: "Anchor 0 (particle 12)"
-                std::string header =
-                    "Anchor " + std::to_string(anchorIndex) +
-                    " (particle " + std::to_string(i) + ")";
-
-                if (ImGui::TreeNode(header.c_str()))
-                {
-                    // Editable anchor target position
-                    glm::vec3 anchorPos = p.anchorPosition;
-                    if (ImGui::DragFloat3("Anchor Target", glm::value_ptr(anchorPos), 0.01f))
-                    {
-                        p.anchorPosition = anchorPos;
-
-                        // Snap static anchors to their new target
-                        if (p.inverseMass == 0.0f)
-                        {
-                            p.position = p.anchorPosition;
-                            p.velocity = glm::vec3(0.0f);
-                        }
-                    }
-
-                    ImGui::TreePop();
-                }
-
-                ImGui::Separator();
-                ImGui::PopID();
-
-                ++anchorIndex;
-            }
-
-            ImGui::EndChild();
-        });
-
-
-        ImGui::EndChild(); // End of ComponentsRegion
-
-        // --- Fixed Footer Region ---
-        ImGui::Separator();
-
-        // Button to add a new component to the selected entity
-        if (ImGui::Button("Add Component", ImVec2(-1, 0)))
-        {
-            ImGui::OpenPopup("AddComponentPopup");
-        }
-
-        if (ImGui::BeginPopup("AddComponentPopup"))
-        {
-            DisplayAddComponentEntry<ModelComponent>("Model", selectedEnt);
-            DisplayAddComponentEntry<AnimationComponent>("Animation", selectedEnt);
-            DisplayAddComponentEntry<LightComponent>("Light", selectedEnt);
-            // Add more component types here!
-            ImGui::EndPopup();
-        }
-
-        ImGui::End(); // End of Inspector window
     }
 }

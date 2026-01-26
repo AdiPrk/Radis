@@ -21,10 +21,8 @@ namespace Radis
 		static int GetWidth() { return mWidth; }
 		static int GetHeight() { return mHeight; }
         float GetDPIScale() { return mDpiScale; }
-
 		bool WasResized() const { return mFramebufferResized; }
 		void ResetResizeFlag() { mFramebufferResized = false; }
-
 		void SetTitle(const std::wstring& title);
 
         // Get glfw window handle

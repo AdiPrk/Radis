@@ -18,9 +18,9 @@ namespace Radis
 
     private:
         void RenderImGui(VkCommandBuffer cmd = VK_NULL_HANDLE);
+        void RenderDebugWindow();
 
         void RenderMainMenuBar();
-        void RenderInspectorWindow();
 
         bool mMouseDown = false;
         bool mLockMouse = false;

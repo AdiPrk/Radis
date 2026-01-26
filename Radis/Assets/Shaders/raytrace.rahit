@@ -22,8 +22,8 @@ struct Instance
 {
     mat4 model;
     vec4 tint;
-    uvec4 textureIndicies;
-    uvec4 textureIndicies2;
+    uvec4 textureIndices;
+    uvec4 textureIndices2;
     vec4 baseColorFactor;
     vec4 metallicRoughnessFactor;
     vec4 emissiveFactor;
@@ -46,23 +46,6 @@ struct Vertex
     float nX, nY, nZ;
     float texU, texV; float _padding;
 };
-
-struct Light {
-    vec3 position;
-    float radius;      // For point/spot attenuation
-    vec3 color;
-    float intensity;
-    vec3 direction;
-    float innerCone;   // for spot
-    float outerCone;   // for spot
-    int type;          // 0=dir, 1=point, 2=spot
-};
-
-#define MAX_LIGHTS 10000
-layout(set = 0, binding = 4) readonly buffer LightData {
-    uint lightCount;
-    Light lights[MAX_LIGHTS];
-} lightData;
 
 layout(set = 1, binding = 3, std430) readonly buffer MeshBuffer
 {
@@ -97,7 +80,7 @@ void main()
 
     // Calculate alpha
     vec4 color = instance.baseColorFactor * instance.tint;
-    uint texIndex = instance.textureIndicies.x;
+    uint texIndex = instance.textureIndices.x;
     if (texIndex != 10001)
     {
         color *= texture(uTextures[texIndex], uv);

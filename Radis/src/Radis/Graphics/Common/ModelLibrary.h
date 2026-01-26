@@ -17,6 +17,7 @@ namespace Radis
 	class Uniform;
 	class TextureLibrary;
     class UnifiedMeshes;
+	struct ModelComponent;
 
 	class ModelLibrary
 	{
@@ -30,8 +31,13 @@ namespace Radis
         Model* GetModel(uint32_t index);
         Model* GetModel(const std::string& modelPath);
 		Model* TryAddGetModel(const std::string& modelPath);
+
+        Model* GetModel(ModelComponent& mc);
+		Model* TryAddGetModel(ModelComponent& mc);
+
 		uint32_t GetModelIndex(const std::string& modelPath);
-        UnifiedMeshes* GetUnifiedMesh() { return mUnifiedMesh.get(); }
+        
+		UnifiedMeshes* GetUnifiedMesh() { return mUnifiedMesh.get(); }
 
         uint32_t GetModelCount() const { return static_cast<uint32_t>(mModels.size()); }
 		

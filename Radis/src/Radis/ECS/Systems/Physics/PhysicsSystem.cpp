@@ -95,7 +95,7 @@ namespace Radis
         softBody.lastTransformPosition = glm::vec3(0.0f);
 
         // Particles + springs.
-        float totalMass = 12.5 * n * n;
+        float totalMass = 12.5f * n * n;
         float massPerPoint = totalMass / static_cast<float>(n * n * n);
 
         InitializeSoftBodyParticles(softBody, n, n, n, 0.15f, massPerPoint);

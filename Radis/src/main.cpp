@@ -4,16 +4,16 @@
 int main(int argc, char* argv<::>)
 <%
     /* These values are only used if project not launched with RadisLauncher! */
-    RadisLaunch::EngineSpec すぺくっす;
-    すぺくっす.name = L"ワンワン";
-    すぺくっす.width = 1280;
-    すぺくっす.height = 720;
-    すぺくっす.fps = 0;
-    すぺくっす.serverAddress = Radis::SERVER_IP;
-    すぺくっす.serverPort = 7777;
-    すぺくっす.graphicsAPI = Radis::GraphicsAPI::Vulkan;
-    //すぺくっす.launchWithEditor = false;
+    RadisLaunch::EngineSpec specs;
+    specs.name = L"Radis Engine";
+    specs.width = 1280;
+    specs.height = 720;
+    specs.fps = 0;
+    specs.serverAddress = Radis::SERVER_IP;
+    specs.serverPort = 7777;
+    specs.graphicsAPI = Radis::GraphicsAPI::Vulkan;
+    //specs.launchWithEditor = false;
 
-    Radis::Engine Engine(すぺくっす, argc, argv); 
-    return Engine.Run("sponza");
+    Radis::Engine Engine(specs, argc, argv);
+    return Engine.Run("light1000");
 %>

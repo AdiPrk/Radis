@@ -55,8 +55,8 @@ namespace Radis
                 instance.model = glm::scale(instance.model, glm::vec3(0.2f));
 
                 instance.tint = glm::vec4(1.0f, 0.f, 0.f, 1.f);
-                instance.textureIndicies = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
-                instance.textureIndicies2 = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
+                instance.textureIndices = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
+                instance.textureIndices2 = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
 
                 // Roughness: left Å® right (X)
                 // Metalness: bottom Å® top (Y)
@@ -197,8 +197,8 @@ namespace Radis
             }
 
             instance.tint = line.color;
-            instance.textureIndicies = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
-            instance.textureIndicies2 = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
+            instance.textureIndices = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
+            instance.textureIndices2 = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
             instance.baseColorFactor = glm::vec4(1.0f);
         }
 
@@ -210,8 +210,8 @@ namespace Radis
             instance.model = glm::translate(instance.model, rect.center);
             instance.model = glm::scale(instance.model, glm::vec3(rect.size.x * 0.5f, 0.02f, rect.size.y * 0.5f));
             instance.tint = rect.color;
-            instance.textureIndicies = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
-            instance.textureIndicies2 = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
+            instance.textureIndices = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
+            instance.textureIndices2 = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
             instance.baseColorFactor = glm::vec4(1.0f);
         }
 
@@ -222,8 +222,8 @@ namespace Radis
             instance.model = glm::translate(instance.model, cube.center);
             instance.model = glm::scale(instance.model, glm::vec3(cube.size * 0.5f));
             instance.tint = cube.color, 1.0f;
-            instance.textureIndicies = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
-            instance.textureIndicies2 = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
+            instance.textureIndices = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
+            instance.textureIndices2 = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
             instance.baseColorFactor = glm::vec4(1.0f);
         }
 
@@ -236,8 +236,8 @@ namespace Radis
             instance.model = glm::translate(instance.model, circle.center);
             instance.model = glm::scale(instance.model, glm::vec3(circle.radius * 0.5f, 0.02f, circle.radius * 0.5f));
             instance.tint = circle.color;
-            instance.textureIndicies = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
-            instance.textureIndicies2 = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
+            instance.textureIndices = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
+            instance.textureIndices2 = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
             instance.baseColorFactor = glm::vec4(1.0f);
         }
 
