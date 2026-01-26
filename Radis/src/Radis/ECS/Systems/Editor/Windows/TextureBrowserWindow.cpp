@@ -286,10 +286,10 @@ namespace Radis
             ImGui::Separator();
 
             const float thumbnailSize = 64.0f;
-            const float padding = 8.0f;
-            const float cellSize = thumbnailSize + padding;
+            ImGuiStyle& style = ImGui::GetStyle();
+            const float cellSize = thumbnailSize + style.ItemSpacing.x;
             const float panelWidth = ImGui::GetContentRegionAvail().x;
-            const int columns = std::max(static_cast<int>(panelWidth / cellSize), 1);
+            int columns = (int)floor((panelWidth + style.ItemSpacing.x) / cellSize);
             
             ImGui::BeginChild("TextureGrid", ImVec2(0, 0), false);
             ImGui::Columns(columns, nullptr, false);
