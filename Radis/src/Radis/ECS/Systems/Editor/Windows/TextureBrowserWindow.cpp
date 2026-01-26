@@ -290,6 +290,7 @@ namespace Radis
             const float cellSize = thumbnailSize + style.ItemSpacing.x;
             const float panelWidth = ImGui::GetContentRegionAvail().x;
             int columns = (int)floor((panelWidth + style.ItemSpacing.x) / cellSize);
+            if (columns == 0) columns = 1;
             
             ImGui::BeginChild("TextureGrid", ImVec2(0, 0), false);
             ImGui::Columns(columns, nullptr, false);

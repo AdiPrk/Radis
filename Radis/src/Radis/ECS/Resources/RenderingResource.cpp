@@ -226,8 +226,8 @@ namespace Radis
             std::vector<Uniform*> rtunis{ cameraUniform.get(), rtUniform.get() };
             std::vector<Uniform*> deferredLightingUnis{ deferredLightingUniform.get() };
             
-            VkFormat imageFormat = swapChain->GetImageFormat();
-            VkFormat depthFormat = swapChain->FindDepthFormat();
+            VkFormat swapImageFormat = swapChain->GetImageFormat();
+            VkFormat swapDepthFormat = swapChain->FindDepthFormat();
             VkFormat hdrFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
             VkFormat albedoFormat = VK_FORMAT_R8G8B8A8_SRGB;
             VkFormat normalFormat = VK_FORMAT_R16G16_SFLOAT;
@@ -235,9 +235,9 @@ namespace Radis
             VkFormat emissiveFormat = VK_FORMAT_B10G11R11_UFLOAT_PACK32;
             std::vector<VkFormat> gBufferFormats = { albedoFormat, normalFormat, pbrFormat, emissiveFormat };
 
-            pipeline = std::make_unique<Pipeline>(*device, imageFormat, depthFormat, unis, false, "forward.vert", "forward.frag");
-            wireframePipeline = std::make_unique<Pipeline>(*device, imageFormat, depthFormat, unis, true, "forward.vert", "forward.frag");
-            gBufferPipeline = std::make_unique<Pipeline>(*device, gBufferFormats, depthFormat, unis, false, "deferred.vert", "deferred.frag");
+            pipeline = std::make_unique<Pipeline>(*device, hdrFormat, swapDepthFormat, unis, false, "forward.vert", "forward.frag");
+            wireframePipeline = std::make_unique<Pipeline>(*device, hdrFormat, swapDepthFormat, unis, true, "forward.vert", "forward.frag");
+            gBufferPipeline = std::make_unique<Pipeline>(*device, gBufferFormats, swapDepthFormat, unis, false, "deferred.vert", "deferred.frag");
 
             // Deferred lighting outputs to HDR texture
             deferredLightingPipeline = std::make_unique<Pipeline>(*device, hdrFormat, VK_FORMAT_UNDEFINED, deferredLightingUnis, false, "fullscreen.vert", "deferredLight.frag", false);

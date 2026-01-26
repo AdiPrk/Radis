@@ -136,7 +136,7 @@ namespace Radis
 
         // Handle global Enter key to focus the input box if no other item is active
         if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
-            ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Enter), false) &&
+            ImGui::IsKeyPressed(ImGuiKey_Enter, false) &&
             !ImGui::IsAnyItemActive())
         {
             ImGui::SetKeyboardFocusHere();

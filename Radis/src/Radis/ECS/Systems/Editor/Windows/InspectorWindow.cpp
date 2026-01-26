@@ -27,7 +27,7 @@ namespace Radis
             const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen
                 | ImGuiTreeNodeFlags_Framed
                 | ImGuiTreeNodeFlags_SpanAvailWidth
-                | ImGuiTreeNodeFlags_AllowItemOverlap
+                | ImGuiTreeNodeFlags_AllowOverlap
                 | ImGuiTreeNodeFlags_FramePadding;
 
             T& component = entity.GetComponent<T>();
