@@ -103,6 +103,13 @@ namespace Radis
                 return;
             }
 
+            if (selectedEntities.size() > 1)
+            {
+                ImGui::Text("Multiple entities selected.");
+                ImGui::End();
+                return;
+            }
+
             Entity selectedEnt = ecs->GetResource<EditorResource>()->selectedEntities[0];
 
             // Handle the case where no entity is selected

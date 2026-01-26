@@ -35,18 +35,19 @@ namespace Radis
             }
             if (ImGui::Button("LightTest+"))
             {
-                for (int x = 0; x < 10; x++)
+                int n = 10;
+                for (int x = 0; x < n; x++)
                 {
-                    for (int y = 0; y < 10; y++)
+                    for (int y = 0; y < n; y++)
                     {
-                        for (int z = 0; z < 10; z++)
+                        for (int z = 0; z < n; z++)
                         {
                             Entity debugEntity = ecs->AddEntity("l" + std::to_string(x) + "_" + std::to_string(y) + "_" + std::to_string(z));
                             auto& transform = debugEntity.GetComponent<TransformComponent>();
                             transform.SetTranslation((float)x * 2.f, (float)y * 2.f, (float)z * 2.f);
 
                             // add model
-                            auto& mc = debugEntity.AddComponent<ModelComponent>("assets/models/sphere.glb");
+                            auto& mc = debugEntity.AddComponent<ModelComponent>("assets/models/sphere.obj");
                             
                             // add light
                             auto& lc = debugEntity.AddComponent<LightComponent>();
@@ -54,9 +55,9 @@ namespace Radis
 
                             // Color based on position
                             lc.Color = glm::vec3(
-                                (float)x / 10.f,
-                                (float)y / 10.f,
-                                (float)z / 10.f
+                                (float)x / (float)n,
+                                (float)y / (float)n,
+                                (float)z / (float)n
                             );
                         }
                     }
@@ -82,7 +83,7 @@ namespace Radis
                             transform.SetScale(0.5f);
 
                             // add model
-                            auto& mc = debugEntity.AddComponent<ModelComponent>("assets/models/sphere.glb");
+                            auto& mc = debugEntity.AddComponent<ModelComponent>("assets/models/cube.obj");
                             mc.tintColor = glm::vec4(
                                 (float)x / (float)n,
                                 (float)y / (float)n,

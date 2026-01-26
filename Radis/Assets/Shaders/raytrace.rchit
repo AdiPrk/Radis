@@ -49,15 +49,12 @@ struct Vertex
     float texU, texV; float _padding;
 };
 
+// Compressed Light data (64 bytes instead of 80) - matches forward.frag
 struct Light {
-    vec3 position;
-    float radius;      // For point/spot attenuation
-    vec3 color;
-    float intensity;
-    vec3 direction;
-    float innerCone;   // for spot
-    float outerCone;   // for spot
-    int type;          // 0=dir, 1=point, 2=spot
+    vec4 positionRadius;    // xyz = position, w = radius
+    vec4 colorIntensity;    // xyz = color, w = intensity
+    vec4 directionInner;    // xyz = direction, w = innerCone
+    vec4 outerConeType;     // x = outerCone, y = type (0=dir, 1=point, 2=spot), zw = padding
 };
 
 #define MAX_LIGHTS 10000
@@ -240,26 +237,43 @@ void main()
     for (uint i = 0; i < lightData.lightCount; ++i)
     {
         Light light = lightData.lights[i];
+        
+        // Unpack compressed light data
+        vec3 lightPos = light.positionRadius.xyz;
+        float lightRadius = light.positionRadius.w;
+        vec3 lightColor = light.colorIntensity.xyz;
+        float lightIntensity = light.colorIntensity.w;
+        vec3 lightDir = light.directionInner.xyz;
+        float innerCone = light.directionInner.w;
+        float outerCone = light.outerConeType.x;
+        int lightType = int(light.outerConeType.y);
+        
         vec3 L;
         float attenuation = 1.0;
         float lightDistance = 0.0;
 
-        if (light.type == 0) { // Directional
-            L = normalize(-light.direction);
+        if (lightType == 0) { // Directional
+            L = normalize(-lightDir);
             lightDistance = 1e38; // Infinite distance for shadow ray
         }
         else { // Point / Spot
-            vec3 toLight = light.position - fragWorldPos;
+            vec3 toLight = lightPos - fragWorldPos;
             lightDistance = length(toLight);
-            float dist = length(toLight);
-            L = normalize(toLight);
-            attenuation = clamp(1.0 - dist / light.radius, 0.0, 1.0);
+            
+            // Early out if outside light radius
+            if (lightDistance >= lightRadius)
+                continue;
+                
+            L = toLight / lightDistance;
+            attenuation = 1.0 - lightDistance / lightRadius;
             attenuation *= attenuation;
         }
 
-        if (light.type == 2) { // Spot
-            float spotFactor = dot(L, -light.direction);
-            float smoothS = smoothstep(light.outerCone, light.innerCone, spotFactor);
+        if (lightType == 2) { // Spot
+            float spotFactor = dot(L, normalize(-lightDir));
+            if (spotFactor < outerCone)
+                continue;
+            float smoothS = smoothstep(outerCone, innerCone, spotFactor);
             attenuation *= smoothS;
         }
 
@@ -270,7 +284,7 @@ void main()
         if (NdotL > 0.0 && attenuation > 0.0)
         {
             shadowFactor = fetchShadow(fragWorldPos, N, L, lightDistance);
-            vec3 lightCol = light.color * light.intensity * attenuation * shadowFactor;
+            vec3 lightCol = lightColor * lightIntensity * attenuation * shadowFactor;
             Lo += computePBRLight(albedo, metallic, roughness, N, V, L, lightCol);
         }
     }
