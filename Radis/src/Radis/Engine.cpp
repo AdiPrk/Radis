@@ -79,12 +79,10 @@ namespace Radis
         bool canVulkan = Engine::GetVulkanSupported();
         bool isVulkan = (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan);
         bool swapVulkan = !canVulkan && isVulkan;
+        if (swapVulkan)
         {
             auto srr = mEcs.GetResource<SwapRendererResource>();
-            if (swapVulkan)
-            {
-                srr->SwapBackend(&mEcs, true);
-            }
+            srr->SwapBackend(&mEcs, true);
         }
 
         if (mEditorEnabled)

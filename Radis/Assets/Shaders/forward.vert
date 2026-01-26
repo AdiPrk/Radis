@@ -55,8 +55,8 @@ struct Instance
 {
     mat4 model;
     vec4 tint;
-    uvec4 textureIndicies;
-    uvec4 textureIndicies2;
+    uvec4 textureIndices;
+    uvec4 textureIndices2;
     vec4 baseColorFactor;
     vec4 metallicRoughnessFactor;
     vec4 emissiveFactor;
@@ -129,8 +129,8 @@ void main()
     fragColor = color;
     fragTint = instance.tint;
     fragTexCoord = texCoord;
-    textureIndex = instance.textureIndicies;
-    textureIndex2 = instance.textureIndicies2;
+    textureIndex = instance.textureIndices;
+    textureIndex2 = instance.textureIndices2;
     baseColorFactor = instance.baseColorFactor;
     metallicRoughnessFactor = instance.metallicRoughnessFactor;
     emissiveFactor = instance.emissiveFactor;

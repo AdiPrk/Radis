@@ -24,8 +24,8 @@ struct Instance
 {
     mat4 model;
     vec4 tint;
-    uvec4 textureIndicies;
-    uvec4 textureIndicies2;
+    uvec4 textureIndices;
+    uvec4 textureIndices2;
     vec4 baseColorFactor;
     vec4 metallicRoughnessFactor;
     vec4 emissiveFactor;
@@ -195,40 +195,40 @@ void main()
     
     // Base Color
     vec4 baseColor = vec4(vertexColor, 1.0) * instance.tint * instance.baseColorFactor; // Included fragTint logic here
-    if (instance.textureIndicies.x != INVALID_TEXTURE_INDEX)
+    if (instance.textureIndices.x != INVALID_TEXTURE_INDEX)
     {
-        baseColor *= SampleTexture(instance.textureIndicies.x, uv);
+        baseColor *= SampleTexture(instance.textureIndices.x, uv);
     }
     vec3 albedo = baseColor.rgb;
 
     // Metallic
     float metallic = instance.metallicRoughnessFactor.x;
-    if (instance.textureIndicies.z != INVALID_TEXTURE_INDEX)
+    if (instance.textureIndices.z != INVALID_TEXTURE_INDEX)
     {
-        metallic = SampleTexture(instance.textureIndicies.z, uv).b;
+        metallic = SampleTexture(instance.textureIndices.z, uv).b;
     }
 
     // Roughness
     float roughness = instance.metallicRoughnessFactor.y;
-    if (instance.textureIndicies.w != INVALID_TEXTURE_INDEX)
+    if (instance.textureIndices.w != INVALID_TEXTURE_INDEX)
     {
-        float rSample = SampleTexture(instance.textureIndicies.w, uv).g;
+        float rSample = SampleTexture(instance.textureIndices.w, uv).g;
         roughness = roughness * rSample; // Generally multiplicative
     }
     roughness = clamp(roughness, 0.04, 1.0);
 
     // Ambient Occlusion
     float ao = 1.0;
-    if (instance.textureIndicies2.x != INVALID_TEXTURE_INDEX)
+    if (instance.textureIndices2.x != INVALID_TEXTURE_INDEX)
     {
-        ao = clamp(SampleTexture(instance.textureIndicies2.x, uv).r, 0.0, 1.0);        
+        ao = clamp(SampleTexture(instance.textureIndices2.x, uv).r, 0.0, 1.0);        
     }
 
     // Emissive
     vec3 emissive = instance.emissiveFactor.rgb;
-    if (instance.textureIndicies2.y != INVALID_TEXTURE_INDEX)
+    if (instance.textureIndices2.y != INVALID_TEXTURE_INDEX)
     {
-        emissive *= SampleTexture(instance.textureIndicies2.y, uv).rgb;
+        emissive *= SampleTexture(instance.textureIndices2.y, uv).rgb;
     }
 
     // 6. Lighting Loop

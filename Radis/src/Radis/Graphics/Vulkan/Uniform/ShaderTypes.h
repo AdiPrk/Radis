@@ -15,8 +15,8 @@ namespace Radis
     {
         glm::mat4 model;
         glm::vec4 tint;
-        glm::uvec4 textureIndicies;
-        glm::uvec4 textureIndicies2; // zw are padding
+        glm::uvec4 textureIndices;
+        glm::uvec4 textureIndices2; // zw are padding
         glm::vec4 baseColorFactor;
         glm::vec4 metallicRoughnessFactor; // zw are padding
         glm::vec4 emissiveFactor; // w is boneOffset

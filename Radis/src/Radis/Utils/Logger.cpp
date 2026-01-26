@@ -1,9 +1,8 @@
-﻿#include <PCH/pch.h>      // assumed to include <windows.h>
+﻿#include <PCH/pch.h>
 #include "Logger.h"
 
-#include <io.h>           // _isatty, _fileno
-#include <cstdio>         // stdout/stderr
-#include <utility>
+#include <io.h>     // _isatty, _fileno
+#include <cstdio>   // stdout/stderr
 
 using namespace Radis;
 

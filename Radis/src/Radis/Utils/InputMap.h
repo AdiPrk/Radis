@@ -3,7 +3,7 @@
 ****************************************************************************************/
 
 // there were many reasons why it's all hard coded numbers
-// those reasons don't exist anymore but the hard coded numbers do '.'
+// those reasons don't exist anymore but the hard coded numbers do :)
 
 #pragma once
 

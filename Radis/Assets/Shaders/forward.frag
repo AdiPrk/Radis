@@ -9,8 +9,8 @@ layout(location = 0) in vec3 fragColor;
 layout(location = 1) in vec4 fragTint;
 layout(location = 2) in vec3 fragWorldNormal;
 layout(location = 3) in vec2 fragTexCoord;
-layout(location = 4) flat in uvec4 textureIndicies;
-layout(location = 5) flat in uvec4 textureIndicies2;
+layout(location = 4) flat in uvec4 textureIndices;
+layout(location = 5) flat in uvec4 textureIndices2;
 layout(location = 6) flat in vec4 baseColorFactor;
 layout(location = 7) flat in vec4 metallicRoughnessFactor;
 layout(location = 8) flat in vec4 emissiveFactor;
@@ -141,9 +141,9 @@ void main()
 {
 	// Base Color
 	vec4 baseColor = vec4(fragColor * fragTint.rgb, fragTint.a) * baseColorFactor;
-	if (textureIndicies.x != INVALID_TEXTURE_INDEX)
+	if (textureIndices.x != INVALID_TEXTURE_INDEX)
 	{
-        baseColor = SampleTexture(textureIndicies.x, fragTexCoord) * fragTint * baseColorFactor;
+        baseColor = SampleTexture(textureIndices.x, fragTexCoord) * fragTint * baseColorFactor;
 	}
     vec3 albedo = baseColor.rgb;
     if (baseColor.a < 0.1)
@@ -153,16 +153,16 @@ void main()
 
     // Metallic
     float metallic = metallicRoughnessFactor.x;
-    if (textureIndicies.z != INVALID_TEXTURE_INDEX)
+    if (textureIndices.z != INVALID_TEXTURE_INDEX)
     {
-        metallic = SampleTexture(textureIndicies.z, fragTexCoord).b;
+        metallic = SampleTexture(textureIndices.z, fragTexCoord).b;
     }
 
     // Roughness
     float roughness = metallicRoughnessFactor.y;
-    if (textureIndicies.w != INVALID_TEXTURE_INDEX)
+    if (textureIndices.w != INVALID_TEXTURE_INDEX)
     {
-        roughness = SampleTexture(textureIndicies.w, fragTexCoord).g;
+        roughness = SampleTexture(textureIndices.w, fragTexCoord).g;
         roughness = clamp(roughness, 0.04, 1.0);
     }
 
@@ -171,16 +171,16 @@ void main()
 
     // Ambient Occlusion
     float ao = 1.0;
-    if (textureIndicies2.x != INVALID_TEXTURE_INDEX)
+    if (textureIndices2.x != INVALID_TEXTURE_INDEX)
     {
-        ao = clamp(SampleTexture(textureIndicies2.x, fragTexCoord).r, 0.0, 1.0);        
+        ao = clamp(SampleTexture(textureIndices2.x, fragTexCoord).r, 0.0, 1.0);        
     }
 
     // Emissive
     vec3 emissive = emissiveFactor.rgb;
-    if (textureIndicies2.y != INVALID_TEXTURE_INDEX)
+    if (textureIndices2.y != INVALID_TEXTURE_INDEX)
     {
-        emissive *= SampleTexture(textureIndicies2.y, fragTexCoord).rgb;
+        emissive *= SampleTexture(textureIndices2.y, fragTexCoord).rgb;
     }
 
     // Lighting
