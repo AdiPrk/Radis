@@ -165,7 +165,7 @@ void main()
         vec3 lightDir = light.directionInner.xyz;
         float innerCone = light.directionInner.w;
         float outerCone = light.outerConeType.x;
-        int lightType = int(light.outerConeType.y);
+        float lightType = light.outerConeType.y;
         
         vec3 L;
         float attenuation = 1.0;
