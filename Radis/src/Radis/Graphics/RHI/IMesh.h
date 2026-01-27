@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   IMesh.h
+ * \brief  Definition of the IMesh interface for 3D mesh representation.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "Graphics/RHI/RHI.h"

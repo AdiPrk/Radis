@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   RaytracingPipeline.cpp
+ * \brief  Implementation of the RaytracingPipeline class for Vulkan ray tracing pipelines.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "RaytracingPipeline.h"
 #include "../Core/Device.h"

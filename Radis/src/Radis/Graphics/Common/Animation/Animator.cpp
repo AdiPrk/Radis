@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   Animator.cpp
+ * \brief  Implementation of the Animator class for handling skeletal animation playback.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "Animator.h"
 #include "Animation.h"

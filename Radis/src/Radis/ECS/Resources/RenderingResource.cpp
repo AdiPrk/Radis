@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   RenderingResource.cpp
+ * \brief  The main rendering resource
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 
 #include "RenderingResource.h"

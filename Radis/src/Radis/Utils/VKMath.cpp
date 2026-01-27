@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   VKMath.cpp
+ * \brief  Implementation of Vulkan-related math utility functions.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "VKMath.h"
 

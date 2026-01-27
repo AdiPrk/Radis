@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   pch.h
+ * \brief  Precompiled header including all common dependencies
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #define WIN32_LEAN_AND_MEAN

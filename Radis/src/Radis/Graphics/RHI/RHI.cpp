@@ -1,10 +1,18 @@
+/*****************************************************************//**
+ * \file   RHI.cpp
+ * \brief  Implementation of the RHI (Rendering Hardware Interface)
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "RHI.h"
 #include "IMesh.h"
 
 namespace Radis
 {
-    bool RHI::RHI_Init(GraphicsAPI backend)
+    bool RHI::Initialize(GraphicsAPI backend)
     {
         switch (backend)
         {

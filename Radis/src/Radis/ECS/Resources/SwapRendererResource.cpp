@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   SwapRendererResource.cpp
+ * \brief  Handles swapping between graphical backends
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "SwapRendererResource.h"
 #include "Engine.h"
@@ -13,6 +21,7 @@
 
 #include "Graphics/Common/ModelLibrary.h"
 #include "Graphics/Common/TextureLibrary.h"
+#include "Graphics/IWindow.h"
 
 namespace Radis
 {

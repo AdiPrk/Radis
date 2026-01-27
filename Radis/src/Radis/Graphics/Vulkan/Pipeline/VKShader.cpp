@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   VKShader.cpp
+ * \brief  Implementation of Vulkan shader compilation and shader module creation.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 
 #include "VKShader.h"

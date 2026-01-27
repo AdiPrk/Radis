@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   Model.cpp
+ * \brief  Implementation of the Model class for loading and processing 3D models.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "Model.h"
 #include "../Vulkan/Core/Buffer.h"

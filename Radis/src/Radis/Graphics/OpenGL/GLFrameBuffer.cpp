@@ -1,6 +1,13 @@
+/*****************************************************************//**
+ * \file   GLFrameBuffer.cpp
+ * \brief  Implementation of the GLFrameBuffer class for OpenGL framebuffer management.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "GLFrameBuffer.h"
-
 
 namespace Radis {
 

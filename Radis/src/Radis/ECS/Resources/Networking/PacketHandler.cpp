@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   PacketHandler.cpp
+ * \brief  Handles incoming network packets
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "PacketHandler.h"
 #include "PlayerManager.h"

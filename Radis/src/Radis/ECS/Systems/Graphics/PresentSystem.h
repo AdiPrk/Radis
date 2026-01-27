@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   PresentSystem.h
+ * \brief  Handles presentation to the screen
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "../ISystem.h"

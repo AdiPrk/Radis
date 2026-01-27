@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   Pipeline.cpp
+ * \brief  Implementation of the Pipeline class for Vulkan graphics pipelines.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "Pipeline.h"
 #include "VKShader.h"

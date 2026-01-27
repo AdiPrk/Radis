@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   Uniform.cpp
+ * \brief  Implementation of the Uniform class for managing Vulkan uniform buffers and descriptor sets.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 
 #include "Uniform.h"

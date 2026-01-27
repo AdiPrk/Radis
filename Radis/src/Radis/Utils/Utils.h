@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   Utils.h
+ * \brief  Utility functions for string conversion, argument parsing, file retrieval, and launching VS Code.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 namespace Radis

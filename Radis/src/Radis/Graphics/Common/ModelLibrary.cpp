@@ -1,10 +1,10 @@
 /*****************************************************************//**
  * \file   ModelLibrary.cpp
- * \author Adi (adityaprk04@gmail.com)
- * \date   October 8 2025
- 
- * \brief  Library of Models
- *  *********************************************************************/
+ * \brief  Implementation of the ModelLibrary class for managing 3D models.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
 
 #include <PCH/pch.h>
 #include "ModelLibrary.h"
@@ -117,45 +117,45 @@ namespace Radis
 
     Model* ModelLibrary::GetModel(ModelComponent& mc)
     {
-        if (mc.updateModelID)
+        if (mc.UpdateModelID)
         {
-            mc.updateModelID = false;
+            mc.UpdateModelID = false;
             Model* model = GetModel(mc.ModelPath);
             if (model)
             {
-                mc.modelID = GetModelIndex(mc.ModelPath);
+                mc.ModelID = GetModelIndex(mc.ModelPath);
             }
             else
             {
-                mc.modelID = INVALID_MODEL_INDEX;
+                mc.ModelID = INVALID_MODEL_INDEX;
             }
             return model;
         }
         else
         {
-            return GetModel(mc.modelID);
+            return GetModel(mc.ModelID);
         }
     }
 
     Model* ModelLibrary::TryAddGetModel(ModelComponent& mc)
     {
-        if (mc.updateModelID)
+        if (mc.UpdateModelID)
         {
-            mc.updateModelID = false;
+            mc.UpdateModelID = false;
             Model* model = TryAddGetModel(mc.ModelPath);
             if (model)
             {
-                mc.modelID = GetModelIndex(mc.ModelPath);
+                mc.ModelID = GetModelIndex(mc.ModelPath);
             }
             else
             {
-                mc.modelID = INVALID_MODEL_INDEX;
+                mc.ModelID = INVALID_MODEL_INDEX;
             }
             return model;
         }
         else
         {
-            return GetModel(mc.modelID);
+            return GetModel(mc.ModelID);
         }
     }
 

@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   GLMesh.h
+ * \brief  Definition of the GLMesh class for OpenGL mesh representation.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "Graphics/RHI/IMesh.h"

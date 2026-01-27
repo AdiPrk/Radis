@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   RenderingResource.h
+ * \brief  The main rendering resource
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "IResource.h"

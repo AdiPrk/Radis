@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   ECS.h
+ * \brief  Entity Component System!
+ *
+ * \author Aditya Prakash
+ * \date   2024
+ *********************************************************************/
+
 #pragma once
 
 #include "Systems/ISystem.h"
@@ -8,6 +16,9 @@ namespace Radis
     class Entity;
     struct IResource;
 
+    /**
+     * \brief Central ECS manager for entities, systems, and resources.
+     */
     class ECS
     {
     public:
@@ -19,13 +30,14 @@ namespace Radis
         ECS(ECS&&) = delete;
         ECS& operator=(ECS&&) = delete;
 
+        // --- Lifecycle ---
         void Init();
         void FrameStart();
         void Update(float dt);
         void FrameEnd();
         void Exit();
         
-        // Add System
+        // --- System ---
         template<typename T>
         void AddSystem()
         {
@@ -33,6 +45,7 @@ namespace Radis
             mSystems.emplace_back(std::make_unique<T>());
         }
 
+        // Resources
         template<typename T, typename... Args>
         void AddResource(Args&&... args) {
             static_assert(std::is_base_of<IResource, T>::value, "Resource type must inherit from Radis::IResource");
@@ -46,7 +59,6 @@ namespace Radis
             }
         }
 
-        // Gets a pointer to the resource of the specified type.
         template<typename T>
         T* GetResource() {
             static T* cachedResource = [this]
@@ -64,6 +76,7 @@ namespace Radis
             return cachedResource;
         }
 
+        // --- Entities ---
         Entity AddEntity(const std::string& name = "");
         Entity GetEntity(const std::string& name);
         Entity CloneEntity(const Entity& entity);
@@ -71,7 +84,6 @@ namespace Radis
         void RemoveEntity(Entity entity);
         void RemoveEntity(entt::entity entity);
         
-
         entt::registry& GetRegistry() { return mRegistry; }
 
     private:

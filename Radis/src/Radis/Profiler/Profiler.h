@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   Profiler.h
+ * \brief  Definition of the Profiler class for CPU scope profiling.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #ifndef PROFILING_ENABLED

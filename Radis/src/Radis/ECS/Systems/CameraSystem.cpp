@@ -1,4 +1,12 @@
-﻿#include <PCH/pch.h>
+﻿/*****************************************************************//**
+ * \file   CameraSystem.cpp
+ * \brief  The camera controller
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
+#include <PCH/pch.h>
 #include "CameraSystem.h"
 #include "InputSystem.h"
 
@@ -35,7 +43,7 @@ namespace Radis
             auto& camera = entity.GetComponent<CameraComponent>();
 
             // --- initialize once ---
-            if (!camera.isInitialized)
+            if (!camera.IsInitialized)
             {
                 camera.TargetYaw = transform.Rotation.y;
                 camera.TargetPitch = transform.Rotation.x;
@@ -44,7 +52,7 @@ namespace Radis
                 camera.SmoothedPosition = transform.Translation;
                 camera.SmoothedMouseDX = 0.0f;
                 camera.SmoothedMouseDY = 0.0f;
-                camera.isInitialized = true;
+                camera.IsInitialized = true;
             }
 
             const bool mouseHeld = InputSystem::isMouseDown(Mouse::RIGHT) && !InputSystem::IsMouseInputLocked();

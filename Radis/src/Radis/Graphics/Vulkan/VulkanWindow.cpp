@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   VulkanWindow.cpp
+ * \brief  Implementation of the VulkanWindow class for Vulkan-based window management.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "VulkanWindow.h"
 #include "Utils/Utils.h"

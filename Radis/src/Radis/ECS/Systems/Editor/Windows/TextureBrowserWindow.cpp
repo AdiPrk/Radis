@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   TextureBrowserWindow.cpp
+ * \brief  Renders the Texture Browser!
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "TextureBrowserWindow.h"
 

@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   GLTexture.cpp
+ * \brief  Implementation of the GLTexture class for OpenGL texture management.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "GLTexture.h"
 

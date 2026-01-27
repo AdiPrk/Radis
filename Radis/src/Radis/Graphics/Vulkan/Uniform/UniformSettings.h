@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   UniformSettings.h
+ * \brief  Definition of the UniformSettings struct for configuring shader uniform bindings.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 namespace Radis

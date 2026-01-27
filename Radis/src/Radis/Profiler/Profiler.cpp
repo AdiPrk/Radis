@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   Profiler.cpp
+ * \brief  Implementation of the Profiler class for performance profiling.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "Profiler.h"
 

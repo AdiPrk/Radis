@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   UnifiedMesh.cpp
+ * \brief  Implementation of the UnifiedMeshes class for combining multiple meshes into a single mesh.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "UnifiedMesh.h"
 #include "../OpenGL/GLMesh.h"

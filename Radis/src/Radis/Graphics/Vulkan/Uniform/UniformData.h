@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   UniformData.h
+ * \brief  Uniform buffer data initializations for Vulkan renderer.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "ShaderTypes.h"

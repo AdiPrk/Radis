@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   Allocator.cpp
+ * \brief  Implementation of the Vulkan memory Allocator using VMA.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "Allocator.h"
 

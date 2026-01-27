@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   GLTexture.h
+ * \brief  Definition of the OpenGL texture class implementing ITexture interface.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "Graphics/RHI/ITexture.h"

@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   Networking.cpp
+ * \brief  Implements networking functionality using ENet
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "Networking.h"
 #include "ECS/Systems/Editor/Windows/ChatWindow.h"

@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   AssimpGlmHelper.h
+ * \brief  Helpers to convert Assimp types to GLM types.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 namespace Radis

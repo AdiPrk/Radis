@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   PathFollower.cpp
+ * \brief  Implementation of the PathFollower class for following cubic spline paths.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "PathFollower.h"
 

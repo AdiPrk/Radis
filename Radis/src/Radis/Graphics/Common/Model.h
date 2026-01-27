@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   Model.h
+ * \brief  Definition of the Model class for 3D model loading and processing.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "../Common/Animation/Bone.h"

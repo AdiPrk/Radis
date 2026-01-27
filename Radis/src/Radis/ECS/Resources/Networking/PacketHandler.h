@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   PacketHandler.h
+ * \brief  Handles incoming network packets
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 namespace Radis

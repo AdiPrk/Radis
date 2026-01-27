@@ -12,7 +12,7 @@ namespace RadisLaunch
         std::wstring name = L"Radis Engine";             // The name of the window.
         unsigned width = 1280;                         // The width of the window.
         unsigned height = 720;                         // The height of the window.
-        unsigned fps = 120;			                   // The target frames per second.
+        unsigned fps = 0;			                   // The target frames per second. 0 = uncapped.
         std::string serverAddress = Radis::SERVER_IP;    // The address of the server. Defaults to online VPS server.
         uint16_t serverPort = 7777;                    // The port of the server.
         Radis::GraphicsAPI graphicsAPI = Radis::GraphicsAPI::Vulkan; // The graphics API to use.

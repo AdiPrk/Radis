@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   RenderSystem.h
+ * \brief  Handles rendering the scene
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "../ISystem.h"

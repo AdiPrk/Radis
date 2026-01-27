@@ -1,16 +1,19 @@
-﻿#pragma once
+﻿/*****************************************************************//**
+ * \file   Logger.h
+ * \brief  Definition of a simple thread-safe logger with levels, color support, and message deduplication.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
+#pragma once
 
 // Windows-only logger
 #include <memory>
-#include <string>
-#include <string_view>
 #include <format>
 #include <mutex>
-#include <chrono>
-#include <iostream>
 #include <atomic>
 #include <fstream>
-#include <optional>
 
 namespace Radis
 {

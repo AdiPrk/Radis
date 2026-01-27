@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   GLFrameBuffer.h
+ * \brief  Definition of the OpenGL FrameBuffer class for managing FBOs and attachments.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 namespace Radis {

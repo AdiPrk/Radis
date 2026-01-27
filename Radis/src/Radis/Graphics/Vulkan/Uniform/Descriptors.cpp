@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   Descriptors.cpp
+ * \brief  Implementation of Vulkan descriptor set layouts and pools.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 
 #include "Descriptors.h"

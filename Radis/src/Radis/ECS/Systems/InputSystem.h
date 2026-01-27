@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   InputSystem.h
+ * \brief  Handles Input
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "ISystem.h"

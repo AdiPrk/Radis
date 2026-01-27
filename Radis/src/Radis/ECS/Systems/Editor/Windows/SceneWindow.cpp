@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   SceneWindow.cpp
+ * \brief  Renders the Scene Window!
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "SceneWindow.h"
 
@@ -136,7 +144,7 @@ namespace Radis
                 transformComponent.Translation = newTranslation;
                 transformComponent.Rotation = glm::radians(newRotation);
                 transformComponent.Scale = newScale;
-                transformComponent.isDirty = true;
+                transformComponent.mIsDirty = true;
             }
         }
     }

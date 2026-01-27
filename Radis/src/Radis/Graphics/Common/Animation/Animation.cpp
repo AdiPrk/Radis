@@ -1,4 +1,12 @@
-﻿#include <PCH/pch.h>
+﻿/*****************************************************************//**
+ * \file   Animation.cpp
+ * \brief  Implementation of the Animation class for skeletal animations.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
+#include <PCH/pch.h>
 #include "Animation.h"
 
 namespace Radis

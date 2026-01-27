@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   ModelSerializer.cpp
+ * \brief  Serializes and deserializes Models to/from disk
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "ModelSerializer.h"
 #include "Graphics/Common/Model.h"

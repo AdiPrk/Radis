@@ -1,12 +1,11 @@
-/*********************************************************************
- * file:   Uniform.hpp
- * author: aditya.prakash (aditya.prakash@digipen.edu) and evan.gray (evan.gray@digipen.edu)
- * date:   September 24, 2024
- * Copyright © 2024 DigiPen (USA) Corporation.
- *
- * brief:  Handles the discriptor sets and buffers for sending
- *         uniform data to shaders
+/*****************************************************************//**
+ * \file   Uniform.h
+ * \brief  Definition of the Uniform class for managing Vulkan uniform buffers and descriptor sets.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
  *********************************************************************/
+
 #pragma once
 
 #include "../Core/Buffer.h"

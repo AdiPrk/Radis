@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   GLShader.cpp
+ * \brief  Implementation of the GLShader class for OpenGL shader management.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "GLShader.h"
 #include <fstream>

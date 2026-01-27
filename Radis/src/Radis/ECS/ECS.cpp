@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   ECS.cpp
+ * \brief  Implementation of the ECS class which manages systems, resources, and entities.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "ECS.h"
 

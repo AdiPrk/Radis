@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   SwapChain.h
+ * \brief  Definition of the SwapChain class for managing Vulkan swapchains.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include <PCH/pch.h>

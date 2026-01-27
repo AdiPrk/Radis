@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   IWindow.cpp
+ * \brief  Implementation of the IWindow interface for window management.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "IWindow.h"
 #include "Utils/Utils.h"

@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   RaytracingPipeline.h
+ * \brief  Definition of the RaytracingPipeline class for managing Vulkan ray tracing pipelines.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "../Core/Buffer.h"

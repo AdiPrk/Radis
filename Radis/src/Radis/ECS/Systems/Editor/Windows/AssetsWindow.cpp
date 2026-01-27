@@ -1,4 +1,12 @@
-﻿#include <PCH/pch.h>
+﻿/*****************************************************************//**
+ * \file   AssetsWindow.cpp
+ * \brief  Renders the Assets Window!
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
+#include <PCH/pch.h>
 #include "AssetsWindow.h"
 #include "Assets/Assets.h"
 #include "Graphics/Common/TextureLibrary.h"

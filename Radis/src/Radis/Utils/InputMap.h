@@ -1,14 +1,15 @@
-/***************************************************************************************
-* The numbers used in the mapping are from GLFW, since glfw is used for the input system 
-****************************************************************************************/
-
-// there were many reasons why it's all hard coded numbers
-// those reasons don't exist anymore but the hard coded numbers do :)
+/*****************************************************************//**
+ * \file   InputMap.h
+ * \brief  Definition of key and mouse button mappings for input handling.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
 
 #pragma once
 
-namespace Radis {
-
+namespace Radis 
+{
     enum class Key
     {
         // Unknown Key

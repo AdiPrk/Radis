@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   UnifiedMesh.h
+ * \brief  Definition of the UnifiedMeshes class for combining multiple meshes into a single mesh.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "Graphics/RHI/IMesh.h"

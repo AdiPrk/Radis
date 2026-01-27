@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   VKTexture.cpp
+ * \brief  Implementation of the VKTexture class for Vulkan texture management.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "VKTexture.h"
 

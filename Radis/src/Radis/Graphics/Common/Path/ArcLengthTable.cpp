@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   ArcLengthTable.cpp
+ * \brief  Implementation of the ArcLengthTable class for spline arc length parameterization.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "ArcLengthTable.h"
 

@@ -1,4 +1,12 @@
-﻿#include <PCH/pch.h>
+﻿/*****************************************************************//**
+ * \file   MemoryWindow.cpp
+ * \brief  Renders the Memory Window!
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
+#include <PCH/pch.h>
 #include "MemoryWindow.h"
 #include "Graphics/Vulkan/Core/Allocator.h"
 #include "Engine.h"

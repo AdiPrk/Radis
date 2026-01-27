@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   NetworkingResource.cpp
+ * \brief  Networking resource wrapper for ECS
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "NetworkingResource.h"
 #include "Networking.h"

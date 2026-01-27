@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   WindowResource.h
+ * \brief  Manages the window
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "IResource.h"

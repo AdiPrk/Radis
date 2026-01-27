@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   Bone.h
+ * \brief  Definition of the Bone class for skeletal animation keyframe interpolation.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 namespace Radis

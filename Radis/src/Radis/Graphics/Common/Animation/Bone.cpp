@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   Bone.cpp
+ * \brief  Implementation of the Bone class for skeletal animation keyframe interpolation.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "Bone.h"
 #include <concepts>

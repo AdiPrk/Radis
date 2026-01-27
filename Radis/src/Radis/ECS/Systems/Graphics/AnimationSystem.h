@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   AnimationSystem.h
+ * \brief  Handles animating entities
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "../ISystem.h"

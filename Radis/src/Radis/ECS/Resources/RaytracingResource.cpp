@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   RaytracingResource.cpp
+ * \brief  Implements raytracing functionality
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "RaytracingResource.h"
 #include "RenderingResource.h"

@@ -1,11 +1,10 @@
 /*****************************************************************//**
- * \file   Animator.hpp
- * \author Adi (aditya.prakash@digipen.edu)
- * \date   November 6 2024
- * \Copyright @ 2024 Digipen (USA) Corporation * 
- 
- * \brief  Animates an animation!!!
- *  *********************************************************************/
+ * \file   Animator.h
+ * \brief  Definition of the Animator class for handling skeletal animation playback.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
 
 #pragma once
 

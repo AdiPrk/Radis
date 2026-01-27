@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   VQS.h
+ * \brief  Definition of the VQS (Vector-Quaternion-Scale) struct for representing transformations.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 namespace Radis

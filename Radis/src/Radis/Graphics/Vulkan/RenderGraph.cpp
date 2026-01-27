@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   RenderGraph.cpp
+ * \brief  Implementation of the RenderGraph class for managing render passes and resources.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "RenderGraph.h"
 #include "Graphics/Vulkan/Texture/VKTexture.h"

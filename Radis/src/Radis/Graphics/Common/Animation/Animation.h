@@ -1,11 +1,10 @@
 ﻿/*****************************************************************//**
- * \file   Animation.hpp
- * \author Adi (aditya.prakash@digipen.edu)
- * \date   November 6 2024
- * \Copyright @ 2024 Digipen (USA) Corporation * 
- 
- * \brief  Sets up the アニメーション data
- *  *********************************************************************/
+ * \file   Animation.h
+ * \brief  Definition of the Animation class for skeletal animations.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
 
 #pragma once
 

@@ -1,4 +1,12 @@
-﻿#include <PCH/pch.h>
+﻿/*****************************************************************//**
+ * \file   RenderSystem.cpp
+ * \brief  Handles rendering the scene!
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
+#include <PCH/pch.h>
 #include "RenderSystem.h"
 
 #include "ECS/Resources/renderingResource.h"
@@ -35,6 +43,7 @@
 #include "Graphics/OpenGL/GLMesh.h"
 #include "Graphics/OpenGL/GLFrameBuffer.h"
 #include "Graphics/OpenGL/GLTexture.h"
+#include "Graphics/IWindow.h"
 
 namespace Radis
 {
@@ -166,17 +175,11 @@ namespace Radis
         auto& registry = ecs->GetRegistry();
         registry.view<LightComponent, TransformComponent>().each([&](auto entity, LightComponent& lc, TransformComponent& tc)
         {
-            // Fun little pattern for light1000 scene
-            // float tx += glm::sin(static_cast<float>(totaltime + (uint32_t)entity)) * 0.01f;
-            // float ty += glm::cos(static_cast<float>(totaltime + (uint32_t)entity)) * 0.01f;
-            // float tz += glm::sin(static_cast<float>(totaltime + (uint32_t)entity)) * 0.02f;
-            // tc.SetTranslation(tx, ty, tz);
-
             LightUniform lu{};
             lu.positionRadius = glm::vec4(tc.Translation, lc.Radius);
             lu.colorIntensity = glm::vec4(lc.Color, lc.Intensity);
             lu.directionInner = glm::vec4(glm::normalize(lc.Direction), lc.InnerCone);
-            lu.outerConeType = glm::vec4(lc.OuterCone, static_cast<float>(lc.Type), 0.0f, 0.0f);
+            lu.outerConeType = glm::vec4(lc.OuterCone, static_cast<float>(lc.LightType), 0.0f, 0.0f);
             mLightData.push_back(lu);
         });
 
@@ -292,15 +295,15 @@ namespace Radis
                 }
                 
                 const MeshInfo& meshInfo = uMeshes->GetMeshInfo(meshID);
-                float meshMetallic = mc.useMetallicOverride ? mc.metallicOverride : mesh->metallicFactor;
-                float meshRoughness = mc.useRoughnessOverride ? mc.roughnessOverride : mesh->roughnessFactor;
-                glm::vec4 meshEmissive = mc.useEmissiveOverride ? mc.emissiveOverride : mesh->emissiveFactor;
+                float meshMetallic = mc.UseMetallicOverride ? mc.MetallicOverride : mesh->metallicFactor;
+                float meshRoughness = mc.UseRoughnessOverride ? mc.RoughnessOverride : mesh->roughnessFactor;
+                glm::vec4 meshEmissive = mc.UseEmissiveOverride ? mc.EmissiveOverride : mesh->emissiveFactor;
 
-                uint32_t metallicIndex = mc.useMetallicOverride ? TextureLibrary::INVALID_TEXTURE_INDEX : mesh->metalnessTextureIndex;
-                uint32_t roughnessIndex = mc.useRoughnessOverride ? TextureLibrary::INVALID_TEXTURE_INDEX : mesh->roughnessTextureIndex;
+                uint32_t metallicIndex = mc.UseMetallicOverride ? TextureLibrary::INVALID_TEXTURE_INDEX : mesh->metalnessTextureIndex;
+                uint32_t roughnessIndex = mc.UseRoughnessOverride ? TextureLibrary::INVALID_TEXTURE_INDEX : mesh->roughnessTextureIndex;
                 if (mesh->mMetallicRoughnessCombined) roughnessIndex = metallicIndex;
 
-                data.tint = mc.tintColor;
+                data.tint = mc.TintColor;
                 data.textureIndices = glm::uvec4(mesh->albedoTextureIndex, mesh->normalTextureIndex, metallicIndex, roughnessIndex);
                 data.textureIndices2 = glm::uvec4(mesh->occlusionTextureIndex, mesh->emissiveTextureIndex, 10001, 10001);
                 data.boneOffset = boneOffset;

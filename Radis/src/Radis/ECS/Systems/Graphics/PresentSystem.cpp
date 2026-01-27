@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   PresentSystem.cpp
+ * \brief  Handles presentation to the screen
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "PresentSystem.h"
 #include "ECS/ECS.h"

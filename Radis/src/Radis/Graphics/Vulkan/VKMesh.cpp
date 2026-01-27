@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   VKMesh.cpp
+ * \brief  Implementation of the VKMesh class for Vulkan mesh handling.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "VKMesh.h"
 

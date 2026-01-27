@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   ScopedDebugLabel.cpp
+ * \brief  Implementation of the ScopedDebugLabel class for Vulkan debug labeling.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "ScopedDebugLabel.h"
 #include "../Core/Device.h"

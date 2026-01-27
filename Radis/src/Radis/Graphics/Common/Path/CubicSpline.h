@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   CubicSpline.h
+ * \brief  Definition of the CubicSpline class for 3D cubic spline interpolation.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 namespace Radis

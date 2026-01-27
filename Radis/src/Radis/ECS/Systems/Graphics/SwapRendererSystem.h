@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   SwapRendererSystem.h
+ * \brief  Used to swap between different rendering backends
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "../ISystem.h"

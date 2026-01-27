@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   Synchronization.h
+ * \brief  Definition of the Synchronizer class for Vulkan synchronization objects.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 namespace Radis

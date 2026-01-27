@@ -1,11 +1,11 @@
 /*****************************************************************//**
- * \file   ModelLibrary.hpp
- * \author Adi (aditya.prakash@digipen.edu)
- * \date   September 26 2024
- * \Copyright @ 2024 Digipen (USA) Corporation *
+ * \file   ModelLibrary.h
+ * \brief Definition of the ModelLibrary class for managing 3D models.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
 
- * \brief  Library for models
- *  *********************************************************************/
 #pragma once
 
 #include "../Vulkan/Core/Device.h"

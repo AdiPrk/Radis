@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   ProfilerWindow.cpp
+ * \brief  Renders the Profiler Window!
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "ProfilerWindow.h"
 #include "Profiler/Profiler.h"

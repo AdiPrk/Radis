@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   VKTexture.h
+ * \brief  Definition of the VKTexture class for Vulkan texture management.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "Graphics/RHI/ITexture.h"

@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   UUID.h
+ * \brief  Universally Unique Identifier (UUID) interface
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 namespace Radis {

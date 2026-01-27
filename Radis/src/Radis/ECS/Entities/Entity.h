@@ -1,72 +1,84 @@
+/*****************************************************************//**
+ * \file   Entity.h
+ * \brief  Lightweight entity wrapper around EnTT handles
+ * 
+ * \author Aditya Prakash
+ * \date   2026
+ *********************************************************************/
 #pragma once
 
-namespace Radis {
-
-    class Entity {
+namespace Radis
+{
+    /**
+     * \brief Wrapper around an EnTT entity handle with component helpers.
+     */
+    class Entity
+    {
     public:
         Entity();
         Entity(entt::registry* registry);
         Entity(entt::registry* registry, entt::entity handle);
         Entity(const Entity& other);
-        void operator=(const Entity& other);
+        Entity& operator=(const Entity& other);
         ~Entity();
 
+        // --- Component Management ---
         template<typename T, typename... Args>
-        T& TryAddComponent(Args&&... args) {
-            if (!HasComponent<T>()) {
+        T& TryAddComponent(Args&&... args)
+        {
+            if (!HasComponent<T>())
+            {
                 return AddComponent<T>(std::forward<Args>(args)...);
             }
             return GetComponent<T>();
         }
 
         template<typename T, typename... Args>
-        T& AddComponent(Args&&... args) {
-            return entities->emplace<T>(handle, std::forward<Args>(args)...);
+        T& AddComponent(Args&&... args)
+        {
+            return mRegistry->emplace<T>(mHandle, std::forward<Args>(args)...);
         }
 
         template<typename T>
-        T& GetComponent() {
-            return entities->get<T>(handle);
+        T& GetComponent()
+        {
+            return mRegistry->get<T>(mHandle);
         }
 
         template<typename T>
-        bool HasComponent() const {
-            return entities->all_of<T>(handle);
+        const T& GetComponent() const
+        {
+            return mRegistry->get<T>(mHandle);
         }
 
         template<typename T>
-        T* TryGetComponent() {
-            return entities->try_get<T>(handle);
+        bool HasComponent() const
+        {
+            return mRegistry->all_of<T>(mHandle);
         }
 
         template<typename T>
-        void RemoveComponent() {
-            entities->remove<T>(handle);
+        T* TryGetComponent()
+        {
+            return mRegistry->try_get<T>(mHandle);
         }
 
-        bool operator==(const Entity& other) const {
-            return handle == other.handle;
+        template<typename T>
+        void RemoveComponent()
+        {
+            mRegistry->remove<T>(mHandle);
         }
 
-        bool operator!=(const Entity& other) const {
-            return !operator==(other);
-        }
-
-        operator bool() const {
-            return handle != entt::null;
-        }
-
-        operator entt::entity() const {
-            return handle;
-        }
-
-        operator uint32_t() const {
-            return (uint32_t)handle;
-        }
+        // --- Operators ---
+        bool operator==(const Entity& other) const { return mHandle == other.mHandle; }
+        bool operator!=(const Entity& other) const { return mHandle != other.mHandle; }
+        explicit operator bool() const { return mHandle != entt::null; }
+        operator entt::entity() const { return mHandle; }
+        operator uint32_t() const { return static_cast<uint32_t>(mHandle); }
 
     private:
-        entt::registry* entities;
-        entt::entity handle;
+        entt::registry* mRegistry = nullptr;
+        entt::entity mHandle = entt::null;
     };
 
-}
+} // namespace Radis

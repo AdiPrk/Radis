@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   GLMesh.cpp
+ * \brief  Implementation of the GLMesh class for OpenGL mesh handling.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "GLMesh.h"
 #include "../Vulkan/Core/Buffer.h"

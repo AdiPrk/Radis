@@ -1,8 +1,16 @@
+/*****************************************************************//**
+ * \file   SerializationOperators.h
+ * \brief  JSON serialization operators for glm types.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 #include "json.hpp"
 
 namespace glm
-    {
+{
     // Serializer for glm::vec2
     inline void to_json(nlohmann::json& j, const glm::vec2& v) {
         j = { v.x, v.y };
@@ -67,5 +75,4 @@ namespace glm
             }
         }
     }
-
 }

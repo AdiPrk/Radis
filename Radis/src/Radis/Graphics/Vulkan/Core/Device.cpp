@@ -1,4 +1,12 @@
-﻿#include <PCH/pch.h>
+﻿/*****************************************************************//**
+ * \file   Device.cpp
+ * \brief  Implementation of the Device class for Vulkan device management.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
+#include <PCH/pch.h>
 #include "Device.h"
 #include "Graphics/Vulkan/VulkanWindow.h"
 
