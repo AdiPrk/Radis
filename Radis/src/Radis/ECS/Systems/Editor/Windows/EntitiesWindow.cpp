@@ -43,7 +43,7 @@ namespace Radis
             }
             if (ImGui::Button("LightTest+"))
             {
-                int n = 10;
+                int n = 25;
                 for (int x = 0; x < n; x++)
                 {
                     for (int y = 0; y < n; y++)
@@ -73,7 +73,7 @@ namespace Radis
             }
             if (ImGui::Button("SpamTest+"))
             {
-                int n = 25;
+                int n = 75;
                 for (int x = 0; x < n; x++)
                 {
                     for (int y = 0; y < n; y++)
