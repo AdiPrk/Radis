@@ -211,7 +211,7 @@ namespace Radis
             for (auto& mesh : model->mMeshes)
             {
                 VkAccelerationStructureInstanceKHR asInstance{};
-                asInstance.transform = toTransformMatrixKHR(tc.GetTransform() * model->GetNormalizationMatrix());  // Position of the instance
+                asInstance.transform = ToTransformMatrixKHR(tc.GetTransform() * model->GetNormalizationMatrix());  // Position of the instance
 
                 asInstance.instanceCustomIndex = instanceIndex++;//mesh->GetID();  // gl_InstanceCustomIndexEXT
                 asInstance.accelerationStructureReference = rr->blasAccel[mesh->GetID()].address;

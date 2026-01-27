@@ -130,61 +130,387 @@ namespace Radis
             rr->textureLibrary->UpdateRTUniform(*rr);
         }
 
+        // Draw the editor grid
         DebugDrawResource::DrawEditorGrid(50, 1.0f);
 
-        // Heh
-        if (InputSystem::isKeyTriggered(Key::R) && InputSystem::isKeyDown(Key::LEFTCONTROL))
-        {
-            ecs->GetResource<SwapRendererResource>()->RequestSwap();
-        }
+        // Swap renderer backends
+        // ecs->GetResource<SwapRendererResource>()->RequestSwap();
     }
 
     void RenderSystem::Update(float dt)
     {
         auto rr = ecs->GetResource<RenderingResource>();
         float aspectRatio = GetAspectRatio();
+        AnimationLibrary* al = rr->animationLibrary.get();
+        ModelLibrary* ml = rr->modelLibrary.get();
+        UnifiedMeshes* uMeshes = ml->GetUnifiedMesh();
 
+        // Collect Uniform Data
+        CameraUniforms camData = CollectCameraData(aspectRatio);
+        CollectLightData();
+
+        // Build Instances
+        BuildInstanceData();
+
+        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+        {
+            rr->cameraUniform->SetUniformData(camData, 0, rr->currentFrameIndex);                // Set Camera Data
+            rr->cameraUniform->SetUniformData(mInstanceData, 1, rr->currentFrameIndex);          // Set Instance Data
+            rr->cameraUniform->SetUniformData(mLightBuffer, 4, rr->currentFrameIndex);           // Set Light Data
+            rr->deferredLightingUniform->SetUniformData(camData, 0, rr->currentFrameIndex);      // Camera data
+            rr->deferredLightingUniform->SetUniformData(mLightBuffer, 6, rr->currentFrameIndex); // Light data
+
+            // Add Render Passes!
+            auto& rg = rr->renderGraph;
+            std::string colorWriteTarget = Engine::GetEditorEnabled() ? "SceneTexture" : "BackBuffer";
+
+            switch (rr->renderMode)
+            {
+            case RenderMode::Forward: {
+                rg->AddPass(
+                    "ScenePass",
+                    [&](RGPassBuilder& builder)
+                    {
+                        builder.writes(colorWriteTarget);
+                        builder.writes("SceneDepth");
+                    },
+                    std::bind(&RenderSystem::RenderSceneVK, this, std::placeholders::_1)
+                );
+                break;
+            }
+            case RenderMode::Deferred: {
+                // G-Buffer pass
+                rg->AddPass("GBufferPass",
+                    [&](RGPassBuilder& builder) {
+                        builder.writes("gAlbedo");
+                        builder.writes("gNormal");
+                        builder.writes("gPBR");
+                        builder.writes("gEmissive");
+                        builder.writes("SceneDepth");
+                    },
+                    std::bind(&RenderSystem::RenderSceneDeferredGeometryVK, this, std::placeholders::_1)
+                );
+
+                // Lighting pass - outputs to SceneHDR
+                rg->AddPass("LightingPass",
+                    [&](RGPassBuilder& builder) {
+                        builder.reads("gAlbedo");
+                        builder.reads("gNormal");
+                        builder.reads("gPBR");
+                        builder.reads("gEmissive");
+                        builder.reads("SceneDepth");
+                        builder.writes(colorWriteTarget);
+                    },
+                    std::bind(&RenderSystem::RenderSceneDeferredLightingVK, this, std::placeholders::_1)
+                );
+
+                break;
+            }
+            case RenderMode::Raytracing: {
+                rg->AddPass(
+                    "ScenePass",
+                    [&](RGPassBuilder& builder) {},
+                    std::bind(&RenderSystem::RaytraceSceneVK, this, std::placeholders::_1)
+                );
+                break;
+            }
+            }
+        }
+        else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
+        {
+            rr->shader->SetCameraUBO(camData);
+            RenderSceneGL();
+        }
+    }
+
+    void RenderSystem::FrameEnd()
+    {
+    }
+
+    void RenderSystem::ExecuteInstancedDrawCalls(VkCommandBuffer cmd)
+    {
+        for (const auto& drawCall : mDrawCalls)
+        {
+            vkCmdDrawIndexed(
+                cmd,
+                drawCall.indexCount,
+                drawCall.instanceCount,
+                drawCall.firstIndex,
+                drawCall.vertexOffset,
+                drawCall.firstInstance
+            );
+        }
+    }
+
+    void RenderSystem::RenderSceneVK(VkCommandBuffer cmd)
+    {
+        auto rr = ecs->GetResource<RenderingResource>();
+        UnifiedMeshes* uMeshes = rr->modelLibrary->GetUnifiedMesh();
+        ScopedDebugLabel sceneDebugLabel(rr->device.get(), cmd, "Render Scene", glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+
+        // Bind Pipeline, Uniforms, and Mesh
+        auto& pipeline = rr->renderWireframe ? rr->wireframePipeline : rr->pipeline;
+        pipeline->Bind(cmd);
+        rr->cameraUniform->Bind(cmd, pipeline->GetLayout(), rr->currentFrameIndex);
+        SetViewportAndScissor(cmd, rr->swapChain->GetSwapChainExtent());
+        uMeshes->GetUnifiedMesh()->Bind(cmd);
+
+        // Execute Draw Calls
+        ExecuteInstancedDrawCalls(cmd);
+    }
+
+    void RenderSystem::RenderSceneDeferredGeometryVK(VkCommandBuffer cmd)
+    {
+        auto rr = ecs->GetResource<RenderingResource>();
+        UnifiedMeshes* uMeshes = rr->modelLibrary->GetUnifiedMesh();
+        ScopedDebugLabel sceneDebugLabel(rr->device.get(), cmd, "Deferred G-Buffer Pass", glm::vec4(0.2f, 0.8f, 0.2f, 1.0f));
+
+        // Bind Pipeline, Uniforms, and Mesh
+        auto& pipeline = rr->gBufferPipeline;
+        pipeline->Bind(cmd);
+        rr->cameraUniform->Bind(cmd, pipeline->GetLayout(), rr->currentFrameIndex);
+        SetViewportAndScissor(cmd, rr->swapChain->GetSwapChainExtent());
+        uMeshes->GetUnifiedMesh()->Bind(cmd);
+
+        // Execute Draw Calls
+        ExecuteInstancedDrawCalls(cmd);
+    }
+
+    void RenderSystem::RenderSceneDeferredLightingVK(VkCommandBuffer cmd)
+    {
+        auto rr = ecs->GetResource<RenderingResource>();
+        ScopedDebugLabel sceneDebugLabel(rr->device.get(), cmd, "Deferred Lighting Pass", glm::vec4(0.8f, 0.8f, 0.2f, 1.0f));
+
+        // Bind Pipeline and Uniforms
+        auto& pipeline = rr->deferredLightingPipeline;
+        pipeline->Bind(cmd);
+        rr->deferredLightingUniform->Bind(cmd, pipeline->GetLayout(), rr->currentFrameIndex);
+        SetViewportAndScissor(cmd, rr->swapChain->GetSwapChainExtent());
+
+        // Draw Fullscreen Quad
+        vkCmdDraw(cmd, 3, 1, 0, 0);
+    }
+
+    void RenderSystem::RaytraceSceneVK(VkCommandBuffer cmd)
+    {
+        auto rr = ecs->GetResource<RenderingResource>();
+        auto& rp = rr->raytracingPipeline;
+        ScopedDebugLabel rtDebugLabel(rr->device.get(), cmd, "Raytrace Scene", glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+     
+        // Update TLAS with mInstanceData
+        {
+            std::vector<VkAccelerationStructureInstanceKHR> tlasInstances;
+            tlasInstances.reserve(mInstanceData.size());
+            for (size_t i = 0; i < mInstanceData.size(); ++i)
+            {
+                const auto& instanceData = mInstanceData[i];
+                VkAccelerationStructureInstanceKHR asInstance{};
+                asInstance.transform = ToTransformMatrixKHR(instanceData.model);
+                asInstance.instanceCustomIndex = static_cast<uint32_t>(i);
+                asInstance.accelerationStructureReference = rr->blasAccel[instanceData.meshID].address;
+                asInstance.instanceShaderBindingTableRecordOffset = 0;
+                asInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
+                asInstance.mask = 0xFF;
+                tlasInstances.emplace_back(asInstance);
+            }
+
+            if (tlasInstances.empty())
+            {
+                VkAccelerationStructureInstanceKHR asInstance{};
+                asInstance.transform = ToTransformMatrixKHR(glm::mat4(0.0f));
+                asInstance.instanceCustomIndex = 0;
+                asInstance.accelerationStructureReference = rr->blasAccel[0].address;
+                asInstance.instanceShaderBindingTableRecordOffset = 0;
+                asInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
+                asInstance.mask = 0xFF;
+                tlasInstances.emplace_back(asInstance);
+            }
+
+            auto rtr = ecs->GetResource<RaytracingResource>();
+            rtr->UpdateTopLevelASImmediate(tlasInstances);
+        }
+        
+        // Bind Pipeline and Uniforms
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, rp->GetPipeline());
+        rr->cameraUniform->Bind(cmd, rp->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR);
+        rr->rtUniform->Bind(cmd, rp->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR);
+
+        // Trace Rays!
+        const VkExtent2D& size = rr->swapChain->GetSwapChainExtent();
+        vkCmdTraceRaysKHR(cmd, &rp->GetRaygenRegion(), &rp->GetMissRegion(), &rp->GetHitRegion(), &rp->GetCallableRegion(), size.width, size.height, 1);
+
+        // Synchronize ray tracing writes with subsequent reads
+        VkMemoryBarrier2 memoryBarrier = {
+            .sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER_2,
+            .pNext = nullptr,
+            .srcStageMask = VK_PIPELINE_STAGE_2_RAY_TRACING_SHADER_BIT_KHR,
+            .srcAccessMask = VK_ACCESS_2_SHADER_WRITE_BIT,
+            .dstStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT,
+            .dstAccessMask = VK_ACCESS_2_SHADER_READ_BIT
+        };
+
+        VkDependencyInfo dependencyInfo = {
+            .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+            .pNext = nullptr,
+            .memoryBarrierCount = 1,
+            .pMemoryBarriers = &memoryBarrier
+        };
+
+        vkCmdPipelineBarrier2(cmd, &dependencyInfo);
+    }
+
+    void RenderSystem::RenderSceneGL()
+    {
+        auto rr = ecs->GetResource<RenderingResource>();
+        auto er = ecs->GetResource<EditorResource>();
+
+        rr->shader->Use();
+
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        if (Engine::GetEditorEnabled()) {
+            rr->sceneFrameBuffer->Bind();
+            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        }
+
+        std::vector<uint64_t> textureData{};
+        for (uint32_t i = 0; i < rr->textureLibrary->GetTextureCount(); ++i)
+        {
+            if (auto itex = rr->textureLibrary->GetTextureByIndex(i))
+            {
+                GLTexture* gltex = static_cast<GLTexture*>(itex);
+                textureData.push_back(gltex->textureHandle);
+            }
+        }
+
+        GLShader::SetupInstanceSSBO();
+        GLuint iSSBO = GLShader::GetInstanceSSBO();
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, iSSBO);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, mInstanceData.size() * sizeof(InstanceUniforms), mInstanceData.data());
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+        GLShader::SetupTextureSSBO();
+        GLuint textureSSBO = GLShader::GetTextureSSBO();
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, textureSSBO);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, textureData.size() * sizeof(uint64_t), textureData.data());
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+        GLShader::SetupLightSSBO();
+        GLuint lightSSBO = GLShader::GetLightSSBO();
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, lightSSBO);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, mLightBuffer.size(), mLightBuffer.data());
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+        UnifiedMeshes* uMeshes = rr->modelLibrary->GetUnifiedMesh();
+        uMeshes->GetUnifiedMesh()->Bind();
+
+        for (const auto& drawCall : mDrawCalls)
+        {
+            glDrawElementsInstancedBaseVertexBaseInstance(
+                GL_TRIANGLES,
+                static_cast<GLsizei>(drawCall.indexCount),
+                GL_UNSIGNED_INT,
+                (void*)(sizeof(uint32_t) * drawCall.firstIndex),
+                drawCall.instanceCount,
+                drawCall.vertexOffset,
+                drawCall.firstInstance
+            );
+        }
+
+        if (Engine::GetEditorEnabled())
+        {
+            rr->sceneFrameBuffer->Unbind();
+        }
+    }
+
+    float RenderSystem::GetAspectRatio()
+    {
+        if (Engine::GetEditorEnabled())
+        {
+            EditorResource* er = ecs->GetResource<EditorResource>();
+            return er->sceneWindowWidth / er->sceneWindowHeight;
+        }
+        
+        WindowResource* wr = ecs->GetResource<WindowResource>();
+        glm::uvec2 extant = wr->window->GetExtent();
+        return static_cast<float>(extant.x) / static_cast<float>(extant.y);
+    }
+
+    void RenderSystem::SetViewportAndScissor(VkCommandBuffer cmd, const VkExtent2D& extent)
+    {
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(extent.width);
+        viewport.height = static_cast<float>(extent.height);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(cmd, 0, 1, &viewport);
+
+        VkRect2D scissor{ {0, 0}, extent };
+        vkCmdSetScissor(cmd, 0, 1, &scissor);
+    }
+
+    CameraUniforms RenderSystem::CollectCameraData(float aspectRatio)
+    {
         CameraUniforms camData{};
         camData.view = glm::mat4(1.0f);
-        camData.projection = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 100.0f); 
+        camData.projection = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 100.0f);
 
-        // get camera entity
         Entity cameraEntity = ecs->GetEntity("Camera");
         if (cameraEntity)
         {
             TransformComponent& tc = cameraEntity.GetComponent<TransformComponent>();
             CameraComponent& cc = cameraEntity.GetComponent<CameraComponent>();
 
-            // Get the position directly
             glm::vec3 cameraPos = tc.Translation;
-            glm::vec3 forwardDir = glm::normalize(cc.Forward);
-            glm::vec3 upDir = glm::normalize(cc.Up);
+            glm::vec3 cameraTarget = cameraPos + glm::normalize(cc.Forward);
 
-            glm::vec3 cameraTarget = cameraPos + forwardDir;
-            camData.view = glm::lookAt(cameraPos, cameraTarget, upDir);
+            camData.view = glm::lookAt(cameraPos, cameraTarget, glm::normalize(cc.Up));
             camData.cameraPos = glm::vec4(tc.Translation, 1.0f);
             camData.projection = glm::perspective(glm::radians(cc.FOV), aspectRatio, cc.Near, cc.Far);
         }
 
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan) camData.projection[1][1] *= -1;
+        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+            camData.projection[1][1] *= -1;
+
         camData.projectionView = camData.projection * camData.view;
         camData.inverseProjView = glm::inverse(camData.projectionView);
+        return camData;
+    }
 
-        // Collect light data
+    void RenderSystem::CollectLightData()
+    {
         mLightData.clear();
         auto& registry = ecs->GetRegistry();
-        registry.view<LightComponent, TransformComponent>().each([&](auto entity, LightComponent& lc, TransformComponent& tc)
-        {
-            LightUniform lu{};
-            lu.positionRadius = glm::vec4(tc.Translation, lc.Radius);
-            lu.colorIntensity = glm::vec4(lc.Color, lc.Intensity);
-            lu.directionInner = glm::vec4(glm::normalize(lc.Direction), lc.InnerCone);
-            lu.outerConeType = glm::vec4(lc.OuterCone, static_cast<float>(lc.LightType), 0.0f, 0.0f);
-            mLightData.push_back(lu);
-        });
 
-        AnimationLibrary* al = rr->animationLibrary.get();
+        registry.view<LightComponent, TransformComponent>().each(
+            [this](auto, LightComponent& lc, TransformComponent& tc)
+            {
+                mLightData.push_back({
+                    .positionRadius = glm::vec4(tc.Translation, lc.Radius),
+                    .colorIntensity = glm::vec4(lc.Color, lc.Intensity),
+                    .directionInner = glm::vec4(glm::normalize(lc.Direction), lc.InnerCone),
+                    .outerConeType = glm::vec4(lc.OuterCone, static_cast<float>(lc.LightType), 0.0f, 0.0f)
+                    });
+            });
+
+        struct LightHeader { uint32_t lightCount; uint32_t _pad[3]; };
+        LightHeader header{ .lightCount = static_cast<uint32_t>(mLightData.size()) };
+        mLightBuffer.resize(sizeof(LightHeader) + sizeof(LightUniform) * mLightData.size());
+        memcpy(mLightBuffer.data(), &header, sizeof(LightHeader));
+        memcpy(mLightBuffer.data() + sizeof(LightHeader), mLightData.data(),
+            sizeof(LightUniform) * mLightData.size());
+    }
+
+    void RenderSystem::BuildInstanceData()
+    {
+        auto rr = ecs->GetResource<RenderingResource>();
+        auto& registry = ecs->GetRegistry();
         ModelLibrary* ml = rr->modelLibrary.get();
+        AnimationLibrary* al = rr->animationLibrary.get();
         UnifiedMeshes* uMeshes = ml->GetUnifiedMesh();
 
         // ============================================================
@@ -211,7 +537,7 @@ namespace Radis
             }
         }
 
-        // Pass 1: Count instances per mesh
+        // Count instances per mesh
         auto modelTransformEntities = registry.view<ModelComponent, TransformComponent>();
         modelTransformEntities.each([&](auto entity, ModelComponent& mc, TransformComponent& tc)
         {
@@ -315,332 +641,5 @@ namespace Radis
                 data.meshID = meshID;
             }
         });
-
-        struct LightHeader { uint32_t lightCount; uint32_t _pad[3]; };
-        LightHeader header{ .lightCount = static_cast<uint32_t>(mLightData.size()) };
-        mLightBuffer.resize(sizeof(LightHeader) + sizeof(LightUniform) * mLightData.size());
-        memcpy(mLightBuffer.data(), &header, sizeof(LightHeader));
-        memcpy(mLightBuffer.data() + sizeof(LightHeader), mLightData.data(), sizeof(LightUniform) * mLightData.size());
-
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
-        {
-            rr->cameraUniform->SetUniformData(camData, 0, rr->currentFrameIndex);       // Set Camera Data
-            rr->cameraUniform->SetUniformData(mInstanceData, 1, rr->currentFrameIndex); // Set Instance Data
-            rr->cameraUniform->SetUniformData(mLightBuffer, 4, rr->currentFrameIndex);  // Set Light Data
-
-            if (rr->deferredLightingUniform)
-            {
-                rr->deferredLightingUniform->SetUniformData(camData, 0, rr->currentFrameIndex);      // Camera data
-                rr->deferredLightingUniform->SetUniformData(mLightBuffer, 6, rr->currentFrameIndex); // Light data
-            }
-
-            // Add the scene render pass
-            auto& rg = rr->renderGraph;
-            std::string colorWriteTarget = Engine::GetEditorEnabled() ? "SceneTexture" : "BackBuffer";
-
-            switch (rr->renderMode)
-            {
-            case RenderMode::Forward: {
-                rg->AddPass(
-                    "ScenePass",
-                    [&](RGPassBuilder& builder)
-                    {
-                        builder.writes(colorWriteTarget);
-                        builder.writes("SceneDepth");
-                    },
-                    std::bind(&RenderSystem::RenderSceneVK, this, std::placeholders::_1)
-                );
-                break;
-            }
-            case RenderMode::Deferred: {
-                // G-Buffer pass
-                rg->AddPass("GBufferPass",
-                    [&](RGPassBuilder& builder) {
-                        builder.writes("gAlbedo");
-                        builder.writes("gNormal");
-                        builder.writes("gPBR");
-                        builder.writes("gEmissive");
-                        builder.writes("SceneDepth");
-                    },
-                    std::bind(&RenderSystem::RenderSceneDeferredGeometryVK, this, std::placeholders::_1)
-                );
-
-                // Lighting pass - outputs to SceneHDR
-                rg->AddPass("LightingPass",
-                    [&](RGPassBuilder& builder) {
-                        builder.reads("gAlbedo");
-                        builder.reads("gNormal");
-                        builder.reads("gPBR");
-                        builder.reads("gEmissive");
-                        builder.reads("SceneDepth");
-                        builder.writes(colorWriteTarget);
-                    },
-                    std::bind(&RenderSystem::RenderSceneDeferredLightingVK, this, std::placeholders::_1)
-                );
-
-                break;
-            }
-            case RenderMode::Raytracing: {
-                rg->AddPass(
-                    "ScenePass",
-                    [&](RGPassBuilder& builder) {},
-                    std::bind(&RenderSystem::RaytraceSceneVK, this, std::placeholders::_1)
-                );
-                break;
-            }
-            }
-        }
-        else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
-        {
-            rr->shader->SetCameraUBO(camData);
-            RenderSceneGL();
-        }
-    }
-
-    void RenderSystem::FrameEnd()
-    {
-    }
-
-    void RenderSystem::ExecuteInstancedDrawCalls(VkCommandBuffer cmd)
-    {
-        for (const auto& drawCall : mDrawCalls)
-        {
-            vkCmdDrawIndexed(
-                cmd,
-                drawCall.indexCount,
-                drawCall.instanceCount,
-                drawCall.firstIndex,
-                drawCall.vertexOffset,
-                drawCall.firstInstance
-            );
-        }
-    }
-
-    void RenderSystem::RenderSceneVK(VkCommandBuffer cmd)
-    {
-        auto rr = ecs->GetResource<RenderingResource>();
-
-        ScopedDebugLabel sceneDebugLabel(rr->device.get(), cmd, "Render Scene", glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-
-        rr->renderWireframe ? rr->wireframePipeline->Bind(cmd) : rr->pipeline->Bind(cmd);
-        VkPipelineLayout pipelineLayout = rr->renderWireframe ? rr->wireframePipeline->GetLayout() : rr->pipeline->GetLayout();
-
-        rr->cameraUniform->Bind(cmd, pipelineLayout, rr->currentFrameIndex);
-
-        VkViewport viewport{};
-        viewport.width = static_cast<float>(rr->swapChain->GetSwapChainExtent().width);
-        viewport.height = static_cast<float>(rr->swapChain->GetSwapChainExtent().height);
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
-        vkCmdSetViewport(cmd, 0, 1, &viewport);
-
-        VkRect2D scissor{ {0, 0}, rr->swapChain->GetSwapChainExtent() };
-        vkCmdSetScissor(cmd, 0, 1, &scissor);
-
-        UnifiedMeshes* uMeshes = rr->modelLibrary->GetUnifiedMesh();
-        uMeshes->GetUnifiedMesh()->Bind(cmd);
-
-        ExecuteInstancedDrawCalls(cmd);
-    }
-
-    void RenderSystem::RenderSceneDeferredGeometryVK(VkCommandBuffer cmd)
-    {
-        auto rr = ecs->GetResource<RenderingResource>();
-
-        ScopedDebugLabel sceneDebugLabel(rr->device.get(), cmd, "Deferred G-Buffer Pass", glm::vec4(0.2f, 0.8f, 0.2f, 1.0f));
-
-        rr->gBufferPipeline->Bind(cmd);
-        VkPipelineLayout pipelineLayout = rr->gBufferPipeline->GetLayout();
-
-        rr->cameraUniform->Bind(cmd, pipelineLayout, rr->currentFrameIndex);
-
-        VkViewport viewport{};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = static_cast<float>(rr->swapChain->GetSwapChainExtent().width);
-        viewport.height = static_cast<float>(rr->swapChain->GetSwapChainExtent().height);
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
-        vkCmdSetViewport(cmd, 0, 1, &viewport);
-
-        VkRect2D scissor{ {0, 0}, rr->swapChain->GetSwapChainExtent() };
-        vkCmdSetScissor(cmd, 0, 1, &scissor);
-
-        UnifiedMeshes* uMeshes = rr->modelLibrary->GetUnifiedMesh();
-        uMeshes->GetUnifiedMesh()->Bind(cmd);
-
-        ExecuteInstancedDrawCalls(cmd);
-    }
-
-    void RenderSystem::RenderSceneDeferredLightingVK(VkCommandBuffer cmd)
-    {
-        auto rr = ecs->GetResource<RenderingResource>();
-
-        ScopedDebugLabel sceneDebugLabel(rr->device.get(), cmd, "Deferred Lighting Pass", glm::vec4(0.8f, 0.8f, 0.2f, 1.0f));
-
-        rr->deferredLightingPipeline->Bind(cmd);
-        VkPipelineLayout pipelineLayout = rr->deferredLightingPipeline->GetLayout();
-
-        rr->deferredLightingUniform->Bind(cmd, pipelineLayout, rr->currentFrameIndex);
-
-        VkViewport viewport{};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = static_cast<float>(rr->swapChain->GetSwapChainExtent().width);
-        viewport.height = static_cast<float>(rr->swapChain->GetSwapChainExtent().height);
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
-        vkCmdSetViewport(cmd, 0, 1, &viewport);
-
-        VkRect2D scissor{ {0, 0}, rr->swapChain->GetSwapChainExtent() };
-        vkCmdSetScissor(cmd, 0, 1, &scissor);
-
-        vkCmdDraw(cmd, 3, 1, 0, 0);
-    }
-
-    void RenderSystem::RenderSceneGL()
-    {
-        auto rr = ecs->GetResource<RenderingResource>();
-        auto er = ecs->GetResource<EditorResource>();
-
-        rr->shader->Use();
-
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        if (Engine::GetEditorEnabled()) {
-            rr->sceneFrameBuffer->Bind();
-            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        }
-
-        std::vector<uint64_t> textureData{};
-        for (uint32_t i = 0; i < rr->textureLibrary->GetTextureCount(); ++i)
-        {
-            if (auto itex = rr->textureLibrary->GetTextureByIndex(i))
-            {
-                GLTexture* gltex = static_cast<GLTexture*>(itex);
-                textureData.push_back(gltex->textureHandle);
-            }
-        }
-
-        GLShader::SetupInstanceSSBO();
-        GLuint iSSBO = GLShader::GetInstanceSSBO();
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, iSSBO);
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, mInstanceData.size() * sizeof(InstanceUniforms), mInstanceData.data());
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-        
-        GLShader::SetupTextureSSBO();
-        GLuint textureSSBO = GLShader::GetTextureSSBO();
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, textureSSBO);
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, textureData.size() * sizeof(uint64_t), textureData.data());
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-
-        GLShader::SetupLightSSBO();
-        GLuint lightSSBO = GLShader::GetLightSSBO();
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, lightSSBO);
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, mLightBuffer.size(), mLightBuffer.data());
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-
-        UnifiedMeshes* uMeshes = rr->modelLibrary->GetUnifiedMesh();
-        uMeshes->GetUnifiedMesh()->Bind();
-
-        for (const auto& drawCall : mDrawCalls)
-        {
-            glDrawElementsInstancedBaseVertexBaseInstance(
-                GL_TRIANGLES,
-                static_cast<GLsizei>(drawCall.indexCount),
-                GL_UNSIGNED_INT,
-                (void*)(sizeof(uint32_t) * drawCall.firstIndex),
-                drawCall.instanceCount,
-                drawCall.vertexOffset,
-                drawCall.firstInstance
-            );
-        }
-
-        if (Engine::GetEditorEnabled())
-        {
-            rr->sceneFrameBuffer->Unbind();
-        }
-    }
-
-    void RenderSystem::RaytraceSceneVK(VkCommandBuffer cmd)
-    {
-        auto rr = ecs->GetResource<RenderingResource>();
-        auto& rp = rr->raytracingPipeline;
-
-        ScopedDebugLabel rtDebugLabel(rr->device.get(), cmd, "Raytrace Scene", glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-     
-        // Update TLAS with mInstanceData
-        {
-            std::vector<VkAccelerationStructureInstanceKHR> tlasInstances;
-            tlasInstances.reserve(mInstanceData.size());
-            for (size_t i = 0; i < mInstanceData.size(); ++i)
-            {
-                const auto& instanceData = mInstanceData[i];
-                VkAccelerationStructureInstanceKHR asInstance{};
-                asInstance.transform = toTransformMatrixKHR(instanceData.model);
-                asInstance.instanceCustomIndex = static_cast<uint32_t>(i);
-                asInstance.accelerationStructureReference = rr->blasAccel[instanceData.meshID].address;
-                asInstance.instanceShaderBindingTableRecordOffset = 0;
-                asInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
-                asInstance.mask = 0xFF;
-                tlasInstances.emplace_back(asInstance);
-            }
-
-            if (tlasInstances.empty())
-            {
-                VkAccelerationStructureInstanceKHR asInstance{};
-                asInstance.transform = toTransformMatrixKHR(glm::mat4(0.0f));
-                asInstance.instanceCustomIndex = 0;
-                asInstance.accelerationStructureReference = rr->blasAccel[0].address;
-                asInstance.instanceShaderBindingTableRecordOffset = 0;
-                asInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
-                asInstance.mask = 0xFF;
-                tlasInstances.emplace_back(asInstance);
-            }
-
-            auto rtr = ecs->GetResource<RaytracingResource>();
-            rtr->UpdateTopLevelASImmediate(tlasInstances);
-        }
-        
-        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, rp->GetPipeline());
-
-        rr->cameraUniform->Bind(cmd, rp->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR);
-        rr->rtUniform->Bind(cmd, rp->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR);
-
-        const VkExtent2D& size = rr->swapChain->GetSwapChainExtent();
-        vkCmdTraceRaysKHR(cmd, &rp->GetRaygenRegion(), &rp->GetMissRegion(), &rp->GetHitRegion(), &rp->GetCallableRegion(), size.width, size.height, 1);
-
-        VkMemoryBarrier2 memoryBarrier = {
-            .sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER_2,
-            .pNext = nullptr,
-            .srcStageMask = VK_PIPELINE_STAGE_2_RAY_TRACING_SHADER_BIT_KHR,
-            .srcAccessMask = VK_ACCESS_2_SHADER_WRITE_BIT,
-            .dstStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT,
-            .dstAccessMask = VK_ACCESS_2_SHADER_READ_BIT
-        };
-
-        VkDependencyInfo dependencyInfo = {
-            .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
-            .pNext = nullptr,
-            .memoryBarrierCount = 1,
-            .pMemoryBarriers = &memoryBarrier
-        };
-
-        vkCmdPipelineBarrier2(cmd, &dependencyInfo);
-    }
-
-    float RenderSystem::GetAspectRatio()
-    {
-        if (Engine::GetEditorEnabled())
-        {
-            EditorResource* er = ecs->GetResource<EditorResource>();
-            return er->sceneWindowWidth / er->sceneWindowHeight;
-        }
-        
-        WindowResource* wr = ecs->GetResource<WindowResource>();
-        glm::uvec2 extant = wr->window->GetExtent();
-        return static_cast<float>(extant.x) / static_cast<float>(extant.y);
     }
 }

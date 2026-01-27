@@ -12,7 +12,7 @@
 namespace Radis
 {
 
-    VkTransformMatrixKHR Radis::toTransformMatrixKHR(const glm::mat4& m)
+    VkTransformMatrixKHR Radis::ToTransformMatrixKHR(const glm::mat4& m)
     {
         VkTransformMatrixKHR t;
         glm::mat4 tmp = glm::transpose(m);
