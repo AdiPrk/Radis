@@ -39,10 +39,12 @@ namespace Radis
 			void* model = nullptr;
 			void* defaultFile = nullptr;
 
-			AssetIcons(TextureLibrary* tl) {
+			AssetIcons(TextureLibrary* tl) 
+			{
 				if (!tl) return;
 
-				auto GetTexID = [&](const std::string& name) -> void* {
+				auto GetTexID = [&](const std::string& name) -> void* 
+				{
 					if (auto itex = tl->GetTexture(Assets::ImagesPath + name)) {
 						return itex->GetTextureID();
 					}
@@ -232,7 +234,8 @@ namespace Radis
 				}
 			}
 
-			auto sortAlpha = [](const auto& a, const auto& b) {
+			auto sortAlpha = [](const auto& a, const auto& b)
+			{
 				return a.path().filename().string() < b.path().filename().string();
 			};
 			std::sort(directories.begin(), directories.end(), sortAlpha);
@@ -256,7 +259,8 @@ namespace Radis
 			}
 
 			// --- Render Separator ---
-			if (!directories.empty() && !files.empty()) {
+			if (!directories.empty() && !files.empty()) 
+			{
 				ImGui::Columns(1);
 				ImGui::Separator();
 				ImGui::Columns(columnCount, 0, false);

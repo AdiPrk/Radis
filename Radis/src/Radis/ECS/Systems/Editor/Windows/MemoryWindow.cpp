@@ -44,27 +44,25 @@ namespace Radis::EditorWindows
 
             double v = static_cast<double>(bytes);
             int i = 0;
-            while (v >= 1024.0 && i < 4) {
+            while (v >= 1024.0 && i < 4) 
+            {
                 v /= 1024.0;
                 ++i;
             }
 
             char buf[64];
-            if (v >= 10.0)
-                std::snprintf(buf, sizeof(buf), "%.0f %s", v, kSuffix[i]);
-            else
-                std::snprintf(buf, sizeof(buf), "%.2f %s", v, kSuffix[i]);
+            if (v >= 10.0) std::snprintf(buf, sizeof(buf), "%.0f %s", v, kSuffix[i]);
+            else           std::snprintf(buf, sizeof(buf), "%.2f %s", v, kSuffix[i]);
 
             return buf;
         }
 
         uint64_t GetU64(const json& v)
         {
-            if (v.is_number_unsigned())
-                return v.get<uint64_t>();
-            if (v.is_number_integer())
-                return static_cast<uint64_t>(v.get<int64_t>());
-            if (v.is_string()) {
+            if (v.is_number_unsigned()) return v.get<uint64_t>();
+            if (v.is_number_integer())  return static_cast<uint64_t>(v.get<int64_t>());
+            if (v.is_string()) 
+            {
                 try { return std::stoull(v.get<std::string>()); }
                 catch (...) {}
             }
@@ -77,9 +75,7 @@ namespace Radis::EditorWindows
         }
 
         // Recursively traverse VMA JSON and gather allocation entries
-        void WalkJson(const json& node,
-            std::vector<std::string>& path,
-            std::vector<SmallEntry>& out)
+        void WalkJson(const json& node, std::vector<std::string>& path, std::vector<SmallEntry>& out)
         {
             if (node.is_object())
             {
@@ -94,7 +90,9 @@ namespace Radis::EditorWindows
                         {
                             poolLabel = path.front();
                             for (size_t i = 1; i < path.size(); ++i)
+                            {
                                 poolLabel += " / " + path[i];
+                            }
                         }
 
                         for (const auto& sub : value)
@@ -119,8 +117,7 @@ namespace Radis::EditorWindows
                             {
                                 uint64_t offset = GetU64(sub.value("Offset", 0));
                                 char buf[64];
-                                std::snprintf(buf, sizeof(buf), "%s @ 0x%llx",
-                                    type.c_str(), (unsigned long long)offset);
+                                std::snprintf(buf, sizeof(buf), "%s @ 0x%llx", type.c_str(), (unsigned long long)offset);
                                 e.name = buf;
                             }
 
@@ -141,9 +138,13 @@ namespace Radis::EditorWindows
                             e.type = GetStr(d.value("Type", ""));
 
                             if (d.contains("Name") && d["Name"].is_string())
+                            {
                                 e.name = d["Name"].get<std::string>();
+                            }
                             else
+                            {
                                 e.name = e.type.empty() ? "Dedicated" : "Dedicated " + e.type;
+                            }
 
                             out.push_back(std::move(e));
                         }
@@ -159,7 +160,9 @@ namespace Radis::EditorWindows
             else if (node.is_array())
             {
                 for (const auto& el : node)
+                {
                     WalkJson(el, path, out);
+                }
             }
         }
 
@@ -248,13 +251,16 @@ namespace Radis::EditorWindows
                 return false;
             }
 
-            struct FreeGuard {
-                VmaAllocator a; char* s;
+            struct FreeGuard 
+            {
+                VmaAllocator a; 
+                char* s;
                 ~FreeGuard() { if (s) vmaFreeStatsString(a, s); }
             } guard{ allocator, statsString };
 
             json j;
-            try {
+            try 
+            {
                 j = json::parse(statsString);
             }
             catch (const std::exception& e)
@@ -265,7 +271,9 @@ namespace Radis::EditorWindows
 
             std::vector<SmallEntry> entries;
             if (!CollectEntries(j, entries, cache.lastError))
+            {
                 return false;
+            }
 
             BuildLines(entries, cache.lines, cache.totalBytes);
             cache.lastUpdateTime = CurrentTimestamp();
