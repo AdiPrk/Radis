@@ -11,7 +11,7 @@
 #include "VKShader.h"
 
 #include "../Core/Device.h"
-#include "../VKMesh.h"
+#include "Graphics/RHI/IMeshBuffer.h"
 
 #include "../Uniform/Uniform.h"
 #include "../Uniform/Descriptors.h"

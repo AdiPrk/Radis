@@ -19,7 +19,7 @@ namespace Radis
         RaytracingResource();
 
         // Accel structure functions
-        void PrimitiveToGeometry(class VKMesh& mesh,
+        void PrimitiveToGeometry(class Mesh& mesh,
             VkAccelerationStructureGeometryKHR& geometry,
             VkAccelerationStructureBuildRangeInfoKHR& rangeInfo);
 

@@ -24,7 +24,7 @@
 #include "Graphics/Vulkan/Texture/VKTexture.h"
 #include "Graphics/Vulkan/Uniform/Descriptors.h"
 #include "Graphics/Common/UnifiedMesh.h"
-#include "Graphics/Vulkan/VKMesh.h"
+#include "Graphics/Vulkan/VKMeshBuffer.h"
 
 #include "ECS/ECS.h"
 #include "ECS/Components/Components.h"
@@ -36,15 +36,16 @@ namespace Radis
     {
     }
 
-    void RaytracingResource::PrimitiveToGeometry(VKMesh& mesh, VkAccelerationStructureGeometryKHR& geometry, VkAccelerationStructureBuildRangeInfoKHR& rangeInfo)
+    void RaytracingResource::PrimitiveToGeometry(Mesh& mesh, VkAccelerationStructureGeometryKHR& geometry, VkAccelerationStructureBuildRangeInfoKHR& rangeInfo)
     {
-        VkDeviceAddress vertexAddress = mesh.mVertexBuffer.address;
-        VkDeviceAddress indexAddress = mesh.mIndexBuffer.address;
+        // Get the Vulkan buffer from the mesh's buffer
+        IMeshBuffer* buffer = mesh.GetBuffer();
+        VkDeviceAddress vertexAddress = buffer->GetVertexBuffer().address;
+        VkDeviceAddress indexAddress = buffer->GetIndexBuffer().address;
 
-        // Describe buffer as array of VertexObj.
         VkAccelerationStructureGeometryTrianglesDataKHR triangles{
             .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR,
-            .vertexFormat = VK_FORMAT_R32G32B32_SFLOAT,  // vec3 vertex position data
+            .vertexFormat = VK_FORMAT_R32G32B32_SFLOAT,
             .vertexData = {.deviceAddress = vertexAddress},
             .vertexStride = sizeof(Vertex),
             .maxVertex = static_cast<uint32_t>(mesh.mVertices.size() - 1),
@@ -52,9 +53,6 @@ namespace Radis
             .indexData = {.deviceAddress = indexAddress},
         };
 
-        // Identify the above data as containing opaque triangles.
-        // @Todo: Future optimization: Check if the material has any transparency and set VK_GEOMETRY_OPAQUE_BIT_KHR
-        // to skip the any-hit shader
         geometry = VkAccelerationStructureGeometryKHR{
             .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR,
             .geometryType = VK_GEOMETRY_TYPE_TRIANGLES_KHR,
@@ -62,8 +60,7 @@ namespace Radis
             .flags = VK_GEOMETRY_NO_DUPLICATE_ANY_HIT_INVOCATION_BIT_KHR,
         };
 
-
-        rangeInfo = VkAccelerationStructureBuildRangeInfoKHR{ .primitiveCount = mesh.mTriangleCount };
+        rangeInfo = VkAccelerationStructureBuildRangeInfoKHR{ .primitiveCount = mesh.GetTriangleCount() };
     }
 
     void RaytracingResource::CreateAccelerationStructure(VkAccelerationStructureTypeKHR asType,  // The type of acceleration structure (BLAS or TLAS)
@@ -170,12 +167,11 @@ namespace Radis
         {
             for (auto& mesh : ml->GetModel(i)->mMeshes)
             {
-                VKMesh* vkMesh = static_cast<VKMesh*>(mesh.get());
                 VkAccelerationStructureGeometryKHR       asGeometry{};
                 VkAccelerationStructureBuildRangeInfoKHR asBuildRangeInfo{};
 
                 // Convert the primitive information to acceleration structure geometry
-                PrimitiveToGeometry(*vkMesh, asGeometry, asBuildRangeInfo);
+                PrimitiveToGeometry(*mesh, asGeometry, asBuildRangeInfo);
                 CreateAccelerationStructure(
                     VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR,
                     rr->blasAccel[mesh->GetID()],

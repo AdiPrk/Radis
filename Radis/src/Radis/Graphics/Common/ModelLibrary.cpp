@@ -14,8 +14,6 @@
 
 #include "TextureLibrary.h"
 #include "../Vulkan/Core/Device.h"
-#include "../Vulkan/VKMesh.h"
-#include "../OpenGL/GLMesh.h"
 #include "Engine.h"
 
 namespace Radis
@@ -32,7 +30,7 @@ namespace Radis
     ModelLibrary::~ModelLibrary()
     {
         mModels.clear();
-        mUnifiedMesh->GetUnifiedMesh()->DestroyBuffers();
+        mUnifiedMesh->GetUnifiedMesh().ReleaseGPU();
     }
 
     uint32_t ModelLibrary::AddModel(const std::string& filePath, bool fromDM, bool toDM)
@@ -46,8 +44,7 @@ namespace Radis
         std::unique_ptr<Model> model = std::make_unique<Model>(mDevice, filePath, fromDM, toDM);
         for (auto& mesh : model->mMeshes)
         {
-            mesh->CreateVertexBuffers(&mDevice);
-            mesh->CreateIndexBuffers(&mDevice);
+            mesh->UploadToGPU(&mDevice);
         }
         
         uint32_t modelID = static_cast<uint32_t>(mModels.size());
@@ -212,11 +209,11 @@ namespace Radis
         {
             for (auto& mesh : model->mMeshes)
             {
-                mesh->DestroyBuffers();
+                mesh->ReleaseGPU();
             }
         }
 
-        mUnifiedMesh->GetUnifiedMesh()->DestroyBuffers();
+        mUnifiedMesh->GetUnifiedMesh().ReleaseGPU();
     }
 
     void ModelLibrary::RecreateAllBuffers(Device* device)
@@ -225,88 +222,10 @@ namespace Radis
         {
             for (auto& mesh : model->mMeshes)
             {
-                std::vector<Vertex> oldVertices = mesh->mVertices;
-                std::vector<uint32_t> oldIndices = mesh->mIndices;
-                uint32_t oldMeshID = mesh->GetID();
-                uint32_t oldDiffuseTextureIndex = mesh->albedoTextureIndex;
-                uint32_t oldNormalTextureIndex = mesh->normalTextureIndex;
-                uint32_t oldMetalnessTextureIndex = mesh->metalnessTextureIndex;
-                uint32_t oldRoughnessTextureIndex = mesh->roughnessTextureIndex;
-                uint32_t oldOcclusionTextureIndex = mesh->occlusionTextureIndex;
-                uint32_t oldEmissiveTextureIndex = mesh->emissiveTextureIndex;
-                glm::vec4 oldBaseColorFactor = mesh->baseColorFactor;
-                float oldMetallicFactor = mesh->metallicFactor;
-                float oldRoughnessFactor = mesh->roughnessFactor;
-                glm::vec4 oldEmissiveFactor = mesh->emissiveFactor;
-
-                // Preserve the missing properties
-                bool oldMetallicRoughnessCombined = mesh->mMetallicRoughnessCombined;
-                std::string oldAlbedoPath = mesh->albedoTexturePath;
-                std::string oldNormalPath = mesh->normalTexturePath;
-                std::string oldMetalnessPath = mesh->metalnessTexturePath;
-                std::string oldRoughnessPath = mesh->roughnessTexturePath;
-                std::string oldOcclusionPath = mesh->occlusionTexturePath;
-                std::string oldEmissivePath = mesh->emissiveTexturePath;
-                bool oldLoadedTextures = mesh->loadedTextures;
-
-                mesh.reset();
-
-                if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
-                {
-                    mesh = std::make_unique<GLMesh>(false);
-                }
-                else if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
-                {
-                    mesh = std::make_unique<VKMesh>(false);
-                }
-
-                mesh->mMeshID = oldMeshID;
-                mesh->mVertices = oldVertices;
-                mesh->mIndices = oldIndices;
-                mesh->albedoTextureIndex = oldDiffuseTextureIndex;
-                mesh->normalTextureIndex = oldNormalTextureIndex;
-                mesh->metalnessTextureIndex = oldMetalnessTextureIndex;
-                mesh->roughnessTextureIndex = oldRoughnessTextureIndex;
-                mesh->occlusionTextureIndex = oldOcclusionTextureIndex;
-                mesh->emissiveTextureIndex = oldEmissiveTextureIndex;
-                mesh->baseColorFactor = oldBaseColorFactor;
-                mesh->metallicFactor = oldMetallicFactor;
-                mesh->roughnessFactor = oldRoughnessFactor;
-                mesh->emissiveFactor = oldEmissiveFactor;
-
-                // Restore the missing properties
-                mesh->mMetallicRoughnessCombined = oldMetallicRoughnessCombined;
-                mesh->albedoTexturePath = oldAlbedoPath;
-                mesh->normalTexturePath = oldNormalPath;
-                mesh->metalnessTexturePath = oldMetalnessPath;
-                mesh->roughnessTexturePath = oldRoughnessPath;
-                mesh->occlusionTexturePath = oldOcclusionPath;
-                mesh->emissiveTexturePath = oldEmissivePath;
-                mesh->loadedTextures = oldLoadedTextures;
-
-                mesh->CreateVertexBuffers(device);
-                mesh->CreateIndexBuffers(device);
+                mesh->RecreateBuffer(device);
             }
         }
 
-        {
-            std::vector<Vertex> oldVertices = mUnifiedMesh->GetUnifiedMesh()->mVertices;
-            std::vector<uint32_t> oldIndices = mUnifiedMesh->GetUnifiedMesh()->mIndices;
-
-            mUnifiedMesh->GetUnifiedMesh().reset();
-            if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
-            {
-                mUnifiedMesh->GetUnifiedMesh() = std::make_unique<GLMesh>(false);
-            }
-            else if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
-            {
-                mUnifiedMesh->GetUnifiedMesh() = std::make_unique<VKMesh>(false);
-            }
-
-            mUnifiedMesh->GetUnifiedMesh()->mVertices = oldVertices;
-            mUnifiedMesh->GetUnifiedMesh()->mIndices = oldIndices;
-            mUnifiedMesh->GetUnifiedMesh()->CreateVertexBuffers(device);
-            mUnifiedMesh->GetUnifiedMesh()->CreateIndexBuffers(device);
-        }
+        mUnifiedMesh->GetUnifiedMesh().RecreateBuffer(device);
     }
 }

@@ -1,6 +1,6 @@
 /*****************************************************************//**
- * \file   IMesh.h
- * \brief  Definition of the IMesh interface for 3D mesh representation.
+ * \file   Mesh.h
+ * \brief  CPU-side mesh class with abstracted GPU buffer management.
  * 
  * \author Aditya Prakash
  * \date   January 2026
@@ -8,65 +8,59 @@
 
 #pragma once
 
-#include "Graphics/RHI/RHI.h"
-#include "Graphics/Vulkan/Core/AccelerationStructures.h"
+#include "IMeshBuffer.h"
 
 namespace Radis
 {
     class Device;
 
-    struct Vertex
-    {
-        glm::vec3 position{ 0.f }; //Position of this vertex
-        glm::vec3 color{ 1.f };    //Color of this vertex
-        glm::vec3 normal{ 0.f };   //Normal of this vertex
-        glm::vec2 uv{ 0.f };       //Texture coords of this vertex
-
-        static constexpr int MAX_BONE_INFLUENCE = 4;
-
-        std::array<int, MAX_BONE_INFLUENCE> boneIDs = { -1, -1, -1, -1 };
-        std::array<float, MAX_BONE_INFLUENCE> weights = { 0.0f, 0.0f, 0.0f, 0.0f };
-
-        static std::vector<VkVertexInputBindingDescription> GetBindingDescriptions();
-        static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions();
-
-        void SetBoneData(int boneID, float weight);
-    };
-
-    class IMesh
+    /**
+     * \brief CPU-side mesh representation with optional GPU buffer.
+     * 
+     * This class holds all mesh data (vertices, indices, material info) on the CPU
+     * and delegates GPU operations to an IMeshBuffer implementation.
+     */
+    class Mesh
     {
     public:
-        IMesh(bool assignID = true);
-        virtual ~IMesh() = default;
+        Mesh(bool assignID = true);
+        ~Mesh();
 
-        virtual void CreateVertexBuffers(Device* device) = 0;
-        virtual void CreateIndexBuffers(Device* device) = 0;
-        virtual void DestroyBuffers() = 0;
+        // Non-copyable, movable
+        Mesh(const Mesh&) = delete;
+        Mesh& operator=(const Mesh&) = delete;
+        Mesh(Mesh&&) = default;
+        Mesh& operator=(Mesh&&) = default;
 
-        virtual void Bind(VkCommandBuffer commandBuffer = nullptr) = 0;
-        virtual void Draw(VkCommandBuffer commandBuffer, uint32_t baseIndex = 0) = 0;
+        // GPU buffer management
+        void UploadToGPU(Device* device);
+        void ReleaseGPU();
+        void RecreateBuffer(Device* device);
 
+        // Rendering
+        void Bind(VkCommandBuffer cmd = nullptr);
+        void Draw(VkCommandBuffer cmd = nullptr, uint32_t instanceBase = 0);
+
+        // Accessors
         uint32_t GetID() const { return mMeshID; }
+        IMeshBuffer* GetBuffer() const { return mBuffer.get(); }
+        bool HasGPUBuffer() const { return mBuffer != nullptr && mBuffer->IsUploaded(); }
 
-    public:
-        // Buffers
-        bool mHasIndexBuffer = false;
-        uint32_t mTriangleCount = 0;
-        uint32_t mVertexCount = 0;
-        uint32_t mIndexCount = 0;
+        // Buffer state (forwarded from IMeshBuffer or computed from CPU data)
+        uint32_t GetVertexCount() const { return static_cast<uint32_t>(mVertices.size()); }
+        uint32_t GetIndexCount() const { return static_cast<uint32_t>(mIndices.size()); }
+        uint32_t GetTriangleCount() const { return GetIndexCount() / 3; }
+        bool HasIndexBuffer() const { return !mIndices.empty(); }
 
-        Buffer mVertexBuffer;
-        Buffer mIndexBuffer;
-        GLuint mVAO, mVBO, mEBO;
-
-        // Mesh data
+    public:       
+        // Geometry
         std::vector<Vertex> mVertices{};
         std::vector<uint32_t> mIndices{};
 
         // Unique mesh index
         uint32_t mMeshID = 0;
 
-        // Tex data if from memory
+        // Embedded texture data (cleared after upload to TextureLibrary)
         std::vector<unsigned char> mAlbedoTextureData{};
         std::vector<unsigned char> mNormalTextureData{};
         std::vector<unsigned char> mMetalnessTextureData{};
@@ -80,7 +74,7 @@ namespace Radis
         uint32_t mOcclusionTextureSize = 0;
         uint32_t mEmissiveTextureSize = 0;
 
-        // Otherwise path to textures
+        // Texture paths (alternative to embedded data)
         bool loadedTextures = false;
         std::string albedoTexturePath{};
         std::string normalTexturePath{};
@@ -89,7 +83,7 @@ namespace Radis
         std::string occlusionTexturePath{};
         std::string emissiveTexturePath{};
 
-        // Indicies sent to GPU
+        // Texture indices (set after textures loaded into TextureLibrary)
         uint32_t albedoTextureIndex = 10001;
         uint32_t normalTextureIndex = 10001;
         uint32_t metalnessTextureIndex = 10001;
@@ -97,15 +91,18 @@ namespace Radis
         uint32_t occlusionTextureIndex = 10001;
         uint32_t emissiveTextureIndex = 10001;
 
-        bool mMetallicRoughnessCombined = false; // Roughness uses same texture as metallic
+        bool mMetallicRoughnessCombined = false;
 
-        // Color 'factors'
+        // Material factors
         glm::vec4 baseColorFactor{ 1.f };
         float metallicFactor{ 0.f };
         float roughnessFactor{ 0.f };
         glm::vec4 emissiveFactor{ 0.f };
 
     private:
+        // GPU Mesh Buffer
+        std::unique_ptr<IMeshBuffer> mBuffer;
+
         static int GetTotalMeshCount() { return uniqueMeshIndex; }
         static int uniqueMeshIndex;
     };

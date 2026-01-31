@@ -8,7 +8,7 @@
 
 #include <PCH/pch.h>
 #include "RHI.h"
-#include "IMesh.h"
+#include "Mesh.h"
 
 namespace Radis
 {

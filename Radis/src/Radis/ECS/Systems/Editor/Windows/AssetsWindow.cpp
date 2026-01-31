@@ -32,7 +32,8 @@ namespace Radis
 		};
 		
 		// Helper struct to load and hold all icons
-		struct AssetIcons {
+		struct AssetIcons 
+		{
 			void* folder = nullptr;
 			void* shader = nullptr;
 			void* scene = nullptr;

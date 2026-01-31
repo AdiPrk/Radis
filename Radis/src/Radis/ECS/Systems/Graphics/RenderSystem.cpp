@@ -40,7 +40,6 @@
 #include "ECS/Components/Components.h"
 
 #include "Engine.h"
-#include "Graphics/OpenGL/GLMesh.h"
 #include "Graphics/OpenGL/GLFrameBuffer.h"
 #include "Graphics/OpenGL/GLTexture.h"
 #include "Graphics/IWindow.h"
@@ -77,7 +76,7 @@ namespace Radis
             if (uMeshes)
             {            
                 MeshDataUniform vertexData;
-                for (auto& v : uMeshes->GetUnifiedMesh()->mVertices)
+                for (auto& v : uMeshes->GetUnifiedMesh().mVertices)
                 {
                     vertexData.posX = v.position.x;
                     vertexData.posY = v.position.y;
@@ -94,7 +93,7 @@ namespace Radis
                     mRTMeshData.push_back(vertexData);
                 }
             
-                mRTMeshIndices = uMeshes->GetUnifiedMesh()->mIndices;
+                mRTMeshIndices = uMeshes->GetUnifiedMesh().mIndices;
             }
             
             auto rtr = ecs->GetResource<RaytracingResource>();
@@ -253,7 +252,7 @@ namespace Radis
         pipeline->Bind(cmd);
         rr->cameraUniform->Bind(cmd, pipeline->GetLayout(), rr->currentFrameIndex);
         SetViewportAndScissor(cmd, rr->swapChain->GetSwapChainExtent());
-        uMeshes->GetUnifiedMesh()->Bind(cmd);
+        uMeshes->GetUnifiedMesh().Bind(cmd);
 
         // Execute Draw Calls
         ExecuteInstancedDrawCalls(cmd);
@@ -270,7 +269,7 @@ namespace Radis
         pipeline->Bind(cmd);
         rr->cameraUniform->Bind(cmd, pipeline->GetLayout(), rr->currentFrameIndex);
         SetViewportAndScissor(cmd, rr->swapChain->GetSwapChainExtent());
-        uMeshes->GetUnifiedMesh()->Bind(cmd);
+        uMeshes->GetUnifiedMesh().Bind(cmd);
 
         // Execute Draw Calls
         ExecuteInstancedDrawCalls(cmd);
@@ -404,7 +403,7 @@ namespace Radis
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
         UnifiedMeshes* uMeshes = rr->modelLibrary->GetUnifiedMesh();
-        uMeshes->GetUnifiedMesh()->Bind();
+        uMeshes->GetUnifiedMesh().Bind();
 
         for (const auto& drawCall : mDrawCalls)
         {
