@@ -40,6 +40,12 @@ namespace Radis
     {
         // Get the Vulkan buffer from the mesh's buffer
         IMeshBuffer* buffer = mesh.GetBuffer();
+        if (!buffer || !buffer->IsUploaded())
+        {
+            RADIS_CRITICAL("Mesh has no buffer for raytracing geometry!");
+            return;
+        }
+
         VkDeviceAddress vertexAddress = buffer->GetVertexBuffer().address;
         VkDeviceAddress indexAddress = buffer->GetIndexBuffer().address;
 

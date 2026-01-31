@@ -18,9 +18,7 @@ namespace Radis
         Destroy();
     }
 
-    void VKMeshBuffer::Upload(Device* device,
-        const std::vector<Vertex>& vertices,
-        const std::vector<uint32_t>& indices)
+    void VKMeshBuffer::Upload(Device* device, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
     {
         if (vertices.empty())
         {
@@ -60,6 +58,7 @@ namespace Radis
         if (!staging.mapping)
         {
             RADIS_CRITICAL("Failed to map vertex buffer staging memory!");
+            Allocator::DestroyBuffer(staging);
             return;
         }
         memcpy(staging.mapping, vertices.data(), static_cast<size_t>(bufferSize));
