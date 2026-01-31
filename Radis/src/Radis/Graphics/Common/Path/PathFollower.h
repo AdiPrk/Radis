@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   PathFollower.h
+ * \brief  Definition of the PathFollower class for following cubic spline paths.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "CubicSpline.h"

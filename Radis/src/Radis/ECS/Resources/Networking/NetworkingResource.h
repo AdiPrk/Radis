@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   NetworkingResource.h
+ * \brief  Networking resource for ECS
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "../IResource.h"

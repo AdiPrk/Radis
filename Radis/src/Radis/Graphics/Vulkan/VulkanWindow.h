@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   VulkanWindow.h
+ * \brief  Definition of the VulkanWindow class for Vulkan-based window management.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "../IWindow.h"

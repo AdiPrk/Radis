@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   Utils.cpp
+ * \brief  Implementation of utility functions for argument parsing, config loading, and file retrieval.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "Utils.h"
 #include "Engine.h"

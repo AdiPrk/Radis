@@ -39,7 +39,7 @@ struct Light {
     vec4 outerConeType;     // x = outerCone, y = type (0=dir, 1=point, 2=spot), zw = padding
 };
 
-#define MAX_LIGHTS 10000
+#define MAX_LIGHTS 200000
 SSBO_LAYOUT(0, 6) readonly buffer LightData {
     uint lightCount;
     Light lights[MAX_LIGHTS];
@@ -165,7 +165,7 @@ void main()
         vec3 lightDir = light.directionInner.xyz;
         float innerCone = light.directionInner.w;
         float outerCone = light.outerConeType.x;
-        int lightType = int(light.outerConeType.y);
+        float lightType = light.outerConeType.y;
         
         vec3 L;
         float attenuation = 1.0;

@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   CubicSpline.cpp
+ * \brief  Implementation of the CubicSpline class for 3D cubic spline interpolation.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "CubicSpline.h"
 

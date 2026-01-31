@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   SerializationResource.cpp
+ * \brief  Serializes and Deserializes scenes!
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "SerializationResource.h"
 

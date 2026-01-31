@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   SpeedControl.cpp
+ * \brief  Implementation of the SpeedControl class for easing speed profiles.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "SpeedControl.h"
 

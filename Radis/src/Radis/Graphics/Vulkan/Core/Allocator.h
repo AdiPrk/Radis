@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   Allocator.h
+ * \brief  Definition of the Allocator class for Vulkan memory management.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "AccelerationStructures.h"

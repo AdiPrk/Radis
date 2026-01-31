@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   EditorResource.h
+ * \brief  Resource for editor-specific data and settings
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "IResource.h"

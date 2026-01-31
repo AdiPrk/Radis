@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   GLWindow.cpp
+ * \brief  Implementation of the GLWindow class for OpenGL context and window management.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "GLWindow.h"
 #include "Utils/Utils.h"

@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   Profiler.cpp
+ * \brief  Implementation of the Profiler class for performance profiling.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "Profiler.h"
 
@@ -57,7 +65,8 @@ namespace Radis
             }
         };
 
-        struct ProfilerState {
+        struct ProfilerState
+        {
             std::vector<Node> nodes;                   // pool of node objects (indexable)
             std::vector<int> stack;                    // active node stack (indices)
             std::vector<std::string> names;            // interned names; stable memory
@@ -76,14 +85,14 @@ namespace Radis
                 // If capacity is large, just reset count and reuse
                 if (!nodes.empty()) 
                 {
-                    // reset used nodes in place for clarity
                     for (size_t i = 0; i < nodes.size(); ++i) nodes[i].Reset();
                 }
                 nextNodeIndex = 0;
             }
         };
 
-        ProfilerState& S() {
+        ProfilerState& GetState()
+        {
             static ProfilerState s;
             return s;
         }
@@ -96,7 +105,7 @@ namespace Radis
 
     void Profiler::Initialize(size_t reserveNodes, size_t reserveNames)
     {
-        auto& st = S();
+        auto& st = GetState();
         st.nodes.clear();
         st.nodes.reserve(std::max<size_t>(reserveNodes, 1024));
         // create at least one node slot for root
@@ -112,7 +121,7 @@ namespace Radis
     // Intern a name and return the stable nameId
     static size_t InternName(const char* nameRaw) 
     {
-        auto& st = S();
+        auto& st = GetState();
         if (nameRaw == nullptr) nameRaw = "<null>";
         std::string key(nameRaw);
         auto it = st.nameToId.find(key);
@@ -127,9 +136,9 @@ namespace Radis
     // ensure there is at least one free node and return its index
     static int AllocNode()
     {
-        auto& st = S();
-        if (st.nextNodeIndex >= static_cast<int>(st.nodes.size())) {
-            // Grow by doubling strategy for performance
+        auto& st = GetState();
+        if (st.nextNodeIndex >= static_cast<int>(st.nodes.size())) 
+        {
             size_t newCap = std::max<size_t>(st.nodes.size() ? st.nodes.size() * 2 : 1024, 1024);
             st.nodes.resize(newCap);
         }
@@ -140,20 +149,20 @@ namespace Radis
 
     void Profiler::BeginFrame()
     {
-        auto& st = S();
+        auto& st = GetState();
         st.frameStartNs = NowNs();
-        st.frameTotalNs = 0;
-        // reset per-frame node pool
-        // keep storage but reset counters
+        st.frameTotalNs = 0;        
         st.nextNodeIndex = 0;
         st.stack.clear();
-        // create root node (index 0)
+
+        // create root node
         int root = AllocNode();
         st.rootIndex = root;
         st.nodes[root].nameId = InternName("FrameRoot");
         st.nodes[root].parent = -1;
         st.nodes[root].startNs = st.frameStartNs;
         st.stack.push_back(root);
+
         // reset aggregates for the frame
         for (auto& a : st.aggregates)
         {
@@ -166,7 +175,7 @@ namespace Radis
 
     void Profiler::EndFrame() 
     {
-        auto& st = S();
+        auto& st = GetState();
         ns_t endNs = NowNs();
         st.frameTotalNs = (endNs > st.frameStartNs) ? (endNs - st.frameStartNs) : 0;
 
@@ -224,7 +233,7 @@ namespace Radis
 
     void Profiler::BeginScope(const char* name) 
     {
-        auto& st = S();
+        auto& st = GetState();
         if (st.rootIndex < 0)
         {
             // If BeginFrame not called, start a minimal implicit frame
@@ -255,7 +264,7 @@ namespace Radis
 
     void Profiler::EndScope() 
     {
-        auto& st = S();
+        auto& st = GetState();
         if (st.stack.empty()) return;
 
         int nodeIdx = st.stack.back();
@@ -283,7 +292,7 @@ namespace Radis
 
     bool Profiler::GetLastFrameSnapshot(ProfilerSnapshot& out)
     {
-        auto& st = S();
+        auto& st = GetState();
         if (st.lastFrameSnapshot.nodes.empty()) return false; // no snapshot yet
         out = st.lastFrameSnapshot;
         return true;

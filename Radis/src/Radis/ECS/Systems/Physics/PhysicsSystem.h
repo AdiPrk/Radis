@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   PhysicsSystem.h
+ * \brief  Updates physics entities
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "../ISystem.h"

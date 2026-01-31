@@ -55,7 +55,7 @@ struct Light {
     vec4 outerConeType;     // x = outerCone, y = type (0=dir, 1=point, 2=spot), zw = padding
 };
 
-#define MAX_LIGHTS 10000
+#define MAX_LIGHTS 200000
 SSBO_LAYOUT(0, 4) readonly buffer LightData {
     uint lightCount;
     Light lights[MAX_LIGHTS];

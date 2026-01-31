@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   Engine.cpp
+ * \brief  Implementation of the Engine class which initializes and runs the game engine.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "Engine.h"
 
@@ -24,17 +32,17 @@
 
 #include "Utils/FrameRate.h"
 #include "Graphics/Vulkan/Core/Device.h"
-
+#include "Graphics/IWindow.h"
 #include "Utils/Utils.h"
 
 #include "Graphics/RHI/RHI.h"
 
 namespace Radis 
 {
-    bool Engine::mDevBuild = false;
-    GraphicsAPI Engine::mGraphicsAPI = GraphicsAPI::None;
-    bool Engine::mVulkanSupported = true;
-    bool Engine::mEditorEnabled = true;
+    bool Engine::sDevBuild = false;
+    GraphicsAPI Engine::sGraphicsAPI = GraphicsAPI::None;
+    bool Engine::sVulkanSupported = true;
+    bool Engine::sEditorEnabled = true;
 
     Engine::Engine(const RadisLaunch::EngineSpec& specs, int argc, char* argv[])
         : mSpecs(specs)
@@ -42,11 +50,11 @@ namespace Radis
     {
         Profiler::Initialize();
  
-        mEditorEnabled = mSpecs.launchWithEditor;
+        sEditorEnabled = mSpecs.launchWithEditor;
         Logger::Init();
 
-        RadisLaunch::EngineSpec launchArgs = LoadConfig(argc, argv, &mDevBuild);
-        if (!mDevBuild) mSpecs = launchArgs;
+        RadisLaunch::EngineSpec launchArgs = LoadConfig(argc, argv, &sDevBuild);
+        if (!sDevBuild) mSpecs = launchArgs;
 
         SetGraphicsAPI(mSpecs.graphicsAPI);
 
@@ -59,7 +67,7 @@ namespace Radis
         mEcs.AddSystem<PresentSystem>();
         // mEcs.AddSystem<PhysicsSystem>();
         mEcs.AddSystem<RenderSystem>();
-        if (mEditorEnabled)
+        if (sEditorEnabled)
         {
             mEcs.AddSystem<EditorSystem>();
         }
@@ -85,7 +93,7 @@ namespace Radis
             srr->SwapBackend(&mEcs, true);
         }
 
-        if (mEditorEnabled)
+        if (sEditorEnabled)
         {
             if (mSpecs.graphicsAPI == GraphicsAPI::Vulkan && !swapVulkan)
             {

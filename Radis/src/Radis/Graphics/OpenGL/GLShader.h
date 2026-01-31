@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   GLShader.h
+ * \brief  Definition of the GLShader class for OpenGL shader management.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 namespace Radis {

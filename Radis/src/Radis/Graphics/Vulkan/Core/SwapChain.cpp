@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   SwapChain.cpp
+ * \brief  Implementation of the SwapChain class for Vulkan swap chain management.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 
 #include "SwapChain.h"

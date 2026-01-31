@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   Synchronization.cpp
+ * \brief  Implementation of the Synchronizer class for Vulkan synchronization objects.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "Synchronization.h"
 

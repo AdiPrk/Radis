@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   CameraSystem.h
+ * \brief  Manages cameras
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "ISystem.h"

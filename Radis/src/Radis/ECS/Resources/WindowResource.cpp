@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   WindowResource.cpp
+ * \brief  Manages the window
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "WindowResource.h"
 #include "Graphics/Vulkan/VulkanWindow.h"

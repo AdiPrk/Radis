@@ -1,9 +1,15 @@
+/*****************************************************************//**
+ * \file   ModelSerializer.cpp
+ * \brief  Serializes and deserializes Models to/from disk
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "ModelSerializer.h"
 #include "Graphics/Common/Model.h"
-#include "Graphics/Vulkan/VKMesh.h"
-#include "Graphics/OpenGL/GLMesh.h"
-#include "Graphics/RHI/IMesh.h"
+#include "Graphics/RHI/Mesh.h"
 #include "Graphics/Common/TextureLoader.h"
 #include "BinaryIO.h"
 #include "Engine.h"
@@ -374,10 +380,8 @@ bool ModelSerializer::load(Model& model, const std::string& filename)
 
     for (auto& meshPtr : model.mMeshes)
     {
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
-            meshPtr = std::make_unique<VKMesh>();
-        else
-            meshPtr = std::make_unique<GLMesh>();
+        // Create a unified Mesh - the buffer will be created later based on graphics API
+        meshPtr = std::make_unique<Mesh>();
 
         auto& mesh = *meshPtr;
 

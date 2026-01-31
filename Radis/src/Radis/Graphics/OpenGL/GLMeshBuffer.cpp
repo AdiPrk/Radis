@@ -1,27 +1,37 @@
+/*****************************************************************//**
+ * \file   GLMeshBuffer.cpp
+ * \brief  OpenGL implementation of IMeshBuffer.
+ *
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
-#include "GLMesh.h"
-#include "../Vulkan/Core/Buffer.h"
-#include "Graphics/Vulkan/Uniform/ShaderTypes.h"
-#include "GLShader.h"
+#include "GLMeshBuffer.h"
 
 namespace Radis
 {
-    GLMesh::GLMesh(bool assignID)
-        : IMesh(assignID)
+    GLMeshBuffer::~GLMeshBuffer()
     {
+        Destroy();
     }
 
-    GLMesh::~GLMesh()
+    void GLMeshBuffer::Upload(Device* device,
+        const std::vector<Vertex>& vertices,
+        const std::vector<uint32_t>& indices)
     {
-        DestroyBuffers();
-    }
+        if (vertices.empty())
+        {
+            RADIS_WARN("GLMeshBuffer::Upload called with empty vertices!");
+            return;
+        }
 
-    // device will be nullptr
-    void GLMesh::CreateVertexBuffers(Device* device)
-    {
-        mVertexCount = static_cast<uint32_t>(mVertices.size());
-        mTriangleCount = mVertexCount / 3;
-        mHasIndexBuffer = !mIndices.empty();
+        // Destroy existing buffers if any
+        Destroy();
+
+        mVertexCount = static_cast<uint32_t>(vertices.size());
+        mIndexCount = static_cast<uint32_t>(indices.size());
+        mHasIndexBuffer = !indices.empty();
 
         // Generate and bind VAO/VBO
         glGenVertexArrays(1, &mVAO);
@@ -29,9 +39,9 @@ namespace Radis
 
         glBindVertexArray(mVAO);
         glBindBuffer(GL_ARRAY_BUFFER, mVBO);
-        glBufferData(GL_ARRAY_BUFFER, mVertices.size() * sizeof(Vertex), mVertices.data(), GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
 
-        // ---- Vertex layout ----
+        // Vertex layout
         // location 0: position (vec3)
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
@@ -56,55 +66,58 @@ namespace Radis
         glEnableVertexAttribArray(5);
         glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, weights));
 
-        glBindVertexArray(0);
-    }
-
-    void GLMesh::CreateIndexBuffers(Device* device)
-    {
-        if (mIndices.empty())
-            return;
-
-        glBindVertexArray(mVAO);
-
-        glGenBuffers(1, &mEBO);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mEBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, mIndices.size() * sizeof(uint32_t), mIndices.data(), GL_STATIC_DRAW);
+        // Create index buffer if needed
+        if (mHasIndexBuffer)
+        {
+            glGenBuffers(1, &mEBO);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mEBO);
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), indices.data(), GL_STATIC_DRAW);
+        }
 
         glBindVertexArray(0);
+
+        mIsUploaded = true;
     }
 
-    void GLMesh::DestroyBuffers()
+    void GLMeshBuffer::Destroy()
     {
-        if (mEBO) {
+        if (mEBO)
+        {
             glDeleteBuffers(1, &mEBO);
             mEBO = 0;
         }
-        if (mVBO) {
+        if (mVBO)
+        {
             glDeleteBuffers(1, &mVBO);
             mVBO = 0;
         }
-        if (mVAO) {
+        if (mVAO)
+        {
             glDeleteVertexArrays(1, &mVAO);
             mVAO = 0;
         }
+
+        mVertexCount = 0;
+        mIndexCount = 0;
+        mHasIndexBuffer = false;
+        mIsUploaded = false;
     }
 
-    // all will be nullptr
-    void GLMesh::Bind(VkCommandBuffer commandBuffer)
+    void GLMeshBuffer::Bind(VkCommandBuffer cmd)
     {
         glBindVertexArray(mVAO);
     }
 
-    void GLMesh::Draw(VkCommandBuffer commandBuffer, uint32_t baseIndex)
+    void GLMeshBuffer::Draw(VkCommandBuffer cmd, uint32_t instanceBase)
     {
         glBindVertexArray(mVAO);
         glDrawElementsInstancedBaseInstance(
             GL_TRIANGLES,
-            static_cast<GLsizei>(mIndices.size()),
+            static_cast<GLsizei>(mIndexCount),
             GL_UNSIGNED_INT,
             nullptr,
             1,
-            baseIndex
+            instanceBase
         );
         glBindVertexArray(0);
     }

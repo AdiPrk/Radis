@@ -1,52 +1,57 @@
+/*****************************************************************//**
+ * \file   Engine.h
+ * \brief  Core engine class - manages the application lifecycle
+ * 
+ * \author Aditya Prakash
+ * \date   2026
+ *********************************************************************/
 #pragma once
 
-#include "Graphics/Vulkan/VulkanWindow.h"
-
 #include "ECS/ECS.h"
-#include "ECS/Resources/IResource.h"
 
-namespace Radis 
+namespace Radis
 {
-	class Engine {
-	public:
-		Engine(const RadisLaunch::EngineSpec& specs, int argc, char* argv[]);
-		~Engine();
+    /**
+     * \brief Main engine class that orchestrates the entire application.
+     * 
+     * Manages the ECS, systems, resources, and the main game loop.
+     * Non-copyable and non-movable to ensure single instance.
+     */
+    class Engine
+    {
+    public:
+        Engine(const RadisLaunch::EngineSpec& specs, int argc, char* argv[]);
+        ~Engine();
 
-		Engine(const Engine&) = delete;
-		Engine& operator=(const Engine&) = delete;
+        Engine(const Engine&) = delete;
+        Engine& operator=(const Engine&) = delete;
+        Engine(Engine&&) = delete;
+        Engine& operator=(Engine&&) = delete;
 
-		/*********************************************************************
-		 * param:  sceneName: The name of the scene to run. (read from assets/scenes)
-		 * 
-		 * brief: Run the engine with the specified scene.
-		 *********************************************************************/
-		int Run(const std::string& sceneName);
-		int Exit();
+        /** Starts the main loop and runs until exit. */
+        int Run(const std::string& sceneName);
 
-        // Configuration
-		static void SetDevBuild(bool dev) { mDevBuild = dev; }
-		static bool IsDevBuild() { return mDevBuild; }
-        static GraphicsAPI GetGraphicsAPI() { return mGraphicsAPI; }
-		static void SetGraphicsAPI(GraphicsAPI api) { mGraphicsAPI = api; }
-		static void ForceVulkanUnsupportedSwap() { mVulkanSupported = false; }
-        static bool GetVulkanSupported() { return mVulkanSupported; }
-        static bool GetEditorEnabled() { return mEditorEnabled; }
+        /** Signals the engine to shut down gracefully. */
+        int Exit();
 
-	private:
-		// Engine Specs
-		RadisLaunch::EngineSpec mSpecs;
+        // --- Static Configuration ---
+        static void SetDevBuild(bool dev) { sDevBuild = dev; }
+        static bool IsDevBuild() { return sDevBuild; }
+        static GraphicsAPI GetGraphicsAPI() { return sGraphicsAPI; }
+        static void SetGraphicsAPI(GraphicsAPI api) { sGraphicsAPI = api; }
+        static void ForceVulkanUnsupportedSwap() { sVulkanSupported = false; }
+        static bool GetVulkanSupported() { return sVulkanSupported; }
+        static bool GetEditorEnabled() { return sEditorEnabled; }
 
-		// Is the engine running?
-		bool mRunning = true;
-
-		// Entity Component System for the engine
+    private:
+        RadisLaunch::EngineSpec mSpecs;
         ECS mEcs;
+        bool mRunning = true;
 
-		// Configuration
-        static bool mDevBuild;
-		static GraphicsAPI mGraphicsAPI;
-		static bool mVulkanSupported;
-		static bool mEditorEnabled;
-	};
+        static bool sDevBuild;
+        static GraphicsAPI sGraphicsAPI;
+        static bool sVulkanSupported;
+        static bool sEditorEnabled;
+    };
 
 } // namespace Radis

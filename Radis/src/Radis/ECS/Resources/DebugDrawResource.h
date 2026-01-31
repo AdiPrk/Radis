@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   DebugDrawResource.h
+ * \brief  Interface for debug drawing
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "IResource.h"

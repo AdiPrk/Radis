@@ -1,11 +1,22 @@
+/*****************************************************************//**
+ * \file   ITexture.h
+ * \brief  Abstract texture interface and texture data structures
+ *
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
+
 #pragma once
 
 namespace Radis
 {
-    /*
-        for stb: isCompressed = false, mipLevels = 1, mipInfos can stay empty.
-        for ktx2: isCompressed = true, mipLevels = kTexture->numLevels, fill mipInfos and pixels with BC7 blocks.
-    */
+    /**
+     * \brief Texture data container supporting both STB and KTX2 formats.
+     *
+     * For STB: isCompressed = false, mipLevels = 1, mipInfos empty.
+     * For KTX2: isCompressed = true, mipLevels = N, mipInfos populated.
+     */
     struct TextureData
     {
         int width{};

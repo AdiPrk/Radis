@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   AnimationLibrary.cpp
+ * \brief  Implementation of the AnimationLibrary class for managing animations and animators.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "AnimationLibrary.h"
 #include "Animator.h"

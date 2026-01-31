@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   SwapRendererSystem.cpp
+ * \brief  Used to swap between different rendering backends
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "SwapRendererSystem.h"
 

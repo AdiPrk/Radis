@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   ArcLengthTable.h
+ * \brief  Definition of the ArcLengthTable class for spline arc length parameterization.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "CubicSpline.h"

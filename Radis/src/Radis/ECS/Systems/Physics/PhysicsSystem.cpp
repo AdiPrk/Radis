@@ -1,4 +1,12 @@
-﻿#include <PCH/pch.h>
+﻿/*****************************************************************//**
+ * \file   PhysicsSystem.cpp
+ * \brief  Updates physics entities
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
+#include <PCH/pch.h>
 #include "PhysicsSystem.h"
 #include "ECS/ECS.h"
 #include "ECS/Components/Components.h"
@@ -68,18 +76,18 @@ namespace Radis
     void PhysicsSystem::SyncSoftBodyWithTransform(SoftBodyComponent& softBody, TransformComponent& transform)
     {
         glm::vec3 currentPos = transform.Translation;
-        glm::vec3 delta = currentPos - softBody.lastTransformPosition;
+        glm::vec3 delta = currentPos - softBody.LastTransformPosition;
 
         if (glm::length2(delta) < 1e-10f)
             return; // no meaningful movement
 
-        for (auto& p : softBody.particles)
+        for (auto& p : softBody.Particles)
         {
-            p.position += delta;
-            p.anchorPosition += delta;
+            p.Position += delta;
+            p.AnchorPosition += delta;
         }
 
-        softBody.lastTransformPosition = currentPos;
+        softBody.LastTransformPosition = currentPos;
     }
 
     void PhysicsSystem::CreateSoftBodyCube(int n, glm::vec3 position, std::string debugName)
@@ -89,10 +97,10 @@ namespace Radis
         SoftBodyComponent& softBody = entity.AddComponent<SoftBodyComponent>();
 
         // Physics params.
-        softBody.gravity = glm::vec3(0.0f, -9.81f, 0.0f);
-        softBody.globalStiffness = 100.0f;
-        softBody.globalDamping = 8.0f;
-        softBody.lastTransformPosition = glm::vec3(0.0f);
+        softBody.Gravity = glm::vec3(0.0f, -9.81f, 0.0f);
+        softBody.GlobalStiffness = 100.0f;
+        softBody.GlobalDamping = 8.0f;
+        softBody.LastTransformPosition = glm::vec3(0.0f);
 
         // Particles + springs.
         float totalMass = 12.5f * n * n;
@@ -107,12 +115,12 @@ namespace Radis
 
     void PhysicsSystem::InitializeSoftBodyParticles(SoftBodyComponent& softBody, uint32_t nx, uint32_t ny, uint32_t nz, float spacing, float massPerPoint)
     {
-        softBody.gridNx = nx;
-        softBody.gridNy = ny;
-        softBody.gridNz = nz;
+        softBody.GridNx = nx;
+        softBody.GridNy = ny;
+        softBody.GridNz = nz;
 
-        softBody.particles.clear();
-        softBody.particles.resize(nx * ny * nz);
+        softBody.Particles.clear();
+        softBody.Particles.resize(nx * ny * nz);
 
         // Center the cube in XZ, slightly above origin in Y.
         const glm::vec3 origin{
@@ -132,35 +140,35 @@ namespace Radis
 
             bool isTopFace = (j == ny - 1u);
 
-            SoftBodyParticle& p = softBody.particles[idx];
-            p.position = pos;
-            p.anchorPosition = pos;
-            p.velocity = glm::vec3(0.0f);
-            p.isAnchor = isTopFace;
-            p.inverseMass = isTopFace ? 0.0f : invMass;
+            SoftBodyParticle& p = softBody.Particles[idx];
+            p.Position = pos;
+            p.AnchorPosition = pos;
+            p.Velocity = glm::vec3(0.0f);
+            p.IsAnchor = isTopFace;
+            p.InverseMass = isTopFace ? 0.0f : invMass;
         }
     }
 
     void PhysicsSystem::BuildSoftBodySprings(SoftBodyComponent& softBody)
     {
-        const uint32_t nx = softBody.gridNx;
-        const uint32_t ny = softBody.gridNy;
-        const uint32_t nz = softBody.gridNz;
+        const uint32_t nx = softBody.GridNx;
+        const uint32_t ny = softBody.GridNy;
+        const uint32_t nz = softBody.GridNz;
 
-        softBody.springs.clear();
-        softBody.springs.reserve(300);
+        softBody.Springs.clear();
+        softBody.Springs.reserve(300);
 
-        auto& particles = softBody.particles;
+        auto& particles = softBody.Particles;
 
         auto addSpring = [&](uint32_t a, uint32_t b)
         {
-            SoftBodySpring spring{.a = a, .b = b};
+            SoftBodySpring spring{.IndexA = a, .IndexB = b};
 
-            spring.restLength = glm::length(particles[b].position - particles[a].position);
-            spring.stiffness = softBody.globalStiffness;
-            spring.damping = softBody.globalDamping;
+            spring.RestLength = glm::length(particles[b].Position - particles[a].Position);
+            spring.Stiffness = softBody.GlobalStiffness;
+            spring.Damping = softBody.GlobalDamping;
 
-            softBody.springs.push_back(spring);
+            softBody.Springs.push_back(spring);
         };
 
         auto index = [&](uint32_t i, uint32_t j, uint32_t k) { return Index3D(i, j, k, nx, ny, nz); };
@@ -238,7 +246,7 @@ namespace Radis
 
     void PhysicsSystem::IntegrateSoftBodyRK4(SoftBodyComponent& softBody, float dt)
     {
-        const std::size_t count = softBody.particles.size();
+        const std::size_t count = softBody.Particles.size();
         if (count == 0) return;
 
         EnsureBufferCapacity(count);
@@ -264,17 +272,17 @@ namespace Radis
         // ---------------------------------------------------------------------
         for (std::size_t i = 0; i < count; ++i)
         {
-            const SoftBodyParticle& p = softBody.particles[i];
+            const SoftBodyParticle& p = softBody.Particles[i];
 
-            if (p.isAnchor || p.inverseMass == 0.0f)
+            if (p.IsAnchor || p.InverseMass == 0.0f)
             {
-                x0[i] = p.anchorPosition;
+                x0[i] = p.AnchorPosition;
                 v0[i] = glm::vec3(0.0f);
             }
             else
             {
-                x0[i] = p.position;
-                v0[i] = p.velocity;
+                x0[i] = p.Position;
+                v0[i] = p.Velocity;
             }
         }
 
@@ -294,11 +302,11 @@ namespace Radis
         // ---------------------------------------------------------------------
         for (std::size_t i = 0; i < count; ++i)
         {
-            const SoftBodyParticle& p = softBody.particles[i];
+            const SoftBodyParticle& p = softBody.Particles[i];
 
-            if (p.isAnchor || p.inverseMass == 0.0f)
+            if (p.IsAnchor || p.InverseMass == 0.0f)
             {
-                xTmp[i] = p.anchorPosition;
+                xTmp[i] = p.AnchorPosition;
                 vTmp[i] = glm::vec3(0.0f);
             }
             else
@@ -319,11 +327,11 @@ namespace Radis
         // ---------------------------------------------------------------------
         for (std::size_t i = 0; i < count; ++i)
         {
-            const SoftBodyParticle& p = softBody.particles[i];
+            const SoftBodyParticle& p = softBody.Particles[i];
 
-            if (p.isAnchor || p.inverseMass == 0.0f)
+            if (p.IsAnchor || p.InverseMass == 0.0f)
             {
-                xTmp[i] = p.anchorPosition;
+                xTmp[i] = p.AnchorPosition;
                 vTmp[i] = glm::vec3(0.0f);
             }
             else
@@ -344,11 +352,11 @@ namespace Radis
         // ---------------------------------------------------------------------
         for (std::size_t i = 0; i < count; ++i)
         {
-            const SoftBodyParticle& p = softBody.particles[i];
+            const SoftBodyParticle& p = softBody.Particles[i];
 
-            if (p.isAnchor || p.inverseMass == 0.0f)
+            if (p.IsAnchor || p.InverseMass == 0.0f)
             {
-                xTmp[i] = p.anchorPosition;
+                xTmp[i] = p.AnchorPosition;
                 vTmp[i] = glm::vec3(0.0f);
             }
             else
@@ -371,43 +379,43 @@ namespace Radis
 
         for (std::size_t i = 0; i < count; ++i)
         {
-            SoftBodyParticle& p = softBody.particles[i];
+            SoftBodyParticle& p = softBody.Particles[i];
 
-            if (p.isAnchor || p.inverseMass == 0.0f)
+            if (p.IsAnchor || p.InverseMass == 0.0f)
             {
-                p.position = p.anchorPosition;
-                p.velocity = glm::vec3(0.0f);
+                p.Position = p.AnchorPosition;
+                p.Velocity = glm::vec3(0.0f);
                 continue;
             }
 
             glm::vec3 dx = (k1x[i] + 2.0f * k2x[i] + 2.0f * k3x[i] + k4x[i]) * inv6dt;
             glm::vec3 dv = (k1v[i] + 2.0f * k2v[i] + 2.0f * k3v[i] + k4v[i]) * inv6dt;
 
-            p.position = x0[i] + dx;
-            p.velocity = v0[i] + dv;
+            p.Position = x0[i] + dx;
+            p.Velocity = v0[i] + dv;
         }
     }
 
     void PhysicsSystem::ComputeAccelerations(const SoftBodyComponent& softBody, const std::vector<glm::vec3>& positions, const std::vector<glm::vec3>& velocities, std::vector<glm::vec3>& outAccelerations)
     {
-        const std::size_t count = softBody.particles.size();
+        const std::size_t count = softBody.Particles.size();
         outAccelerations.assign(count, glm::vec3(0.0f));
 
         // Gravity
         for (std::size_t i = 0; i < count; ++i)
         {
-            const SoftBodyParticle& p = softBody.particles[i];
-            if (!p.isAnchor && p.inverseMass > 0.0f)
+            const SoftBodyParticle& p = softBody.Particles[i];
+            if (!p.IsAnchor && p.InverseMass > 0.0f)
             {
-                outAccelerations[i] += softBody.gravity;
+                outAccelerations[i] += softBody.Gravity;
             }
         }
 
         // Springs
-        for (const SoftBodySpring& spring : softBody.springs)
+        for (const SoftBodySpring& spring : softBody.Springs)
         {
-            uint32_t ia = spring.a;
-            uint32_t ib = spring.b;
+            uint32_t ia = spring.IndexA;
+            uint32_t ib = spring.IndexB;
 
             const glm::vec3& xa = positions[ia];
             const glm::vec3& xb = positions[ib];
@@ -420,26 +428,26 @@ namespace Radis
 
             glm::vec3 dir = delta / length;
 
-            float stretch = length - spring.restLength;
+            float stretch = length - spring.RestLength;
             float relativeSpeed = glm::dot(vb - va, dir);
 
             // Force on particle b
-            glm::vec3 force = -spring.stiffness * stretch * dir
-                              - spring.damping * relativeSpeed * dir;
+            glm::vec3 force = -spring.Stiffness * stretch * dir
+                              - spring.Damping * relativeSpeed * dir;
 
-            const SoftBodyParticle& pa = softBody.particles[ia];
-            const SoftBodyParticle& pb = softBody.particles[ib];
+            const SoftBodyParticle& pa = softBody.Particles[ia];
+            const SoftBodyParticle& pb = softBody.Particles[ib];
 
             // Apply to b
-            if (!pb.isAnchor && pb.inverseMass > 0.0f)
+            if (!pb.IsAnchor && pb.InverseMass > 0.0f)
             {
-                outAccelerations[ib] += force * pb.inverseMass;
+                outAccelerations[ib] += force * pb.InverseMass;
             }
 
             // Equal and opposite on a
-            if (!pa.isAnchor && pa.inverseMass > 0.0f)
+            if (!pa.IsAnchor && pa.InverseMass > 0.0f)
             {
-                outAccelerations[ia] -= force * pa.inverseMass;
+                outAccelerations[ia] -= force * pa.InverseMass;
             }
         }
     }
@@ -471,8 +479,8 @@ namespace Radis
 
     void PhysicsSystem::DebugDrawSoftBodyFancy(const SoftBodyComponent& softBody)
     {
-        const auto& particles = softBody.particles;
-        const auto& springs = softBody.springs;
+        const auto& particles = softBody.Particles;
+        const auto& springs = softBody.Springs;
 
         if (particles.empty())
             return;
@@ -499,8 +507,8 @@ namespace Radis
         float maxSpeed = 0.0f;
         for (const SoftBodyParticle& p : particles)
         {
-            if (p.isAnchor) continue;
-            maxSpeed = std::max(maxSpeed, glm::length(p.velocity));
+            if (p.IsAnchor) continue;
+            maxSpeed = std::max(maxSpeed, glm::length(p.Velocity));
         }
         if (maxSpeed < 1e-4f) maxSpeed = 1e-4f;
 
@@ -508,21 +516,21 @@ namespace Radis
         // Springs Rendering
         for (const SoftBodySpring& s : springs)
         {
-            if (s.a >= particles.size() || s.b >= particles.size())
+            if (s.IndexA >= particles.size() || s.IndexB >= particles.size())
                 continue;
 
-            const glm::vec3& pa = particles[s.a].position;
-            const glm::vec3& pb = particles[s.b].position;
+            const glm::vec3& pa = particles[s.IndexA].Position;
+            const glm::vec3& pb = particles[s.IndexB].Position;
 
             glm::vec3 delta = pb - pa;
             float currentLen = glm::length(delta);
-            if (currentLen < 1e-6f || s.restLength < 1e-6f)
+            if (currentLen < 1e-6f || s.RestLength < 1e-6f)
             {
                 DebugDrawResource::DrawLine(pa, pb, springNeutralColor, baseSpringThickness);
                 continue;
             }
 
-            float strain = (currentLen - s.restLength) / s.restLength; // <0 compressed, >0 stretched
+            float strain = (currentLen - s.RestLength) / s.RestLength; // <0 compressed, >0 stretched
             float absStrain = glm::abs(strain);
 
             float t = glm::clamp(absStrain / maxVisualStrain, 0.0f, 1.0f);
@@ -539,9 +547,9 @@ namespace Radis
         // Particles Rendering
         for (const SoftBodyParticle& p : particles)
         {
-            bool isAnchor = p.isAnchor;
+            bool isAnchor = p.IsAnchor;
 
-            float speed = glm::length(p.velocity);
+            float speed = glm::length(p.Velocity);
             float speedNorm = glm::clamp(speed / maxSpeed, 0.0f, 1.0f);
 
             glm::vec3 size;
@@ -562,8 +570,8 @@ namespace Radis
             glm::vec3 outlineSize = size * outlineScale;
             glm::vec4 outlineColor = glm::vec4(0.0f, 0.0f, 0.0f, outlineAlpha);
 
-            DebugDrawResource::DrawCube(p.position, outlineSize, outlineColor);
-            DebugDrawResource::DrawCube(p.position, size, color);
+            DebugDrawResource::DrawCube(p.Position, outlineSize, outlineColor);
+            DebugDrawResource::DrawCube(p.Position, size, color);
         }
     }
 }

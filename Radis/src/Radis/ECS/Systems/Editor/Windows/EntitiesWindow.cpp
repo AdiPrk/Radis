@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   EntitiesWindow.cpp
+ * \brief  Renders the Entities Window!
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "EntitiesWindow.h"
 
@@ -35,7 +43,7 @@ namespace Radis
             }
             if (ImGui::Button("LightTest+"))
             {
-                int n = 10;
+                int n = 25;
                 for (int x = 0; x < n; x++)
                 {
                     for (int y = 0; y < n; y++)
@@ -65,7 +73,7 @@ namespace Radis
             }
             if (ImGui::Button("SpamTest+"))
             {
-                int n = 25;
+                int n = 75;
                 for (int x = 0; x < n; x++)
                 {
                     for (int y = 0; y < n; y++)
@@ -84,7 +92,7 @@ namespace Radis
 
                             // add model
                             auto& mc = debugEntity.AddComponent<ModelComponent>("assets/models/cube.obj");
-                            mc.tintColor = glm::vec4(
+                            mc.TintColor = glm::vec4(
                                 (float)x / (float)n,
                                 (float)y / (float)n,
                                 (float)z / (float)n,

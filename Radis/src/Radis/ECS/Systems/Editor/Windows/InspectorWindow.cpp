@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   InspectorWindow.cpp
+ * \brief  Renders the Inspector Window!
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "InspectorWindow.h"
 
@@ -160,7 +168,7 @@ namespace Radis
 
                 if (modified)
                 {
-                    component.isDirty = true;
+                    component.mIsDirty = true;
                 }
             });
 
@@ -200,7 +208,7 @@ namespace Radis
                             std::transform(lowerModelPath.begin(), lowerModelPath.end(), lowerModelPath.begin(), ::tolower);
 
                             component.ModelPath = lowerModelPath;
-                            component.updateModelID = true;
+                            component.UpdateModelID = true;
                         }
                         if (isSelected)
                         {
@@ -220,29 +228,29 @@ namespace Radis
                     {
                         std::string path = std::string((char*)payload->Data, payload->DataSize - 1); // -1 to remove null terminator
                         component.ModelPath = path;
-                        component.updateModelID = true;
+                        component.UpdateModelID = true;
                     }
 
                     ImGui::EndDragDropTarget();
                 }
 
-                ImGui::ColorEdit4("Tint Color", glm::value_ptr(component.tintColor));
+                ImGui::ColorEdit4("Tint Color", glm::value_ptr(component.TintColor));
 
                 // Checkbox with slider + input field for metallic and roughness overrides
-                ImGui::Checkbox("Override Metallic", &component.useMetallicOverride);
-                if (component.useMetallicOverride)
+                ImGui::Checkbox("Override Metallic", &component.UseMetallicOverride);
+                if (component.UseMetallicOverride)
                 {
-                    ImGui::DragFloat("Metallic Override", &component.metallicOverride, 0.01f, 0.0f, 1.0f);
+                    ImGui::DragFloat("Metallic Override", &component.MetallicOverride, 0.01f, 0.0f, 1.0f);
                 }
-                ImGui::Checkbox("Override Roughness", &component.useRoughnessOverride);
-                if (component.useRoughnessOverride)
+                ImGui::Checkbox("Override Roughness", &component.UseRoughnessOverride);
+                if (component.UseRoughnessOverride)
                 {
-                    ImGui::DragFloat("Roughness Override", &component.roughnessOverride, 0.01f, 0.0f, 1.0f);
+                    ImGui::DragFloat("Roughness Override", &component.RoughnessOverride, 0.01f, 0.0f, 1.0f);
                 }
-                ImGui::Checkbox("Override Emissive", &component.useEmissiveOverride);
-                if (component.useEmissiveOverride)
+                ImGui::Checkbox("Override Emissive", &component.UseEmissiveOverride);
+                if (component.UseEmissiveOverride)
                 {
-                    ImGui::ColorEdit4("Emissive Override", glm::value_ptr(component.emissiveOverride));
+                    ImGui::ColorEdit4("Emissive Override", glm::value_ptr(component.EmissiveOverride));
                 }
             });
 
@@ -309,7 +317,7 @@ namespace Radis
                 }
 
                 ImGui::InputInt("Animation Index", (int*)&component.AnimationIndex);
-                ImGui::Checkbox("In Place", &component.inPlace);
+                ImGui::Checkbox("In Place", &component.InPlace);
                 ImGui::Checkbox("Is Playing", &component.IsPlaying);
                 ImGui::DragFloat("Animation Time", &component.AnimationTime, 0.05f, 0.0f, FLT_MAX);
             });
@@ -323,17 +331,17 @@ namespace Radis
                 ImGui::DragFloat("Inner Cone", &component.InnerCone, 0.01f, 0.0f, glm::pi<float>());
                 ImGui::DragFloat("Outer Cone", &component.OuterCone, 0.01f, 0.0f, glm::pi<float>());
                 const char* lightTypes[] = { "DIRECTIONAL", "POINT", "SPOT" };
-                int currentType = static_cast<int>(component.Type);
+                int currentType = static_cast<int>(component.LightType);
                 if (ImGui::Combo("Light Type", &currentType, lightTypes, IM_ARRAYSIZE(lightTypes)))
                 {
-                    component.Type = static_cast<LightComponent::LightType>(currentType);
+                    component.LightType = static_cast<LightComponent::Types>(currentType);
                 }
             });
 
             DrawComponentUI<SoftBodyComponent>("Soft Body", selectedEnt, [&](SoftBodyComponent& component)
             {
-                const auto& particles = component.particles;
-                const auto& springs = component.springs;
+                const auto& particles = component.Particles;
+                const auto& springs = component.Springs;
 
                 // ------------------------------------------------------------
                 // Summary / read-only info
@@ -342,10 +350,10 @@ namespace Radis
                 ImGui::SameLine();
                 ImGui::Text("Springs: %zu", springs.size());
 
-                if (component.gridNx > 0 && component.gridNy > 0 && component.gridNz > 0)
+                if (component.GridNx > 0 && component.GridNy > 0 && component.GridNz > 0)
                 {
                     ImGui::Text("Grid: %u x %u x %u",
-                        component.gridNx, component.gridNy, component.gridNz);
+                        component.GridNx, component.GridNy, component.GridNz);
                 }
 
                 // Simple runtime stats
@@ -358,10 +366,10 @@ namespace Radis
                     float speedSum = 0.0f;
                     for (const SoftBodyParticle& p : particles)
                     {
-                        if (p.isAnchor)
+                        if (p.IsAnchor)
                             ++anchorCount;
 
-                        float speed = glm::length(p.velocity);
+                        float speed = glm::length(p.Velocity);
                         speedSum += speed;
                         if (speed > maxSpeed)
                             maxSpeed = speed;
@@ -377,23 +385,23 @@ namespace Radis
                 // ------------------------------------------------------------
                 // Simulation parameters
                 // ------------------------------------------------------------
-                ImGui::DragFloat3("Gravity", glm::value_ptr(component.gravity), 0.1f, -50.0f, 50.0f);
-                ImGui::DragFloat("Global Stiffness", &component.globalStiffness, 1.0f, 0.0f, 2000.0f);
-                ImGui::DragFloat("Global Damping", &component.globalDamping, 0.1f, 0.0f, 200.0f);
+                ImGui::DragFloat3("Gravity", glm::value_ptr(component.Gravity), 0.1f, -50.0f, 50.0f);
+                ImGui::DragFloat("Global Stiffness", &component.GlobalStiffness, 1.0f, 0.0f, 2000.0f);
+                ImGui::DragFloat("Global Damping", &component.GlobalDamping, 0.1f, 0.0f, 200.0f);
 
                 if (ImGui::Button("Apply Global Stiffness/Damping to Springs"))
                 {
-                    for (auto& s : component.springs)
+                    for (auto& s : component.Springs)
                     {
-                        s.stiffness = component.globalStiffness;
-                        s.damping = component.globalDamping;
+                        s.Stiffness = component.GlobalStiffness;
+                        s.Damping = component.GlobalDamping;
                     }
                 }
 
                 ImGui::SameLine();
                 if (ImGui::Button("Zero All Velocities"))
                 {
-                    for (auto& p : component.particles) p.velocity = glm::vec3(0.0f);
+                    for (auto& p : component.Particles) p.Velocity = glm::vec3(0.0f);
                 }
 
                 // ------------------------------------------------------------
@@ -401,48 +409,48 @@ namespace Radis
                 // ------------------------------------------------------------
                 ImGui::SeparatorText("Anchors");
 
-                auto& particlesNonConst = component.particles;
+                auto& particlesNonConst = component.Particles;
 
                 // ---------- Global anchor offset (move all anchors together) ----------
                 ImGui::TextDisabled("Move all anchor targets together (relative offset).");
 
-                glm::vec3 newOffset = component.globalOffset;
+                glm::vec3 newOffset = component.GlobalOffset;
 
                 if (ImGui::DragFloat3("Global Anchor Offset", glm::value_ptr(newOffset), 0.01f))
                 {
-                    glm::vec3 delta = newOffset - component.globalOffset;
-                    component.globalOffset = newOffset;
+                    glm::vec3 delta = newOffset - component.GlobalOffset;
+                    component.GlobalOffset = newOffset;
 
                     for (auto& p : particlesNonConst)
                     {
-                        if (!p.isAnchor) continue;
+                        if (!p.IsAnchor) continue;
 
-                        p.anchorPosition += delta;
+                        p.AnchorPosition += delta;
 
                         // For static anchors, keep particle snapped to its target
-                        if (p.inverseMass == 0.0f)
+                        if (p.InverseMass == 0.0f)
                         {
-                            p.position = p.anchorPosition;
-                            p.velocity = glm::vec3(0.0f);
+                            p.Position = p.AnchorPosition;
+                            p.Velocity = glm::vec3(0.0f);
                         }
                     }
                 }
 
                 if (ImGui::Button("Reset Global Anchor Offset"))
                 {
-                    glm::vec3 delta = -component.globalOffset;
-                    component.globalOffset = glm::vec3(0.0f);
+                    glm::vec3 delta = -component.GlobalOffset;
+                    component.GlobalOffset = glm::vec3(0.0f);
 
                     for (auto& p : particlesNonConst)
                     {
-                        if (!p.isAnchor) continue;
+                        if (!p.IsAnchor) continue;
 
-                        p.anchorPosition += delta;
+                        p.AnchorPosition += delta;
 
-                        if (p.inverseMass == 0.0f)
+                        if (p.InverseMass == 0.0f)
                         {
-                            p.position = p.anchorPosition;
-                            p.velocity = glm::vec3(0.0f);
+                            p.Position = p.AnchorPosition;
+                            p.Velocity = glm::vec3(0.0f);
                         }
                     }
                 }
@@ -453,7 +461,7 @@ namespace Radis
                 // Count anchors
                 std::size_t totalAnchors = 0;
                 for (const auto& p : particlesNonConst)
-                    if (p.isAnchor) ++totalAnchors;
+                    if (p.IsAnchor) ++totalAnchors;
 
                 if (totalAnchors == 0)
                 {
@@ -468,7 +476,7 @@ namespace Radis
                 for (std::size_t i = 0; i < particlesNonConst.size(); ++i)
                 {
                     SoftBodyParticle& p = particlesNonConst[i];
-                    if (!p.isAnchor)
+                    if (!p.IsAnchor)
                         continue;
 
                     ImGui::PushID(static_cast<int>(i));
@@ -481,16 +489,16 @@ namespace Radis
                     if (ImGui::TreeNode(header.c_str()))
                     {
                         // Editable anchor target position
-                        glm::vec3 anchorPos = p.anchorPosition;
+                        glm::vec3 anchorPos = p.AnchorPosition;
                         if (ImGui::DragFloat3("Anchor Target", glm::value_ptr(anchorPos), 0.01f))
                         {
-                            p.anchorPosition = anchorPos;
+                            p.AnchorPosition = anchorPos;
 
                             // Snap static anchors to their new target
-                            if (p.inverseMass == 0.0f)
+                            if (p.InverseMass == 0.0f)
                             {
-                                p.position = p.anchorPosition;
-                                p.velocity = glm::vec3(0.0f);
+                                p.Position = p.AnchorPosition;
+                                p.Velocity = glm::vec3(0.0f);
                             }
                         }
 

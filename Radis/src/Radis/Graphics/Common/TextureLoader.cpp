@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   TextureLoader.cpp
+ * \brief  Implementation of the TextureLoader class for loading and converting textures.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "TextureLoader.h"
 

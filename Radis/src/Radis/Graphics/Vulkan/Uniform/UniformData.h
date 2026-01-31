@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   UniformData.h
+ * \brief  Uniform buffer data initializations for Vulkan renderer.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "ShaderTypes.h"
@@ -25,7 +33,7 @@ namespace Radis
         .AddSSBOBinding(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags, sizeof(InstanceUniforms), InstanceUniforms::MAX_INSTANCES).SetDebugName("Instance SSBO")
         .AddSSBOBinding(VK_SHADER_STAGE_VERTEX_BIT, sizeof(VQS), 10000).SetDebugName("Animation SSBO")
         .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags, TextureLibrary::MAX_TEXTURE_COUNT).SetDebugName("Texture SSBO")
-        .AddSSBOBinding(VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags, sizeof(LightUniform) * 10000 + sizeof(uint32_t)).SetDebugName("Light SSBO");
+        .AddSSBOBinding(VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags, sizeof(LightUniform) * LightUniform::MAX_LIGHTS + sizeof(uint32_t)).SetDebugName("Light SSBO");
 
     const UniformSettings rayTracingUniformSettings = UniformSettings(RTUniformInit)
         .AddASBinding(rtFlags, 1).SetDebugName("RT TLAS Buffer")
@@ -49,5 +57,5 @@ namespace Radis
         .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("G-Buffer PBR")
         .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("G-Buffer Emissive")
         .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("G-Buffer Depth")
-        .AddSSBOBinding(VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(LightUniform) * 10000 + sizeof(uint32_t)).SetDebugName("Deferred Light SSBO");
+        .AddSSBOBinding(VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(LightUniform) * LightUniform::MAX_LIGHTS + sizeof(uint32_t)).SetDebugName("Deferred Light SSBO");
 }

@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   ProfilerWindow.cpp
+ * \brief  Renders the Profiler Window!
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "ProfilerWindow.h"
 #include "Profiler/Profiler.h"
@@ -15,12 +23,17 @@ namespace Radis
     {
 #if PROFILING_ENABLED
 
-        // Small helpers
+        // -------- Helpers -----------
+
+        // Convert nanoseconds to milliseconds
         static inline double NsToMs(uint64_t ns) { return double(ns) * 1e-6; }
+
+        // Clamp float to [0,1]
         static inline float Clamp01(float v) { return (v < 0.0f ? 0.0f : (v > 1.0f ? 1.0f : v)); }
 
-        // Helper: lowercase a string in-place
-        static inline void ToLowerInPlace(std::string& s) {
+        // lowercase a string in-place
+        static inline void ToLowerInPlace(std::string& s) 
+        {
             std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
         }
 
@@ -40,9 +53,9 @@ namespace Radis
                 maxNs = snap.aggs[node.nameId].maxNs;
             }
 
-            // The tree label is the name. We'll render the TreeNode (arrow + label) and then place stats on the same line.
+            // Render the TreeNode
             ImGui::TextUnformatted(name.c_str());
-            ImGui::SameLine(300); // adjust X position where stats start; tweak as needed for preferred layout
+            ImGui::SameLine(300); // Arbitrary x position for where the stats start
             ImGui::TextDisabled("%.3f ms", totalMs);
             ImGui::SameLine();
             ImGui::TextDisabled("(%.2f%%)", pct);
@@ -70,14 +83,17 @@ namespace Radis
 
             // search filter
             bool matchesSearch = false;
-            if (!searchLower.empty()) {
-                if (node.nameId >= 0 && node.nameId < (int)snap.names.size()) {
+            if (!searchLower.empty())
+            {
+                if (node.nameId >= 0 && node.nameId < (int)snap.names.size()) 
+                {
                     std::string nameLower = snap.names[node.nameId];
                     ToLowerInPlace(nameLower);
                     if (nameLower.find(searchLower) != std::string::npos) matchesSearch = true;
                 }
             }
-            else {
+            else 
+            {
                 // no search -> treat as matched
                 matchesSearch = true;
             }
@@ -86,7 +102,8 @@ namespace Radis
 
             // Check children
             int child = node.firstChild;
-            while (child != -1) {
+            while (child != -1)
+            {
                 if (NodeOrDescendantMatchesFilter(snap, child, searchLower, minPctFilter)) return true;
                 child = snap.nodes[child].nextSibling;
             }
@@ -94,25 +111,28 @@ namespace Radis
         }
 
         // Render the hierarchy starting at a given node's children, sorting siblings by totalNs descending.
-        // `showRootChildrenOnly` can be used when you want to start from root's children (root itself isn't shown as a node).
+        // `showRootChildrenOnly` can be used to start from root's children (root itself isn't shown as a node).
         static void RenderHierarchyRecursive(const ProfilerSnapshot& snap, int nodeIdx, const std::string& searchLower, float minPctFilter)
         {
             // Gather children of nodeIdx
             std::vector<int> children;
-            if (nodeIdx >= 0 && nodeIdx < (int)snap.nodes.size()) {
+            if (nodeIdx >= 0 && nodeIdx < (int)snap.nodes.size()) 
+            {
                 int child = snap.nodes[nodeIdx].firstChild;
-                while (child != -1) {
+                while (child != -1) 
+                {
                     children.push_back(child);
                     child = snap.nodes[child].nextSibling;
                 }
             }
 
             // Sort children by descending totalNs
-            std::sort(children.begin(), children.end(), [&snap](int a, int b) {
+            std::sort(children.begin(), children.end(), [&snap](int a, int b) 
+            {
                 uint64_t ta = (a >= 0 && a < (int)snap.nodes.size()) ? snap.nodes[a].totalNs : 0;
                 uint64_t tb = (b >= 0 && b < (int)snap.nodes.size()) ? snap.nodes[b].totalNs : 0;
                 return ta > tb;
-                });
+            });
 
             for (int childIdx : children)
             {
@@ -129,15 +149,20 @@ namespace Radis
                 // Determine if it's a leaf (no children that pass the filter)
                 bool hasChild = false;
                 int ch = node.firstChild;
-                while (ch != -1) {
+                while (ch != -1) 
+                {
                     // check child's percent/search quickly to avoid showing expand arrow if no visible children
-                    if (searchLower.empty() && minPctFilter <= 0.0f) {
+                    if (searchLower.empty() && minPctFilter <= 0.0f) 
+                    {
                         hasChild = true;
                         break;
                     }
-                    else {
-                        if (NodeOrDescendantMatchesFilter(snap, ch, searchLower, minPctFilter)) { hasChild = true; break; }
+                    else if (NodeOrDescendantMatchesFilter(snap, ch, searchLower, minPctFilter))
+                    {
+                        hasChild = true; 
+                        break;
                     }
+
                     ch = snap.nodes[ch].nextSibling;
                 }
 
@@ -147,7 +172,8 @@ namespace Radis
 
                 // We want a unique id per node; use the pointer-less index based id
                 ImGui::PushID(childIdx);
-                if (hasChild) {
+                if (hasChild) 
+                {
                     // When node has children we call TreeNodeEx which returns true if opened
                     bool opened = ImGui::TreeNodeEx(name.c_str(), flags);
                     // Render stats on same line (we used name as label above but want stats packed right)
@@ -176,13 +202,15 @@ namespace Radis
                         ImGui::TextDisabled("max %.3f ms", NsToMs(maxNs));
                     }
 
-                    if (opened) {
+                    if (opened) 
+                    {
                         // Recurse into children
                         RenderHierarchyRecursive(snap, childIdx, searchLower, minPctFilter);
                         ImGui::TreePop();
                     }
                 }
-                else {
+                else 
+                {
                     // Leaf: use selectable-looking presentation with no push/pop
                     // Because we passed NoTreePushOnOpen, we must render the label ourselves
                     ImGui::TreeNodeEx(name.c_str(), flags);
@@ -232,7 +260,8 @@ namespace Radis
 
             // If root index is invalid, early out
             int root = snap.rootIndex;
-            if (root < 0 || root >= (int)snap.nodes.size()) {
+            if (root < 0 || root >= (int)snap.nodes.size()) 
+            {
                 ImGui::TextDisabled("No root node in snapshot.");
                 ImGui::EndChild();
                 return;
@@ -252,8 +281,10 @@ namespace Radis
             // Try to get last fully-complete frame snapshot.
             ProfilerSnapshot snap;
             bool have = Profiler::GetLastFrameSnapshot(snap);
-            if (!have) {
-                if (ImGui::Begin("Profiler", nullptr)) {
+            if (!have) 
+            {
+                if (ImGui::Begin("Profiler", nullptr)) 
+                {
                     ImGui::TextDisabled("No profiler snapshot available yet.");
                 }
                 ImGui::End();
@@ -307,7 +338,8 @@ namespace Radis
             // Prepare search lower-case
             std::string search = searchBuf;
             std::string searchLower;
-            if (!search.empty()) {
+            if (!search.empty())
+            {
                 searchLower = search;
                 ToLowerInPlace(searchLower);
             }

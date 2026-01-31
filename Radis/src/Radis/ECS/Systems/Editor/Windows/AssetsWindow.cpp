@@ -1,4 +1,12 @@
-﻿#include <PCH/pch.h>
+﻿/*****************************************************************//**
+ * \file   AssetsWindow.cpp
+ * \brief  Renders the Assets Window!
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
+#include <PCH/pch.h>
 #include "AssetsWindow.h"
 #include "Assets/Assets.h"
 #include "Graphics/Common/TextureLibrary.h"
@@ -24,17 +32,20 @@ namespace Radis
 		};
 		
 		// Helper struct to load and hold all icons
-		struct AssetIcons {
+		struct AssetIcons 
+		{
 			void* folder = nullptr;
 			void* shader = nullptr;
 			void* scene = nullptr;
 			void* model = nullptr;
 			void* defaultFile = nullptr;
 
-			AssetIcons(TextureLibrary* tl) {
+			AssetIcons(TextureLibrary* tl) 
+			{
 				if (!tl) return;
 
-				auto GetTexID = [&](const std::string& name) -> void* {
+				auto GetTexID = [&](const std::string& name) -> void* 
+				{
 					if (auto itex = tl->GetTexture(Assets::ImagesPath + name)) {
 						return itex->GetTextureID();
 					}
@@ -224,7 +235,8 @@ namespace Radis
 				}
 			}
 
-			auto sortAlpha = [](const auto& a, const auto& b) {
+			auto sortAlpha = [](const auto& a, const auto& b)
+			{
 				return a.path().filename().string() < b.path().filename().string();
 			};
 			std::sort(directories.begin(), directories.end(), sortAlpha);
@@ -248,7 +260,8 @@ namespace Radis
 			}
 
 			// --- Render Separator ---
-			if (!directories.empty() && !files.empty()) {
+			if (!directories.empty() && !files.empty()) 
+			{
 				ImGui::Columns(1);
 				ImGui::Separator();
 				ImGui::Columns(columnCount, 0, false);

@@ -1,7 +1,15 @@
+/*****************************************************************//**
+ * \file   Model.h
+ * \brief  Definition of the Model class for 3D model loading and processing.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "../Common/Animation/Bone.h"
-#include "../RHI/IMesh.h"
+#include "../RHI/Mesh.h"
 
 namespace Radis
 {
@@ -19,7 +27,7 @@ namespace Radis
         Model(Device& device, const std::string& filePath, bool fromDM = false, bool toDM = false);
         ~Model();
 
-        std::vector<std::unique_ptr<IMesh>> mMeshes;
+        std::vector<std::unique_ptr<Mesh>> mMeshes;
 
         std::unordered_map<std::string, BoneInfo>& GetBoneInfoMap() { return mBoneInfoMap; }
         const std::unordered_map<std::string, BoneInfo>& GetBoneInfoMap() const { return mBoneInfoMap; }
@@ -37,16 +45,16 @@ namespace Radis
         // Load and process model using assimp
         void LoadMeshes(const std::string& filepath);
         void ProcessNode(aiNode* node, const glm::mat4& parentTransform = glm::mat4(1.f));
-        IMesh& ProcessMesh(aiMesh* mesh, const glm::mat4& transform);
+        Mesh& ProcessMesh(aiMesh* mesh, const glm::mat4& transform);
 
         // Checks for textures in order of types to try
         std::string ResolveTexturePath(aiMaterial* material, const std::vector<aiTextureType>& typesToTry, std::vector<unsigned char>& outEmbeddedData);
-        void ProcessMaterials(aiMesh* mesh, IMesh& newMesh);
-        void ProcessVertexColor(aiMaterial* material, IMesh& newMesh);
-        void ProcessBaseColor(aiMaterial* material, IMesh& newMesh);
-        void ProcessNormalMap(aiMaterial* material, IMesh& newMesh);
-        void ProcessPBRMaps(aiMaterial* material, IMesh& newMesh);
-        void ProcessEmissive(aiMaterial* material, IMesh& newMesh);
+        void ProcessMaterials(aiMesh* mesh, Mesh& newMesh);
+        void ProcessVertexColor(aiMaterial* material, Mesh& newMesh);
+        void ProcessBaseColor(aiMaterial* material, Mesh& newMesh);
+        void ProcessNormalMap(aiMaterial* material, Mesh& newMesh);
+        void ProcessPBRMaps(aiMaterial* material, Mesh& newMesh);
+        void ProcessEmissive(aiMaterial* material, Mesh& newMesh);
 
         void NormalizeModel();
         void ExtractBoneWeights(std::vector<Vertex>& vertices, aiMesh* mesh);

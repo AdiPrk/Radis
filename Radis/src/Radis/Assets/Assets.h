@@ -1,11 +1,24 @@
+/*****************************************************************//**
+ * \file   Assets.h
+ * \brief  Asset path constants
+ *
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 namespace Radis
 {
+	/**
+	 * \brief Centralized asset path definitions.
+	 */
 	class Assets {
 	public:
+        // Base Assets directory
 		inline static const std::string AssetsDir = "Assets/";
 
+        // Sub-directories
 		inline static const std::string EditorDir = "Editor/";
 		inline static const std::string ShadersDir = "Shaders/";
 		inline static const std::string ImagesDir = "Textures/";
@@ -15,6 +28,7 @@ namespace Radis
 		inline static const std::string ModelTexturesDir = "Models/ModelTextures/";
 		inline static const std::string BinariesDir = "Bin/";
 
+        // Full paths
 		inline static const std::string EditorPath = AssetsDir + EditorDir;
 		inline static const std::string ShadersPath = AssetsDir + ShadersDir;
 		inline static const std::string ImagesPath = AssetsDir + ImagesDir;

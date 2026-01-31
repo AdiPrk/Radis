@@ -1,168 +1,169 @@
+/*****************************************************************//**
+ * \file   Components.h
+ * \brief  Core ECS component definitions
+ * 
+ * \author Aditya Prakash
+ * \date   2026
+ *********************************************************************/
 #pragma once
 
 #include "Graphics/Common/Animation/AnimationLibrary.h" // For AnimationLibrary::INVALID_ANIMATION_INDEX
 
-namespace Radis {
+namespace Radis
+{
+    // =========================================================================
+    // Core Components
+    // =========================================================================
 
-	struct TagComponent
-	{
-		std::string Tag;
-	};
+    struct TagComponent
+    {
+        std::string Tag;
+    };
 
-	struct TransformComponent
-	{
-        // DO NOT MODIFY MANUALLY! Use SetTranslation/SetRotation/SetScale instead to mark dirty.
-		glm::vec3 Translation = { 0.0f, 0.0f, 0.0f };
-		glm::vec3 Rotation = { 0.0f, 0.0f, 0.0f };
-		glm::vec3 Scale = { 1.0f, 1.0f, 1.0f };
-		
-		glm::mat4 CachedTransform{};
-		bool isDirty = true;
+    struct TransformComponent
+    {
+        glm::vec3 Translation = glm::vec3(0.0f);
+        glm::vec3 Rotation = glm::vec3(0.0f);
+        glm::vec3 Scale = glm::vec3(1.0f);
 
-		glm::mat4 GetTransform()
-		{
-			if (!isDirty) return CachedTransform;
+        glm::mat4 GetTransform();
+        glm::mat3 GetNormalMatrix() const;
 
-			isDirty = false;
-			CachedTransform = glm::translate(glm::mat4(1.0f), Translation) * glm::toMat4(glm::quat(Rotation)) * glm::scale(glm::mat4(1.0f), Scale);
-
-			return CachedTransform;
-		}
-
-		void SetTranslation(float x, float y, float z);
-		void SetTranslation(const glm::vec3& tr);
+        void SetTranslation(float x, float y, float z);
+        void SetTranslation(const glm::vec3& tr);
         void SetRotation(float x, float y, float z);
         void SetRotation(const glm::vec3& rot);
         void SetScale(float x, float y, float z);
         void SetScale(const glm::vec3& scale);
-		void SetScale(float s);
+        void SetScale(float uniformScale);
 
-		glm::mat3 normalMatrix() const;
-	};
+        glm::mat4 mCachedTransform = glm::mat4(1.0f);
+        bool mIsDirty = true;
+    };
 
-	struct ModelComponent
-	{
-		std::string ModelPath = "";
-        uint32_t modelID = 0;
-		bool updateModelID = true;
-        glm::vec4 tintColor = glm::vec4(1.0f);
+    // =========================================================================
+    // Rendering Components
+    // =========================================================================
 
-        bool useMetallicOverride = false;
-        bool useRoughnessOverride = false;
-        bool useEmissiveOverride = false;
-		float metallicOverride = 1.0f;
-        float roughnessOverride = 1.0f;
-		glm::vec4 emissiveOverride{};
-	};
+    struct ModelComponent
+    {
+        std::string ModelPath;
+        uint32_t ModelID = 0;
+        bool UpdateModelID = true;
+        glm::vec4 TintColor = glm::vec4(1.0f);
 
-	struct AnimationComponent
-	{
+        bool UseMetallicOverride = false;
+        bool UseRoughnessOverride = false;
+        bool UseEmissiveOverride = false;
+        float MetallicOverride = 1.0f;
+        float RoughnessOverride = 1.0f;
+        glm::vec4 EmissiveOverride = glm::vec4(0.0f);
+    };
+
+    struct AnimationComponent
+    {
         bool IsPlaying = true;
-		uint32_t AnimationIndex = AnimationLibrary::INVALID_ANIMATION_INDEX;
+        uint32_t AnimationIndex = AnimationLibrary::INVALID_ANIMATION_INDEX;
         float AnimationTime = 0.0f;
-		bool inPlace = false;
+        bool InPlace = false;
 
-		// Used internally:
-        float PrevAnimationTime = AnimationTime;
-        bool prevInPlace = inPlace;
+        // Internal state
+        float PrevAnimationTime = 0.0f;
+        bool PrevInPlace = false;
         uint32_t BoneOffset = 0;
-	};
+    };
 
-	struct CameraComponent
-	{
-		float FOV = 45.0f;
-		float Near = 0.1f;
-		float Far = 1000.0f;
+    struct CameraComponent
+    {
+        float FOV = 45.0f;
+        float Near = 0.1f;
+        float Far = 1000.0f;
 
         glm::vec3 Forward = glm::vec3(0.0f, 0.0f, -1.0f);
         glm::vec3 Up = glm::vec3(0.0f, 1.0f, 0.0f);
 
-		float Yaw{ 0.0f };
-		float Pitch{ 0.0f };
-		float MouseSensitivity{ 0.15f };
-		bool InvertY{ true };
-		float MoveSpeed{ 10.f };
+        float Yaw = 0.0f;
+        float Pitch = 0.0f;
+        float MouseSensitivity = 0.15f;
+        bool InvertY = true;
+        float MoveSpeed = 10.0f;
 
-		// --- Internal ---
-		// in CameraComponent
-		float TargetYaw = 0.0f;
-		float TargetPitch = 0.0f;
+        // Internal smoothing state
+        float TargetYaw = 0.0f;
+        float TargetPitch = 0.0f;
+        float SmoothedYaw = 0.0f;
+        float SmoothedPitch = 0.0f;
+        glm::vec3 SmoothedPosition = glm::vec3(0.0f);
+        float SmoothedMouseDX = 0.0f;
+        float SmoothedMouseDY = 0.0f;
 
-		// Smoothed current values (what we write to transform and use for lookAt)
-		float SmoothedYaw = 0.0f;
-		float SmoothedPitch = 0.0f;
-		glm::vec3 SmoothedPosition = glm::vec3(0.0f);
+        // Smoothing parameters
+        float MouseSmoothness = 20.0f;
+        float RotationSmoothness = 18.0f;
+        float PositionSmoothness = 12.0f;
+        bool IsInitialized = false;
+    };
 
-		// Mouse smoothing buffer
-		float SmoothedMouseDX = 0.0f;
-		float SmoothedMouseDY = 0.0f;
+    // =========================================================================
+    // Lighting Components
+    // =========================================================================
 
-		// Tweakable smoothing params (tune these)
-		float MouseSmoothness = 20.0f; // higher -> less smoothing of raw mouse (more snappy)
-		float RotationSmoothness = 18.0f; // higher -> faster rotation follow (less smoothing)
-		float PositionSmoothness = 12.0f; // higher -> faster position follow (less smoothing)
-		bool isInitialized{ false };
-	};
+    struct LightComponent
+    {
+        enum class Types : uint32_t
+        {
+            Directional = 0,
+            Point = 1,
+            Spot = 2
+        };
 
-	struct LightComponent 
-	{
-		enum LightType
-		{
-			DIRECTIONAL = 0,
-			POINT = 1,
-			SPOT = 2
-		};
-	
-		glm::vec3 Position{};
-		float Radius{ 1.f };        // For point/spot attenuation
-		glm::vec3 Color{ 1.f, 1.f, 1.f };
-		float Intensity{ 1.f };
-		glm::vec3 Direction{ 0.f, 0.f, -1.f };
-		float InnerCone{ glm::radians(30.f) }; // for spot
-		float OuterCone{ glm::radians(60.f) }; // for spot
-		LightType Type{ POINT };
-	};
+        glm::vec3 Position = glm::vec3(0.0f);
+        float Radius = 1.0f;
+        glm::vec3 Color = glm::vec3(1.0f);
+        float Intensity = 1.0f;
+        glm::vec3 Direction = glm::vec3(0.0f, 0.0f, -1.0f);
+        float InnerCone = glm::radians(30.0f);
+        float OuterCone = glm::radians(60.0f);
+        Types LightType = Types::Point;
+    };
 
-	struct SoftBodyParticle
-	{
-		glm::vec3 position{ 0.0f };
-		glm::vec3 velocity{ 0.0f };
+    // =========================================================================
+    // Physics Components
+    // =========================================================================
 
-		/// Inverse mass (0.0f => infinite mass / static).
-		float inverseMass = 1.0f;
+    struct SoftBodyParticle
+    {
+        glm::vec3 Position = glm::vec3(0.0f);
+        glm::vec3 Velocity = glm::vec3(0.0f);
+        float InverseMass = 1.0f;
+        bool IsAnchor = false;
+        glm::vec3 AnchorPosition = glm::vec3(0.0f);
+    };
 
-		bool isAnchor = false;
-		glm::vec3 anchorPosition{ 0.0f };
-	};
+    struct SoftBodySpring
+    {
+        uint32_t IndexA = 0;
+        uint32_t IndexB = 0;
+        float RestLength = 0.0f;
+        float Stiffness = 0.0f;
+        float Damping = 0.0f;
+    };
 
-	struct SoftBodySpring
-	{
-		std::uint32_t a = 0; // Index of first particle
-		std::uint32_t b = 0; // Index of second particle
+    struct SoftBodyComponent
+    {
+        std::vector<SoftBodyParticle> Particles;
+        std::vector<SoftBodySpring> Springs;
 
-		float restLength = 0.0f;
-		float stiffness = 0.0f; // Hooke stiffness (k)
-		float damping = 0.0f; // Spring damping (c)
-	};
+        glm::vec3 Gravity = glm::vec3(0.0f);
+        glm::vec3 GlobalOffset = glm::vec3(0.0f);
+        float GlobalStiffness = 50.0f;
+        float GlobalDamping = 10.0f;
 
-	struct SoftBodyComponent
-	{
-		std::vector<SoftBodyParticle> particles;
-		std::vector<SoftBodySpring>   springs;
+        uint32_t GridNx = 0;
+        uint32_t GridNy = 0;
+        uint32_t GridNz = 0;
 
-		// Global settings (can be overridden per-entity if you want).
-		glm::vec3 gravity{ 0.0f, 0.0f, 0.0f };
-        glm::vec3 globalOffset{ 0.0f, 0.0f, 0.0f };
+        glm::vec3 LastTransformPosition = glm::vec3(0.0f);
+    };
 
-		float globalStiffness = 50.0f;
-		float globalDamping = 10.0f;
-
-		// If you want to know the logical layout (for anchors/interaction).
-		std::uint32_t gridNx = 0;
-		std::uint32_t gridNy = 0;
-		std::uint32_t gridNz = 0;
-		
-		// sync with transform
-		glm::vec3 lastTransformPosition{ 0.0f, 0.0f, 0.0f };
-	};
-}
+} // namespace Radis

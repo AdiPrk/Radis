@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   ModelSerializer.h
+ * \brief  Serialization and deserialization of Model objects
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 namespace Radis

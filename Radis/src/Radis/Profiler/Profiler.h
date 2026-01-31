@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   Profiler.h
+ * \brief  Definition of the Profiler class for CPU scope profiling.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #ifndef PROFILING_ENABLED
@@ -8,7 +16,8 @@
 
 namespace Radis
 {
-    struct ProfilerSnapshotNode {
+    struct ProfilerSnapshotNode 
+    {
         int32_t nameId = -1;
         int32_t parent = -1;
         int32_t firstChild = -1;
@@ -18,14 +27,16 @@ namespace Radis
         uint32_t callCount = 0;
     };
 
-    struct ProfilerSnapshotAggregate {
+    struct ProfilerSnapshotAggregate 
+    {
         uint64_t totalNs = 0;
         uint32_t callCount = 0;
         uint64_t maxNs = 0;
         uint64_t minNs = 0;
     };
 
-    struct ProfilerSnapshot {
+    struct ProfilerSnapshot 
+    {
         std::vector<ProfilerSnapshotNode> nodes;      // node pool for last frame
         std::vector<std::string> names;               // nameId -> string
         std::vector<ProfilerSnapshotAggregate> aggs;  // per-name aggregates
@@ -57,7 +68,8 @@ namespace Radis
     };
 
     // RAII helper that begins a scope on construction and ends it on destruction
-    struct ProfilerScope {
+    struct ProfilerScope
+    {
         explicit ProfilerScope(const char* name) : m_name(name) { Profiler::BeginScope(m_name); }
         ~ProfilerScope() { Profiler::EndScope(); }
         const char* m_name;

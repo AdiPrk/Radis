@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   TextureLoader.h
+ * \brief  Definition of the TextureLoader class for loading textures from files and memory.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "Graphics/RHI/ITexture.h"

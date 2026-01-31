@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   ScopedDebugLabel.h
+ * \brief  Definition of the ScopedDebugLabel class for Vulkan debug labeling.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 namespace Radis

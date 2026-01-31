@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   IWindow.h
+ * \brief  Definition of the IWindow interface for window management across different graphics APIs.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 namespace Radis

@@ -1,4 +1,12 @@
- #pragma once
+/*****************************************************************//**
+ * \file   RenderGraph.h
+ * \brief  Definition of a simple Render Graph system for managing render passes and resources.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
+#pragma once
 
 namespace Radis
 {

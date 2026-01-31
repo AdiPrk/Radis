@@ -1,4 +1,12 @@
-﻿#include <PCH/pch.h>
+﻿/*****************************************************************//**
+ * \file   Logger.cpp
+ * \brief  Implementation of the Logger class for logging messages with levels and colors.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
+#include <PCH/pch.h>
 #include "Logger.h"
 
 #include <io.h>     // _isatty, _fileno

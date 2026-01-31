@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   Components.cpp
+ * \brief  Implements component functionality
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "Components.h"
 
@@ -6,46 +14,56 @@ namespace Radis
 	void TransformComponent::SetTranslation(float x, float y, float z)
 	{
         Translation = glm::vec3(x, y, z);
-        isDirty = true;
+        mIsDirty = true;
 	}
 
 	void TransformComponent::SetTranslation(const glm::vec3& tr)
 	{
 		Translation = tr;
-        isDirty = true;
+        mIsDirty = true;
 	}
 
 	void TransformComponent::SetRotation(float x, float y, float z)
 	{
 		Rotation = glm::vec3(x, y, z);
-        isDirty = true;
+        mIsDirty = true;
 	}
 	
 	void TransformComponent::SetRotation(const glm::vec3& rot)
 	{
 		Rotation = rot;
-        isDirty = true;
+        mIsDirty = true;
 	}
 	
 	void TransformComponent::SetScale(float x, float y, float z)
 	{
 		Scale = glm::vec3(x, y, z);
-        isDirty = true;
+        mIsDirty = true;
 	}
 	
 	void TransformComponent::SetScale(const glm::vec3& scale)
 	{
 		Scale = scale;
-        isDirty = true;
+        mIsDirty = true;
 	}
 
 	void TransformComponent::SetScale(float s)
 	{
 		Scale = glm::vec3(s, s, s);
-        isDirty = true;
+        mIsDirty = true;
 	}
 
-	glm::mat3 TransformComponent::normalMatrix() const {
+	glm::mat4 TransformComponent::GetTransform()
+	{
+		if (!mIsDirty) return mCachedTransform;
+
+		mIsDirty = false;
+		mCachedTransform = glm::translate(glm::mat4(1.0f), Translation) * glm::toMat4(glm::quat(Rotation)) * glm::scale(glm::mat4(1.0f), Scale);
+
+		return mCachedTransform;
+	}
+
+	glm::mat3 TransformComponent::GetNormalMatrix() const {
 		const float c3 = glm::cos(Rotation.z);
 		const float s3 = glm::sin(Rotation.z);
 		const float c2 = glm::cos(Rotation.x);

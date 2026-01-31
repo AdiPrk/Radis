@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   GLWindow.h
+ * \brief  Definition of the GLWindow class for OpenGL window management.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "../IWindow.h"

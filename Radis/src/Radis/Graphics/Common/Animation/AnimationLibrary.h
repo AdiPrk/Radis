@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   AnimationLibrary.h
+ * \brief  Definition of the AnimationLibrary class for managing animations and animators.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 namespace Radis

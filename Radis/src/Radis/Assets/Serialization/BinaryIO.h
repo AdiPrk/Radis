@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   BinaryIO.h
+ * \brief  Little-endian binary writer/reader with automatic endian swap
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 namespace Radis

@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   TextureLibrary.h
+ * \brief  Definition of the TextureLibrary class for managing textures.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "Graphics/RHI/ITexture.h"

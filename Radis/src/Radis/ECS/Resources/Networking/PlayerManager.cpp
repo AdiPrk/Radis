@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   PlayerManager.cpp
+ * \brief  Manages a list of connected players in a multiplayer session
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "PlayerManager.h"
 

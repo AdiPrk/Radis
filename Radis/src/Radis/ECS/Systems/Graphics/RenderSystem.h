@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   RenderSystem.h
+ * \brief  Handles rendering the scene
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "../ISystem.h"
@@ -28,19 +36,22 @@ namespace Radis
         void FrameEnd();
         void Exit();
 
-
     private:
+        // Rendering Functions
         void RenderSceneVK(VkCommandBuffer cmd);
-
         void RenderSceneDeferredGeometryVK(VkCommandBuffer cmd);
         void RenderSceneDeferredLightingVK(VkCommandBuffer cmd);
-
         void RaytraceSceneVK(VkCommandBuffer cmd);
-
         void RenderSceneGL();
 
+        // Submit instanced draw calls
         void ExecuteInstancedDrawCalls(VkCommandBuffer cmd);
         
+        // Utilities
+        void SetViewportAndScissor(VkCommandBuffer cmd, const VkExtent2D& extent);
+        CameraUniforms CollectCameraData(float aspectRatio);
+        void CollectLightData();
+        void BuildInstanceData();
         float GetAspectRatio();
 
         std::vector<MeshDataUniform> mRTMeshData{};

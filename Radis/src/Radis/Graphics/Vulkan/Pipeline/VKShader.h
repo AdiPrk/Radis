@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   VKShader.h
+ * \brief  Definition of the Shader class for Vulkan shader compilation and module creation.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 namespace Radis

@@ -1,4 +1,12 @@
-﻿#include <PCH/pch.h>
+﻿/*****************************************************************//**
+ * \file   EditorSystem.cpp
+ * \brief  Manages the Editor
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
+#include <PCH/pch.h>
 #include "EditorSystem.h"
 #include "Engine.h"
 #include "ECS/ECS.h"

@@ -1,12 +1,19 @@
+/*****************************************************************//**
+ * \file   UnifiedMesh.h
+ * \brief  Definition of the UnifiedMeshes class for combining multiple meshes.
+ *
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
-#include "Graphics/RHI/IMesh.h"
+#include "Graphics/RHI/Mesh.h"
 
 namespace Radis
 {
-    // Forward reference
     class Device;
-    
+
     struct MeshInfo {
         uint32_t indexCount;
         uint32_t firstIndex;
@@ -19,14 +26,15 @@ namespace Radis
         UnifiedMeshes();
         ~UnifiedMeshes();
 
-        void AddMesh(Device& device, IMesh& mesh);
+        void AddMesh(Device& device, Mesh& mesh);
 
-        std::unique_ptr<IMesh>& GetUnifiedMesh() { return mUnifiedMesh; }
+        Mesh& GetUnifiedMesh() { return mUnifiedMesh; }
+        const Mesh& GetUnifiedMesh() const { return mUnifiedMesh; }
         const MeshInfo& GetMeshInfo(uint32_t meshID) const { return mMeshInfos.at(meshID); }
         uint32_t GetMeshCount() const { return static_cast<uint32_t>(mMeshInfos.size()); }
 
     private:
-        std::unique_ptr<IMesh> mUnifiedMesh;
+        Mesh mUnifiedMesh;
         std::unordered_map<uint32_t, MeshInfo> mMeshInfos;
     };
 }

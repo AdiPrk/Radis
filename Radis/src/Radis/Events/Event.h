@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   Event.h
+ * \brief  Definition of the Event system for publishing and subscribing to events.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 namespace Radis 

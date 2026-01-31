@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   Descriptors.h
+ * \brief  Definition of DescriptorSetLayout, DescriptorPool, and DescriptorWriter classes for Vulkan descriptor management.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 namespace Radis

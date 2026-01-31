@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   ShaderTypes.h
+ * \brief  Defines types used in shaders
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 namespace Radis
@@ -49,7 +57,7 @@ namespace Radis
         glm::vec4 directionInner;    // xyz = direction, w = innerCone
         glm::vec4 outerConeType;     // x = outerCone, y = type (0=dir, 1=point, 2=spot), zw = padding
 
-        static const uint32_t MAX_LIGHTS = 1000;
+        static const uint32_t MAX_LIGHTS = 200000;
     };
 
     /*struct MeshDataUniform {

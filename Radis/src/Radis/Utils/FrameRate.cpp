@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   FrameRate.cpp
+ * \brief  Implementation of the FrameRateController class for managing frame rates.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "FrameRate.h"
 //#include "mmsystem.h" // For timeBeginPeriod, timeEndPeriod

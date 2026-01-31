@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   EditorResource.cpp
+ * \brief  ECS Resource for Editor related data and ImGui integration
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "EditorResource.h"
 #include "RenderingResource.h"

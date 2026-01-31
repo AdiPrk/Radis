@@ -1,4 +1,12 @@
-﻿#include <PCH/pch.h>
+﻿/*****************************************************************//**
+ * \file   AnimationSystem.cpp
+ * \brief  Handles animating entities
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
+#include <PCH/pch.h>
 #include "AnimationSystem.h"
 
 #include "ECS/ECS.h"
@@ -59,9 +67,9 @@ namespace Radis
             ac.AnimationTime = fmod(ac.AnimationTime, anim->GetDuration());
 
             glm::mat4 tr = tc.GetTransform();
-            animator->UpdateAnimationInstant(ac.AnimationTime, ac.inPlace, tr);
+            animator->UpdateAnimationInstant(ac.AnimationTime, ac.InPlace, tr);
             ac.PrevAnimationTime = ac.AnimationTime;
-            ac.prevInPlace = ac.inPlace;
+            ac.PrevInPlace = ac.InPlace;
 
             const auto& finalMatrices = animator->GetFinalBoneVQS();
             bonesMatrices.insert(bonesMatrices.end(), finalMatrices.begin(), finalMatrices.end());

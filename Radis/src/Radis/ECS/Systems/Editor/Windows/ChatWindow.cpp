@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   ChatWindow.cpp
+ * \brief  Renders the Chat Window!
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "ChatWindow.h"
 #include "Engine.h"

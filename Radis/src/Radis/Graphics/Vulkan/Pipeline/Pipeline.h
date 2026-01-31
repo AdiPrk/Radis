@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   Pipeline.h
+ * \brief  Definition of the Pipeline class for Vulkan graphics pipelines.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "../Core/Device.h"

@@ -1,11 +1,10 @@
 /*****************************************************************//**
  * \file   Uniform.inl
- * \author Adi (aditya.prakash@digipen.edu)
- * \date   October 27 2024
- * \Copyright @ 2024 Digipen (USA) Corporation *
-
- * \brief  Uniform template definitions
- *  *********************************************************************/
+ * \brief  Implementation of the Uniform class template methods for setting uniform data.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
 
 #pragma once
 #include "Uniform.h"

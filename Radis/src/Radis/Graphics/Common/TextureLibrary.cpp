@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   TextureLibrary.cpp
+ * \brief  Implementation of the TextureLibrary class for managing texture resources.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "TextureLibrary.h"
 #include "ECS/Resources/RenderingResource.h"

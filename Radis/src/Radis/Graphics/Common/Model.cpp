@@ -1,8 +1,14 @@
+/*****************************************************************//**
+ * \file   Model.cpp
+ * \brief  Implementation of the Model class for loading and processing 3D models.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "Model.h"
 #include "../Vulkan/Core/Buffer.h"
-#include "../Vulkan/VKMesh.h"
-#include "../OpenGL/GLMesh.h"
 #include "Assets/Assets.h"
 
 #include "Graphics/RHI/RHI.h"
@@ -75,20 +81,11 @@ namespace Radis
         }
     }
 
-    IMesh& Model::ProcessMesh(aiMesh* mesh, const glm::mat4& transform)
+    Mesh& Model::ProcessMesh(aiMesh* mesh, const glm::mat4& transform)
     {
-        std::unique_ptr<IMesh>* newMeshPtrRaw = nullptr;
-
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
-        {
-            newMeshPtrRaw = &mMeshes.emplace_back(std::make_unique<VKMesh>());
-        }
-        else
-        {
-            newMeshPtrRaw = &mMeshes.emplace_back(std::make_unique<GLMesh>());
-        }
-
-        IMesh& newMesh = **newMeshPtrRaw;
+        // Create a new Mesh (the unified class, no longer VKMesh/GLMesh)
+        auto& newMeshPtr = mMeshes.emplace_back(std::make_unique<Mesh>());
+        Mesh& newMesh = *newMeshPtr;
 
         glm::vec3 meshMin(std::numeric_limits<float>::max());
         glm::vec3 meshMax(std::numeric_limits<float>::lowest());
@@ -226,7 +223,7 @@ namespace Radis
         return "";
     }
 
-    void Model::ProcessMaterials(aiMesh* mesh, IMesh& newMesh)
+    void Model::ProcessMaterials(aiMesh* mesh, Mesh& newMesh)
     {
         if (!mScene->HasMaterials()) return;
 
@@ -238,7 +235,7 @@ namespace Radis
         ProcessEmissive(material, newMesh);
     }
 
-    void Model::ProcessVertexColor(aiMaterial* material, IMesh& newMesh)
+    void Model::ProcessVertexColor(aiMaterial* material, Mesh& newMesh)
     {
 
         aiColor4D baseColor;
@@ -253,7 +250,7 @@ namespace Radis
         }
     }
 
-    void Model::ProcessBaseColor(aiMaterial* material, IMesh& newMesh)
+    void Model::ProcessBaseColor(aiMaterial* material, Mesh& newMesh)
     {
         aiColor4D color;
 
@@ -273,7 +270,7 @@ namespace Radis
         );
     }
 
-    void Model::ProcessNormalMap(aiMaterial* material, IMesh& newMesh)
+    void Model::ProcessNormalMap(aiMaterial* material, Mesh& newMesh)
     {
         newMesh.normalTexturePath = ResolveTexturePath(
             material,
@@ -282,7 +279,7 @@ namespace Radis
         );
     }
 
-    void Model::ProcessPBRMaps(aiMaterial* material, IMesh& newMesh)
+    void Model::ProcessPBRMaps(aiMaterial* material, Mesh& newMesh)
     {
         material->Get(AI_MATKEY_METALLIC_FACTOR, newMesh.metallicFactor);
         material->Get(AI_MATKEY_ROUGHNESS_FACTOR, newMesh.roughnessFactor);
@@ -318,7 +315,7 @@ namespace Radis
         }
     }
         
-    void Model::ProcessEmissive(aiMaterial* material, IMesh& newMesh)
+    void Model::ProcessEmissive(aiMaterial* material, Mesh& newMesh)
     {
         aiColor3D color(0.0f, 0.0f, 0.0f);
         if (material->Get(AI_MATKEY_COLOR_EMISSIVE, color) == AI_SUCCESS)

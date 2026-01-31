@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   DebugDrawResource.cpp
+ * \brief  Implements debug draw functionality
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "DebugDrawResource.h"
 

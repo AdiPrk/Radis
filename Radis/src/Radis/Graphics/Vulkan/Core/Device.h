@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   Device.h
+ * \brief  Definition of the Device class for Vulkan physical and logical device management.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 #include "Allocator.h"

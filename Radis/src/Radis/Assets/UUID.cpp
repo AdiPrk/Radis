@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   UUID.cpp
+ * \brief  Generates unique identifiers (UUIDs) for assets and entities
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #include <PCH/pch.h>
 #include "UUID.h"
 

@@ -1,3 +1,11 @@
+/*****************************************************************//**
+ * \file   FrameRate.h
+ * \brief  Definition of the FrameRateController class for managing frame timing.
+ * 
+ * \author Aditya Prakash
+ * \date   January 2026
+ *********************************************************************/
+
 #pragma once
 
 // Simple frame rate controller.
