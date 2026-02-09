@@ -190,7 +190,7 @@ namespace Radis
                     std::bind(&RenderSystem::RenderSceneDeferredGeometryVK, this, std::placeholders::_1)
                 );
 
-                // Lighting pass - outputs to SceneHDR
+                // Lighting pass - directional/ambient → raw HDR to SceneHDR
                 rg->AddPass("LightingPass",
                     [&](RGPassBuilder& builder) {
                         builder.reads("gAlbedo");
@@ -198,9 +198,31 @@ namespace Radis
                         builder.reads("gPBR");
                         builder.reads("gEmissive");
                         builder.reads("SceneDepth");
-                        builder.writes(colorWriteTarget);
+                        builder.writes("SceneHDR");
                     },
                     std::bind(&RenderSystem::RenderSceneDeferredLightingVK, this, std::placeholders::_1)
+                );
+
+                // Light volumes pass - additive local lights → SceneHDR
+                rg->AddPass("LightVolumesPass",
+                    [&](RGPassBuilder& builder) {
+                        builder.reads("gAlbedo");
+                        builder.reads("gNormal");
+                        builder.reads("gPBR");
+                        builder.reads("gEmissive");
+                        builder.reads("SceneDepth");
+                        builder.writes("SceneHDR");
+                    },
+                    std::bind(&RenderSystem::RenderLightVolumesVK, this, std::placeholders::_1)
+                );
+
+                // Tone map pass - reads accumulated HDR, writes final output
+                rg->AddPass("ToneMapPass",
+                    [&](RGPassBuilder& builder) {
+                        builder.reads("SceneHDR");
+                        builder.writes(colorWriteTarget);
+                    },
+                    std::bind(&RenderSystem::RenderToneMapVK, this, std::placeholders::_1)
                 );
 
                 break;
@@ -483,11 +505,15 @@ namespace Radis
     void RenderSystem::CollectLightData()
     {
         mLightData.clear();
+        mDirectionalLightCount = 0;
+        mLocalLightCount = 0;
         auto& registry = ecs->GetRegistry();
 
+        // Pass 1: Directional lights first
         registry.view<LightComponent, TransformComponent>().each(
             [this](auto, LightComponent& lc, TransformComponent& tc)
             {
+                if (lc.LightType != LightComponent::Types::Directional) return; // Skip non-directional
                 mLightData.push_back({
                     .positionRadius = glm::vec4(tc.Translation, lc.Radius),
                     .colorIntensity = glm::vec4(lc.Color, lc.Intensity),
@@ -495,6 +521,21 @@ namespace Radis
                     .outerConeType = glm::vec4(lc.OuterCone, static_cast<float>(lc.LightType), 0.0f, 0.0f)
                     });
             });
+        mDirectionalLightCount = static_cast<uint32_t>(mLightData.size());
+
+        // Pass 2: Local lights (point + spot) after directional
+        registry.view<LightComponent, TransformComponent>().each(
+            [this](auto, LightComponent& lc, TransformComponent& tc)
+            {
+                if (lc.LightType == LightComponent::Types::Directional) return; // Skip directional
+                mLightData.push_back({
+                    .positionRadius = glm::vec4(tc.Translation, lc.Radius),
+                    .colorIntensity = glm::vec4(lc.Color, lc.Intensity),
+                    .directionInner = glm::vec4(glm::normalize(lc.Direction), lc.InnerCone),
+                    .outerConeType = glm::vec4(lc.OuterCone, static_cast<float>(lc.LightType), 0.0f, 0.0f)
+                    });
+            });
+        mLocalLightCount = static_cast<uint32_t>(mLightData.size()) - mDirectionalLightCount;
 
         struct LightHeader { uint32_t lightCount; uint32_t _pad[3]; };
         LightHeader header{ .lightCount = static_cast<uint32_t>(mLightData.size()) };
@@ -640,5 +681,62 @@ namespace Radis
                 data.meshID = meshID;
             }
         });
+    }
+
+    void RenderSystem::RenderLightVolumesVK(VkCommandBuffer cmd)
+    {
+        if (mLocalLightCount == 0) return;
+
+        auto rr = ecs->GetResource<RenderingResource>();
+        ModelLibrary* ml = rr->modelLibrary.get();
+        UnifiedMeshes* uMeshes = ml->GetUnifiedMesh();
+        ScopedDebugLabel label(rr->device.get(), cmd, "Light Volumes Pass", glm::vec4(1.0f, 0.5f, 0.0f, 1.0f));
+
+        // Load sphere mesh on first use
+        if (!mSphereLoaded)
+        {
+            Model* sphereModel = ml->TryAddGetModel("Assets/Models/sphere.glb");
+            if (sphereModel && !sphereModel->mMeshes.empty())
+            {
+                mSphereMeshID = sphereModel->mMeshes[0]->GetID();
+                mSphereLoaded = true;
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        // Bind pipeline, uniforms, viewport, mesh
+        rr->lightVolumePipeline->Bind(cmd);
+        rr->deferredLightingUniform->Bind(cmd, rr->lightVolumePipeline->GetLayout(), rr->currentFrameIndex);
+        SetViewportAndScissor(cmd, rr->swapChain->GetSwapChainExtent());
+        uMeshes->GetUnifiedMesh().Bind(cmd);
+
+        // Push constants: light offset + debug mode
+        LightVolumePushConstants pc{};
+        pc.directionalLightCount = mDirectionalLightCount;
+        pc.debugMode = mLightVolumeDebugMode;
+        vkCmdPushConstants(cmd, rr->lightVolumePipeline->GetLayout(),
+            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+            0, sizeof(LightVolumePushConstants), &pc);
+
+        // Single instanced draw for ALL local lights
+        const MeshInfo& sphereInfo = uMeshes->GetMeshInfo(mSphereMeshID);
+        vkCmdDrawIndexed(cmd, sphereInfo.indexCount, mLocalLightCount,
+            sphereInfo.firstIndex, sphereInfo.vertexOffset, 0);
+    }
+
+    void RenderSystem::RenderToneMapVK(VkCommandBuffer cmd)
+    {
+        auto rr = ecs->GetResource<RenderingResource>();
+        ScopedDebugLabel label(rr->device.get(), cmd, "Tone Map Pass", glm::vec4(0.5f, 0.2f, 0.8f, 1.0f));
+
+        rr->tonemapPipeline->Bind(cmd);
+        rr->tonemapUniform->Bind(cmd, rr->tonemapPipeline->GetLayout(), rr->currentFrameIndex);
+        SetViewportAndScissor(cmd, rr->swapChain->GetSwapChainExtent());
+
+        // Fullscreen triangle
+        vkCmdDraw(cmd, 3, 1, 0, 0);
     }
 }

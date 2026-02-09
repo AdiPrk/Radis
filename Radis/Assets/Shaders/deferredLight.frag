@@ -1,4 +1,4 @@
-#version 460
+﻿#version 460
 
 layout(location = 0) in vec2 fragTexCoord;
 
@@ -158,63 +158,25 @@ void main()
     {
         Light light = lightData.lights[i];
         
-        vec3 lightPos = light.positionRadius.xyz;
-        float lightRadius = light.positionRadius.w;
-        vec3 lightColor = light.colorIntensity.xyz;
-        float lightIntensity = light.colorIntensity.w;
         vec3 lightDir = light.directionInner.xyz;
-        float innerCone = light.directionInner.w;
-        float outerCone = light.outerConeType.x;
         float lightType = light.outerConeType.y;
+
+        // Skip local lights - handled by light volume pass
+        if (lightType != 0)
+            continue;
         
-        vec3 L;
+        vec3 L = normalize(-lightDir);
         float attenuation = 1.0;
 
-        if (lightType == 0) 
-        {
-            // Directional light
-            L = normalize(-lightDir);
-        }
-        else 
-        {
-            // Point / Spot light
-            vec3 toLight = lightPos - worldPos;
-            float dist = length(toLight);
-            
-            // Early out if outside light radius
-            if (dist >= lightRadius)
-                continue;
-                
-            L = toLight / dist;
-            attenuation = 1.0 - dist / lightRadius;
-            attenuation *= attenuation;
-        }
-
-        if (lightType == 2) 
-        {
-            // Spot light cone attenuation
-            float spotFactor = dot(L, normalize(-lightDir));
-            if (spotFactor < outerCone)
-                continue;
-            float smoothS = smoothstep(outerCone, innerCone, spotFactor);
-            attenuation *= smoothS;
-        }
-
-        vec3 lightCol = lightColor * lightIntensity * attenuation;
+        vec3 lightCol = light.colorIntensity.xyz * light.colorIntensity.w * attenuation;
         Lo += computePBRLight(albedo, metallic, roughness, N, V, L, lightCol);
     }
 
     // Ambient lighting with AO
     vec3 ambient = vec3(0.03) * albedo * ao;
     
-    // Final color (HDR)
+    // Output raw HDR — tone mapping happens in a dedicated post-process pass
     vec3 color = (Lo * ao) + ambient + emissive;
-
-    // Tone mapping (Reinhard)
-    color = color / (color + vec3(1.0));
-    
-    // Gamma correction
-    color = pow(color, vec3(1.0 / 2.2));
 
     outColor = vec4(color, 1.0);
 }

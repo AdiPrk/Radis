@@ -3,7 +3,7 @@
  * \brief  Implementation of the Pipeline class for Vulkan graphics pipelines.
  * 
  * \author Aditya Prakash
- * \date   January 2026
+ * \date   February 2026
  *********************************************************************/
 
 #include <PCH/pch.h>
@@ -77,6 +77,26 @@ namespace Radis
 		CreatePipeline();
 	}
 
+	Pipeline::Pipeline(Device& device, VkFormat colorFormat, VkFormat depthFormat, const std::vector<Uniform*>& uniforms, const std::string& vertFile, const std::string& fragFile, const PipelineOptions& options, bool useVertexInput)
+		: device(device)
+		, isWireframe(false)
+		, mVertPath(ShaderDir + vertFile)
+		, mFragPath(ShaderDir + fragFile)
+		, mTescPath("")
+		, mTesePath("")
+		, mColorFormats({ colorFormat })
+		, mDepthFormat(depthFormat)
+		, mUniforms(uniforms)
+		, mUseVertexInput(useVertexInput)
+		, mOptions(options)
+	{
+		mSpvVertPath = SpvDir + vertFile + ".spv";
+		mSpvFragPath = SpvDir + fragFile + ".spv";
+
+		CreatePipelineLayout(uniforms);
+		CreatePipeline();
+	}
+
 	void Pipeline::DestroyPipeline()
 	{
 		//Destroy shaders
@@ -135,7 +155,19 @@ namespace Radis
 		pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(uniformsDescriptorSetLayouts.size()); //Set how many layouts are being provided
 		pipelineLayoutCreateInfo.pSetLayouts = uniformsDescriptorSetLayouts.data();                           //Provide layouts
         
-		pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
+		// Push constants support via PipelineOptions
+		if (mOptions.pushConstantSize > 0)
+		{
+			pushConstantRange.stageFlags = mOptions.pushConstantStages;
+			pushConstantRange.offset = 0;
+			pushConstantRange.size = mOptions.pushConstantSize;
+			pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
+			pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
+		}
+		else
+		{
+			pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
+		}
 
 		//Create pipeline
 		if (vkCreatePipelineLayout(device.GetDevice(), &pipelineLayoutCreateInfo, nullptr, &mPipelineLayout) != VK_SUCCESS)
@@ -172,6 +204,30 @@ namespace Radis
 		//Formats
         pipelineConfig.colorFormats = mColorFormats;
         pipelineConfig.depthFormat = mDepthFormat;
+
+		// Apply PipelineOptions overrides
+		if (mOptions.additiveBlend)
+		{
+			pipelineConfig.colorBlendAttachment.blendEnable = VK_TRUE;
+			pipelineConfig.colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+			pipelineConfig.colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE;
+			pipelineConfig.colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+			pipelineConfig.colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+			pipelineConfig.colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+			pipelineConfig.colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+		}
+		if (mOptions.depthTestDisable)
+		{
+			pipelineConfig.depthStencilCreateInfo.depthTestEnable = VK_FALSE;
+		}
+		if (mOptions.depthWriteDisable)
+		{
+			pipelineConfig.depthStencilCreateInfo.depthWriteEnable = VK_FALSE;
+		}
+		if (mOptions.cullFrontFace)
+		{
+			pipelineConfig.rasterizationCreateInfo.cullMode = VK_CULL_MODE_FRONT_BIT;
+		}
 
 		//Create the pipeline
 		CreateGraphicsPipeline(pipelineConfig);
@@ -397,6 +453,21 @@ namespace Radis
 			colorBlendAttachments[i].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
 			colorBlendAttachments[i].dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
 			colorBlendAttachments[i].alphaBlendOp = VK_BLEND_OP_ADD;
+		}
+
+		// Apply PipelineOptions overrides to all blend attachments
+		if (mOptions.additiveBlend)
+		{
+			for (auto& att : colorBlendAttachments)
+			{
+				att.blendEnable = VK_TRUE;
+				att.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+				att.dstColorBlendFactor = VK_BLEND_FACTOR_ONE;
+				att.colorBlendOp = VK_BLEND_OP_ADD;
+				att.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+				att.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+				att.alphaBlendOp = VK_BLEND_OP_ADD;
+			}
 		}
 
 		// Update color blend state for MRT

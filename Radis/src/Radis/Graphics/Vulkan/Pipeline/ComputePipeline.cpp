@@ -60,8 +60,7 @@ namespace Radis
 
         DestroyPipeline();
 
-        if (!mCompPath.empty())
-            Shader::CompileShader(mCompPath);
+        if (!mCompPath.empty()) Shader::CompileShader(mCompPath);
 
         CreatePipeline();
     }
