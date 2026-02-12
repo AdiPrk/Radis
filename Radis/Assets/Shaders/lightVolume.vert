@@ -12,7 +12,7 @@ layout(location = 0) flat out uint lightIndex;
 layout(push_constant) uniform PushConstants {
     uint directionalLightCount;
     uint debugMode;
-    uint _pad[2];
+    vec2 invViewport;   // (1/width, 1/height) of your GBuffer/depth targets
 } pc;
 
 layout(set = 0, binding = 0) uniform Uniforms {

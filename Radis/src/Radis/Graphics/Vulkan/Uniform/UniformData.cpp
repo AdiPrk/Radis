@@ -3,7 +3,7 @@
  * \brief  Implementation of uniform data initialization for Vulkan rendering.
  * 
  * \author Aditya Prakash
- * \date   January 2026
+ * \date   February 2026
  *********************************************************************/
 
 #include <PCH/pch.h>

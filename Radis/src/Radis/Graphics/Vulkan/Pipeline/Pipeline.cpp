@@ -167,6 +167,7 @@ namespace Radis
 		else
 		{
 			pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
+            pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
 		}
 
 		//Create pipeline
@@ -205,17 +206,6 @@ namespace Radis
         pipelineConfig.colorFormats = mColorFormats;
         pipelineConfig.depthFormat = mDepthFormat;
 
-		// Apply PipelineOptions overrides
-		if (mOptions.additiveBlend)
-		{
-			pipelineConfig.colorBlendAttachment.blendEnable = VK_TRUE;
-			pipelineConfig.colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
-			pipelineConfig.colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE;
-			pipelineConfig.colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
-			pipelineConfig.colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-			pipelineConfig.colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-			pipelineConfig.colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
-		}
 		if (mOptions.depthTestDisable)
 		{
 			pipelineConfig.depthStencilCreateInfo.depthTestEnable = VK_FALSE;

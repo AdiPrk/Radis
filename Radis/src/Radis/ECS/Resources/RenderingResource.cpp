@@ -159,6 +159,7 @@ namespace Radis
         {
             textureLibrary->RecreateAllBuffers(device.get());
         }
+
         if (swapChain)
         {
             VkExtent2D extent = swapChain->GetSwapChainExtent();
