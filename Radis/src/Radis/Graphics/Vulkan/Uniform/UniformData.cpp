@@ -3,7 +3,7 @@
  * \brief  Implementation of uniform data initialization for Vulkan rendering.
  * 
  * \author Aditya Prakash
- * \date   January 2026
+ * \date   February 2026
  *********************************************************************/
 
 #include <PCH/pch.h>
@@ -318,6 +318,60 @@ namespace Radis
                 .range = lightBuffer.bufferSize
             };
             writer.WriteBuffer(6, &lightBufferInfo);
+
+            writer.Overwrite(uniform.GetDescriptorSets()[frameIndex]);
+        }
+    }
+
+    void TonemapUniformInit(Uniform& uniform, RenderingResource& renderData)
+    {
+        uniform.GetDescriptorSets().resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
+
+        VkSampler defaultSampler = renderData.textureLibrary->GetSampler();
+        VKTexture* sceneHDRTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("SceneHDR"));
+
+        if (!sceneHDRTex)
+        {
+            RADIS_ERROR("TonemapUniformInit: SceneHDR texture not found!");
+            return;
+        }
+
+        for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex)
+        {
+            DescriptorWriter writer(*uniform.GetDescriptorLayout(), *uniform.GetDescriptorPool());
+
+            VkDescriptorImageInfo imageInfo{
+                .sampler = defaultSampler,
+                .imageView = sceneHDRTex->GetImageView(),
+                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            };
+            writer.WriteImage(0, &imageInfo);
+
+            writer.Build(uniform.GetDescriptorSets()[frameIndex]);
+        }
+    }
+
+    void TonemapUniformUpdate(Uniform& uniform, RenderingResource& renderData)
+    {
+        VkSampler defaultSampler = renderData.textureLibrary->GetSampler();
+        VKTexture* sceneHDRTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("SceneHDR"));
+
+        if (!sceneHDRTex)
+        {
+            RADIS_ERROR("TonemapUniformUpdate: SceneHDR texture not found!");
+            return;
+        }
+
+        for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex)
+        {
+            DescriptorWriter writer(*uniform.GetDescriptorLayout(), *uniform.GetDescriptorPool());
+
+            VkDescriptorImageInfo imageInfo{
+                .sampler = defaultSampler,
+                .imageView = sceneHDRTex->GetImageView(),
+                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            };
+            writer.WriteImage(0, &imageInfo);
 
             writer.Overwrite(uniform.GetDescriptorSets()[frameIndex]);
         }

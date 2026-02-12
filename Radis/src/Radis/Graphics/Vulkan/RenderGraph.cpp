@@ -134,6 +134,8 @@ namespace Radis
             }
 
             // Handle write targets - transition to attachment optimal
+            // Track which resources were already in the write layout (previously written this frame)
+            std::unordered_set<RGResource*> previouslyWrittenResources;
             for (const auto& handleName : pass.writeTargets)
             {
                 RGResourceHandle handle = GetResourceHandle(handleName);
@@ -145,6 +147,12 @@ namespace Radis
                 VkImageLayout newLayout = isDepth ?
                     VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL :
                     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+                // If already in the target layout, a previous pass wrote to it this frame
+                if (resource.currentLayout == newLayout)
+                {
+                    previouslyWrittenResources.insert(&resource);
+                }
 
                 if (resource.currentLayout != newLayout)
                 {
@@ -209,7 +217,10 @@ namespace Radis
                         colorAttachments[i].resolveMode = VK_RESOLVE_MODE_NONE;
                         colorAttachments[i].resolveImageView = VK_NULL_HANDLE;
                         colorAttachments[i].resolveImageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-                        colorAttachments[i].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+                        // LOAD if a previous pass already wrote to this target, CLEAR otherwise
+                        colorAttachments[i].loadOp = previouslyWrittenResources.count(colorTargets[i]) > 0
+                            ? VK_ATTACHMENT_LOAD_OP_LOAD
+                            : VK_ATTACHMENT_LOAD_OP_CLEAR;
                         colorAttachments[i].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
                         colorAttachments[i].clearValue.color = { {0.0f, 0.0f, 0.0f, 1.0f} };
                     }
@@ -224,7 +235,9 @@ namespace Radis
                         depthAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
                         depthAttachment.resolveImageView = VK_NULL_HANDLE;
                         depthAttachment.resolveImageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-                        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+                        depthAttachment.loadOp = previouslyWrittenResources.count(depthTarget) > 0
+                            ? VK_ATTACHMENT_LOAD_OP_LOAD
+                            : VK_ATTACHMENT_LOAD_OP_CLEAR;
                         depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
                         depthAttachment.clearValue.depthStencil = { 1.0f, 0 };
                     }

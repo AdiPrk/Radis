@@ -21,6 +21,7 @@
 #include "Graphics/Vulkan/Uniform/Uniform.h"
 #include "Graphics/Vulkan/Uniform/UniformData.h"
 #include "Graphics/Vulkan/Uniform/Descriptors.h"
+#include "Graphics/Vulkan/Uniform/ShaderTypes.h"
 
 #include "Graphics/OpenGL/GLFrameBuffer.h"
 
@@ -158,6 +159,7 @@ namespace Radis
         {
             textureLibrary->RecreateAllBuffers(device.get());
         }
+
         if (swapChain)
         {
             VkExtent2D extent = swapChain->GetSwapChainExtent();
@@ -217,6 +219,15 @@ namespace Radis
                 VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             );
+
+            textureLibrary->CreateTexture(
+                "SceneHDR",
+                extent.width, extent.height,
+                hdrFormat,
+                VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            );
         }
 
         modelLibrary->QueueTextures();
@@ -229,10 +240,12 @@ namespace Radis
             cameraUniform = std::make_unique<Uniform>(*device, *this, cameraUniformSettings);
             rtUniform = std::make_unique<Uniform>(*device, *this, rayTracingUniformSettings);
             deferredLightingUniform = std::make_unique<Uniform>(*device, *this, deferredLightingUniformSettings);
+            tonemapUniform = std::make_unique<Uniform>(*device, *this, tonemapUniformSettings);
 
             std::vector<Uniform*> unis{ cameraUniform.get() };
             std::vector<Uniform*> rtunis{ cameraUniform.get(), rtUniform.get() };
             std::vector<Uniform*> deferredLightingUnis{ deferredLightingUniform.get() };
+            std::vector<Uniform*> tonemapUnis{ tonemapUniform.get() };
             
             VkFormat swapImageFormat = swapChain->GetImageFormat();
             VkFormat swapDepthFormat = swapChain->FindDepthFormat();
@@ -247,8 +260,23 @@ namespace Radis
             wireframePipeline = std::make_unique<Pipeline>(*device, hdrFormat, swapDepthFormat, unis, true, "forward.vert", "forward.frag");
             gBufferPipeline = std::make_unique<Pipeline>(*device, gBufferFormats, swapDepthFormat, unis, false, "deferred.vert", "deferred.frag");
 
-            // Deferred lighting outputs to HDR texture
+            // Deferred lighting outputs raw HDR to SceneHDR
             deferredLightingPipeline = std::make_unique<Pipeline>(*device, hdrFormat, VK_FORMAT_UNDEFINED, deferredLightingUnis, false, "fullscreen.vert", "deferredLight.frag", false);
+
+            // Light volume pipeline: additive blend, no depth test, front-face culling, push constants
+            {
+                PipelineOptions lightVolOpts;
+                lightVolOpts.additiveBlend = true;
+                lightVolOpts.depthTestDisable = true;
+                lightVolOpts.depthWriteDisable = true;
+                lightVolOpts.cullFrontFace = true;
+                lightVolOpts.pushConstantSize = sizeof(LightVolumePushConstants);
+                lightVolOpts.pushConstantStages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+                lightVolumePipeline = std::make_unique<Pipeline>(*device, hdrFormat, VK_FORMAT_UNDEFINED, deferredLightingUnis, "lightVolume.vert", "lightVolume.frag", lightVolOpts);
+            }
+
+            // Tone mapping: reads SceneHDR, outputs final color
+            tonemapPipeline = std::make_unique<Pipeline>(*device, hdrFormat, VK_FORMAT_UNDEFINED, tonemapUnis, false, "fullscreen.vert", "tonemap.frag", false);
 
             raytracingPipeline = std::make_unique<RaytracingPipeline>(*device, rtunis);
         }
@@ -292,11 +320,14 @@ namespace Radis
             cameraUniform.reset();
             rtUniform.reset();
             deferredLightingUniform.reset();
+            tonemapUniform.reset();
             pipeline.reset();
             wireframePipeline.reset();
             gBufferPipeline.reset();
             deferredLightingPipeline.reset();
+            lightVolumePipeline.reset();
             raytracingPipeline.reset();
+            tonemapPipeline.reset();
             syncObjects.reset();
 
             for (auto& blas : blasAccel)

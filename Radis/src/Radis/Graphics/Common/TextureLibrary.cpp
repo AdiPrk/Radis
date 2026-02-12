@@ -498,17 +498,17 @@ namespace Radis
 
             if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
             {
-                // If you have textureData.isStorageImage flag, pass the proper final layout
+                VkImageLayout finalLayout = (textureData.isStorageImage || textureData.isSpecialImage) ? textureData.finalLayout : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
                 mTextures[index] = std::make_unique<VKTexture>(*device, textureData);
-                CreateDescriptorSet(static_cast<VKTexture*>(mTextures[index].get()),
-                    (textureData.isStorageImage || textureData.isSpecialImage) ? textureData.finalLayout : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                CreateDescriptorSet(static_cast<VKTexture*>(mTextures[index].get()), finalLayout);
             }
             else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
             {
                 mTextures[index] = std::make_unique<GLTexture>(textureData);
             }
 
-            // Ensure mTextureMap has the same mapping still (this should be true if we didn't clear it).
+            // Ensure mTextureMap has the same mapping
             mTextureMap[textureData.name] = index;
         }
     }

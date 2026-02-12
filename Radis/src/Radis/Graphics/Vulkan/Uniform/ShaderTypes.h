@@ -57,21 +57,16 @@ namespace Radis
         glm::vec4 directionInner;    // xyz = direction, w = innerCone
         glm::vec4 outerConeType;     // x = outerCone, y = type (0=dir, 1=point, 2=spot), zw = padding
 
-        static const uint32_t MAX_LIGHTS = 200000;
+        static const uint32_t MAX_LIGHTS = 100000;
     };
 
-    /*struct MeshDataUniform {
-        glm::vec3 position; float _padding1 = 777.0f;
-        glm::vec3 color;    float _padding2 = 777.0f;
-        glm::vec3 normal;   float _padding3 = 777.0f;
-        glm::vec2 texCoord; glm::vec2 _padding4 = glm::vec2(777.0f);
-    };*/
-
-    /*struct MeshDataUniform2 {
-        glm::vec4 positionColorR;
-        glm::vec4 colorGBnormalXY;
-        glm::vec3 normalZtexXY; uint32_t padding;
-    };*/
+    // Push constants for light volume debug/control (16 bytes)
+    struct LightVolumePushConstants
+    {
+        uint32_t directionalLightCount; // Offset into light SSBO where local lights begin
+        uint32_t debugMode;             // 0=normal, 1=volume tint, 2=density heatmap
+        glm::vec2 invView;              // (1/width, 1/height) of GBuffer/depth targets
+    };
 
     struct MeshDataUniform
     {

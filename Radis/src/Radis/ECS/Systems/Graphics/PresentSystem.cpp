@@ -42,6 +42,7 @@ namespace Radis
         tl->ResizeStorageImage("RTHeatmapImage_1", extent.width, extent.height);
         tl->ResizeTexture("SceneTexture", extent.width, extent.height);
         tl->ResizeTexture("SceneDepth", extent.width, extent.height);
+        tl->ResizeTexture("SceneHDR", extent.width, extent.height);
         tl->ResizeTexture("gAlbedo", extent.width, extent.height);
         tl->ResizeTexture("gNormal", extent.width, extent.height);
         tl->ResizeTexture("gPBR", extent.width, extent.height);
@@ -50,6 +51,10 @@ namespace Radis
         if (rr->deferredLightingUniform)
         {
             DeferredLightingUniformUpdate(*rr->deferredLightingUniform, *rr);
+        }
+        if (rr->tonemapUniform)
+        {
+            TonemapUniformUpdate(*rr->tonemapUniform, *rr);
         }
     }
 
@@ -121,6 +126,7 @@ namespace Radis
 
         rg->ImportTexture("SceneTexture", (VKTexture*)tl->GetTexture("SceneTexture"));
         rg->ImportTexture("SceneDepth", (VKTexture*)tl->GetTexture("SceneDepth"));
+        rg->ImportTexture("SceneHDR", (VKTexture*)tl->GetTexture("SceneHDR"));
         rg->ImportTexture("gAlbedo", (VKTexture*)tl->GetTexture("gAlbedo"));
         rg->ImportTexture("gNormal", (VKTexture*)tl->GetTexture("gNormal"));
         rg->ImportTexture("gPBR", (VKTexture*)tl->GetTexture("gPBR"));

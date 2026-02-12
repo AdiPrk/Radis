@@ -15,6 +15,17 @@ namespace Radis
 	class Uniform;
 	class Device;
 
+	// Optional overrides for pipeline creation
+	struct PipelineOptions
+	{
+		bool additiveBlend = false;
+		bool depthTestDisable = false;
+		bool depthWriteDisable = false;
+		bool cullFrontFace = false;
+		uint32_t pushConstantSize = 0;
+		VkShaderStageFlags pushConstantStages = 0;
+	};
+
 	//Holds also configuration info for a pipeline
 	struct PipelineConfigInfo
 	{
@@ -69,6 +80,9 @@ namespace Radis
 		Pipeline(Device& device, VkFormat colorFormat, VkFormat depthFormat, const std::vector<Uniform*>& uniforms, bool wireframe, const std::string& vertFile, const std::string& fragFile, bool useVertexInput = true);
 		Pipeline(Device& device, VkFormat colorFormat, VkFormat depthFormat, const std::vector<Uniform*>& uniforms, bool wireframe, const std::string& vertFile, const std::string& fragFile, const std::string& tescFile, const std::string& teseFile, bool useVertexInput = true);
 
+		// Constructor with PipelineOptions for custom blend/depth/cull/push-constant settings
+		Pipeline(Device& device, VkFormat colorFormat, VkFormat depthFormat, const std::vector<Uniform*>& uniforms, const std::string& vertFile, const std::string& fragFile, const PipelineOptions& options, bool useVertexInput = true);
+
 		void DestroyPipeline();
 		void Recreate();
 
@@ -114,5 +128,8 @@ namespace Radis
         bool mIsWireframe;
         bool mUseVertexInput = true;
         const std::vector<Uniform*>& mUniforms;
+
+		// Optional overrides
+		PipelineOptions mOptions{};
 	};
 }

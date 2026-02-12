@@ -43,16 +43,17 @@ namespace Radis
             }
             if (ImGui::Button("LightTest+"))
             {
-                int n = 25;
+                int n = 10;
                 for (int x = 0; x < n; x++)
                 {
                     for (int y = 0; y < n; y++)
                     {
                         for (int z = 0; z < n; z++)
                         {
+                            float spacing = 3.f;
                             Entity debugEntity = ecs->AddEntity("l" + std::to_string(x) + "_" + std::to_string(y) + "_" + std::to_string(z));
                             auto& transform = debugEntity.GetComponent<TransformComponent>();
-                            transform.SetTranslation((float)x * 2.f, (float)y * 2.f, (float)z * 2.f);
+                            transform.SetTranslation((float)x * spacing, (float)y * spacing, (float)z * spacing);
 
                             // add model
                             auto& mc = debugEntity.AddComponent<ModelComponent>("assets/models/sphere.obj");
@@ -73,7 +74,7 @@ namespace Radis
             }
             if (ImGui::Button("SpamTest+"))
             {
-                int n = 75;
+                int n = 25;
                 for (int x = 0; x < n; x++)
                 {
                     for (int y = 0; y < n; y++)
@@ -84,9 +85,9 @@ namespace Radis
                             auto& transform = debugEntity.GetComponent<TransformComponent>();
                             
                             // add little offsets in tx ty and tz to make it not completely uniform 
-                            float tx = ((float)x - (float)(n / 2)) * 1.5f + (glm::fract(glm::sin((float)(x * y * z + 1)) * 43758.5453f) - 0.5f);
-                            float ty = ((float)y - (float)(n / 2)) * 1.5f + (glm::fract(glm::sin((float)(x * y * z + 2)) * 43758.5453f) - 0.5f);
-                            float tz = ((float)z - (float)(n / 2)) * 1.5f + (glm::fract(glm::sin((float)(x * y * z + 3)) * 43758.5453f) - 0.5f);
+                            float tx = ((float)x - (float)(n / 2)) * 1.5f ;// + (glm::fract(glm::sin((float)(x * y * z + 1)) * 43758.5453f) - 0.5f);
+                            float ty = ((float)y - (float)(n / 2)) * 1.5f ;// + (glm::fract(glm::sin((float)(x * y * z + 2)) * 43758.5453f) - 0.5f);
+                            float tz = ((float)z - (float)(n / 2)) * 1.5f ;// + (glm::fract(glm::sin((float)(x * y * z + 3)) * 43758.5453f) - 0.5f);
                             transform.SetTranslation(tx, ty, tz);
                             transform.SetScale(0.5f);
 

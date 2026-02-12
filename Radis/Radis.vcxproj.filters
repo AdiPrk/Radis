@@ -23,7 +23,6 @@
     <ClCompile Include="src\Radis\Graphics\Common\Animation\AnimationLibrary.cpp" />
     <ClCompile Include="src\Radis\Graphics\Common\Animation\Animator.cpp" />
     <ClCompile Include="src\Radis\Graphics\Common\Animation\Bone.cpp" />
-    <ClCompile Include="src\Radis\Graphics\Vulkan\VKMesh.cpp" />
     <ClCompile Include="src\Radis\Graphics\Common\ModelLibrary.cpp" />
     <ClCompile Include="src\Radis\Graphics\Vulkan\Pipeline\Pipeline.cpp" />
     <ClCompile Include="src\Radis\Graphics\Vulkan\Pipeline\VKShader.cpp" />
@@ -50,8 +49,6 @@
     <ClCompile Include="src\Radis\ECS\Systems\WindowSystem.cpp" />
     <ClCompile Include="src\Radis\Graphics\RHI\RHI.cpp" />
     <ClCompile Include="src\Radis\Graphics\Common\Model.cpp" />
-    <ClCompile Include="src\Radis\Graphics\RHI\IMesh.cpp" />
-    <ClCompile Include="src\Radis\Graphics\OpenGL\GLMesh.cpp" />
     <ClCompile Include="src\Radis\Graphics\OpenGL\GLShader.cpp" />
     <ClCompile Include="src\Radis\Graphics\OpenGL\GLFrameBuffer.cpp" />
     <ClCompile Include="src\Radis\Events\Event.cpp" />
@@ -96,6 +93,7 @@
     <ClCompile Include="src\Radis\Graphics\Vulkan\VKMeshBuffer.cpp" />
     <ClCompile Include="src\Radis\Graphics\OpenGL\GLMeshBuffer.cpp" />
     <ClCompile Include="src\Radis\Graphics\RHI\Mesh.cpp" />
+    <ClCompile Include="src\Radis\Graphics\Vulkan\Pipeline\ComputePipeline.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\nlohmann\json.hpp" />
@@ -140,7 +138,6 @@
     <ClInclude Include="src\Radis\Graphics\Common\Animation\Animator.h" />
     <ClInclude Include="src\Radis\Graphics\Common\Animation\Bone.h" />
     <ClInclude Include="src\Radis\Graphics\Common\Animation\VQS.h" />
-    <ClInclude Include="src\Radis\Graphics\Vulkan\VKMesh.h" />
     <ClInclude Include="src\Radis\Graphics\Common\ModelLibrary.h" />
     <ClInclude Include="src\Radis\Graphics\Vulkan\Pipeline\Pipeline.h" />
     <ClInclude Include="src\Radis\Graphics\Vulkan\Pipeline\VKShader.h" />
@@ -168,8 +165,6 @@
     <ClInclude Include="src\Radis\ECS\Systems\WindowSystem.h" />
     <ClInclude Include="src\Radis\Graphics\RHI\RHI.h" />
     <ClInclude Include="src\Radis\Graphics\Common\Model.h" />
-    <ClInclude Include="src\Radis\Graphics\RHI\IMesh.h" />
-    <ClInclude Include="src\Radis\Graphics\OpenGL\GLMesh.h" />
     <ClInclude Include="src\Radis\Graphics\OpenGL\GLShader.h" />
     <ClInclude Include="src\Radis\Graphics\OpenGL\GLFrameBuffer.h" />
     <ClInclude Include="src\Radis\Events\Event.h" />
@@ -215,8 +210,19 @@
     <ClInclude Include="src\Radis\Graphics\Vulkan\VKMeshBuffer.h" />
     <ClInclude Include="src\Radis\Graphics\OpenGL\GLMeshBuffer.h" />
     <ClInclude Include="src\Radis\Graphics\RHI\Mesh.h" />
+    <ClInclude Include="src\Radis\Graphics\Vulkan\Pipeline\ComputePipeline.h" />
   </ItemGroup>
   <ItemGroup>
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
@@ -432,5 +438,8 @@
     <None Include="Assets\Scenes\sponza.json" />
     <None Include="Assets\Scenes\lighttest.json" />
     <None Include="Assets\Scenes\cube.json" />
+    <None Include="Assets\Shaders\lightVolume.vert" />
+    <None Include="Assets\Shaders\lightVolume.frag" />
+    <None Include="Assets\Shaders\tonemap.frag" />
   </ItemGroup>
 </Project>

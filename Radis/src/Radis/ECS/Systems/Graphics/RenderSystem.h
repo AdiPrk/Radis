@@ -41,6 +41,8 @@ namespace Radis
         void RenderSceneVK(VkCommandBuffer cmd);
         void RenderSceneDeferredGeometryVK(VkCommandBuffer cmd);
         void RenderSceneDeferredLightingVK(VkCommandBuffer cmd);
+        void RenderLightVolumesVK(VkCommandBuffer cmd);
+        void RenderToneMapVK(VkCommandBuffer cmd);
         void RaytraceSceneVK(VkCommandBuffer cmd);
         void RenderSceneGL();
 
@@ -63,6 +65,10 @@ namespace Radis
         std::vector<uint8_t> mLightBuffer{};
 
         std::unordered_map<uint32_t, uint32_t> mMeshInstanceCounts{};
+
+        // Light counts for instanced rendering
+        uint32_t mDirectionalLightCount = 0;
+        uint32_t mLocalLightCount = 0;
     };
 }
 

@@ -51,6 +51,7 @@ namespace Radis
         std::unique_ptr<Uniform> cameraUniform;
         std::unique_ptr<Uniform> rtUniform;
         std::unique_ptr<Uniform> deferredLightingUniform;
+        std::unique_ptr<Uniform> tonemapUniform;
         // -------------------------
 
         std::vector<VkCommandBuffer> commandBuffers;
@@ -83,6 +84,8 @@ namespace Radis
         std::unique_ptr<Pipeline> wireframePipeline;
         std::unique_ptr<Pipeline> gBufferPipeline;
         std::unique_ptr<Pipeline> deferredLightingPipeline;
+        std::unique_ptr<Pipeline> lightVolumePipeline;
+        std::unique_ptr<Pipeline> tonemapPipeline;
         std::unique_ptr<RaytracingPipeline> raytracingPipeline;
         // -----------
 
@@ -99,7 +102,7 @@ namespace Radis
         // Render Mode
         RenderMode renderMode = RenderMode::Deferred;
         bool renderWireframe = false;
-
+        uint32_t lightVolumeDebugMode = 0;
         bool supportsVulkan = true;
 
         bool SupportsVulkan();

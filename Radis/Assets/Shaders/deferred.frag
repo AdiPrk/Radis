@@ -59,7 +59,6 @@ vec4 SampleTexture(uint texIndex, vec2 uv)
 
 // Octahedral normal encoding
 // Encodes a unit normal vector to a 2D octahedral representation
-// Reference: "A Survey of Efficient Representations for Independent Unit Vectors"
 vec2 OctEncode(vec3 n)
 {
     // Project to octahedron
