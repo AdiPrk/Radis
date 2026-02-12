@@ -30,7 +30,7 @@ struct Light {
     vec4 outerConeType;
 };
 
-#define MAX_LIGHTS 200000
+#define MAX_LIGHTS 100000
 layout(set = 0, binding = 6, std430) readonly buffer LightData {
     uint lightCount;
     Light lights[MAX_LIGHTS];

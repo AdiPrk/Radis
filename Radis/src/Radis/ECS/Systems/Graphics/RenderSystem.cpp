@@ -190,7 +190,7 @@ namespace Radis
                     std::bind(&RenderSystem::RenderSceneDeferredGeometryVK, this, std::placeholders::_1)
                 );
 
-                // Lighting pass - directional/ambient → raw HDR to SceneHDR
+                // Lighting pass - directional/ambient -> raw HDR to SceneHDR
                 rg->AddPass("LightingPass",
                     [&](RGPassBuilder& builder) {
                         builder.reads("gAlbedo");
@@ -203,7 +203,7 @@ namespace Radis
                     std::bind(&RenderSystem::RenderSceneDeferredLightingVK, this, std::placeholders::_1)
                 );
 
-                // Light volumes pass - additive local lights → SceneHDR
+                // Light volumes pass - additive local lights -> SceneHDR
                 rg->AddPass("LightVolumesPass",
                     [&](RGPassBuilder& builder) {
                         builder.reads("gAlbedo");
@@ -693,20 +693,11 @@ namespace Radis
         ScopedDebugLabel label(rr->device.get(), cmd, "Light Volumes Pass", glm::vec4(1.0f, 0.5f, 0.0f, 1.0f));
 
         // Load sphere mesh on first use
-        if (!mSphereLoaded)
-        {
-            Model* sphereModel = ml->TryAddGetModel("Assets/Models/sphere.glb");
-            if (sphereModel && !sphereModel->mMeshes.empty())
-            {
-                mSphereMeshID = sphereModel->mMeshes[0]->GetID();
-                mSphereLoaded = true;
-            }
-            else
-            {
-                return;
-            }
-        }
+        Model* sphereModel = ml->TryAddGetModel("Assets/Models/sphere.glb");
+        if (!sphereModel) return;
 
+        uint32_t sphereID = sphereModel->mMeshes[0]->GetID();
+        
         // Bind pipeline, uniforms, viewport, mesh
         rr->lightVolumePipeline->Bind(cmd);
         rr->deferredLightingUniform->Bind(cmd, rr->lightVolumePipeline->GetLayout(), rr->currentFrameIndex);
@@ -716,15 +707,16 @@ namespace Radis
         // Push constants: light offset + debug mode
         LightVolumePushConstants pc{};
         pc.directionalLightCount = mDirectionalLightCount;
-        pc.debugMode = mLightVolumeDebugMode;
-        vkCmdPushConstants(cmd, rr->lightVolumePipeline->GetLayout(),
-            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-            0, sizeof(LightVolumePushConstants), &pc);
+        pc.debugMode = rr->lightVolumeDebugMode;
 
-        // Single instanced draw for ALL local lights
-        const MeshInfo& sphereInfo = uMeshes->GetMeshInfo(mSphereMeshID);
-        vkCmdDrawIndexed(cmd, sphereInfo.indexCount, mLocalLightCount,
-            sphereInfo.firstIndex, sphereInfo.vertexOffset, 0);
+        auto tex = rr->textureLibrary->GetTexture("gAlbedo");
+        pc.invView = glm::vec2(1.0f / tex->GetWidth(), 1.0f / tex->GetHeight());
+
+        vkCmdPushConstants(cmd, rr->lightVolumePipeline->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(LightVolumePushConstants), &pc);
+
+        // Single instanced draw for all local lights
+        const MeshInfo& sphereInfo = uMeshes->GetMeshInfo(sphereID);
+        vkCmdDrawIndexed(cmd, sphereInfo.indexCount, mLocalLightCount, sphereInfo.firstIndex, sphereInfo.vertexOffset, 0);
     }
 
     void RenderSystem::RenderToneMapVK(VkCommandBuffer cmd)

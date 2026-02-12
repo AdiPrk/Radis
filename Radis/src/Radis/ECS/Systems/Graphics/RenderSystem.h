@@ -66,16 +66,9 @@ namespace Radis
 
         std::unordered_map<uint32_t, uint32_t> mMeshInstanceCounts{};
 
-        // Light volume sphere mesh
-        uint32_t mSphereMeshID = 0;
-        bool mSphereLoaded = false;
-
         // Light counts for instanced rendering
         uint32_t mDirectionalLightCount = 0;
         uint32_t mLocalLightCount = 0;
-
-        // Debug mode (0=normal, 1=volume tint, 2=density heatmap)
-        uint32_t mLightVolumeDebugMode = 0;
     };
 }
 

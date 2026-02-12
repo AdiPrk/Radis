@@ -1,15 +1,15 @@
 #version 460
 
 layout(location = 0) flat in uint lightIndex;
-
 layout(location = 0) out vec4 outColor;
 
-const float PI = 3.14159265359;
+const float PI     = 3.14159265359;
+const float INV_PI = 0.31830988618;
 
 layout(push_constant) uniform PushConstants {
     uint directionalLightCount;
-    uint debugMode;   // 0=normal, 1=volume tint, 2=density heatmap
-    uint _pad[2];
+    uint debugMode;
+    vec2 invViewport;   // (1/width, 1/height) of your GBuffer/depth targets
 } pc;
 
 layout(set = 0, binding = 0) uniform Uniforms {
@@ -20,80 +20,78 @@ layout(set = 0, binding = 0) uniform Uniforms {
     vec3 cameraPos;
 } uniforms;
 
-// G-Buffer textures
 layout(set = 0, binding = 1) uniform sampler2D gAlbedo;
 layout(set = 0, binding = 2) uniform sampler2D gNormal;
 layout(set = 0, binding = 3) uniform sampler2D gPBR;
-layout(set = 0, binding = 4) uniform sampler2D gEmissive;
+layout(set = 0, binding = 4) uniform sampler2D gEmissive; // (unused here)
 layout(set = 0, binding = 5) uniform sampler2D gDepth;
 
 struct Light {
-    vec4 positionRadius;
-    vec4 colorIntensity;
-    vec4 directionInner;
-    vec4 outerConeType;
+    vec4 positionRadius;   // xyz pos, w range
+    vec4 colorIntensity;   // xyz color, w intensity
+    vec4 directionInner;   // xyz dir, w innerCone
+    vec4 outerConeType;    // x outerCone, y type
 };
 
-#define MAX_LIGHTS 200000
+#define MAX_LIGHTS 100000
 layout(set = 0, binding = 6, std430) readonly buffer LightData {
     uint lightCount;
     Light lights[MAX_LIGHTS];
 } lightData;
 
-// --- PBR Functions ---
-
-float DistributionGGX(float NdotH, float roughness)
+// Optimized GGX D term
+float D_GGX(float NdotH, float a2)
 {
-    float a = roughness * roughness;
-    float a2 = a * a;
-    float NdotH2 = NdotH * NdotH;
-    float num = a2;
-    float den = (NdotH2 * (a2 - 1.0) + 1.0);
-    den = PI * den * den;
-    return num / (den + 0.0001);
+    float d = NdotH * NdotH * (a2 - 1.0) + 1.0;
+    return a2 / (PI * d * d + 1e-7);
 }
 
-float GeometrySchlickGGX(float NdotV, float roughness)
+// Smith height-correlated visibility
+float V_SmithGGXCorrelated(float NdotV, float NdotL, float a2)
 {
-    float r = (roughness + 1.0);
-    float k = (r * r) / 8.0;
-    return NdotV / (NdotV * (1.0 - k) + k);
+    float GGXV = NdotL * sqrt(NdotV * NdotV * (1.0 - a2) + a2);
+    float GGXL = NdotV * sqrt(NdotL * NdotL * (1.0 - a2) + a2);
+    return 0.5 / (GGXV + GGXL + 1e-7);
 }
 
-float GeometrySmith(float NdotV, float NdotL, float roughness)
+// Fast Fresnel (no pow)
+vec3 F_Schlick(float VdotH, vec3 F0)
 {
-    return GeometrySchlickGGX(NdotV, roughness) * GeometrySchlickGGX(NdotL, roughness);
-}
-
-vec3 FresnelSchlick(float cosTheta, vec3 F0)
-{
-    return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+    float f  = 1.0 - VdotH;
+    float f2 = f * f;
+    return F0 + (1.0 - F0) * (f2 * f2 * f);
 }
 
 vec3 computePBRLight(vec3 albedo, float metallic, float roughness, vec3 N, vec3 V, vec3 L, vec3 lightColor)
 {
-    vec3 F0 = mix(vec3(0.04), albedo, metallic);
+    float NdotL = max(dot(N, L), 0.0);
+    if (NdotL <= 0.0) return vec3(0.0);
+
     vec3 H = normalize(V + L);
 
-    float NdotL = max(dot(N, L), 0.0);
-    float NdotV = max(dot(N, V), 0.0);
+    float NdotV = max(dot(N, V), 1e-4);
     float NdotH = max(dot(N, H), 0.0);
     float VdotH = max(dot(V, H), 0.0);
 
-    float D = DistributionGGX(NdotH, roughness);
-    float G = GeometrySmith(NdotV, NdotL, roughness);
-    vec3 F = FresnelSchlick(VdotH, F0);
+    float a  = roughness * roughness;
+    float a2 = a * a;
 
-    vec3 specular = (D * G * F) / (4.0 * NdotV * NdotL + 1e-4);
-    vec3 kD = (1.0 - F) * (1.0 - metallic);
-    vec3 diffuse = kD * albedo / PI;
+    vec3 F0 = mix(vec3(0.04), albedo, metallic);
 
-    return (diffuse + specular) * NdotL * lightColor;
+    float D   = D_GGX(NdotH, a2);
+    float Vis = V_SmithGGXCorrelated(NdotV, NdotL, a2);
+    vec3  F   = F_Schlick(VdotH, F0);
+
+    vec3 specular = D * Vis * F;
+    vec3 kD       = (1.0 - F) * (1.0 - metallic);
+
+    return (kD * albedo * INV_PI + specular) * NdotL * lightColor;
 }
 
-vec3 ReconstructWorldPos(vec2 uv, float depth)
+vec3 ReconstructWorldPosFromNDC(vec2 ndc, float depth)
 {
-    vec4 clipPos = vec4(uv * 2.0 - 1.0, depth, 1.0);
+    // ndc already in [-1, 1]
+    vec4 clipPos  = vec4(ndc, depth, 1.0);
     vec4 worldPos = uniforms.invProjView * clipPos;
     return worldPos.xyz / worldPos.w;
 }
@@ -102,97 +100,119 @@ vec3 OctDecode(vec2 f)
 {
     f = f * 2.0 - 1.0;
     vec3 n = vec3(f.x, f.y, 1.0 - abs(f.x) - abs(f.y));
-    if (n.z < 0.0)
-    {
-        vec2 wrapped = (1.0 - abs(n.yx)) * vec2(n.x >= 0.0 ? 1.0 : -1.0, n.y >= 0.0 ? 1.0 : -1.0);
-        n.xy = wrapped;
-    }
+    float t = max(-n.z, 0.0);
+    n.xy += mix(vec2(t), vec2(-t), greaterThanEqual(n.xy, vec2(0.0)));
     return normalize(n);
 }
 
 void main()
 {
-    // lightIndex was computed in the vertex shader and passed via flat interpolation
-    Light light = lightData.lights[lightIndex];
+    // Integer pixel coords for texelFetch (exact)
+    ivec2 pix = ivec2(gl_FragCoord.xy);
 
-    vec3  lightPos       = light.positionRadius.xyz;
-    float range          = light.positionRadius.w;
-    vec3  lightColor     = light.colorIntensity.xyz;
-    float lightIntensity = light.colorIntensity.w;
-    float lightType      = light.outerConeType.y;
+    // Depth first
+    float depth = texelFetch(gDepth, pix, 0).r;
 
-    // Screen UV from fragment position
-    vec2 uv = gl_FragCoord.xy / vec2(textureSize(gAlbedo, 0));
-
-    float depth = texture(gDepth, uv).r;
-    if (depth >= 1.0)
+    // If cleared depth is 1.0, skip
+    if (depth > 0.999999)
     {
-        outColor = vec4(0.0, 0.0, 0.0, 0.0);
-        return;
+        discard;
     }
 
-    vec3 worldPos = ReconstructWorldPos(uv, depth);
-
-    float dist = distance(worldPos, lightPos);
-    if (dist >= range)
-    {
-        outColor = vec4(0.0, 0.0, 0.0, 0.0);
-        return;
-    }
-
-    // --- Debug Mode 2: Density heatmap (count overlapping lights) ---
-    if (pc.debugMode == 2)
+    // Debug modes
+    if (pc.debugMode == 2u)
     {
         outColor = vec4(0.04, 0.02, 0.0, 0.0);
         return;
     }
 
-    // --- Debug Mode 1: Volume tint (flat color per light) ---
-    if (pc.debugMode == 1)
+    // Convert pixel -> NDC
+    vec2 uv  = (vec2(pix) + 0.5) * pc.invViewport;      // [0,1]
+    vec2 ndc = uv * 2.0 - 1.0;                          // [-1,1]
+
+    // Load light data
+    Light light     = lightData.lights[lightIndex];
+    vec3  lightPos  = light.positionRadius.xyz;
+    float range     = light.positionRadius.w;
+    float rangeInv  = 1.0 / max(range, 1e-6);
+    float range2    = range * range;
+
+    // Reconstruct world position
+    vec3 worldPos = ReconstructWorldPosFromNDC(ndc, depth);
+
+    // Vector to light + squared distance
+    vec3  toLight = lightPos - worldPos;
+    float dist2   = dot(toLight, toLight);
+
+    // Sphere reject
+    if (dist2 >= range2)
     {
-        float hue = fract(float(lightIndex) * 0.618033988749895);
-        vec3 tint = vec3(
-            abs(hue * 6.0 - 3.0) - 1.0,
-            2.0 - abs(hue * 6.0 - 2.0),
-            2.0 - abs(hue * 6.0 - 4.0)
-        );
-        tint = clamp(tint, 0.0, 1.0);
-        float falloff = 1.0 - dist / range;
-        outColor = vec4(tint * falloff * 0.3, 0.0);
+        outColor = vec4(0.0);
         return;
     }
 
-    // --- Normal rendering (Mode 0) ---
-    vec3 albedo = texture(gAlbedo, uv).rgb;
-    vec3 N = OctDecode(texture(gNormal, uv).rg);
-    vec4 pbrSample = texture(gPBR, uv);
+    // Compute invDist cheaply; derive dist from it
+    float invDist = inversesqrt(max(dist2, 1e-12));
+    float dist    = dist2 * invDist;     // dist = sqrt(dist2)
+    vec3  L       = toLight * invDist;   // normalized(toLight)
+
+    // Debug mode 1 uses distance
+    if (pc.debugMode == 1u)
+    {
+        float hue = fract(float(lightIndex) * 0.618033988749895);
+        vec3 tint = clamp(vec3(
+            abs(hue * 6.0 - 3.0) - 1.0,
+            2.0 - abs(hue * 6.0 - 2.0),
+            2.0 - abs(hue * 6.0 - 4.0)
+        ), 0.0, 1.0);
+
+        outColor = vec4(tint * (1.0 - dist * rangeInv) * 0.3, 0.0);
+        return;
+    }
+
+    // Read textures
+    vec4 albedoAO  = texelFetch(gAlbedo, pix, 0);
+    vec4 pbrSample = texelFetch(gPBR,    pix, 0);
+    vec2 normalEnc = texelFetch(gNormal, pix, 0).rg;
+
+    vec3  albedo    = albedoAO.rgb;
+    vec3  N         = OctDecode(normalEnc);
     float metallic  = pbrSample.r;
     float roughness = pbrSample.g;
     float ao        = pbrSample.b;
 
     vec3 V = normalize(uniforms.cameraPos - worldPos);
-    vec3 L = normalize(lightPos - worldPos);
 
-    // Attenuation matching the original deferredLight.frag formula
-    float attenuation = 1.0 - dist / range;
-    attenuation *= attenuation;
+    // Smooth quadratic attenuation
+    float distNorm    = dist * rangeInv;
+    float oneMinus    = 1.0 - distNorm;
+    float attenuation = oneMinus * oneMinus;
 
     // Spot light cone attenuation
+    float lightType = light.outerConeType.y;
     if (lightType == 2.0)
     {
-        vec3  lightDir = light.directionInner.xyz;
+        vec3  lightDir  = light.directionInner.xyz;
         float innerCone = light.directionInner.w;
         float outerCone = light.outerConeType.x;
-        float spotFactor = dot(L, normalize(-lightDir));
+
+        // normalize(-lightDir) once
+        vec3  spotDir   = normalize(-lightDir);
+        float spotFactor = dot(L, spotDir);
+
         if (spotFactor < outerCone)
         {
-            outColor = vec4(0.0, 0.0, 0.0, 0.0);
+            outColor = vec4(0.0);
             return;
         }
+
         attenuation *= smoothstep(outerCone, innerCone, spotFactor);
     }
 
-    vec3 lightCol = lightColor * lightIntensity * attenuation;
+    vec3  lightColor     = light.colorIntensity.xyz;
+    float lightIntensity = light.colorIntensity.w;
+    vec3  lightCol       = lightColor * lightIntensity * attenuation;
+
     vec3 Lo = computePBRLight(albedo, metallic, roughness, N, V, L, lightCol);
 
     outColor = vec4(Lo * ao, 0.0);

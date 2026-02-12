@@ -219,7 +219,6 @@ namespace Radis
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             );
 
-            // Intermediate HDR accumulation target (lighting + light volumes write here)
             textureLibrary->CreateTexture(
                 "SceneHDR",
                 extent.width, extent.height,

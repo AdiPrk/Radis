@@ -50,9 +50,10 @@ namespace Radis
                     {
                         for (int z = 0; z < n; z++)
                         {
+                            float spacing = 3.f;
                             Entity debugEntity = ecs->AddEntity("l" + std::to_string(x) + "_" + std::to_string(y) + "_" + std::to_string(z));
                             auto& transform = debugEntity.GetComponent<TransformComponent>();
-                            transform.SetTranslation((float)x * 2.f, (float)y * 2.f, (float)z * 2.f);
+                            transform.SetTranslation((float)x * spacing, (float)y * spacing, (float)z * spacing);
 
                             // add model
                             auto& mc = debugEntity.AddComponent<ModelComponent>("assets/models/sphere.obj");

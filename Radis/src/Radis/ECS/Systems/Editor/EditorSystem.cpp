@@ -324,6 +324,16 @@ namespace Radis
         ImGui::BeginDisabled(rr->renderMode != RenderMode::Raytracing);
         ImGui::Checkbox("Raytracing Heatmap Estimation", &er->renderRaytracingHeatmap);
         ImGui::EndDisabled();
+
+        // lightVolumeDebugMode, combo of (0=normal, 1=volume tint, 2=density heatmap)
+        ImGui::Text("Light Volume Debug Mode:");
+        const char* lightVolumeDebugModeItems[] = { "Normal", "Volume Tint", "Density Heatmap" };
+        int currentLightVolumeDebugMode = rr->lightVolumeDebugMode;
+        if (ImGui::Combo("##LightVolumeDebugMode", &currentLightVolumeDebugMode, lightVolumeDebugModeItems, IM_ARRAYSIZE(lightVolumeDebugModeItems)))
+        {
+            rr->lightVolumeDebugMode = currentLightVolumeDebugMode;
+        }
+
         ImGui::End();
     }
 
