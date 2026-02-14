@@ -41,8 +41,8 @@ namespace Radis
         .AddASBinding(rtFlags, 1).SetDebugName("RT TLAS Buffer")
         .AddSSBIBinding(rtFlags, 1).SetDebugName("RT Color Image")
         .AddSSBIBinding(rtFlags, 1).SetDebugName("RT Heatmap Image")
-        .AddSSBOBinding(rtFlags, sizeof(MeshDataUniform), 2000000).SetDebugName("RT Vertices SSBO")
-        .AddSSBOBinding(rtFlags, sizeof(uint32_t), 10000000).SetDebugName("RT Indices SSBO");
+        .AddSSBOBinding(rtFlags, sizeof(MeshDataUniform), 10'000'000).SetDebugName("RT Vertices SSBO")
+        .AddSSBOBinding(rtFlags, sizeof(uint32_t), 30'000'000).SetDebugName("RT Indices SSBO");
 
     // Deferred lighting pass uniform settings
     // Binding 0: Camera UBO

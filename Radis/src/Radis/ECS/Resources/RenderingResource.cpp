@@ -102,6 +102,7 @@ namespace Radis
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "folderIcon.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "unknownFileIcon.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "shikaout.ktx2");
+            //textureLibrary->QueueTextureLoad(Assets::ImagesPath + "M_Soul_Rocks2_Inst_8_BaseColor.dds");
         }
         else
         {
@@ -122,6 +123,8 @@ namespace Radis
             modelLibrary->AddModel(Assets::ModelsPath + "SteampunkRobot.gltf", true);
             modelLibrary->AddModel(Assets::ModelsPath + "DragonAttenuation.glb", true);
             modelLibrary->AddModel(Assets::ModelsPath + "Sponza.gltf", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Curtains.gltf", true, false, false);
+            modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Main.gltf", true, false);
 
             // Model* sponzaModel = modelLibrary->GetModel(sponzaInd);
             //VFS::ModelSerializer::save(*sponzaModel, "Assets/Models/dm/Sponza.dm", 0xDEADBEEF);

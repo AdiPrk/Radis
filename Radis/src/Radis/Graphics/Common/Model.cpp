@@ -19,13 +19,14 @@
 
 namespace Radis
 {
-    Model::Model(Device& device, const std::string& filePath, bool fromDM, bool toDM)
+    Model::Model(Device& device, const std::string& filePath, ModelConfig& config)
+        : mConfig(config)
     {
         std::filesystem::path pathObj(filePath);
         mDirectory = pathObj.parent_path().string();
         mModelName = pathObj.stem().string();
 
-        if (fromDM)
+        if (config.fromDM)
         {
             RADIS_INFO("Loading {} from .dm model...", mModelName.c_str());
             ModelSerializer::load(*this, Assets::ModelsPath + "dm/" + mModelName + ".dm");
@@ -37,7 +38,7 @@ namespace Radis
         
         NormalizeModel();
         
-        if (toDM)
+        if (config.toDM)
         {
             RADIS_INFO("Saving {} to .dm model...", mModelName.c_str());
             ModelSerializer::save(*this, Assets::ModelsPath + "dm/" + mModelName + ".dm", 0x0);
@@ -66,12 +67,13 @@ namespace Radis
     {
         glm::mat4 nodeTransform = aiMatToGlm(node->mTransformation);
         glm::mat4 globalTransform = parentTransform * nodeTransform;
+        glm::mat3 normalMat = glm::transpose(glm::inverse(glm::mat3(globalTransform)));
 
         // Process each mesh in the current node
         for (unsigned int i = 0; i < node->mNumMeshes; i++)
         {
             aiMesh* aMesh = mScene->mMeshes[node->mMeshes[i]];
-            ProcessMesh(aMesh, globalTransform);
+            ProcessMesh(aMesh, globalTransform, normalMat);
         }
 
         // Recursively process each child node
@@ -81,7 +83,7 @@ namespace Radis
         }
     }
 
-    Mesh& Model::ProcessMesh(aiMesh* mesh, const glm::mat4& transform)
+    Mesh& Model::ProcessMesh(aiMesh* mesh, const glm::mat4& transform, const glm::mat3& normalMat)
     {
         // Create a new Mesh (the unified class, no longer VKMesh/GLMesh)
         auto& newMeshPtr = mMeshes.emplace_back(std::make_unique<Mesh>());
@@ -94,12 +96,19 @@ namespace Radis
         for (unsigned int j = 0; j < mesh->mNumVertices; j++)
         {
             Vertex vertex{};
-            vertex.position = { mesh->mVertices[j].x, mesh->mVertices[j].y, mesh->mVertices[j].z };
+
+            glm::vec4 pos = transform * glm::vec4(mesh->mVertices[j].x, mesh->mVertices[j].y, mesh->mVertices[j].z, 1.f);
+            vertex.position = { pos.x, pos.y, pos.z };
+
+            //vertex.position = { mesh->mVertices[j].x, mesh->mVertices[j].y, mesh->mVertices[j].z };
 
             // Normals
             if (mesh->HasNormals())
             {
-                vertex.normal = { mesh->mNormals[j].x, mesh->mNormals[j].y, mesh->mNormals[j].z };
+                glm::vec3 n = normalMat * glm::vec3(mesh->mNormals[j].x, mesh->mNormals[j].y, mesh->mNormals[j].z);
+                vertex.normal = glm::normalize(n);
+
+                //vertex.normal = { mesh->mNormals[j].x, mesh->mNormals[j].y, mesh->mNormals[j].z };
             }
 
             // UV Coordinates
@@ -146,7 +155,16 @@ namespace Radis
         glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), -center);
         glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(invScale));
 
-        mNormalizationMatrix = scaleMatrix * translationMatrix;
+        if (!mConfig.yUp)
+        {
+            glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(90.f), glm::vec3(1.f, 0.f, 0.f));
+            
+            mNormalizationMatrix = rotationMatrix * scaleMatrix * translationMatrix;
+        }
+        else
+        {
+        }
+            mNormalizationMatrix = scaleMatrix * translationMatrix;
     }
 
     void Model::ExtractBoneWeights(std::vector<Vertex>& vertices, aiMesh* mesh)
@@ -205,6 +223,9 @@ namespace Radis
             std::filesystem::path path(texturePath.C_Str());
             std::string filename = path.filename().string();
 
+            std::string res = Assets::ModelTexturesPath + mModelName + "/" + filename;
+            RADIS_INFO("Resolved external texture path: {}", res.c_str());
+
             return Assets::ModelTexturesPath + mModelName + "/" + filename;
         }
         
@@ -213,6 +234,8 @@ namespace Radis
             const std::size_t dataSize = static_cast<std::size_t>(embeddedTexture->mWidth);
             const unsigned char* src = reinterpret_cast<const unsigned char*>(embeddedTexture->pcData);
             outEmbeddedData.assign(src, src + dataSize);
+
+            RADIS_INFO("Resolved embedded texture with format hint '{}', size {} bytes", embeddedTexture->achFormatHint, dataSize);
 
             return "";
         }
@@ -274,7 +297,7 @@ namespace Radis
     {
         newMesh.normalTexturePath = ResolveTexturePath(
             material,
-            { aiTextureType_NORMAL_CAMERA, aiTextureType_NORMALS },
+            { aiTextureType_NORMALS }, // aiTextureType_NORMAL_CAMERA in the future perhaps
             newMesh.mNormalTextureData
         );
     }

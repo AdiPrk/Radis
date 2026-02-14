@@ -17,6 +17,13 @@ namespace Radis
 
     class Device;
 
+    struct ModelConfig
+    {
+        bool fromDM = false; // Whether to load from .dm serialized model
+        bool toDM = false;   // Whether to save to .dm serialized model after loading
+        bool yUp = true;     // Whether to convert from Y-up to Z-up coordinate system
+    };
+
     class Model
     {
     public:
@@ -24,7 +31,7 @@ namespace Radis
         Model(const Model&) = delete;
         Model& operator=(const Model&) = delete;
 
-        Model(Device& device, const std::string& filePath, bool fromDM = false, bool toDM = false);
+        Model(Device& device, const std::string& filePath, ModelConfig& config);
         ~Model();
 
         std::vector<std::unique_ptr<Mesh>> mMeshes;
@@ -45,7 +52,7 @@ namespace Radis
         // Load and process model using assimp
         void LoadMeshes(const std::string& filepath);
         void ProcessNode(aiNode* node, const glm::mat4& parentTransform = glm::mat4(1.f));
-        Mesh& ProcessMesh(aiMesh* mesh, const glm::mat4& transform);
+        Mesh& ProcessMesh(aiMesh* mesh, const glm::mat4& transform, const glm::mat3& normalMat);
 
         // Checks for textures in order of types to try
         std::string ResolveTexturePath(aiMaterial* material, const std::vector<aiTextureType>& typesToTry, std::vector<unsigned char>& outEmbeddedData);
@@ -73,5 +80,6 @@ namespace Radis
         // Animation data
         std::unordered_map<std::string, BoneInfo> mBoneInfoMap;
         int mBoneCount = 0;
+        ModelConfig mConfig;
     };
 }

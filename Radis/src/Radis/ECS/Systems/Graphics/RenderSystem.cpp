@@ -280,106 +280,6 @@ namespace Radis
         ExecuteInstancedDrawCalls(cmd);
     }
 
-    void RenderSystem::RenderSceneDeferredGeometryVK(VkCommandBuffer cmd)
-    {
-        auto rr = ecs->GetResource<RenderingResource>();
-        UnifiedMeshes* uMeshes = rr->modelLibrary->GetUnifiedMesh();
-        ScopedDebugLabel sceneDebugLabel(rr->device.get(), cmd, "Deferred G-Buffer Pass", glm::vec4(0.2f, 0.8f, 0.2f, 1.0f));
-
-        // Bind Pipeline, Uniforms, and Mesh
-        auto& pipeline = rr->gBufferPipeline;
-        pipeline->Bind(cmd);
-        rr->cameraUniform->Bind(cmd, pipeline->GetLayout(), rr->currentFrameIndex);
-        SetViewportAndScissor(cmd, rr->swapChain->GetSwapChainExtent());
-        uMeshes->GetUnifiedMesh().Bind(cmd);
-
-        // Execute Draw Calls
-        ExecuteInstancedDrawCalls(cmd);
-    }
-
-    void RenderSystem::RenderSceneDeferredLightingVK(VkCommandBuffer cmd)
-    {
-        auto rr = ecs->GetResource<RenderingResource>();
-        ScopedDebugLabel sceneDebugLabel(rr->device.get(), cmd, "Deferred Lighting Pass", glm::vec4(0.8f, 0.8f, 0.2f, 1.0f));
-
-        // Bind Pipeline and Uniforms
-        auto& pipeline = rr->deferredLightingPipeline;
-        pipeline->Bind(cmd);
-        rr->deferredLightingUniform->Bind(cmd, pipeline->GetLayout(), rr->currentFrameIndex);
-        SetViewportAndScissor(cmd, rr->swapChain->GetSwapChainExtent());
-
-        // Draw Fullscreen Quad
-        vkCmdDraw(cmd, 3, 1, 0, 0);
-    }
-
-    void RenderSystem::RaytraceSceneVK(VkCommandBuffer cmd)
-    {
-        auto rr = ecs->GetResource<RenderingResource>();
-        auto& rp = rr->raytracingPipeline;
-        ScopedDebugLabel rtDebugLabel(rr->device.get(), cmd, "Raytrace Scene", glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-     
-        // Update TLAS with mInstanceData
-        {
-            std::vector<VkAccelerationStructureInstanceKHR> tlasInstances;
-            tlasInstances.reserve(mInstanceData.size());
-            for (size_t i = 0; i < mInstanceData.size(); ++i)
-            {
-                const auto& instanceData = mInstanceData[i];
-                VkAccelerationStructureInstanceKHR asInstance{};
-                asInstance.transform = ToTransformMatrixKHR(instanceData.model);
-                asInstance.instanceCustomIndex = static_cast<uint32_t>(i);
-                asInstance.accelerationStructureReference = rr->blasAccel[instanceData.meshID].address;
-                asInstance.instanceShaderBindingTableRecordOffset = 0;
-                asInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
-                asInstance.mask = 0xFF;
-                tlasInstances.emplace_back(asInstance);
-            }
-
-            if (tlasInstances.empty())
-            {
-                VkAccelerationStructureInstanceKHR asInstance{};
-                asInstance.transform = ToTransformMatrixKHR(glm::mat4(0.0f));
-                asInstance.instanceCustomIndex = 0;
-                asInstance.accelerationStructureReference = rr->blasAccel[0].address;
-                asInstance.instanceShaderBindingTableRecordOffset = 0;
-                asInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
-                asInstance.mask = 0xFF;
-                tlasInstances.emplace_back(asInstance);
-            }
-
-            auto rtr = ecs->GetResource<RaytracingResource>();
-            rtr->UpdateTopLevelASImmediate(tlasInstances);
-        }
-        
-        // Bind Pipeline and Uniforms
-        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, rp->GetPipeline());
-        rr->cameraUniform->Bind(cmd, rp->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR);
-        rr->rtUniform->Bind(cmd, rp->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR);
-
-        // Trace Rays!
-        const VkExtent2D& size = rr->swapChain->GetSwapChainExtent();
-        vkCmdTraceRaysKHR(cmd, &rp->GetRaygenRegion(), &rp->GetMissRegion(), &rp->GetHitRegion(), &rp->GetCallableRegion(), size.width, size.height, 1);
-
-        // Synchronize ray tracing writes with subsequent reads
-        VkMemoryBarrier2 memoryBarrier = {
-            .sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER_2,
-            .pNext = nullptr,
-            .srcStageMask = VK_PIPELINE_STAGE_2_RAY_TRACING_SHADER_BIT_KHR,
-            .srcAccessMask = VK_ACCESS_2_SHADER_WRITE_BIT,
-            .dstStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT,
-            .dstAccessMask = VK_ACCESS_2_SHADER_READ_BIT
-        };
-
-        VkDependencyInfo dependencyInfo = {
-            .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
-            .pNext = nullptr,
-            .memoryBarrierCount = 1,
-            .pMemoryBarriers = &memoryBarrier
-        };
-
-        vkCmdPipelineBarrier2(cmd, &dependencyInfo);
-    }
-
     void RenderSystem::RenderSceneGL()
     {
         auto rr = ecs->GetResource<RenderingResource>();
@@ -653,7 +553,7 @@ namespace Radis
 
                 if (boneOffset == AnimationLibrary::INVALID_ANIMATION_INDEX)
                 {
-                    data.model = tc.GetTransform() * model->GetNormalizationMatrix();
+                    data.model = tc.GetTransform() /** model->GetNormalizationMatrix()*/;
                 }
                 else
                 {
@@ -681,6 +581,110 @@ namespace Radis
                 data.meshID = meshID;
             }
         });
+    }
+
+    void RenderSystem::RaytraceSceneVK(VkCommandBuffer cmd)
+    {
+        auto rr = ecs->GetResource<RenderingResource>();
+        auto& rp = rr->raytracingPipeline;
+        ScopedDebugLabel rtDebugLabel(rr->device.get(), cmd, "Raytrace Scene", glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+
+        // Update TLAS with mInstanceData
+        {
+            std::vector<VkAccelerationStructureInstanceKHR> tlasInstances;
+            tlasInstances.reserve(mInstanceData.size());
+            for (size_t i = 0; i < mInstanceData.size(); ++i)
+            {
+                const auto& instanceData = mInstanceData[i];
+                VkAccelerationStructureInstanceKHR asInstance{};
+                asInstance.transform = ToTransformMatrixKHR(instanceData.model);
+                asInstance.instanceCustomIndex = static_cast<uint32_t>(i);
+                asInstance.accelerationStructureReference = rr->blasAccel[instanceData.meshID].address;
+                asInstance.instanceShaderBindingTableRecordOffset = 0;
+                asInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
+                asInstance.mask = 0xFF;
+                tlasInstances.emplace_back(asInstance);
+            }
+
+            if (tlasInstances.empty())
+            {
+                VkAccelerationStructureInstanceKHR asInstance{};
+                asInstance.transform = ToTransformMatrixKHR(glm::mat4(0.0f));
+                asInstance.instanceCustomIndex = 0;
+                asInstance.accelerationStructureReference = rr->blasAccel[0].address;
+                asInstance.instanceShaderBindingTableRecordOffset = 0;
+                asInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
+                asInstance.mask = 0xFF;
+                tlasInstances.emplace_back(asInstance);
+            }
+
+            auto rtr = ecs->GetResource<RaytracingResource>();
+            rtr->UpdateTopLevelASImmediate(tlasInstances);
+        }
+
+        // Bind Pipeline and Uniforms
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, rp->GetPipeline());
+        rr->cameraUniform->Bind(cmd, rp->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR);
+        rr->rtUniform->Bind(cmd, rp->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR);
+
+        // Trace Rays!
+        const VkExtent2D& size = rr->swapChain->GetSwapChainExtent();
+        vkCmdTraceRaysKHR(cmd, &rp->GetRaygenRegion(), &rp->GetMissRegion(), &rp->GetHitRegion(), &rp->GetCallableRegion(), size.width, size.height, 1);
+
+        // Synchronize ray tracing writes with subsequent reads
+        VkMemoryBarrier2 memoryBarrier = {
+            .sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER_2,
+            .pNext = nullptr,
+            .srcStageMask = VK_PIPELINE_STAGE_2_RAY_TRACING_SHADER_BIT_KHR,
+            .srcAccessMask = VK_ACCESS_2_SHADER_WRITE_BIT,
+            .dstStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT,
+            .dstAccessMask = VK_ACCESS_2_SHADER_READ_BIT
+        };
+
+        VkDependencyInfo dependencyInfo = {
+            .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+            .pNext = nullptr,
+            .memoryBarrierCount = 1,
+            .pMemoryBarriers = &memoryBarrier
+        };
+
+        vkCmdPipelineBarrier2(cmd, &dependencyInfo);
+    }
+
+    // -----------------------------------------
+    // Deferred Rendering Passes
+    // -----------------------------------------
+
+    void RenderSystem::RenderSceneDeferredGeometryVK(VkCommandBuffer cmd)
+    {
+        auto rr = ecs->GetResource<RenderingResource>();
+        UnifiedMeshes* uMeshes = rr->modelLibrary->GetUnifiedMesh();
+        ScopedDebugLabel sceneDebugLabel(rr->device.get(), cmd, "Deferred G-Buffer Pass", glm::vec4(0.2f, 0.8f, 0.2f, 1.0f));
+
+        // Bind Pipeline, Uniforms, and Mesh
+        auto& pipeline = rr->gBufferPipeline;
+        pipeline->Bind(cmd);
+        rr->cameraUniform->Bind(cmd, pipeline->GetLayout(), rr->currentFrameIndex);
+        SetViewportAndScissor(cmd, rr->swapChain->GetSwapChainExtent());
+        uMeshes->GetUnifiedMesh().Bind(cmd);
+
+        // Execute Draw Calls
+        ExecuteInstancedDrawCalls(cmd);
+    }
+
+    void RenderSystem::RenderSceneDeferredLightingVK(VkCommandBuffer cmd)
+    {
+        auto rr = ecs->GetResource<RenderingResource>();
+        ScopedDebugLabel sceneDebugLabel(rr->device.get(), cmd, "Deferred Lighting Pass", glm::vec4(0.8f, 0.8f, 0.2f, 1.0f));
+
+        // Bind Pipeline and Uniforms
+        auto& pipeline = rr->deferredLightingPipeline;
+        pipeline->Bind(cmd);
+        rr->deferredLightingUniform->Bind(cmd, pipeline->GetLayout(), rr->currentFrameIndex);
+        SetViewportAndScissor(cmd, rr->swapChain->GetSwapChainExtent());
+
+        // Draw Fullscreen Quad
+        vkCmdDraw(cmd, 3, 1, 0, 0);
     }
 
     void RenderSystem::RenderLightVolumesVK(VkCommandBuffer cmd)

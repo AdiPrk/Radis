@@ -33,7 +33,7 @@ namespace Radis
         mUnifiedMesh->GetUnifiedMesh().ReleaseGPU();
     }
 
-    uint32_t ModelLibrary::AddModel(const std::string& filePath, bool fromDM, bool toDM)
+    uint32_t ModelLibrary::AddModel(const std::string& filePath, bool fromDM, bool toDM, bool yUp)
     {
         auto it = mModelMap.find(filePath);
         if (it != mModelMap.end())
@@ -41,7 +41,12 @@ namespace Radis
             return it->second;
         }
 
-        std::unique_ptr<Model> model = std::make_unique<Model>(mDevice, filePath, fromDM, toDM);
+        ModelConfig config;
+        config.fromDM = fromDM;
+        config.toDM = toDM;
+        config.yUp = yUp;
+
+        std::unique_ptr<Model> model = std::make_unique<Model>(mDevice, filePath, config);
         for (auto& mesh : model->mMeshes)
         {
             mesh->UploadToGPU(&mDevice);
