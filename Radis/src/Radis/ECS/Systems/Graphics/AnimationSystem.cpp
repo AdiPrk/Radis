@@ -76,29 +76,5 @@ namespace Radis
             ac.BoneOffset = boneOffset;
             boneOffset += static_cast<uint32_t>(finalMatrices.size());
         }
-
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
-        {
-            auto& rg = rr->renderGraph;
-            rg->AddPass(
-                "UpdateAnimationUniform",
-                [](RGPassBuilder& builder) {},
-                [&](VkCommandBuffer cmd)
-                {
-                    auto renderingData = ecs->GetResource<RenderingResource>();
-                    auto animationData = ecs->GetResource<AnimationResource>();
-                    renderingData->cameraUniform->SetUniformData(animationData->bonesMatrices, 2, renderingData->currentFrameIndex);
-                }
-            );
-        }
-        else
-        {
-            rr->shader->Use();
-            GLShader::SetupAnimationSSBO();
-            GLuint animationVBO = GLShader::GetAnimationSSBO();
-            glBindBuffer(GL_SHADER_STORAGE_BUFFER, animationVBO);
-            glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, bonesMatrices.size() * sizeof(VQS), bonesMatrices.data());
-            glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-        }
     }
 }

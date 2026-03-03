@@ -17,12 +17,13 @@
 
 namespace Radis
 {
-    ComputePipeline::ComputePipeline(Device& device, const std::vector<Uniform*>& uniforms, const std::string& compFile, const std::string& entryPoint)
+    ComputePipeline::ComputePipeline(Device& device, const std::vector<Uniform*>& uniforms, const std::string& compFile, const PushConstantInfo& pcInfo, const std::string& entryPoint)
         : device(device)
         , mCompPath(ShaderDir + compFile)
         , mSpvCompPath(SpvDir + compFile + ".spv")
         , mEntryPoint(entryPoint)
         , mUniforms(uniforms)
+        , mPcInfo(pcInfo)
     {
         CreatePipelineLayout(uniforms);
         CreatePipeline();
@@ -72,6 +73,8 @@ namespace Radis
 
     void ComputePipeline::CreatePipelineLayout(const std::vector<Uniform*>& uniforms)
     {
+        VkPushConstantRange pushConstantRange{};
+
         VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
         pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 
@@ -90,9 +93,19 @@ namespace Radis
         pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(uniformsDescriptorSetLayouts.size());
         pipelineLayoutCreateInfo.pSetLayouts = uniformsDescriptorSetLayouts.data();
 
-        // Push constants (none for now, same as your Pipeline)
-        pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
-        pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
+        if (mPcInfo.size > 0)
+        {
+            pushConstantRange.stageFlags = mPcInfo.stageFlags;
+            pushConstantRange.offset = 0;
+            pushConstantRange.size = mPcInfo.size;
+            pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
+            pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
+        }
+        else
+        {
+            pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
+            pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
+        }
 
         if (vkCreatePipelineLayout(device.GetDevice(), &pipelineLayoutCreateInfo, nullptr, &mPipelineLayout) != VK_SUCCESS)
         {

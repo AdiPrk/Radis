@@ -13,6 +13,7 @@
 #include "ECS/Resources/EditorResource.h"
 #include "ECS/Resources/DebugDrawResource.h"
 #include "ECS/Resources/WindowResource.h"
+#include "ECS/Resources/AnimationResource.h"
 #include "ECS/Resources/SwapRendererResource.h"
 #include "ECS/Resources/RaytracingResource.h"
 
@@ -24,6 +25,7 @@
 #include "Graphics/Common/ModelLibrary.h"
 #include "Graphics/Vulkan/Uniform/ShaderTypes.h"
 #include "Graphics/Vulkan/Pipeline/Pipeline.h"
+#include "Graphics/Vulkan/Pipeline/ComputePipeline.h"
 #include "Graphics/Vulkan/Pipeline/RaytracingPipeline.h"
 #include "Graphics/Common/Model.h"
 #include "Graphics/Vulkan/Uniform/Uniform.h"
@@ -130,7 +132,7 @@ namespace Radis
         }
 
         // Draw the editor grid
-        DebugDrawResource::DrawEditorGrid(50, 1.0f);
+        // DebugDrawResource::DrawEditorGrid(50, 1.0f);
 
         // Swap renderer backends
         // ecs->GetResource<SwapRendererResource>()->RequestSwap();
@@ -151,13 +153,59 @@ namespace Radis
         // Build Instances
         BuildInstanceData();
 
+        mShadowCamData = {};
+        bool foundShadowCam = false;
+        ecs->GetRegistry().view<LightComponent, TransformComponent>().each([&](auto, LightComponent& lc, TransformComponent& tc)
+        {
+            if (foundShadowCam) return;
+            if (lc.LightType != LightComponent::Types::Directional) return;
+
+            // Ensure direction is normalized
+            glm::vec3 L = glm::normalize(lc.Direction);
+
+            // Pick a shadow center (for now: camera position)
+            glm::vec3 center = camData.cameraPos;
+
+            // Move "eye" back along direction
+            float distBack = 50.0f; // just needs to be far enough behind the ortho volume
+            glm::vec3 eye = center - L * distBack;
+
+            // Robust up vector (avoid parallel to direction)
+            glm::vec3 up = (std::abs(L.y) > 0.99f) ? glm::vec3(0, 0, 1) : glm::vec3(0, 1, 0);
+
+            glm::mat4 lightView = glm::lookAt(eye, center, up);
+
+            // Ortho volume size (start simple)
+            float r = 5.0f;
+            float nearZ = 0.1f;
+            float farZ = 200.0f;
+            glm::mat4 lightProj = glm::ortho(-r, r, -r, r, nearZ, farZ);
+
+            mShadowCamData.lightView = lightView;
+            mShadowCamData.lightViewProj = lightProj * lightView;
+
+            // IMPORTANT: z0/z1 must be in LIGHT VIEW SPACE, matching what you compute in shader:
+            mShadowCamData.z0 = nearZ;
+            mShadowCamData.z1 = farZ;
+
+            foundShadowCam = true;
+        });
+
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
         {
-            rr->cameraUniform->SetUniformData(camData, 0, rr->currentFrameIndex);                // Set Camera Data
-            rr->cameraUniform->SetUniformData(mInstanceData, 1, rr->currentFrameIndex);          // Set Instance Data
-            rr->cameraUniform->SetUniformData(mLightBuffer, 4, rr->currentFrameIndex);           // Set Light Data
+            auto ar = ecs->GetResource<AnimationResource>();
+
+            rr->cameraUniform->SetUniformData(camData, 0, rr->currentFrameIndex);                  // Set Camera Data
+            rr->cameraUniform->SetUniformData(mInstanceData, 1, rr->currentFrameIndex);            // Set Instance Data
+            rr->cameraUniform->SetUniformData(ar->bonesMatrices, 2, rr->currentFrameIndex);        // Set Animation Data
+            rr->cameraUniform->SetUniformData(mLightBuffer, 4, rr->currentFrameIndex);             // Set Light Data
+            rr->shadowMomentsUniform->SetUniformData(mShadowCamData, 0, rr->currentFrameIndex);     // Set Shadow Camera Data
+            rr->shadowMomentsUniform->SetUniformData(mInstanceData, 1, rr->currentFrameIndex);     // Set Instance Data
+            rr->shadowMomentsUniform->SetUniformData(ar->bonesMatrices, 2, rr->currentFrameIndex); // Set Animation Data
+
             rr->deferredLightingUniform->SetUniformData(camData, 0, rr->currentFrameIndex);      // Camera data
             rr->deferredLightingUniform->SetUniformData(mLightBuffer, 6, rr->currentFrameIndex); // Light data
+            UpdateShadowParamsUBO(*rr, rr->currentFrameIndex);
 
             // Add Render Passes!
             auto& rg = rr->renderGraph;
@@ -178,6 +226,33 @@ namespace Radis
                 break;
             }
             case RenderMode::Deferred: {
+                // MSM pass
+                rg->AddPass("ShadowMomentsPass",
+                    [&](RGPassBuilder& b) {
+                        b.writes("ShadowMomentsRaw");
+                        b.writes("ShadowDepth");
+                    },
+                    std::bind(&RenderSystem::RenderShadowMomentsVK, this, std::placeholders::_1)
+                );
+
+                rg->AddPass("ShadowBlurH",
+                    [&](RGPassBuilder& b) {
+                        b.setCompute();
+                        b.reads("ShadowMomentsRaw");
+                        b.writes("ShadowMomentsTmp");
+                    },
+                    std::bind(&RenderSystem::RenderShadowBlurHVK, this, std::placeholders::_1)
+                );
+
+                rg->AddPass("ShadowBlurV",
+                    [&](RGPassBuilder& b) {
+                        b.setCompute(); 
+                        b.reads("ShadowMomentsTmp");
+                        b.writes("ShadowMoments");
+                    },
+                    std::bind(&RenderSystem::RenderShadowBlurVVK, this, std::placeholders::_1)
+                );
+
                 // G-Buffer pass
                 rg->AddPass("GBufferPass",
                     [&](RGPassBuilder& builder) {
@@ -239,7 +314,16 @@ namespace Radis
         }
         else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
         {
+            auto ar = ecs->GetResource<AnimationResource>();
+            rr->shader->Use();
             rr->shader->SetCameraUBO(camData);
+
+            GLShader::SetupAnimationSSBO();
+            GLuint animationVBO = GLShader::GetAnimationSSBO();
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, animationVBO);
+            glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, ar->bonesMatrices.size() * sizeof(VQS), ar->bonesMatrices.data());
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
             RenderSceneGL();
         }
     }
@@ -278,6 +362,76 @@ namespace Radis
 
         // Execute Draw Calls
         ExecuteInstancedDrawCalls(cmd);
+    }
+
+    void RenderSystem::RenderShadowMomentsVK(VkCommandBuffer cmd)
+    {
+        auto rr = ecs->GetResource<RenderingResource>();
+        ScopedDebugLabel label(rr->device.get(), cmd, "Shadow Moments Pass", glm::vec4(0.2f, 0.2f, 0.9f, 1.0f));
+
+        // Bind pipeline
+        rr->shadowMomentsPipeline->Bind(cmd);
+
+        // Bind shadow uniform (light matrices + instances)
+        rr->shadowMomentsUniform->Bind(cmd, rr->shadowMomentsPipeline->GetLayout(), rr->currentFrameIndex);
+
+        // Set viewport/scissor to shadow resolution
+        VKTexture* sm = static_cast<VKTexture*>(rr->textureLibrary->GetTexture("ShadowMomentsRaw"));
+        VkExtent2D ext{ (uint32_t)sm->GetWidth(), (uint32_t)sm->GetHeight() };
+        SetViewportAndScissor(cmd, ext);
+
+        // Bind unified mesh + draw instances
+        UnifiedMeshes* uMeshes = rr->modelLibrary->GetUnifiedMesh();
+        uMeshes->GetUnifiedMesh().Bind(cmd);
+        ExecuteInstancedDrawCalls(cmd);
+    }
+
+    static inline uint32_t DivUp(uint32_t a, uint32_t b) { return (a + b - 1) / b; }
+
+    void RenderSystem::RenderShadowBlurHVK(VkCommandBuffer cmd)
+    {
+        auto rr = ecs->GetResource<RenderingResource>();
+        ScopedDebugLabel label(rr->device.get(), cmd, "Shadow Blur H", glm::vec4(0.2f, 0.6f, 0.9f, 1.0f));
+
+        rr->shadowBlurHPipeline->Bind(cmd);
+        rr->shadowBlurHUniform->Bind(cmd, rr->shadowBlurHPipeline->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_COMPUTE);
+
+        VKTexture* src = static_cast<VKTexture*>(rr->textureLibrary->GetTexture("ShadowMomentsRaw"));
+
+        MSMBlurPC pc{};
+        pc.radius = 7;
+        pc.sigma = 3.5f;
+        pc.width = (int)src->GetWidth();
+        pc.height = (int)src->GetHeight();
+
+        vkCmdPushConstants(cmd, rr->shadowBlurHPipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(MSMBlurPC), &pc);
+
+        const uint32_t gx = DivUp(src->GetWidth(), 16);
+        const uint32_t gy = DivUp(src->GetHeight(), 16);
+        vkCmdDispatch(cmd, gx, gy, 1);
+    }
+
+    void RenderSystem::RenderShadowBlurVVK(VkCommandBuffer cmd)
+    {
+        auto rr = ecs->GetResource<RenderingResource>();
+        ScopedDebugLabel label(rr->device.get(), cmd, "Shadow Blur V", glm::vec4(0.2f, 0.6f, 0.9f, 1.0f));
+
+        rr->shadowBlurVPipeline->Bind(cmd);
+        rr->shadowBlurVUniform->Bind(cmd, rr->shadowBlurVPipeline->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_COMPUTE);
+
+        VKTexture* src = static_cast<VKTexture*>(rr->textureLibrary->GetTexture("ShadowMomentsTmp"));
+
+        MSMBlurPC pc{};
+        pc.radius = 7;
+        pc.sigma = 3.5;
+        pc.width = (int)src->GetWidth();
+        pc.height = (int)src->GetHeight();
+
+        vkCmdPushConstants(cmd, rr->shadowBlurVPipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(MSMBlurPC), &pc);
+
+        const uint32_t gx = DivUp(src->GetWidth(), 16);
+        const uint32_t gy = DivUp(src->GetHeight(), 16);
+        vkCmdDispatch(cmd, gx, gy, 1);
     }
 
     void RenderSystem::RenderSceneGL()
@@ -357,6 +511,28 @@ namespace Radis
         WindowResource* wr = ecs->GetResource<WindowResource>();
         glm::uvec2 extant = wr->window->GetExtent();
         return static_cast<float>(extant.x) / static_cast<float>(extant.y);
+    }
+
+    // Utilities
+    void RenderSystem::UpdateShadowParamsUBO(RenderingResource& rr, int frameIndex)
+    {
+        ShadowParamsUniform sp{};
+
+        sp.lightViewProj = mShadowCamData.lightViewProj;
+        sp.lightView = mShadowCamData.lightView;
+        float z0 = mShadowCamData.z0;
+        float z1 = mShadowCamData.z1;
+
+        float invRange = 1.0f / std::max(z1 - z0, 1e-6f);
+
+        const float alpha = 1e-3f; // good default for MSM
+        sp.zParams = glm::vec4(z0, z1, invRange, alpha);
+
+        VKTexture* sm = static_cast<VKTexture*>(rr.textureLibrary->GetTexture("ShadowMoments"));
+        sp.mapParams = glm::vec4(1.0f / sm->GetWidth(), 1.0f / sm->GetHeight(), 7.5f, 0.0f);
+
+        // Write to deferred lighting UBO binding
+        rr.deferredLightingUniform->SetUniformData(sp, 8, frameIndex);
     }
 
     void RenderSystem::SetViewportAndScissor(VkCommandBuffer cmd, const VkExtent2D& extent)
@@ -553,7 +729,7 @@ namespace Radis
 
                 if (boneOffset == AnimationLibrary::INVALID_ANIMATION_INDEX)
                 {
-                    data.model = tc.GetTransform() /** model->GetNormalizationMatrix()*/;
+                    data.model = tc.GetTransform() * model->GetNormalizationMatrix();
                 }
                 else
                 {

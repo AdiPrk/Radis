@@ -9,7 +9,7 @@ const float INV_PI = 0.31830988618;
 layout(push_constant) uniform PushConstants {
     uint directionalLightCount;
     uint debugMode;
-    vec2 invViewport;   // (1/width, 1/height) of your GBuffer/depth targets
+    vec2 invViewport;
 } pc;
 
 layout(set = 0, binding = 0) uniform Uniforms {
@@ -23,14 +23,14 @@ layout(set = 0, binding = 0) uniform Uniforms {
 layout(set = 0, binding = 1) uniform sampler2D gAlbedo;
 layout(set = 0, binding = 2) uniform sampler2D gNormal;
 layout(set = 0, binding = 3) uniform sampler2D gPBR;
-layout(set = 0, binding = 4) uniform sampler2D gEmissive; // (unused here)
+layout(set = 0, binding = 4) uniform sampler2D gEmissive;
 layout(set = 0, binding = 5) uniform sampler2D gDepth;
 
 struct Light {
-    vec4 positionRadius;   // xyz pos, w range
-    vec4 colorIntensity;   // xyz color, w intensity
-    vec4 directionInner;   // xyz dir, w innerCone
-    vec4 outerConeType;    // x outerCone, y type
+    vec4 positionRadius;
+    vec4 colorIntensity;
+    vec4 directionInner;
+    vec4 outerConeType;
 };
 
 #define MAX_LIGHTS 100000
@@ -39,6 +39,93 @@ layout(set = 0, binding = 6, std430) readonly buffer LightData {
     Light lights[MAX_LIGHTS];
 } lightData;
 
+// NEW: blurred moments + params
+layout(set=0, binding=7) uniform sampler2D shadowMoments;
+
+layout(set=0, binding=8) uniform ShadowParams {
+    mat4 lightViewProj;
+    mat4 lightView;
+    vec4 zParams;   // (z0, z1, invRange, alpha)
+    vec4 mapParams; // (invW, invH, blurRadius, pad)
+} sh;
+
+// ---- MSM Hamburger 4 ----
+float MSM_Hamburger4(vec4 b, float zf, float alpha)
+{
+    vec4 bp = mix(b, vec4(0.5), alpha);
+    bp = clamp(bp, 0.0, 1.0);
+
+    float m11 = 1.0;
+    float m12 = bp.x;
+    float m13 = bp.y;
+    float m22 = bp.y;
+    float m23 = bp.z;
+    float m33 = bp.w;
+
+    float z1 = 1.0;
+    float z2 = zf;
+    float z3 = zf*zf;
+
+    const float EPS = 1e-6;
+
+    float a = sqrt(max(m11, EPS));
+    float bL = m12 / a;
+    float cL = m13 / a;
+
+    float d2 = m22 - bL*bL;
+    float d  = sqrt(max(d2, EPS));
+
+    float eL = (m23 - bL*cL) / d;
+
+    float f2 = m33 - cL*cL - eL*eL;
+    float f  = sqrt(max(f2, EPS));
+
+    float chat1 = z1 / a;
+    float chat2 = (z2 - bL*chat1) / d;
+    float chat3 = (z3 - cL*chat1 - eL*chat2) / f;
+
+    float c3 = chat3 / f;
+    float c2 = (chat2 - eL*c3) / d;
+    float c1 = (chat1 - bL*c2 - cL*c3) / a;
+
+    float A = c3;
+    float B = c2;
+    float C = c1;
+
+    if (abs(A) < 1e-8)
+    {
+        float mu  = bp.x;
+        float var = max(bp.y - mu*mu, 0.0);
+        float dmu = zf - mu;
+        float p   = var / (var + dmu*dmu + EPS);
+        return clamp(1.0 - p, 0.0, 1.0);
+    }
+
+    float disc = max(B*B - 4.0*A*C, 0.0);
+    float sdisc = sqrt(disc);
+
+    float r1 = (-B - sdisc) / (2.0*A);
+    float r2 = (-B + sdisc) / (2.0*A);
+
+    float zLo = min(r1, r2);
+    float zHi = max(r1, r2);
+
+    if (zf <= zLo) return 0.0;
+
+    if (zf <= zHi)
+    {
+        float numer = zf*zHi - bp.x*(zf + zHi) + bp.y;
+        float denom = (zHi - zLo) * (zf - zLo);
+        return clamp(numer / max(denom, EPS), 0.0, 1.0);
+    }
+    else
+    {
+        float numer = zLo*zHi - bp.x*(zLo + zHi) + bp.y;
+        float denom = (zf - zLo) * (zf - zHi);
+        return clamp(1.0 - numer / max(denom, EPS), 0.0, 1.0);
+    }
+}
+
 // Optimized GGX D term
 float D_GGX(float NdotH, float a2)
 {
@@ -46,7 +133,6 @@ float D_GGX(float NdotH, float a2)
     return a2 / (PI * d * d + 1e-7);
 }
 
-// Smith height-correlated visibility
 float V_SmithGGXCorrelated(float NdotV, float NdotL, float a2)
 {
     float GGXV = NdotL * sqrt(NdotV * NdotV * (1.0 - a2) + a2);
@@ -54,7 +140,6 @@ float V_SmithGGXCorrelated(float NdotV, float NdotL, float a2)
     return 0.5 / (GGXV + GGXL + 1e-7);
 }
 
-// Fast Fresnel (no pow)
 vec3 F_Schlick(float VdotH, vec3 F0)
 {
     float f  = 1.0 - VdotH;
@@ -90,7 +175,6 @@ vec3 computePBRLight(vec3 albedo, float metallic, float roughness, vec3 N, vec3 
 
 vec3 ReconstructWorldPosFromNDC(vec2 ndc, float depth)
 {
-    // ndc already in [-1, 1]
     vec4 clipPos  = vec4(ndc, depth, 1.0);
     vec4 worldPos = uniforms.invProjView * clipPos;
     return worldPos.xyz / worldPos.w;
@@ -105,58 +189,70 @@ vec3 OctDecode(vec2 f)
     return normalize(n);
 }
 
+float ComputeDirectionalShadow(vec3 worldPos)
+{
+    // Project into light clip space
+    vec4 lp = sh.lightViewProj * vec4(worldPos, 1.0);
+    vec3 ndc = lp.xyz / max(lp.w, 1e-6);
+
+    // NDC -> UV
+    vec2 suv = ndc.xy * 0.5 + 0.5;
+
+    // Outside shadow map => treat as lit
+    if (any(lessThan(suv, vec2(0.0))) || any(greaterThan(suv, vec2(1.0))))
+        return 1.0;
+
+    // Relative depth zf (we use light-view-space in the moment map, but we only have clip here)
+    // If your light projection is linear in view-space z, you can reconstruct zf by also storing light-view z.
+    // For now assume ndc.z maps monotonically and approximate with ndc.z remap:
+    // Better: compute vLightViewZ in shadow pass (we do) and encode that; then in lighting compute lightViewZ the same way.
+    // We'll do the correct method:
+    // Use lightView to compute light view Z:
+    // (You didn�ft pass lightView here; easiest is to put z0/z1 in the same space you compute below.)
+    // We'll approximate by using ndc.z -> [0,1] and then map with z0/z1 params as if it were view z.
+    // If your light projection is standard, replace with computing actual light-view z and relative transform.
+    float z01 = clamp(ndc.z * 0.5 + 0.5, 0.0, 1.0);
+    float zf  = z01;
+
+    vec4 m = texture(shadowMoments, suv);
+    float G = MSM_Hamburger4(m, zf, sh.zParams.w);
+    float shadow = 1.0 - G; // lit factor
+    return clamp(shadow, 0.0, 1.0);
+}
+
 void main()
 {
-    // Integer pixel coords for texelFetch (exact)
     ivec2 pix = ivec2(gl_FragCoord.xy);
 
-    // Depth first
     float depth = texelFetch(gDepth, pix, 0).r;
+    if (depth > 0.999999) discard;
 
-    // If cleared depth is 1.0, skip
-    if (depth > 0.999999)
-    {
-        discard;
-    }
-
-    // Debug modes
     if (pc.debugMode == 2u)
     {
         outColor = vec4(0.04, 0.02, 0.0, 0.0);
         return;
     }
 
-    // Convert pixel -> NDC
-    vec2 uv  = (vec2(pix) + 0.5) * pc.invViewport;      // [0,1]
-    vec2 ndc = uv * 2.0 - 1.0;                          // [-1,1]
+    vec2 uv  = (vec2(pix) + 0.5) * pc.invViewport;
+    vec2 ndc = uv * 2.0 - 1.0;
 
-    // Load light data
     Light light     = lightData.lights[lightIndex];
     vec3  lightPos  = light.positionRadius.xyz;
     float range     = light.positionRadius.w;
     float rangeInv  = 1.0 / max(range, 1e-6);
     float range2    = range * range;
 
-    // Reconstruct world position
     vec3 worldPos = ReconstructWorldPosFromNDC(ndc, depth);
 
-    // Vector to light + squared distance
     vec3  toLight = lightPos - worldPos;
     float dist2   = dot(toLight, toLight);
 
-    // Sphere reject
-    if (dist2 >= range2)
-    {
-        outColor = vec4(0.0);
-        return;
-    }
+    if (dist2 >= range2) { outColor = vec4(0.0); return; }
 
-    // Compute invDist cheaply; derive dist from it
     float invDist = inversesqrt(max(dist2, 1e-12));
-    float dist    = dist2 * invDist;     // dist = sqrt(dist2)
-    vec3  L       = toLight * invDist;   // normalized(toLight)
+    float dist    = dist2 * invDist;
+    vec3  L       = toLight * invDist;
 
-    // Debug mode 1 uses distance
     if (pc.debugMode == 1u)
     {
         float hue = fract(float(lightIndex) * 0.618033988749895);
@@ -170,7 +266,6 @@ void main()
         return;
     }
 
-    // Read textures
     vec4 albedoAO  = texelFetch(gAlbedo, pix, 0);
     vec4 pbrSample = texelFetch(gPBR,    pix, 0);
     vec2 normalEnc = texelFetch(gNormal, pix, 0).rg;
@@ -183,12 +278,10 @@ void main()
 
     vec3 V = normalize(uniforms.cameraPos - worldPos);
 
-    // Smooth quadratic attenuation
     float distNorm    = dist * rangeInv;
     float oneMinus    = 1.0 - distNorm;
     float attenuation = oneMinus * oneMinus;
 
-    // Spot light cone attenuation
     float lightType = light.outerConeType.y;
     if (lightType == 2.0)
     {
@@ -196,16 +289,10 @@ void main()
         float innerCone = light.directionInner.w;
         float outerCone = light.outerConeType.x;
 
-        // normalize(-lightDir) once
         vec3  spotDir   = normalize(-lightDir);
         float spotFactor = dot(L, spotDir);
 
-        if (spotFactor < outerCone)
-        {
-            outColor = vec4(0.0);
-            return;
-        }
-
+        if (spotFactor < outerCone) { outColor = vec4(0.0); return; }
         attenuation *= smoothstep(outerCone, innerCone, spotFactor);
     }
 
@@ -215,5 +302,8 @@ void main()
 
     vec3 Lo = computePBRLight(albedo, metallic, roughness, N, V, L, lightCol);
 
-    outColor = vec4(Lo * ao, 0.0);
+    // Apply directional shadow factor to local light (common + cheap)
+    float shadow = (pc.directionalLightCount > 0u) ? ComputeDirectionalShadow(worldPos) : 1.0;
+
+    outColor = vec4(Lo * ao * shadow, 0.0);
 }

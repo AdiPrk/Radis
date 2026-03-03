@@ -20,6 +20,7 @@ namespace Radis
     class SwapChain;
     class Synchronizer;
     class Pipeline;
+    class ComputePipeline;
     class RaytracingPipeline;
     class Renderer;
     class RenderGraph;
@@ -52,6 +53,9 @@ namespace Radis
         std::unique_ptr<Uniform> rtUniform;
         std::unique_ptr<Uniform> deferredLightingUniform;
         std::unique_ptr<Uniform> tonemapUniform;
+        std::unique_ptr<Uniform> shadowMomentsUniform;
+        std::unique_ptr<Uniform> shadowBlurHUniform;
+        std::unique_ptr<Uniform> shadowBlurVUniform;
         // -------------------------
 
         std::vector<VkCommandBuffer> commandBuffers;
@@ -87,6 +91,9 @@ namespace Radis
         std::unique_ptr<Pipeline> lightVolumePipeline;
         std::unique_ptr<Pipeline> tonemapPipeline;
         std::unique_ptr<RaytracingPipeline> raytracingPipeline;
+        std::unique_ptr<Pipeline> shadowMomentsPipeline;
+        std::unique_ptr<ComputePipeline> shadowBlurHPipeline;
+        std::unique_ptr<ComputePipeline> shadowBlurVPipeline;
         // -----------
 
         // OPENGL STUFFS

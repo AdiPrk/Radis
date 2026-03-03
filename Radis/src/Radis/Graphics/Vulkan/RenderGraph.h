@@ -18,6 +18,14 @@ namespace Radis
         void operator=(const uint32_t& idx) { index = idx; }
     };
 
+    // What kind of GPU work a pass does
+    enum class PassType
+    {
+        Graphics,   // uses vkCmdBeginRendering
+        Compute,    // no render pass, writes storage images (GENERAL)
+        Raytrace,   // no render pass
+    };
+
     // Internal representation of a resource's state.
     struct RGResource
     {
@@ -30,6 +38,10 @@ namespace Radis
 
         // State tracking for automatic barriers
         VkImageLayout currentLayout{ VK_IMAGE_LAYOUT_UNDEFINED };
+
+        // Which pipeline stage last wrote this resource
+        VkPipelineStageFlags lastWriteStage{ VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT };
+        VkAccessFlags        lastWriteAccess{ 0 };
     };
 
     struct RGPass; // Forward declaration
@@ -47,6 +59,11 @@ namespace Radis
         // Declare that this pass reads from a resource.
         void reads(const std::string& handleName);
 
+        // Mark this pass as a compute pass (write targets transition to GENERAL)
+        void setCompute();
+
+        // Mark this pass as a ray tracing pass (no render pass, no layout transitions).
+        void setRaytrace();
 
     private:
         RGPass& m_pass;
@@ -55,11 +72,9 @@ namespace Radis
     // Logical description of a render pass and its resource usage.
     struct RGPass {
         std::string name;
+        PassType type{ PassType::Graphics };
         std::function<void(RGPassBuilder&)> setupCallback;
         std::function<void(VkCommandBuffer)> executeCallback;
-
-        //std::vector<RGResourceHandle> writeTargets;
-        //std::vector<RGResourceHandle> readTargets;
 
         std::vector<std::string> writeTargets;
         std::vector<std::string> readTargets;

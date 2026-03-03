@@ -14,6 +14,7 @@
 #include "Graphics/Vulkan/Core/SwapChain.h"
 #include "Graphics/Vulkan/Core/Synchronization.h"
 #include "Graphics/Vulkan/Pipeline/Pipeline.h"
+#include "Graphics/Vulkan/Pipeline/ComputePipeline.h"
 #include "Graphics/Vulkan/Pipeline/RaytracingPipeline.h"
 #include "Graphics/Vulkan/RenderGraph.h"
 #include "Graphics/Vulkan/Texture/VKTexture.h"
@@ -123,8 +124,8 @@ namespace Radis
             modelLibrary->AddModel(Assets::ModelsPath + "SteampunkRobot.gltf", true);
             modelLibrary->AddModel(Assets::ModelsPath + "DragonAttenuation.glb", true);
             modelLibrary->AddModel(Assets::ModelsPath + "Sponza.gltf", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Curtains.gltf", true, false, false);
-            modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Main.gltf", true, false);
+            // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Curtains.gltf", true, false, false);
+            // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Main.gltf", true, false);
 
             // Model* sponzaModel = modelLibrary->GetModel(sponzaInd);
             //VFS::ModelSerializer::save(*sponzaModel, "Assets/Models/dm/Sponza.dm", 0xDEADBEEF);
@@ -169,6 +170,51 @@ namespace Radis
 
             // HDR format for scene color (before tonemapping)
             VkFormat hdrFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+            VkFormat momentsFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+
+            // Choose shadow resolution (can be independent of swapchain)
+            uint32_t shadowW = 2048;
+            uint32_t shadowH = 2048;
+
+            // Raw moments written by raster pass
+            textureLibrary->CreateTexture(
+                "ShadowMomentsRaw",
+                shadowW, shadowH,
+                momentsFormat,
+                VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            );
+
+            // Temp (H blur output)
+            textureLibrary->CreateTexture(
+                "ShadowMomentsTmp",
+                shadowW, shadowH,
+                momentsFormat,
+                VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
+                VK_IMAGE_LAYOUT_GENERAL
+            );
+
+            // Final blurred moments sampled by lighting
+            textureLibrary->CreateTexture(
+                "ShadowMoments",
+                shadowW, shadowH,
+                momentsFormat,
+                VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
+                VK_IMAGE_LAYOUT_GENERAL
+            );
+
+            // Optional depth for shadow pass (recommended)
+            textureLibrary->CreateTexture(
+                "ShadowDepth",
+                shadowW, shadowH,
+                swapChain->FindDepthFormat(),
+                VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
+            );
 
             // Create HDR scene texture
             textureLibrary->CreateTexture(
@@ -244,14 +290,21 @@ namespace Radis
             rtUniform = std::make_unique<Uniform>(*device, *this, rayTracingUniformSettings);
             deferredLightingUniform = std::make_unique<Uniform>(*device, *this, deferredLightingUniformSettings);
             tonemapUniform = std::make_unique<Uniform>(*device, *this, tonemapUniformSettings);
+            shadowMomentsUniform = std::make_unique<Uniform>(*device, *this, shadowMomentsUniformSettings);
+            shadowBlurHUniform = std::make_unique<Uniform>(*device, *this, shadowBlurHUniformSettings);
+            shadowBlurVUniform = std::make_unique<Uniform>(*device, *this, shadowBlurVUniformSettings);
 
             std::vector<Uniform*> unis{ cameraUniform.get() };
             std::vector<Uniform*> rtunis{ cameraUniform.get(), rtUniform.get() };
             std::vector<Uniform*> deferredLightingUnis{ deferredLightingUniform.get() };
             std::vector<Uniform*> tonemapUnis{ tonemapUniform.get() };
+            std::vector<Uniform*> shadowUnis{ shadowMomentsUniform.get() };
+            std::vector<Uniform*> blurHUnis{ shadowBlurHUniform.get() };
+            std::vector<Uniform*> blurVUnis{ shadowBlurVUniform.get() };
             
             VkFormat swapImageFormat = swapChain->GetImageFormat();
             VkFormat swapDepthFormat = swapChain->FindDepthFormat();
+            VkFormat momentsFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
             VkFormat hdrFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
             VkFormat albedoFormat = VK_FORMAT_R8G8B8A8_SRGB;
             VkFormat normalFormat = VK_FORMAT_R16G16_SFLOAT;
@@ -261,9 +314,16 @@ namespace Radis
 
             pipeline = std::make_unique<Pipeline>(*device, hdrFormat, swapDepthFormat, unis, false, "forward.vert", "forward.frag");
             wireframePipeline = std::make_unique<Pipeline>(*device, hdrFormat, swapDepthFormat, unis, true, "forward.vert", "forward.frag");
-            gBufferPipeline = std::make_unique<Pipeline>(*device, gBufferFormats, swapDepthFormat, unis, false, "deferred.vert", "deferred.frag");
+            
+            shadowMomentsPipeline = std::make_unique<Pipeline>(*device, momentsFormat, swapDepthFormat, shadowUnis, false, "shadowMoments.vert", "shadowMoments.frag");
 
-            // Deferred lighting outputs raw HDR to SceneHDR
+            PushConstantInfo computePC;
+            computePC.size = sizeof(MSMBlurPC);
+            computePC.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+            shadowBlurHPipeline = std::make_unique<ComputePipeline>(*device, blurHUnis, "msmBlurH.comp", computePC);
+            shadowBlurVPipeline = std::make_unique<ComputePipeline>(*device, blurVUnis, "msmBlurV.comp", computePC);
+            
+            gBufferPipeline = std::make_unique<Pipeline>(*device, gBufferFormats, swapDepthFormat, unis, false, "deferred.vert", "deferred.frag");
             deferredLightingPipeline = std::make_unique<Pipeline>(*device, hdrFormat, VK_FORMAT_UNDEFINED, deferredLightingUnis, false, "fullscreen.vert", "deferredLight.frag", false);
 
             // Light volume pipeline: additive blend, no depth test, front-face culling, push constants
@@ -322,10 +382,16 @@ namespace Radis
             renderGraph.reset();
             cameraUniform.reset();
             rtUniform.reset();
+            shadowMomentsUniform.reset();
+            shadowBlurHUniform.reset();
+            shadowBlurVUniform.reset();
             deferredLightingUniform.reset();
             tonemapUniform.reset();
             pipeline.reset();
             wireframePipeline.reset();
+            shadowMomentsPipeline.reset();
+            shadowBlurHPipeline.reset();
+            shadowBlurVPipeline.reset();
             gBufferPipeline.reset();
             deferredLightingPipeline.reset();
             lightVolumePipeline.reset();

@@ -3,6 +3,11 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+*NewSponza_Main/
+*NewSponza_Curtains/
+NewSponza_Main.dm
+NewSponza_Curtains.dm
+
 # User-specific files
 *.rsuser
 *.suo

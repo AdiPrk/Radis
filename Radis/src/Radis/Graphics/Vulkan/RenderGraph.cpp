@@ -22,6 +22,16 @@ namespace Radis
         m_pass.readTargets.push_back(handleName);
     }
 
+    void RGPassBuilder::setCompute()
+    {
+        m_pass.type = PassType::Compute;
+    }
+
+    void RGPassBuilder::setRaytrace()
+    {
+        m_pass.type = PassType::Raytrace;
+    }
+
     RGResourceHandle RenderGraph::ImportTexture(const char* name, VKTexture* tex, bool backBuffer)
     {
         if (!tex)
@@ -88,21 +98,26 @@ namespace Radis
     {
         for (const auto& pass : mPasses)
         {
-            // --- 1. Automatic Barrier Insertion (Image Layout Transitions) ---
+            const bool isCompute = (pass.type == PassType::Compute);
+            const bool isRaytrace = (pass.type == PassType::Raytrace);
 
-            // Handle read targets - transition to shader read optimal
+            // ---------------------------------------------------------------
+            // Barriers for READ targets
+            // - Graphics: transition to SHADER_READ_ONLY_OPTIMAL, dst stage = FRAGMENT_SHADER
+            // - Compute reads: transition to SHADER_READ_ONLY_OPTIMAL, dst stage = COMPUTE_SHADER
+            // ---------------------------------------------------------------
             for (const auto& handleName : pass.readTargets)
             {
                 RGResourceHandle handle = GetResourceHandle(handleName);
                 if (handle.index == UINT32_MAX) continue;
-                
+
                 RGResource& resource = mResources[handle.index];
                 bool isDepth = IsDepthFormat(resource.format);
-                
-                VkImageLayout targetLayout = isDepth ? 
-                    VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL : 
-                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                
+
+                VkImageLayout targetLayout = isDepth
+                    ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
+                    : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
                 if (resource.currentLayout != targetLayout)
                 {
                     VkImageMemoryBarrier barrier{};
@@ -118,37 +133,58 @@ namespace Radis
                     barrier.subresourceRange.baseArrayLayer = 0;
                     barrier.subresourceRange.layerCount = 1;
 
-                    // From color/depth attachment write to shader read
-                    barrier.srcAccessMask = isDepth ? VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT : VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+                    // src: whatever wrote this resource last frame/pass
+                    barrier.srcAccessMask = resource.lastWriteAccess;
                     barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-                    VkPipelineStageFlags srcStage = isDepth ? VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT : VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+                    VkPipelineStageFlags dstStage = isCompute
+                        ? VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT
+                        : VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 
-                    vkCmdPipelineBarrier(cmd,
-                        srcStage,
-                        VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                        0, 0, nullptr, 0, nullptr, 1, &barrier);
+                    vkCmdPipelineBarrier(cmd, resource.lastWriteStage, dstStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
                     resource.currentLayout = targetLayout;
                 }
             }
 
-            // Handle write targets - transition to attachment optimal
-            // Track which resources were already in the write layout (previously written this frame)
+            // ---------------------------------------------------------------
+            // Barriers for WRITE targets
+            // - Graphics: COLOR/DEPTH_ATTACHMENT_OPTIMAL
+            // - Compute: GENERAL
+            // ---------------------------------------------------------------
             std::unordered_set<RGResource*> previouslyWrittenResources;
+
             for (const auto& handleName : pass.writeTargets)
             {
                 RGResourceHandle handle = GetResourceHandle(handleName);
                 if (handle.index == UINT32_MAX) continue;
-                
+
                 RGResource& resource = mResources[handle.index];
                 bool isDepth = IsDepthFormat(resource.format);
 
-                VkImageLayout newLayout = isDepth ?
-                    VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL :
-                    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+                VkImageLayout newLayout;
+                VkAccessFlags dstAccess;
+                VkPipelineStageFlags dstStage;
 
-                // If already in the target layout, a previous pass wrote to it this frame
+                if (isCompute)
+                {
+                    newLayout = VK_IMAGE_LAYOUT_GENERAL;
+                    dstAccess = VK_ACCESS_SHADER_WRITE_BIT;
+                    dstStage = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+                }
+                else if (isDepth)
+                {
+                    newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                    dstAccess = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+                    dstStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+                }
+                else
+                {
+                    newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+                    dstAccess = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+                    dstStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+                }
+
                 if (resource.currentLayout == newLayout)
                 {
                     previouslyWrittenResources.insert(&resource);
@@ -168,45 +204,49 @@ namespace Radis
                     barrier.subresourceRange.levelCount = 1;
                     barrier.subresourceRange.baseArrayLayer = 0;
                     barrier.subresourceRange.layerCount = 1;
-
-                    barrier.srcAccessMask = 0;
-                    barrier.dstAccessMask = isDepth ? VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT : VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+                    barrier.srcAccessMask = resource.lastWriteAccess;
+                    barrier.dstAccessMask = dstAccess;
 
                     vkCmdPipelineBarrier(cmd,
-                        VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-                        isDepth ? VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT : VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                        resource.lastWriteStage, dstStage,
                         0, 0, nullptr, 0, nullptr, 1, &barrier);
 
                     resource.currentLayout = newLayout;
                 }
+
+                // Record that we are the new writer of this resource
+                resource.lastWriteStage = dstStage;
+                resource.lastWriteAccess = dstAccess;
             }
 
-            // --- 2. Begin Dynamic Rendering with MRT support ---
-            if (!pass.writeTargets.empty())
+            // ---------------------------------------------------------------
+            // Execute the pass
+            // ---------------------------------------------------------------
+            if (isCompute || isRaytrace)
             {
-                // Collect all color targets and the depth target
+                // No render pass, just dispatch
+                pass.executeCallback(cmd);
+            }
+            else if (!pass.writeTargets.empty())
+            {
+                // Collect color and depth targets
                 std::vector<RGResource*> colorTargets;
                 RGResource* depthTarget = nullptr;
-                
-                for (const auto& handleName : pass.writeTargets) 
+
+                for (const auto& handleName : pass.writeTargets)
                 {
                     RGResourceHandle handle = GetResourceHandle(handleName);
                     if (handle.index == UINT32_MAX) continue;
-                    
+
                     RGResource& res = mResources[handle.index];
-                    if (IsDepthFormat(res.format)) 
-                    {
+                    if (IsDepthFormat(res.format))
                         depthTarget = &res;
-                    }
-                    else 
-                    {
+                    else
                         colorTargets.push_back(&res);
-                    }
                 }
 
-                if (!colorTargets.empty()) 
+                if (!colorTargets.empty())
                 {
-                    // Create color attachment infos for all color targets (MRT)
                     std::vector<VkRenderingAttachmentInfo> colorAttachments(colorTargets.size());
                     for (size_t i = 0; i < colorTargets.size(); ++i)
                     {
@@ -217,16 +257,14 @@ namespace Radis
                         colorAttachments[i].resolveMode = VK_RESOLVE_MODE_NONE;
                         colorAttachments[i].resolveImageView = VK_NULL_HANDLE;
                         colorAttachments[i].resolveImageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-                        // LOAD if a previous pass already wrote to this target, CLEAR otherwise
                         colorAttachments[i].loadOp = previouslyWrittenResources.count(colorTargets[i]) > 0
-                            ? VK_ATTACHMENT_LOAD_OP_LOAD
-                            : VK_ATTACHMENT_LOAD_OP_CLEAR;
+                            ? VK_ATTACHMENT_LOAD_OP_LOAD : VK_ATTACHMENT_LOAD_OP_CLEAR;
                         colorAttachments[i].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
                         colorAttachments[i].clearValue.color = { {0.0f, 0.0f, 0.0f, 1.0f} };
                     }
 
                     VkRenderingAttachmentInfo depthAttachment{};
-                    if (depthTarget) 
+                    if (depthTarget)
                     {
                         depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
                         depthAttachment.pNext = nullptr;
@@ -236,8 +274,7 @@ namespace Radis
                         depthAttachment.resolveImageView = VK_NULL_HANDLE;
                         depthAttachment.resolveImageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
                         depthAttachment.loadOp = previouslyWrittenResources.count(depthTarget) > 0
-                            ? VK_ATTACHMENT_LOAD_OP_LOAD
-                            : VK_ATTACHMENT_LOAD_OP_CLEAR;
+                            ? VK_ATTACHMENT_LOAD_OP_LOAD : VK_ATTACHMENT_LOAD_OP_CLEAR;
                         depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
                         depthAttachment.clearValue.depthStencil = { 1.0f, 0 };
                     }
@@ -255,62 +292,51 @@ namespace Radis
                     renderingInfo.pStencilAttachment = nullptr;
 
                     vkCmdBeginRendering(cmd, &renderingInfo);
-
                     pass.executeCallback(cmd);
-
                     vkCmdEndRendering(cmd);
                 }
                 else
                 {
-                    // No color targets, just execute (shouldn't happen often)
+                    // No color targets, don't start a render pass
                     pass.executeCallback(cmd);
                 }
             }
             else
             {
-                // No write targets - just execute the callback (e.g., compute or raytracing)
+                // No write targets, don't start a render pass
                 pass.executeCallback(cmd);
             }
         }
 
-        // --- 3. Final Transition for Presentation ---
-        if (!mResources.empty())
+        // ---------------------------------------------------------------
+        // Final transition for presentation if back buffer
+        // ---------------------------------------------------------------
+        for (auto& resource : mResources)
         {
-            RGResource* finalBackbuffer = nullptr;
-            for (auto& resource : mResources)
-            {
-                if (resource.isBackBuffer)
-                {
-                    finalBackbuffer = &resource;
-                    break;
-                }
-            }
+            if (!resource.isBackBuffer) continue;
+            if (resource.currentLayout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR) continue;
 
-            if (finalBackbuffer && finalBackbuffer->currentLayout != VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
-            {
-                VkImageMemoryBarrier barrier{};
-                barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-                barrier.oldLayout = finalBackbuffer->currentLayout;
-                barrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-                barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-                barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-                barrier.image = finalBackbuffer->image;
-                barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-                barrier.subresourceRange.baseMipLevel = 0;
-                barrier.subresourceRange.levelCount = 1;
-                barrier.subresourceRange.baseArrayLayer = 0;
-                barrier.subresourceRange.layerCount = 1;
+            VkImageMemoryBarrier barrier{};
+            barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            barrier.oldLayout = resource.currentLayout;
+            barrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+            barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.image = resource.image;
+            barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            barrier.subresourceRange.baseMipLevel = 0;
+            barrier.subresourceRange.levelCount = 1;
+            barrier.subresourceRange.baseArrayLayer = 0;
+            barrier.subresourceRange.layerCount = 1;
+            barrier.srcAccessMask = resource.lastWriteAccess;
+            barrier.dstAccessMask = 0;
 
-                barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-                barrier.dstAccessMask = 0;
+            vkCmdPipelineBarrier(cmd, resource.lastWriteStage,
+                VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                0, 0, nullptr, 0, nullptr, 1, &barrier);
 
-                vkCmdPipelineBarrier(cmd,
-                    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                    VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                    0, 0, nullptr, 0, nullptr, 1, &barrier);
-
-                finalBackbuffer->currentLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-            }
+            resource.currentLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+            break;
         }
     }
 
