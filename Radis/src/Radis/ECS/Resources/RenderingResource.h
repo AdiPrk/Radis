@@ -12,6 +12,7 @@
 #include "Graphics/Vulkan/Core/AccelerationStructures.h"
 #include "Graphics/OpenGL/GLShader.h"
 #include "Graphics/Common/RenderMode.h"
+#include "Graphics/Vulkan/Uniform/ShaderTypes.h"
 
 namespace Radis
 {
@@ -111,6 +112,8 @@ namespace Radis
         bool renderWireframe = false;
         uint32_t lightVolumeDebugMode = 0;
         bool supportsVulkan = true;
+
+        MSMBlurPC msmPC;
 
         bool SupportsVulkan();
 

@@ -51,6 +51,9 @@ namespace Radis
 
     void RenderingResource::Create(IWindow* window)
     {
+        msmPC.radius = 4.0f;
+        msmPC.sigma = 2.f;
+
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
         {
             device = std::make_unique<Device>(*dynamic_cast<VulkanWindow*>(window));
@@ -118,7 +121,7 @@ namespace Radis
             modelLibrary->AddModel(Assets::ModelsPath + "quad.obj", true);
             modelLibrary->AddModel(Assets::ModelsPath + "sphere.glb", true);
             modelLibrary->AddModel(Assets::ModelsPath + "pbrreference.glb", true);
-            // modelLibrary->AddModel(Assets::ModelsPath + "trotting_cat.glb");
+            modelLibrary->AddModel(Assets::ModelsPath + "trotting_cat.glb");
             modelLibrary->AddModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx", true);
             modelLibrary->AddModel(Assets::ModelsPath + "jack_samba.glb", true);
             modelLibrary->AddModel(Assets::ModelsPath + "SteampunkRobot.gltf", true);
@@ -141,7 +144,7 @@ namespace Radis
         if (!animationLibrary)
         {
             animationLibrary = std::make_unique<AnimationLibrary>();
-            // animationLibrary->AddAnimation(Assets::ModelsPath + "trotting_cat.glb", modelLibrary->GetModel(Assets::ModelsPath + "trotting_cat.glb"));
+            animationLibrary->AddAnimation(Assets::ModelsPath + "trotting_cat.glb", modelLibrary->GetModel(Assets::ModelsPath + "trotting_cat.glb"));
             animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/idle.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
             animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/idle.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
             animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/jump.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
@@ -170,9 +173,9 @@ namespace Radis
 
             // HDR format for scene color (before tonemapping)
             VkFormat hdrFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
-            VkFormat momentsFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+            VkFormat momentsFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
 
-            // Choose shadow resolution (can be independent of swapchain)
+            // Choose shadow resolution
             uint32_t shadowW = 2048;
             uint32_t shadowH = 2048;
 
@@ -193,7 +196,7 @@ namespace Radis
                 momentsFormat,
                 VK_IMAGE_TILING_OPTIMAL,
                 VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
-                VK_IMAGE_LAYOUT_GENERAL
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             );
 
             // Final blurred moments sampled by lighting
@@ -203,7 +206,7 @@ namespace Radis
                 momentsFormat,
                 VK_IMAGE_TILING_OPTIMAL,
                 VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
-                VK_IMAGE_LAYOUT_GENERAL
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             );
 
             // Optional depth for shadow pass (recommended)
@@ -304,7 +307,7 @@ namespace Radis
             
             VkFormat swapImageFormat = swapChain->GetImageFormat();
             VkFormat swapDepthFormat = swapChain->FindDepthFormat();
-            VkFormat momentsFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+            VkFormat momentsFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
             VkFormat hdrFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
             VkFormat albedoFormat = VK_FORMAT_R8G8B8A8_SRGB;
             VkFormat normalFormat = VK_FORMAT_R16G16_SFLOAT;
@@ -332,7 +335,7 @@ namespace Radis
                 lightVolOpts.additiveBlend = true;
                 lightVolOpts.depthTestDisable = true;
                 lightVolOpts.depthWriteDisable = true;
-                lightVolOpts.cullFrontFace = true;
+                //lightVolOpts.cullFrontFace = true;
                 lightVolOpts.pushConstantSize = sizeof(LightVolumePushConstants);
                 lightVolOpts.pushConstantStages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
                 lightVolumePipeline = std::make_unique<Pipeline>(*device, hdrFormat, VK_FORMAT_UNDEFINED, deferredLightingUnis, "lightVolume.vert", "lightVolume.frag", lightVolOpts);

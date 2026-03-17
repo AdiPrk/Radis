@@ -116,7 +116,7 @@ vec3 OctDecode(vec2 f)
     return normalize(n);
 }
 
-// MSM Hamburger 4 (same as you already have)
+// MSM Hamburger 4
 float MSM_Hamburger4(vec4 b, float zf, float alpha)
 {
     vec4 bp = mix(b, vec4(0.5), alpha);
@@ -159,8 +159,9 @@ float MSM_Hamburger4(vec4 b, float zf, float alpha)
     float B = c2;
     float C = c1;
 
-    if (abs(A) < 1e-8)
+    if (abs(A) < 1e-3)
     {
+        if (zf <= bp.x) return 0.0;
         float mu  = bp.x;
         float var = max(bp.y - mu*mu, 0.0);
         float dmu = zf - mu;
@@ -195,23 +196,20 @@ float MSM_Hamburger4(vec4 b, float zf, float alpha)
 
 float ComputeDirectionalShadow(vec3 worldPos)
 {
-    vec4 lp = sh.lightViewProj * vec4(worldPos, 1.0);
+    vec4 lp  = sh.lightViewProj * vec4(worldPos, 1.0);
     vec3 ndc = lp.xyz / max(lp.w, 1e-6);
-    vec2 uv = ndc.xy * 0.5 + 0.5;
+    vec2 uv  = ndc.xy * 0.5 + 0.5;
 
-    // out of bounds => lit
     if (any(lessThan(uv, vec2(0.0))) || any(greaterThan(uv, vec2(1.0))))
-        return 1.0;
+        return 0.0;
 
-    // Compute zf in LIGHT VIEW space (matches shadow pass)
     float lightViewZ = -(sh.lightView * vec4(worldPos, 1.0)).z;
-    float zf = (lightViewZ - sh.zParams.x) * sh.zParams.z; // (z - z0) / (z1 - z0)
-    zf = clamp(zf, 0.0, 1.0);
+    float zf = clamp((lightViewZ - sh.zParams.x) * sh.zParams.z, 0.0, 1.0);
 
-    vec4 m = texture(shadowMoments, uv);
-    float G = MSM_Hamburger4(m, zf, sh.zParams.w);
-    float shadow = 1.0 - G; // lit factor
-    return clamp(shadow, 0.0, 1.0);
+    vec4  moments = texture(shadowMoments, uv);
+    float alpha   = sh.zParams.w;
+
+    return MSM_Hamburger4(moments, zf, alpha);
 }
 
 void main()
@@ -251,11 +249,11 @@ void main()
         vec3 lightCol = light.colorIntensity.xyz * light.colorIntensity.w;
 
         // Apply shadow to directional contribution
-        Lo += computePBRLight(albedo, metallic, roughness, N, V, L, lightCol) * shadow;
+        Lo += computePBRLight(albedo, metallic, roughness, N, V, L, lightCol) * (shadow * shadow);
     }
 
-    vec3 ambient = vec3(0.03) * albedo * ao;
-    vec3 color = (Lo * ao) + ambient + emissive;
+    vec3 ambient = vec3(0.01) * albedo * ao;
+    vec3 color = Lo + ambient + emissive;
 
     outColor = vec4(color, 1.0);
 }

@@ -141,14 +141,6 @@ namespace Radis
 
     void EditorSystem::FrameStart()
     {
-        static bool dothing = false;
-        if (dothing == false)
-        {
-            RADIS_INFO("Set up ImGui Style!");
-            SetupImGuiStyle();
-            dothing = true;
-        }
-
         auto rr = ecs->GetResource<RenderingResource>();
         auto er = ecs->GetResource<EditorResource>();
 
@@ -242,9 +234,19 @@ namespace Radis
 
             rr->renderGraph->AddPass(
                 "ImGuiPass",
-                [&](RGPassBuilder& builder) {
-                    builder.reads("SceneTexture");
-                    builder.writes("BackBuffer");
+                [&](RGPassBuilder& b) {
+                    b.reads("SceneTexture");
+                    b.reads("SceneDepth");
+                    b.reads("ShadowMomentsRaw");
+                    b.reads("ShadowMomentsTmp");
+                    b.reads("ShadowMoments");
+                    b.reads("ShadowDepth");
+                    b.reads("gAlbedo");
+                    b.reads("gNormal");
+                    b.reads("gPBR");
+                    b.reads("gEmissive");
+                    b.reads("SceneHDR");
+                    b.writes("BackBuffer"); 
                 },
                 std::bind(&EditorSystem::RenderImGui, this, std::placeholders::_1)
             );
@@ -333,6 +335,9 @@ namespace Radis
         {
             rr->lightVolumeDebugMode = currentLightVolumeDebugMode;
         }
+
+        ImGui::DragInt("MSM Blur Radius", &rr->msmPC.radius, 0.1f, 0, 16);
+        ImGui::DragFloat("MSM Blur Sigma", &rr->msmPC.sigma, 0.1f, 0.0f, 8.0f);
 
         ImGui::End();
     }

@@ -23,7 +23,7 @@ void main()
 {
     float zRel = (vLightViewZ - sh.z0) / max(sh.z1 - sh.z0, 1e-6);
     zRel = clamp(zRel, 0.0, 1.0);
-
+    
     float z2 = zRel * zRel;
     outMoments = vec4(zRel, z2, z2 * zRel, z2 * z2);
 }

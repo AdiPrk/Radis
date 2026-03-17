@@ -92,7 +92,7 @@ namespace Radis {
     {
         if (mPeer)
         {
-            // notify server wefre leaving
+            // notify server weï¿½fre leaving
             mPacketUtils.send(mPeer, CLIENT_LEAVE_PACKET);
 
             enet_host_flush(mPeer->host);

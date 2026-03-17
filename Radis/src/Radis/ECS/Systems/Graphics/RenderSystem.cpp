@@ -160,33 +160,28 @@ namespace Radis
             if (foundShadowCam) return;
             if (lc.LightType != LightComponent::Types::Directional) return;
 
-            // Ensure direction is normalized
             glm::vec3 L = glm::normalize(lc.Direction);
-
-            // Pick a shadow center (for now: camera position)
-            glm::vec3 center = camData.cameraPos;
-
-            // Move "eye" back along direction
-            float distBack = 50.0f; // just needs to be far enough behind the ortho volume
-            glm::vec3 eye = center - L * distBack;
-
-            // Robust up vector (avoid parallel to direction)
             glm::vec3 up = (std::abs(L.y) > 0.99f) ? glm::vec3(0, 0, 1) : glm::vec3(0, 1, 0);
 
-            glm::mat4 lightView = glm::lookAt(eye, center, up);
+            // Fixed stable shadow frustum
+            constexpr float kShadowHalfWidth = 15.0f; // tune to scene size
+            constexpr float kShadowNear = 0.1f;
+            constexpr float kShadowFar = 200.0f;
+            constexpr float kDistBack = 100.0f;
 
-            // Ortho volume size (start simple)
-            float r = 5.0f;
-            float nearZ = 0.1f;
-            float farZ = 200.0f;
-            glm::mat4 lightProj = glm::ortho(-r, r, -r, r, nearZ, farZ);
+            glm::vec3 sceneCenter(0.0f);
+            glm::vec3 eye = sceneCenter - L * kDistBack;
+            glm::mat4 lightView = glm::lookAt(eye, sceneCenter, up);
+            glm::mat4 lightProj = glm::ortho(
+                -kShadowHalfWidth, kShadowHalfWidth,
+                -kShadowHalfWidth, kShadowHalfWidth,
+                kShadowNear, kShadowFar
+            );
 
             mShadowCamData.lightView = lightView;
             mShadowCamData.lightViewProj = lightProj * lightView;
-
-            // IMPORTANT: z0/z1 must be in LIGHT VIEW SPACE, matching what you compute in shader:
-            mShadowCamData.z0 = nearZ;
-            mShadowCamData.z1 = farZ;
+            mShadowCamData.z0 = kShadowNear;
+            mShadowCamData.z1 = kShadowFar;
 
             foundShadowCam = true;
         });
@@ -216,10 +211,10 @@ namespace Radis
             case RenderMode::Forward: {
                 rg->AddPass(
                     "ScenePass",
-                    [&](RGPassBuilder& builder)
+                    [&](RGPassBuilder& b)
                     {
-                        builder.writes(colorWriteTarget);
-                        builder.writes("SceneDepth");
+                        b.writes(colorWriteTarget);
+                        b.writes("SceneDepth");
                     },
                     std::bind(&RenderSystem::RenderSceneVK, this, std::placeholders::_1)
                 );
@@ -243,7 +238,7 @@ namespace Radis
                     },
                     std::bind(&RenderSystem::RenderShadowBlurHVK, this, std::placeholders::_1)
                 );
-
+                
                 rg->AddPass("ShadowBlurV",
                     [&](RGPassBuilder& b) {
                         b.setCompute(); 
@@ -255,47 +250,48 @@ namespace Radis
 
                 // G-Buffer pass
                 rg->AddPass("GBufferPass",
-                    [&](RGPassBuilder& builder) {
-                        builder.writes("gAlbedo");
-                        builder.writes("gNormal");
-                        builder.writes("gPBR");
-                        builder.writes("gEmissive");
-                        builder.writes("SceneDepth");
+                    [&](RGPassBuilder& b) {
+                        b.writes("gAlbedo");
+                        b.writes("gNormal");
+                        b.writes("gPBR");
+                        b.writes("gEmissive");
+                        b.writes("SceneDepth");
                     },
                     std::bind(&RenderSystem::RenderSceneDeferredGeometryVK, this, std::placeholders::_1)
                 );
 
                 // Lighting pass - directional/ambient -> raw HDR to SceneHDR
                 rg->AddPass("LightingPass",
-                    [&](RGPassBuilder& builder) {
-                        builder.reads("gAlbedo");
-                        builder.reads("gNormal");
-                        builder.reads("gPBR");
-                        builder.reads("gEmissive");
-                        builder.reads("SceneDepth");
-                        builder.writes("SceneHDR");
+                    [&](RGPassBuilder& b) {
+                        b.reads("gAlbedo");
+                        b.reads("gNormal");
+                        b.reads("gPBR");
+                        b.reads("gEmissive");
+                        b.reads("SceneDepth");
+                        b.reads("ShadowMoments");
+                        b.writes("SceneHDR");
                     },
                     std::bind(&RenderSystem::RenderSceneDeferredLightingVK, this, std::placeholders::_1)
                 );
 
                 // Light volumes pass - additive local lights -> SceneHDR
                 rg->AddPass("LightVolumesPass",
-                    [&](RGPassBuilder& builder) {
-                        builder.reads("gAlbedo");
-                        builder.reads("gNormal");
-                        builder.reads("gPBR");
-                        builder.reads("gEmissive");
-                        builder.reads("SceneDepth");
-                        builder.writes("SceneHDR");
+                    [&](RGPassBuilder& b) {
+                        b.reads("gAlbedo");
+                        b.reads("gNormal");
+                        b.reads("gPBR");
+                        b.reads("gEmissive");
+                        b.reads("SceneDepth");
+                        b.writes("SceneHDR");
                     },
                     std::bind(&RenderSystem::RenderLightVolumesVK, this, std::placeholders::_1)
                 );
 
                 // Tone map pass - reads accumulated HDR, writes final output
                 rg->AddPass("ToneMapPass",
-                    [&](RGPassBuilder& builder) {
-                        builder.reads("SceneHDR");
-                        builder.writes(colorWriteTarget);
+                    [&](RGPassBuilder& b) {
+                        b.reads("SceneHDR");
+                        b.writes(colorWriteTarget);
                     },
                     std::bind(&RenderSystem::RenderToneMapVK, this, std::placeholders::_1)
                 );
@@ -305,7 +301,7 @@ namespace Radis
             case RenderMode::Raytracing: {
                 rg->AddPass(
                     "ScenePass",
-                    [&](RGPassBuilder& builder) {},
+                    [&](RGPassBuilder& b) {},
                     std::bind(&RenderSystem::RaytraceSceneVK, this, std::placeholders::_1)
                 );
                 break;
@@ -398,13 +394,10 @@ namespace Radis
 
         VKTexture* src = static_cast<VKTexture*>(rr->textureLibrary->GetTexture("ShadowMomentsRaw"));
 
-        MSMBlurPC pc{};
-        pc.radius = 7;
-        pc.sigma = 3.5f;
-        pc.width = (int)src->GetWidth();
-        pc.height = (int)src->GetHeight();
+        rr->msmPC.width = (int)src->GetWidth();
+        rr->msmPC.height = (int)src->GetHeight();
 
-        vkCmdPushConstants(cmd, rr->shadowBlurHPipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(MSMBlurPC), &pc);
+        vkCmdPushConstants(cmd, rr->shadowBlurHPipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(MSMBlurPC), &rr->msmPC);
 
         const uint32_t gx = DivUp(src->GetWidth(), 16);
         const uint32_t gy = DivUp(src->GetHeight(), 16);
@@ -421,13 +414,10 @@ namespace Radis
 
         VKTexture* src = static_cast<VKTexture*>(rr->textureLibrary->GetTexture("ShadowMomentsTmp"));
 
-        MSMBlurPC pc{};
-        pc.radius = 7;
-        pc.sigma = 3.5;
-        pc.width = (int)src->GetWidth();
-        pc.height = (int)src->GetHeight();
+        rr->msmPC.width = (int)src->GetWidth();
+        rr->msmPC.height = (int)src->GetHeight();
 
-        vkCmdPushConstants(cmd, rr->shadowBlurVPipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(MSMBlurPC), &pc);
+        vkCmdPushConstants(cmd, rr->shadowBlurVPipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(MSMBlurPC), &rr->msmPC);
 
         const uint32_t gx = DivUp(src->GetWidth(), 16);
         const uint32_t gy = DivUp(src->GetHeight(), 16);
@@ -525,7 +515,7 @@ namespace Radis
 
         float invRange = 1.0f / std::max(z1 - z0, 1e-6f);
 
-        const float alpha = 1e-3f; // good default for MSM
+        const float alpha = 1e-5f;
         sp.zParams = glm::vec4(z0, z1, invRange, alpha);
 
         VKTexture* sm = static_cast<VKTexture*>(rr.textureLibrary->GetTexture("ShadowMoments"));

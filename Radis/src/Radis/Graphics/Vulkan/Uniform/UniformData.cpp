@@ -166,6 +166,7 @@ namespace Radis
         VKTexture* gEmissiveTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("gEmissive"));
         VKTexture* gDepthTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("SceneDepth"));
         VKTexture* shadowMomentsTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("ShadowMoments"));
+        VKTexture* shadowDepthTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("ShadowDepth"));
 
         if (!gAlbedoTex || !gNormalTex || !gPBRTex || !gEmissiveTex || !gDepthTex)
         {
@@ -267,6 +268,7 @@ namespace Radis
         VKTexture* gEmissiveTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("gEmissive"));
         VKTexture* gDepthTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("SceneDepth"));
         VKTexture* shadowMomentsTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("ShadowMoments"));
+        VKTexture* shadowDepthTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("ShadowDepth"));
 
         if (!gAlbedoTex || !gNormalTex || !gPBRTex || !gEmissiveTex || !gDepthTex)
         {

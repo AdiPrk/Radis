@@ -189,37 +189,6 @@ vec3 OctDecode(vec2 f)
     return normalize(n);
 }
 
-float ComputeDirectionalShadow(vec3 worldPos)
-{
-    // Project into light clip space
-    vec4 lp = sh.lightViewProj * vec4(worldPos, 1.0);
-    vec3 ndc = lp.xyz / max(lp.w, 1e-6);
-
-    // NDC -> UV
-    vec2 suv = ndc.xy * 0.5 + 0.5;
-
-    // Outside shadow map => treat as lit
-    if (any(lessThan(suv, vec2(0.0))) || any(greaterThan(suv, vec2(1.0))))
-        return 1.0;
-
-    // Relative depth zf (we use light-view-space in the moment map, but we only have clip here)
-    // If your light projection is linear in view-space z, you can reconstruct zf by also storing light-view z.
-    // For now assume ndc.z maps monotonically and approximate with ndc.z remap:
-    // Better: compute vLightViewZ in shadow pass (we do) and encode that; then in lighting compute lightViewZ the same way.
-    // We'll do the correct method:
-    // Use lightView to compute light view Z:
-    // (You didn�ft pass lightView here; easiest is to put z0/z1 in the same space you compute below.)
-    // We'll approximate by using ndc.z -> [0,1] and then map with z0/z1 params as if it were view z.
-    // If your light projection is standard, replace with computing actual light-view z and relative transform.
-    float z01 = clamp(ndc.z * 0.5 + 0.5, 0.0, 1.0);
-    float zf  = z01;
-
-    vec4 m = texture(shadowMoments, suv);
-    float G = MSM_Hamburger4(m, zf, sh.zParams.w);
-    float shadow = 1.0 - G; // lit factor
-    return clamp(shadow, 0.0, 1.0);
-}
-
 void main()
 {
     ivec2 pix = ivec2(gl_FragCoord.xy);
@@ -302,8 +271,5 @@ void main()
 
     vec3 Lo = computePBRLight(albedo, metallic, roughness, N, V, L, lightCol);
 
-    // Apply directional shadow factor to local light (common + cheap)
-    float shadow = (pc.directionalLightCount > 0u) ? ComputeDirectionalShadow(worldPos) : 1.0;
-
-    outColor = vec4(Lo * ao * shadow, 0.0);
+    outColor = vec4(Lo * ao, 0.0);
 }
