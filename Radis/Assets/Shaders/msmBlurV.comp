@@ -6,15 +6,9 @@ layout(set=0,binding=1, rgba32f) uniform writeonly image2D dst;
 
 layout(push_constant) uniform PC {
     int radius;
-    float sigma;
     int width;
     int height;
 } pc;
-
-float gauss(float x, float sigma)
-{
-    return exp(-(x*x) / (2.0*sigma*sigma));
-}
 
 const int MAX_R = 64;
 shared vec4 tile[16 + 2*MAX_R][16];
@@ -23,11 +17,11 @@ void main()
 {
     ivec2 gid = ivec2(gl_GlobalInvocationID.xy);
     ivec2 lid = ivec2(gl_LocalInvocationID.xy);
-    if (gid.x >= pc.width || gid.y >= pc.height) return;
 
-    int R = clamp(pc.radius, 0, MAX_R);
+    int R     = clamp(pc.radius, 0, MAX_R);
     int tileH = 16 + 2*R;
 
+    // All threads participate in loading — no early exit before barrier
     for (int ty = lid.y; ty < tileH; ty += 16)
     {
         int sy = int(gl_WorkGroupID.y)*16 + (ty - R);
@@ -37,16 +31,15 @@ void main()
 
     barrier();
 
-    vec4 sum = vec4(0.0);
-    float wsum = 0.0;
+    // Out-of-bounds guard is AFTER the barrier
+    if (gid.x >= pc.width || gid.y >= pc.height) return;
 
+    vec4 sum   = vec4(0.0);
     int center = lid.y + R;
-    for (int i = -R; i <= R; ++i)
-    {
-        float w = gauss(float(i), pc.sigma);
-        sum += tile[center + i][lid.x] * w;
-        wsum += w;
-    }
 
-    imageStore(dst, gid, sum / max(wsum, 1e-8));
+    // Box filter: uniform weight 1 for every tap
+    for (int i = -R; i <= R; ++i)
+        sum += tile[center + i][lid.x];
+
+    imageStore(dst, gid, sum / float(2*R + 1));
 }

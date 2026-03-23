@@ -94,7 +94,6 @@ namespace Radis
 
     struct MSMBlurPC {
         int radius;
-        float sigma;
         int width;
         int height;
     };

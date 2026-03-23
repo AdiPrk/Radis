@@ -233,7 +233,7 @@ void main()
     vec3 worldPos = ReconstructWorldPos(fragTexCoord, depth);
     vec3 V = normalize(uniforms.cameraPos - worldPos);
 
-    float shadow = ComputeDirectionalShadow(worldPos);
+    // float shadow = ComputeDirectionalShadow(worldPos);
 
     vec3 Lo = vec3(0.0);
 
@@ -248,7 +248,7 @@ void main()
         vec3 lightCol = light.colorIntensity.xyz * light.colorIntensity.w;
 
         // Apply shadow to directional contribution
-        Lo += computePBRLight(albedo, metallic, roughness, N, V, L, lightCol) * (1.0 - shadow);
+        Lo += computePBRLight(albedo, metallic, roughness, N, V, L, lightCol);// * (1.0 - shadow);
     }
 
     vec3 ambient = vec3(0.01) * albedo * ao;

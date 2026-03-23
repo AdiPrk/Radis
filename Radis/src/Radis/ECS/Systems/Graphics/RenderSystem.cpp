@@ -221,7 +221,7 @@ namespace Radis
                 );
                 break;
             }
-            case RenderMode::Deferred: {
+/*            case RenderMode::Deferred: {
                 // MSM pass
                 rg->AddPass("ShadowMomentsPass",
                     [&](RGPassBuilder& b) {
@@ -249,6 +249,57 @@ namespace Radis
                     std::bind(&RenderSystem::RenderShadowBlurVVK, this, std::placeholders::_1)
                 );
 
+                // G-Buffer pass
+                rg->AddPass("GBufferPass",
+                    [&](RGPassBuilder& b) {
+                        b.writes("gAlbedo");
+                        b.writes("gNormal");
+                        b.writes("gPBR");
+                        b.writes("gEmissive");
+                        b.writes("SceneDepth");
+                    },
+                    std::bind(&RenderSystem::RenderSceneDeferredGeometryVK, this, std::placeholders::_1)
+                );
+
+                // Lighting pass - directional/ambient -> raw HDR to SceneHDR
+                rg->AddPass("LightingPass",
+                    [&](RGPassBuilder& b) {
+                        b.reads("gAlbedo");
+                        b.reads("gNormal");
+                        b.reads("gPBR");
+                        b.reads("gEmissive");
+                        b.reads("SceneDepth");
+                        b.reads("ShadowMoments");
+                        b.writes("SceneHDR");
+                    },
+                    std::bind(&RenderSystem::RenderSceneDeferredLightingVK, this, std::placeholders::_1)
+                );
+
+                // Light volumes pass - additive local lights -> SceneHDR
+                rg->AddPass("LightVolumesPass",
+                    [&](RGPassBuilder& b) {
+                        b.reads("gAlbedo");
+                        b.reads("gNormal");
+                        b.reads("gPBR");
+                        b.reads("gEmissive");
+                        b.reads("SceneDepth");
+                        b.writes("SceneHDR");
+                    },
+                    std::bind(&RenderSystem::RenderLightVolumesVK, this, std::placeholders::_1)
+                );
+
+                // Tone map pass - reads accumulated HDR, writes final output
+                rg->AddPass("ToneMapPass",
+                    [&](RGPassBuilder& b) {
+                        b.reads("SceneHDR");
+                        b.writes(colorWriteTarget);
+                    },
+                    std::bind(&RenderSystem::RenderToneMapVK, this, std::placeholders::_1)
+                );
+
+                break;
+            }*/
+            case RenderMode::Deferred: {
                 // G-Buffer pass
                 rg->AddPass("GBufferPass",
                     [&](RGPassBuilder& b) {

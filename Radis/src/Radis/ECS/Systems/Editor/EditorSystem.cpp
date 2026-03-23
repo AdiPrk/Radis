@@ -336,8 +336,7 @@ namespace Radis
             rr->lightVolumeDebugMode = currentLightVolumeDebugMode;
         }
 
-        ImGui::DragInt("MSM Blur Radius", &rr->msmPC.radius, 0.1f, 0, 64.0f);
-        ImGui::DragFloat("MSM Blur Sigma", &rr->msmPC.sigma, 0.1f, 0.0f, 32.0f);
+        // ImGui::DragInt("MSM Blur Radius", &rr->msmPC.radius, 0.1f, 0, 64);
 
         ImGui::End();
     }

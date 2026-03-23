@@ -52,7 +52,6 @@ namespace Radis
     void RenderingResource::Create(IWindow* window)
     {
         msmPC.radius = 4.0f;
-        msmPC.sigma = 2.f;
 
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
         {
