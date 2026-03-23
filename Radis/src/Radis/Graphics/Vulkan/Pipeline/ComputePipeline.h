@@ -15,6 +15,12 @@ namespace Radis
     class Uniform;
     class Device;
 
+    struct PushConstantInfo
+    {
+        uint32_t size;
+        VkShaderStageFlags stageFlags;
+    };
+
     class ComputePipeline
     {
     public:
@@ -22,7 +28,7 @@ namespace Radis
         inline static const std::string ShaderDir = "Assets/shaders/";
         inline static const std::string SpvDir = "Assets/shaders/spv/";
 
-        ComputePipeline(Device& device, const std::vector<Uniform*>& uniforms, const std::string& compFile, const std::string& entryPoint = "main");
+        ComputePipeline(Device& device, const std::vector<Uniform*>& uniforms, const std::string& compFile, const PushConstantInfo& pcInfo = {}, const std::string& entryPoint = "main");
         ~ComputePipeline();
 
         ComputePipeline(const ComputePipeline&) = delete;
@@ -56,6 +62,9 @@ namespace Radis
         std::string mEntryPoint;
 
         // Uniforms
-        const std::vector<Uniform*>& mUniforms;
+        std::vector<Uniform*> mUniforms;
+
+        // Optional settings
+        PushConstantInfo mPcInfo;
     };
 }

@@ -1,0 +1,45 @@
+#version 460
+layout(local_size_x=16, local_size_y=16) in;
+
+layout(set=0,binding=0) uniform sampler2D src;
+layout(set=0,binding=1, rgba32f) uniform writeonly image2D dst;
+
+layout(push_constant) uniform PC {
+    int radius;
+    int width;
+    int height;
+} pc;
+
+const int MAX_R = 64;
+shared vec4 tile[16][16 + 2*MAX_R];
+
+void main()
+{
+    ivec2 gid = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 lid = ivec2(gl_LocalInvocationID.xy);
+
+    int R     = clamp(pc.radius, 0, MAX_R);
+    int tileW = 16 + 2*R;
+
+    // All threads participate in loading — no early exit before barrier
+    for (int tx = lid.x; tx < tileW; tx += 16)
+    {
+        int sx = int(gl_WorkGroupID.x)*16 + (tx - R);
+        sx = clamp(sx, 0, pc.width-1);
+        tile[lid.y][tx] = texelFetch(src, ivec2(sx, gid.y), 0);
+    }
+
+    barrier();
+
+    // Out-of-bounds guard is AFTER the barrier
+    if (gid.x >= pc.width || gid.y >= pc.height) return;
+
+    vec4 sum    = vec4(0.0);
+    int  center = lid.x + R;
+
+    // Box filter: uniform weight 1 for every tap
+    for (int i = -R; i <= R; ++i)
+        sum += tile[lid.y][center + i];
+
+    imageStore(dst, gid, sum / float(2*R + 1));
+}

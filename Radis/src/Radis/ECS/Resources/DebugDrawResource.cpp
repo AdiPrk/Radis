@@ -66,8 +66,8 @@ namespace Radis
                 instance.textureIndices = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
                 instance.textureIndices2 = glm::uvec4(TextureLibrary::INVALID_TEXTURE_INDEX);
 
-                // Roughness: left Å® right (X)
-                // Metalness: bottom Å® top (Y)
+                // Roughness: left ÔøΩÔøΩ right (X)
+                // Metalness: bottom ÔøΩÔøΩ top (Y)
                 float roughness = static_cast<float>(x) / static_cast<float>(gridSize - 1);
                 float metalness = static_cast<float>(y) / static_cast<float>(gridSize - 1);
 

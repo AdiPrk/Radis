@@ -220,22 +220,22 @@ namespace Radis
                 const float checkSize = 16.0f;
                 ImU32 col1 = IM_COL32(60, 60, 60, 255);
                 ImU32 col2 = IM_COL32(40, 40, 40, 255);
-                drawList->PushClipRect(p0, p1, true);
-                for (float y = p0.y; y < p1.y; y += checkSize)
-                {
-                    for (float x = p0.x; x < p1.x; x += checkSize)
-                    {
-                        int cx = static_cast<int>((x - p0.x) / checkSize);
-                        int cy = static_cast<int>((y - p0.y) / checkSize);
-                        ImU32 col = ((cx + cy) % 2 == 0) ? col1 : col2;
-                        drawList->AddRectFilled(
-                            { x, y },
-                            { std::min(x + checkSize, p1.x), std::min(y + checkSize, p1.y) },
-                            col
-                        );
-                    }
-                }
-                drawList->PopClipRect();
+                //drawList->PushClipRect(p0, p1, true);
+                //for (float y = p0.y; y < p1.y; y += checkSize)
+                //{
+                //    for (float x = p0.x; x < p1.x; x += checkSize)
+                //    {
+                //        int cx = static_cast<int>((x - p0.x) / checkSize);
+                //        int cy = static_cast<int>((y - p0.y) / checkSize);
+                //        ImU32 col = ((cx + cy) % 2 == 0) ? col1 : col2;
+                //        drawList->AddRectFilled(
+                //            { x, y },
+                //            { std::min(x + checkSize, p1.x), std::min(y + checkSize, p1.y) },
+                //            col
+                //        );
+                //    }
+                //}
+                //drawList->PopClipRect();
 
                 // Draw the texture
                 ImGui::Image(texture->GetTextureID(), ImVec2(displayWidth, displayHeight), uv0, uv1);

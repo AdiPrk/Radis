@@ -131,6 +131,10 @@ namespace Radis
         rg->ImportTexture("gNormal", (VKTexture*)tl->GetTexture("gNormal"));
         rg->ImportTexture("gPBR", (VKTexture*)tl->GetTexture("gPBR"));
         rg->ImportTexture("gEmissive", (VKTexture*)tl->GetTexture("gEmissive"));
+        rg->ImportTexture("ShadowMomentsRaw", (VKTexture*)tl->GetTexture("ShadowMomentsRaw"));
+        rg->ImportTexture("ShadowMomentsTmp", (VKTexture*)tl->GetTexture("ShadowMomentsTmp"));
+        rg->ImportTexture("ShadowMoments", (VKTexture*)tl->GetTexture("ShadowMoments"));
+        rg->ImportTexture("ShadowDepth", (VKTexture*)tl->GetTexture("ShadowDepth"));
         
         rg->ImportBackbuffer(
             "BackBuffer",

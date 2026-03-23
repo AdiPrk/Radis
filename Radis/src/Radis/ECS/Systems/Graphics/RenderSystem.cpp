@@ -13,6 +13,7 @@
 #include "ECS/Resources/EditorResource.h"
 #include "ECS/Resources/DebugDrawResource.h"
 #include "ECS/Resources/WindowResource.h"
+#include "ECS/Resources/AnimationResource.h"
 #include "ECS/Resources/SwapRendererResource.h"
 #include "ECS/Resources/RaytracingResource.h"
 
@@ -24,6 +25,7 @@
 #include "Graphics/Common/ModelLibrary.h"
 #include "Graphics/Vulkan/Uniform/ShaderTypes.h"
 #include "Graphics/Vulkan/Pipeline/Pipeline.h"
+#include "Graphics/Vulkan/Pipeline/ComputePipeline.h"
 #include "Graphics/Vulkan/Pipeline/RaytracingPipeline.h"
 #include "Graphics/Common/Model.h"
 #include "Graphics/Vulkan/Uniform/Uniform.h"
@@ -130,7 +132,7 @@ namespace Radis
         }
 
         // Draw the editor grid
-        DebugDrawResource::DrawEditorGrid(50, 1.0f);
+        // DebugDrawResource::DrawEditorGrid(50, 1.0f);
 
         // Swap renderer backends
         // ecs->GetResource<SwapRendererResource>()->RequestSwap();
@@ -151,13 +153,55 @@ namespace Radis
         // Build Instances
         BuildInstanceData();
 
+        mShadowCamData = {};
+        bool foundShadowCam = false;
+        ecs->GetRegistry().view<LightComponent, TransformComponent>().each([&](auto, LightComponent& lc, TransformComponent& tc)
+        {
+            if (foundShadowCam) return;
+            if (lc.LightType != LightComponent::Types::Directional) return;
+
+            glm::vec3 L = glm::normalize(lc.Direction);
+            glm::vec3 up = (std::abs(L.y) > 0.99f) ? glm::vec3(0, 0, 1) : glm::vec3(0, 1, 0);
+
+            // Fixed stable shadow frustum
+            constexpr float kShadowHalfWidth = 15.0f; // tune to scene size
+            constexpr float kShadowNear = 0.1f;
+            constexpr float kShadowFar = 35.0f;
+            constexpr float kDistBack = 15.0f;
+
+            glm::vec3 sceneCenter(0.0f);
+            glm::vec3 eye = sceneCenter - L * kDistBack;
+            glm::mat4 lightView = glm::lookAt(eye, sceneCenter, up);
+            glm::mat4 lightProj = glm::orthoRH_ZO(
+                -kShadowHalfWidth, kShadowHalfWidth,
+                -kShadowHalfWidth, kShadowHalfWidth,
+                kShadowNear, kShadowFar
+            );
+            lightProj[1][1] *= -1;
+
+            mShadowCamData.lightView = lightView;
+            mShadowCamData.lightViewProj = lightProj * lightView;
+            mShadowCamData.z0 = kShadowNear;
+            mShadowCamData.z1 = kShadowFar;
+
+            foundShadowCam = true;
+        });
+
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
         {
-            rr->cameraUniform->SetUniformData(camData, 0, rr->currentFrameIndex);                // Set Camera Data
-            rr->cameraUniform->SetUniformData(mInstanceData, 1, rr->currentFrameIndex);          // Set Instance Data
-            rr->cameraUniform->SetUniformData(mLightBuffer, 4, rr->currentFrameIndex);           // Set Light Data
+            auto ar = ecs->GetResource<AnimationResource>();
+
+            rr->cameraUniform->SetUniformData(camData, 0, rr->currentFrameIndex);                  // Set Camera Data
+            rr->cameraUniform->SetUniformData(mInstanceData, 1, rr->currentFrameIndex);            // Set Instance Data
+            rr->cameraUniform->SetUniformData(ar->bonesMatrices, 2, rr->currentFrameIndex);        // Set Animation Data
+            rr->cameraUniform->SetUniformData(mLightBuffer, 4, rr->currentFrameIndex);             // Set Light Data
+            rr->shadowMomentsUniform->SetUniformData(mShadowCamData, 0, rr->currentFrameIndex);     // Set Shadow Camera Data
+            rr->shadowMomentsUniform->SetUniformData(mInstanceData, 1, rr->currentFrameIndex);     // Set Instance Data
+            rr->shadowMomentsUniform->SetUniformData(ar->bonesMatrices, 2, rr->currentFrameIndex); // Set Animation Data
+
             rr->deferredLightingUniform->SetUniformData(camData, 0, rr->currentFrameIndex);      // Camera data
             rr->deferredLightingUniform->SetUniformData(mLightBuffer, 6, rr->currentFrameIndex); // Light data
+            UpdateShadowParamsUBO(*rr, rr->currentFrameIndex);
 
             // Add Render Passes!
             auto& rg = rr->renderGraph;
@@ -168,59 +212,138 @@ namespace Radis
             case RenderMode::Forward: {
                 rg->AddPass(
                     "ScenePass",
-                    [&](RGPassBuilder& builder)
+                    [&](RGPassBuilder& b)
                     {
-                        builder.writes(colorWriteTarget);
-                        builder.writes("SceneDepth");
+                        b.writes(colorWriteTarget);
+                        b.writes("SceneDepth");
                     },
                     std::bind(&RenderSystem::RenderSceneVK, this, std::placeholders::_1)
                 );
                 break;
             }
-            case RenderMode::Deferred: {
+/*            case RenderMode::Deferred: {
+                // MSM pass
+                rg->AddPass("ShadowMomentsPass",
+                    [&](RGPassBuilder& b) {
+                        b.writes("ShadowMomentsRaw");
+                        b.writes("ShadowDepth");
+                    },
+                    std::bind(&RenderSystem::RenderShadowMomentsVK, this, std::placeholders::_1)
+                );
+
+                rg->AddPass("ShadowBlurH",
+                    [&](RGPassBuilder& b) {
+                        b.setCompute();
+                        b.reads("ShadowMomentsRaw");
+                        b.writes("ShadowMomentsTmp");
+                    },
+                    std::bind(&RenderSystem::RenderShadowBlurHVK, this, std::placeholders::_1)
+                );
+                
+                rg->AddPass("ShadowBlurV",
+                    [&](RGPassBuilder& b) {
+                        b.setCompute(); 
+                        b.reads("ShadowMomentsTmp");
+                        b.writes("ShadowMoments");
+                    },
+                    std::bind(&RenderSystem::RenderShadowBlurVVK, this, std::placeholders::_1)
+                );
+
                 // G-Buffer pass
                 rg->AddPass("GBufferPass",
-                    [&](RGPassBuilder& builder) {
-                        builder.writes("gAlbedo");
-                        builder.writes("gNormal");
-                        builder.writes("gPBR");
-                        builder.writes("gEmissive");
-                        builder.writes("SceneDepth");
+                    [&](RGPassBuilder& b) {
+                        b.writes("gAlbedo");
+                        b.writes("gNormal");
+                        b.writes("gPBR");
+                        b.writes("gEmissive");
+                        b.writes("SceneDepth");
                     },
                     std::bind(&RenderSystem::RenderSceneDeferredGeometryVK, this, std::placeholders::_1)
                 );
 
                 // Lighting pass - directional/ambient -> raw HDR to SceneHDR
                 rg->AddPass("LightingPass",
-                    [&](RGPassBuilder& builder) {
-                        builder.reads("gAlbedo");
-                        builder.reads("gNormal");
-                        builder.reads("gPBR");
-                        builder.reads("gEmissive");
-                        builder.reads("SceneDepth");
-                        builder.writes("SceneHDR");
+                    [&](RGPassBuilder& b) {
+                        b.reads("gAlbedo");
+                        b.reads("gNormal");
+                        b.reads("gPBR");
+                        b.reads("gEmissive");
+                        b.reads("SceneDepth");
+                        b.reads("ShadowMoments");
+                        b.writes("SceneHDR");
                     },
                     std::bind(&RenderSystem::RenderSceneDeferredLightingVK, this, std::placeholders::_1)
                 );
 
                 // Light volumes pass - additive local lights -> SceneHDR
                 rg->AddPass("LightVolumesPass",
-                    [&](RGPassBuilder& builder) {
-                        builder.reads("gAlbedo");
-                        builder.reads("gNormal");
-                        builder.reads("gPBR");
-                        builder.reads("gEmissive");
-                        builder.reads("SceneDepth");
-                        builder.writes("SceneHDR");
+                    [&](RGPassBuilder& b) {
+                        b.reads("gAlbedo");
+                        b.reads("gNormal");
+                        b.reads("gPBR");
+                        b.reads("gEmissive");
+                        b.reads("SceneDepth");
+                        b.writes("SceneHDR");
                     },
                     std::bind(&RenderSystem::RenderLightVolumesVK, this, std::placeholders::_1)
                 );
 
                 // Tone map pass - reads accumulated HDR, writes final output
                 rg->AddPass("ToneMapPass",
-                    [&](RGPassBuilder& builder) {
-                        builder.reads("SceneHDR");
-                        builder.writes(colorWriteTarget);
+                    [&](RGPassBuilder& b) {
+                        b.reads("SceneHDR");
+                        b.writes(colorWriteTarget);
+                    },
+                    std::bind(&RenderSystem::RenderToneMapVK, this, std::placeholders::_1)
+                );
+
+                break;
+            }*/
+            case RenderMode::Deferred: {
+                // G-Buffer pass
+                rg->AddPass("GBufferPass",
+                    [&](RGPassBuilder& b) {
+                        b.writes("gAlbedo");
+                        b.writes("gNormal");
+                        b.writes("gPBR");
+                        b.writes("gEmissive");
+                        b.writes("SceneDepth");
+                    },
+                    std::bind(&RenderSystem::RenderSceneDeferredGeometryVK, this, std::placeholders::_1)
+                );
+
+                // Lighting pass - directional/ambient -> raw HDR to SceneHDR
+                rg->AddPass("LightingPass",
+                    [&](RGPassBuilder& b) {
+                        b.reads("gAlbedo");
+                        b.reads("gNormal");
+                        b.reads("gPBR");
+                        b.reads("gEmissive");
+                        b.reads("SceneDepth");
+                        b.reads("ShadowMoments");
+                        b.writes("SceneHDR");
+                    },
+                    std::bind(&RenderSystem::RenderSceneDeferredLightingVK, this, std::placeholders::_1)
+                );
+
+                // Light volumes pass - additive local lights -> SceneHDR
+                rg->AddPass("LightVolumesPass",
+                    [&](RGPassBuilder& b) {
+                        b.reads("gAlbedo");
+                        b.reads("gNormal");
+                        b.reads("gPBR");
+                        b.reads("gEmissive");
+                        b.reads("SceneDepth");
+                        b.writes("SceneHDR");
+                    },
+                    std::bind(&RenderSystem::RenderLightVolumesVK, this, std::placeholders::_1)
+                );
+
+                // Tone map pass - reads accumulated HDR, writes final output
+                rg->AddPass("ToneMapPass",
+                    [&](RGPassBuilder& b) {
+                        b.reads("SceneHDR");
+                        b.writes(colorWriteTarget);
                     },
                     std::bind(&RenderSystem::RenderToneMapVK, this, std::placeholders::_1)
                 );
@@ -230,7 +353,7 @@ namespace Radis
             case RenderMode::Raytracing: {
                 rg->AddPass(
                     "ScenePass",
-                    [&](RGPassBuilder& builder) {},
+                    [&](RGPassBuilder& b) {},
                     std::bind(&RenderSystem::RaytraceSceneVK, this, std::placeholders::_1)
                 );
                 break;
@@ -239,7 +362,16 @@ namespace Radis
         }
         else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
         {
+            auto ar = ecs->GetResource<AnimationResource>();
+            rr->shader->Use();
             rr->shader->SetCameraUBO(camData);
+
+            GLShader::SetupAnimationSSBO();
+            GLuint animationVBO = GLShader::GetAnimationSSBO();
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, animationVBO);
+            glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, ar->bonesMatrices.size() * sizeof(VQS), ar->bonesMatrices.data());
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
             RenderSceneGL();
         }
     }
@@ -280,104 +412,68 @@ namespace Radis
         ExecuteInstancedDrawCalls(cmd);
     }
 
-    void RenderSystem::RenderSceneDeferredGeometryVK(VkCommandBuffer cmd)
+    void RenderSystem::RenderShadowMomentsVK(VkCommandBuffer cmd)
     {
         auto rr = ecs->GetResource<RenderingResource>();
+        ScopedDebugLabel label(rr->device.get(), cmd, "Shadow Moments Pass", glm::vec4(0.2f, 0.2f, 0.9f, 1.0f));
+
+        // Bind pipeline
+        rr->shadowMomentsPipeline->Bind(cmd);
+
+        // Bind shadow uniform (light matrices + instances)
+        rr->shadowMomentsUniform->Bind(cmd, rr->shadowMomentsPipeline->GetLayout(), rr->currentFrameIndex);
+
+        // Set viewport/scissor to shadow resolution
+        VKTexture* sm = static_cast<VKTexture*>(rr->textureLibrary->GetTexture("ShadowMomentsRaw"));
+        VkExtent2D ext{ (uint32_t)sm->GetWidth(), (uint32_t)sm->GetHeight() };
+        SetViewportAndScissor(cmd, ext);
+
+        // Bind unified mesh + draw instances
         UnifiedMeshes* uMeshes = rr->modelLibrary->GetUnifiedMesh();
-        ScopedDebugLabel sceneDebugLabel(rr->device.get(), cmd, "Deferred G-Buffer Pass", glm::vec4(0.2f, 0.8f, 0.2f, 1.0f));
-
-        // Bind Pipeline, Uniforms, and Mesh
-        auto& pipeline = rr->gBufferPipeline;
-        pipeline->Bind(cmd);
-        rr->cameraUniform->Bind(cmd, pipeline->GetLayout(), rr->currentFrameIndex);
-        SetViewportAndScissor(cmd, rr->swapChain->GetSwapChainExtent());
         uMeshes->GetUnifiedMesh().Bind(cmd);
-
-        // Execute Draw Calls
         ExecuteInstancedDrawCalls(cmd);
     }
 
-    void RenderSystem::RenderSceneDeferredLightingVK(VkCommandBuffer cmd)
+    static inline uint32_t DivUp(uint32_t a, uint32_t b) { return (a + b - 1) / b; }
+
+    void RenderSystem::RenderShadowBlurHVK(VkCommandBuffer cmd)
     {
         auto rr = ecs->GetResource<RenderingResource>();
-        ScopedDebugLabel sceneDebugLabel(rr->device.get(), cmd, "Deferred Lighting Pass", glm::vec4(0.8f, 0.8f, 0.2f, 1.0f));
+        ScopedDebugLabel label(rr->device.get(), cmd, "Shadow Blur H", glm::vec4(0.2f, 0.6f, 0.9f, 1.0f));
 
-        // Bind Pipeline and Uniforms
-        auto& pipeline = rr->deferredLightingPipeline;
-        pipeline->Bind(cmd);
-        rr->deferredLightingUniform->Bind(cmd, pipeline->GetLayout(), rr->currentFrameIndex);
-        SetViewportAndScissor(cmd, rr->swapChain->GetSwapChainExtent());
+        rr->shadowBlurHPipeline->Bind(cmd);
+        rr->shadowBlurHUniform->Bind(cmd, rr->shadowBlurHPipeline->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_COMPUTE);
 
-        // Draw Fullscreen Quad
-        vkCmdDraw(cmd, 3, 1, 0, 0);
+        VKTexture* src = static_cast<VKTexture*>(rr->textureLibrary->GetTexture("ShadowMomentsRaw"));
+
+        rr->msmPC.width = (int)src->GetWidth();
+        rr->msmPC.height = (int)src->GetHeight();
+
+        vkCmdPushConstants(cmd, rr->shadowBlurHPipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(MSMBlurPC), &rr->msmPC);
+
+        const uint32_t gx = DivUp(src->GetWidth(), 16);
+        const uint32_t gy = DivUp(src->GetHeight(), 16);
+        vkCmdDispatch(cmd, gx, gy, 1);
     }
 
-    void RenderSystem::RaytraceSceneVK(VkCommandBuffer cmd)
+    void RenderSystem::RenderShadowBlurVVK(VkCommandBuffer cmd)
     {
         auto rr = ecs->GetResource<RenderingResource>();
-        auto& rp = rr->raytracingPipeline;
-        ScopedDebugLabel rtDebugLabel(rr->device.get(), cmd, "Raytrace Scene", glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-     
-        // Update TLAS with mInstanceData
-        {
-            std::vector<VkAccelerationStructureInstanceKHR> tlasInstances;
-            tlasInstances.reserve(mInstanceData.size());
-            for (size_t i = 0; i < mInstanceData.size(); ++i)
-            {
-                const auto& instanceData = mInstanceData[i];
-                VkAccelerationStructureInstanceKHR asInstance{};
-                asInstance.transform = ToTransformMatrixKHR(instanceData.model);
-                asInstance.instanceCustomIndex = static_cast<uint32_t>(i);
-                asInstance.accelerationStructureReference = rr->blasAccel[instanceData.meshID].address;
-                asInstance.instanceShaderBindingTableRecordOffset = 0;
-                asInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
-                asInstance.mask = 0xFF;
-                tlasInstances.emplace_back(asInstance);
-            }
+        ScopedDebugLabel label(rr->device.get(), cmd, "Shadow Blur V", glm::vec4(0.2f, 0.6f, 0.9f, 1.0f));
 
-            if (tlasInstances.empty())
-            {
-                VkAccelerationStructureInstanceKHR asInstance{};
-                asInstance.transform = ToTransformMatrixKHR(glm::mat4(0.0f));
-                asInstance.instanceCustomIndex = 0;
-                asInstance.accelerationStructureReference = rr->blasAccel[0].address;
-                asInstance.instanceShaderBindingTableRecordOffset = 0;
-                asInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
-                asInstance.mask = 0xFF;
-                tlasInstances.emplace_back(asInstance);
-            }
+        rr->shadowBlurVPipeline->Bind(cmd);
+        rr->shadowBlurVUniform->Bind(cmd, rr->shadowBlurVPipeline->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_COMPUTE);
 
-            auto rtr = ecs->GetResource<RaytracingResource>();
-            rtr->UpdateTopLevelASImmediate(tlasInstances);
-        }
-        
-        // Bind Pipeline and Uniforms
-        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, rp->GetPipeline());
-        rr->cameraUniform->Bind(cmd, rp->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR);
-        rr->rtUniform->Bind(cmd, rp->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR);
+        VKTexture* src = static_cast<VKTexture*>(rr->textureLibrary->GetTexture("ShadowMomentsTmp"));
 
-        // Trace Rays!
-        const VkExtent2D& size = rr->swapChain->GetSwapChainExtent();
-        vkCmdTraceRaysKHR(cmd, &rp->GetRaygenRegion(), &rp->GetMissRegion(), &rp->GetHitRegion(), &rp->GetCallableRegion(), size.width, size.height, 1);
+        rr->msmPC.width = (int)src->GetWidth();
+        rr->msmPC.height = (int)src->GetHeight();
 
-        // Synchronize ray tracing writes with subsequent reads
-        VkMemoryBarrier2 memoryBarrier = {
-            .sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER_2,
-            .pNext = nullptr,
-            .srcStageMask = VK_PIPELINE_STAGE_2_RAY_TRACING_SHADER_BIT_KHR,
-            .srcAccessMask = VK_ACCESS_2_SHADER_WRITE_BIT,
-            .dstStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT,
-            .dstAccessMask = VK_ACCESS_2_SHADER_READ_BIT
-        };
+        vkCmdPushConstants(cmd, rr->shadowBlurVPipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(MSMBlurPC), &rr->msmPC);
 
-        VkDependencyInfo dependencyInfo = {
-            .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
-            .pNext = nullptr,
-            .memoryBarrierCount = 1,
-            .pMemoryBarriers = &memoryBarrier
-        };
-
-        vkCmdPipelineBarrier2(cmd, &dependencyInfo);
+        const uint32_t gx = DivUp(src->GetWidth(), 16);
+        const uint32_t gy = DivUp(src->GetHeight(), 16);
+        vkCmdDispatch(cmd, gx, gy, 1);
     }
 
     void RenderSystem::RenderSceneGL()
@@ -457,6 +553,28 @@ namespace Radis
         WindowResource* wr = ecs->GetResource<WindowResource>();
         glm::uvec2 extant = wr->window->GetExtent();
         return static_cast<float>(extant.x) / static_cast<float>(extant.y);
+    }
+
+    // Utilities
+    void RenderSystem::UpdateShadowParamsUBO(RenderingResource& rr, int frameIndex)
+    {
+        ShadowParamsUniform sp{};
+
+        sp.lightViewProj = mShadowCamData.lightViewProj;
+        sp.lightView = mShadowCamData.lightView;
+        float z0 = mShadowCamData.z0;
+        float z1 = mShadowCamData.z1;
+
+        float invRange = 1.0f / std::max(z1 - z0, 1e-6f);
+
+        const float alpha = 1e-5f;
+        sp.zParams = glm::vec4(z0, z1, invRange, alpha);
+
+        VKTexture* sm = static_cast<VKTexture*>(rr.textureLibrary->GetTexture("ShadowMoments"));
+        sp.mapParams = glm::vec4(1.0f / sm->GetWidth(), 1.0f / sm->GetHeight(), 7.5f, 0.0f);
+
+        // Write to deferred lighting UBO binding
+        rr.deferredLightingUniform->SetUniformData(sp, 8, frameIndex);
     }
 
     void RenderSystem::SetViewportAndScissor(VkCommandBuffer cmd, const VkExtent2D& extent)
@@ -681,6 +799,110 @@ namespace Radis
                 data.meshID = meshID;
             }
         });
+    }
+
+    void RenderSystem::RaytraceSceneVK(VkCommandBuffer cmd)
+    {
+        auto rr = ecs->GetResource<RenderingResource>();
+        auto& rp = rr->raytracingPipeline;
+        ScopedDebugLabel rtDebugLabel(rr->device.get(), cmd, "Raytrace Scene", glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+
+        // Update TLAS with mInstanceData
+        {
+            std::vector<VkAccelerationStructureInstanceKHR> tlasInstances;
+            tlasInstances.reserve(mInstanceData.size());
+            for (size_t i = 0; i < mInstanceData.size(); ++i)
+            {
+                const auto& instanceData = mInstanceData[i];
+                VkAccelerationStructureInstanceKHR asInstance{};
+                asInstance.transform = ToTransformMatrixKHR(instanceData.model);
+                asInstance.instanceCustomIndex = static_cast<uint32_t>(i);
+                asInstance.accelerationStructureReference = rr->blasAccel[instanceData.meshID].address;
+                asInstance.instanceShaderBindingTableRecordOffset = 0;
+                asInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
+                asInstance.mask = 0xFF;
+                tlasInstances.emplace_back(asInstance);
+            }
+
+            if (tlasInstances.empty())
+            {
+                VkAccelerationStructureInstanceKHR asInstance{};
+                asInstance.transform = ToTransformMatrixKHR(glm::mat4(0.0f));
+                asInstance.instanceCustomIndex = 0;
+                asInstance.accelerationStructureReference = rr->blasAccel[0].address;
+                asInstance.instanceShaderBindingTableRecordOffset = 0;
+                asInstance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
+                asInstance.mask = 0xFF;
+                tlasInstances.emplace_back(asInstance);
+            }
+
+            auto rtr = ecs->GetResource<RaytracingResource>();
+            rtr->UpdateTopLevelASImmediate(tlasInstances);
+        }
+
+        // Bind Pipeline and Uniforms
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, rp->GetPipeline());
+        rr->cameraUniform->Bind(cmd, rp->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR);
+        rr->rtUniform->Bind(cmd, rp->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR);
+
+        // Trace Rays!
+        const VkExtent2D& size = rr->swapChain->GetSwapChainExtent();
+        vkCmdTraceRaysKHR(cmd, &rp->GetRaygenRegion(), &rp->GetMissRegion(), &rp->GetHitRegion(), &rp->GetCallableRegion(), size.width, size.height, 1);
+
+        // Synchronize ray tracing writes with subsequent reads
+        VkMemoryBarrier2 memoryBarrier = {
+            .sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER_2,
+            .pNext = nullptr,
+            .srcStageMask = VK_PIPELINE_STAGE_2_RAY_TRACING_SHADER_BIT_KHR,
+            .srcAccessMask = VK_ACCESS_2_SHADER_WRITE_BIT,
+            .dstStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT,
+            .dstAccessMask = VK_ACCESS_2_SHADER_READ_BIT
+        };
+
+        VkDependencyInfo dependencyInfo = {
+            .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+            .pNext = nullptr,
+            .memoryBarrierCount = 1,
+            .pMemoryBarriers = &memoryBarrier
+        };
+
+        vkCmdPipelineBarrier2(cmd, &dependencyInfo);
+    }
+
+    // -----------------------------------------
+    // Deferred Rendering Passes
+    // -----------------------------------------
+
+    void RenderSystem::RenderSceneDeferredGeometryVK(VkCommandBuffer cmd)
+    {
+        auto rr = ecs->GetResource<RenderingResource>();
+        UnifiedMeshes* uMeshes = rr->modelLibrary->GetUnifiedMesh();
+        ScopedDebugLabel sceneDebugLabel(rr->device.get(), cmd, "Deferred G-Buffer Pass", glm::vec4(0.2f, 0.8f, 0.2f, 1.0f));
+
+        // Bind Pipeline, Uniforms, and Mesh
+        auto& pipeline = rr->gBufferPipeline;
+        pipeline->Bind(cmd);
+        rr->cameraUniform->Bind(cmd, pipeline->GetLayout(), rr->currentFrameIndex);
+        SetViewportAndScissor(cmd, rr->swapChain->GetSwapChainExtent());
+        uMeshes->GetUnifiedMesh().Bind(cmd);
+
+        // Execute Draw Calls
+        ExecuteInstancedDrawCalls(cmd);
+    }
+
+    void RenderSystem::RenderSceneDeferredLightingVK(VkCommandBuffer cmd)
+    {
+        auto rr = ecs->GetResource<RenderingResource>();
+        ScopedDebugLabel sceneDebugLabel(rr->device.get(), cmd, "Deferred Lighting Pass", glm::vec4(0.8f, 0.8f, 0.2f, 1.0f));
+
+        // Bind Pipeline and Uniforms
+        auto& pipeline = rr->deferredLightingPipeline;
+        pipeline->Bind(cmd);
+        rr->deferredLightingUniform->Bind(cmd, pipeline->GetLayout(), rr->currentFrameIndex);
+        SetViewportAndScissor(cmd, rr->swapChain->GetSwapChainExtent());
+
+        // Draw Fullscreen Quad
+        vkCmdDraw(cmd, 3, 1, 0, 0);
     }
 
     void RenderSystem::RenderLightVolumesVK(VkCommandBuffer cmd)

@@ -75,4 +75,26 @@ namespace Radis
         float normalX, normalY, normalZ;
         float texU, texV; float _padding = 777.0f;
     };
+
+    struct ShadowCameraUniform {
+        glm::mat4 lightViewProj;
+        glm::mat4 lightView;
+        float z0;
+        float z1;
+        float pad0 = 7777.0f;
+        float pad1 = 7777.0f;
+    };
+
+    struct ShadowParamsUniform {
+        glm::mat4 lightViewProj;
+        glm::mat4 lightView;
+        glm::vec4 zParams;     // (z0, z1, 1/(z1-z0), alpha)
+        glm::vec4 mapParams;   // (invW, invH, blurRadius, pad)
+    };
+
+    struct MSMBlurPC {
+        int radius;
+        int width;
+        int height;
+    };
 }
