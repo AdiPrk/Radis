@@ -16,7 +16,7 @@ float gauss(float x, float sigma)
     return exp(-(x*x) / (2.0*sigma*sigma));
 }
 
-const int MAX_R = 32;
+const int MAX_R = 64;
 shared vec4 tile[16 + 2*MAX_R][16];
 
 void main()

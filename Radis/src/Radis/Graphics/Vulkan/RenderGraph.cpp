@@ -260,7 +260,9 @@ namespace Radis
                         colorAttachments[i].loadOp = previouslyWrittenResources.count(colorTargets[i]) > 0
                             ? VK_ATTACHMENT_LOAD_OP_LOAD : VK_ATTACHMENT_LOAD_OP_CLEAR;
                         colorAttachments[i].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-                        colorAttachments[i].clearValue.color = { {0.0f, 0.0f, 0.0f, 1.0f} };
+                        //colorAttachments[i].clearValue.color = { {0.0f, 0.0f, 0.0f, 1.0f} };
+                        colorAttachments[i].clearValue.color = { {1.0f, 1.0f, 1.0f, 1.0f} }; // for moments
+
                     }
 
                     VkRenderingAttachmentInfo depthAttachment{};

@@ -166,17 +166,18 @@ namespace Radis
             // Fixed stable shadow frustum
             constexpr float kShadowHalfWidth = 15.0f; // tune to scene size
             constexpr float kShadowNear = 0.1f;
-            constexpr float kShadowFar = 200.0f;
-            constexpr float kDistBack = 100.0f;
+            constexpr float kShadowFar = 35.0f;
+            constexpr float kDistBack = 15.0f;
 
             glm::vec3 sceneCenter(0.0f);
             glm::vec3 eye = sceneCenter - L * kDistBack;
             glm::mat4 lightView = glm::lookAt(eye, sceneCenter, up);
-            glm::mat4 lightProj = glm::ortho(
+            glm::mat4 lightProj = glm::orthoRH_ZO(
                 -kShadowHalfWidth, kShadowHalfWidth,
                 -kShadowHalfWidth, kShadowHalfWidth,
                 kShadowNear, kShadowFar
             );
+            lightProj[1][1] *= -1;
 
             mShadowCamData.lightView = lightView;
             mShadowCamData.lightViewProj = lightProj * lightView;

@@ -203,8 +203,7 @@ float ComputeDirectionalShadow(vec3 worldPos)
     if (any(lessThan(uv, vec2(0.0))) || any(greaterThan(uv, vec2(1.0))))
         return 0.0;
 
-    float lightViewZ = -(sh.lightView * vec4(worldPos, 1.0)).z;
-    float zf = clamp((lightViewZ - sh.zParams.x) * sh.zParams.z, 0.0, 1.0);
+    float zf = clamp(ndc.z, 0.0, 1.0);
 
     vec4  moments = texture(shadowMoments, uv);
     float alpha   = sh.zParams.w;
@@ -249,7 +248,7 @@ void main()
         vec3 lightCol = light.colorIntensity.xyz * light.colorIntensity.w;
 
         // Apply shadow to directional contribution
-        Lo += computePBRLight(albedo, metallic, roughness, N, V, L, lightCol) * (shadow * shadow);
+        Lo += computePBRLight(albedo, metallic, roughness, N, V, L, lightCol) * (1.0 - shadow);
     }
 
     vec3 ambient = vec3(0.01) * albedo * ao;
