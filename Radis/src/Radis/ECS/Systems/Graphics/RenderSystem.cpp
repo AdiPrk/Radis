@@ -769,9 +769,9 @@ namespace Radis
 
                 InstanceUniforms& data = mInstanceData[writeIdx];
 
-                if (boneOffset == AnimationLibrary::INVALID_ANIMATION_INDEX)
+                if (boneOffset == AnimationLibrary::INVALID_ANIMATION_INDEX && mc.NormalizeModel)
                 {
-                    data.model = tc.GetTransform() * model->GetNormalizationMatrix();
+                     data.model = tc.GetTransform() * model->GetNormalizationMatrix();
                 }
                 else
                 {

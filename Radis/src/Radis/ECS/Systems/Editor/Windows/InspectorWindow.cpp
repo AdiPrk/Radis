@@ -234,10 +234,9 @@ namespace Radis
                     ImGui::EndDragDropTarget();
                 }
 
-                if (ImGui::ColorEdit4("Tint Color", glm::value_ptr(component.TintColor)))
-                {
-                    printf("tint changed to %f, %f, %f, %f\n", component.TintColor.x, component.TintColor.y, component.TintColor.z, component.TintColor.w);
-                }
+                ImGui::ColorEdit4("Tint Color", glm::value_ptr(component.TintColor));
+
+                ImGui::Checkbox("Normalize Model", &component.NormalizeModel);
 
                 // Checkbox with slider + input field for metallic and roughness overrides
                 ImGui::Checkbox("Override Metallic", &component.UseMetallicOverride);

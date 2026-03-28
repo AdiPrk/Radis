@@ -51,7 +51,7 @@ namespace Radis
 
     void RenderingResource::Create(IWindow* window)
     {
-        msmPC.radius = 4.0f;
+        msmPC.radius = 4;
 
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
         {
@@ -126,15 +126,15 @@ namespace Radis
             modelLibrary->AddModel(Assets::ModelsPath + "SteampunkRobot.gltf", true);
             modelLibrary->AddModel(Assets::ModelsPath + "DragonAttenuation.glb", true);
             modelLibrary->AddModel(Assets::ModelsPath + "Sponza.gltf", true);
-            // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Curtains.gltf", true, false, false);
-            // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Main.gltf", true, false);
+            modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Curtains.gltf", true, false, false);
+            modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Main.gltf", true, false);
 
             // Model* sponzaModel = modelLibrary->GetModel(sponzaInd);
             //VFS::ModelSerializer::save(*sponzaModel, "Assets/Models/dm/Sponza.dm", 0xDEADBEEF);
             // load it to test
             //Model newModelTest;
             //VFS::ModelSerializer::load(newModelTest, "Assets/Models/dm/Sponza.dm");
-            //printf("done"); // for breakpoint
+            //printf("done"); 
 
             // modelLibrary->AddModel("Assets/Models/okayu.pmx");
             // modelLibrary->AddModel("Assets/Models/AlisaMikhailovna.fbx");

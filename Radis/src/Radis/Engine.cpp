@@ -65,7 +65,7 @@ namespace Radis
         mEcs.AddSystem<SwapRendererSystem>();
         mEcs.AddSystem<AnimationSystem>();
         mEcs.AddSystem<PresentSystem>();
-        // mEcs.AddSystem<PhysicsSystem>();
+        //mEcs.AddSystem<PhysicsSystem>();
         mEcs.AddSystem<RenderSystem>();
         if (sEditorEnabled)
         {
@@ -75,7 +75,7 @@ namespace Radis
         // ---------------------------------
 
         // Resources -----------------------
-        // mEcs.AddResource<NetworkingResource>(mSpecs.serverAddress, mSpecs.serverPort);
+        mEcs.AddResource<NetworkingResource>(mSpecs.serverAddress, mSpecs.serverPort);
         mEcs.AddResource<SwapRendererResource>();
         mEcs.AddResource<WindowResource>(mSpecs.width, mSpecs.height, mSpecs.name);
 

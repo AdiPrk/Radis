@@ -52,6 +52,7 @@ namespace Radis
         bool UpdateModelID = true;
         glm::vec4 TintColor = glm::vec4(1.0f);
 
+        bool NormalizeModel = true;
         bool UseMetallicOverride = false;
         bool UseRoughnessOverride = false;
         bool UseEmissiveOverride = false;
