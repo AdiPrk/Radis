@@ -950,6 +950,8 @@ namespace Radis
         rr->tonemapUniform->Bind(cmd, rr->tonemapPipeline->GetLayout(), rr->currentFrameIndex);
         SetViewportAndScissor(cmd, rr->swapChain->GetSwapChainExtent());
 
+        vkCmdPushConstants(cmd, rr->tonemapPipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(float), &rr->exposure);
+
         // Fullscreen triangle
         vkCmdDraw(cmd, 3, 1, 0, 0);
     }

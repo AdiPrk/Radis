@@ -24,7 +24,7 @@ namespace Radis
         void* GetTextureID() override { return reinterpret_cast<void*>(static_cast<uintptr_t>(ID)); }
 
         // generates texture from image data
-        void Generate(unsigned int width, unsigned int height, const unsigned char* data);
+        void Generate(unsigned int width, unsigned int height);
         void Bind() const;
 
         // holds the ID of the texture object, used for all texture operations to reference to this particular texture

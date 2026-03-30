@@ -23,7 +23,13 @@ namespace Radis
         int height{};
         int channels{};
         std::string name{};
+
+        // LDR pixel data (STB/KTX2)
         std::vector<unsigned char> pixels{};
+
+        // HDR pixel data, populated instead of pixels if isHDR = true
+        std::vector<float> floatPixels{};
+        bool isHDR{ false };
 
         // Compression & mips (for KTX2)
         bool isCompressed{ false };
@@ -45,6 +51,21 @@ namespace Radis
         VkImageUsageFlags usage{};
         VkImageLayout finalLayout{};
         VkImageTiling tiling{};
+
+        // Helpers
+        size_t ByteSize() const
+        {
+            return isHDR
+                ? floatPixels.size() * sizeof(float)
+                : pixels.size();
+        }
+
+        const void* RawData() const
+        {
+            return isHDR
+                ? static_cast<const void*>(floatPixels.data())
+                : static_cast<const void*>(pixels.data());
+        }
     };
 
     class ITexture
@@ -56,7 +77,7 @@ namespace Radis
         int GetWidth() const { return mData.width; }
         int GetHeight() const { return mData.height; }
         int GetChannels() const { return mData.channels; }
-        uint64_t GetImageSize() const { return mData.pixels.size(); }
+        size_t GetByteSize() const { return mData.ByteSize(); }
 
         virtual void* GetTextureID() = 0;
 

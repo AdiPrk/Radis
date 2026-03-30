@@ -122,10 +122,10 @@ vec3 OctDecode(vec2 f)
 // Skybox helpers
 // ---------------------------------------------------------------------------
 
-// Reconstruct the world-space view ray direction for a sky pixel
+// Reconstruct world space view ray direction for a sky pixel
 vec3 GetSkyDirection(vec2 uv)
 {
-    vec4 ndc      = vec4(uv * 2.0 - 1.0, 1.0, 1.0);
+    vec4 ndc = vec4(uv * 2.0 - 1.0, 1.0, 1.0);
     vec4 worldPos = uniforms.invProjView * ndc;
     return normalize(worldPos.xyz / worldPos.w - uniforms.cameraPos);
 }
@@ -143,13 +143,13 @@ vec2 DirToEquirect(vec3 dir)
 void main()
 {
     float depth = texture(gDepth, fragTexCoord).r;
-    if (depth >= 1.0)
+    if (depth >= 1.0) // Skybox!
     {
-        // vec3 dir    = GetSkyDirection(fragTexCoord);
-        // vec2 envUV  = DirToEquirect(dir);
-        // vec3 skyCol = texture(envMap, envUV).rgb;
-        // outColor = vec4(skyCol, 1.0);
-        outColor = vec4(0.0, 0.0, 0.0, 1.0);
+        vec3 dir    = GetSkyDirection(fragTexCoord);
+        vec2 envUV  = DirToEquirect(dir);
+        vec3 skyCol = texture(envMap, envUV).rgb;
+        outColor = vec4(skyCol, 1.0);
+
         return;
     }
 

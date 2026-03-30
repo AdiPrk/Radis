@@ -58,15 +58,6 @@ vec4 SampleTexture(uint texIndex, vec2 uv)
 #endif
 }
 
-const vec2 invAtan = vec2(0.1591, 0.3183);
-vec2 SampleSphericalMap(vec3 v)
-{
-    vec2 uv = vec2(atan(v.z, v.x), asin(v.y));
-    uv *= invAtan;
-    uv += 0.5;
-    return uv;
-}
-
 // Octahedral normal encoding
 // Encodes a unit normal vector to a 2D octahedral representation
 vec2 OctEncode(vec3 n)
@@ -93,11 +84,6 @@ void main()
     {
         baseColor = SampleTexture(textureIndices.x, fragTexCoord) * fragTint * baseColorFactor;
     }
-    
-    // Temporary code to debug draw the equirectangular texture onto a cube; --------
-    vec2 uv = SampleSphericalMap(normalize(localPos));
-    baseColor = vec4(SampleTexture(14, uv).rgb, 1.0);
-    // ------------------------------------------------------------------------------
     
     // Alpha test - discard transparent fragments
     if (baseColor.a < 0.1)

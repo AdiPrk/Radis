@@ -136,7 +136,7 @@ namespace Radis
 		Buffer stagingBuffer{};
 		Allocator::CreateBuffer(
 			stagingBuffer,
-			mData.pixels.size(),
+			mData.ByteSize(),
 			VK_BUFFER_USAGE_2_TRANSFER_SRC_BIT_KHR,
 			VMA_MEMORY_USAGE_AUTO,
 			VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
@@ -150,7 +150,7 @@ namespace Radis
 			return;
 		}
 
-		std::memcpy(stagingBuffer.mapping, mData.pixels.data(), mData.pixels.size());
+		std::memcpy(stagingBuffer.mapping, mData.RawData(), mData.ByteSize());
 
 		// 2. Create image with compressed format & mips
 		VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
@@ -255,7 +255,7 @@ namespace Radis
 		Buffer stagingBuffer{};
 		Allocator::CreateBuffer(
 			stagingBuffer,
-            mData.pixels.size(),
+            mData.ByteSize(),
 			VK_BUFFER_USAGE_2_TRANSFER_SRC_BIT_KHR,  // Note: new flag type (VkBufferUsageFlags2KHR)
 			VMA_MEMORY_USAGE_AUTO,                   // auto-select memory type
 			VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT // ensures host-visible, coherent memory
@@ -265,7 +265,7 @@ namespace Radis
 		// Copy pixel data to staging buffer (mapping is stored in ABuffer.mapping)
 		if (stagingBuffer.mapping)
 		{
-			memcpy(stagingBuffer.mapping, mData.pixels.data(), static_cast<size_t>(mData.pixels.size()));
+			memcpy(stagingBuffer.mapping, mData.RawData(), static_cast<size_t>(mData.ByteSize()));
 		}
 		else
 		{

@@ -117,6 +117,7 @@ namespace Radis
         
         // Env map
         uint32_t envMapIndex;
+        float exposure = 1.0f;
 
         bool SupportsVulkan();
 

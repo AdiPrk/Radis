@@ -77,9 +77,9 @@ namespace Radis
 		CreatePipeline();
 	}
 
-	Pipeline::Pipeline(Device& device, VkFormat colorFormat, VkFormat depthFormat, const std::vector<Uniform*>& uniforms, const std::string& vertFile, const std::string& fragFile, const PipelineOptions& options, bool useVertexInput)
+	Pipeline::Pipeline(Device& device, VkFormat colorFormat, VkFormat depthFormat, const std::vector<Uniform*>& uniforms, bool wireframe, const std::string& vertFile, const std::string& fragFile, const PipelineOptions& options, bool useVertexInput)
 		: device(device)
-		, isWireframe(false)
+		, isWireframe(wireframe)
 		, mVertPath(ShaderDir + vertFile)
 		, mFragPath(ShaderDir + fragFile)
 		, mTescPath("")

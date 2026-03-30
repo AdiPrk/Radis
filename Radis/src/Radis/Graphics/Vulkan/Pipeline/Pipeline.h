@@ -81,7 +81,7 @@ namespace Radis
 		Pipeline(Device& device, VkFormat colorFormat, VkFormat depthFormat, const std::vector<Uniform*>& uniforms, bool wireframe, const std::string& vertFile, const std::string& fragFile, const std::string& tescFile, const std::string& teseFile, bool useVertexInput = true);
 
 		// Constructor with PipelineOptions for custom blend/depth/cull/push-constant settings
-		Pipeline(Device& device, VkFormat colorFormat, VkFormat depthFormat, const std::vector<Uniform*>& uniforms, const std::string& vertFile, const std::string& fragFile, const PipelineOptions& options, bool useVertexInput = true);
+		Pipeline(Device& device, VkFormat colorFormat, VkFormat depthFormat, const std::vector<Uniform*>& uniforms, bool wireframe, const std::string& vertFile, const std::string& fragFile, const PipelineOptions& options, bool useVertexInput = true);
 
 		void DestroyPipeline();
 		void Recreate();

@@ -341,11 +341,17 @@ namespace Radis
                 //lightVolOpts.cullFrontFace = true;
                 lightVolOpts.pushConstantSize = sizeof(LightVolumePushConstants);
                 lightVolOpts.pushConstantStages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-                lightVolumePipeline = std::make_unique<Pipeline>(*device, hdrFormat, VK_FORMAT_UNDEFINED, deferredLightingUnis, "lightVolume.vert", "lightVolume.frag", lightVolOpts);
+                lightVolumePipeline = std::make_unique<Pipeline>(*device, hdrFormat, VK_FORMAT_UNDEFINED, deferredLightingUnis, false, "lightVolume.vert", "lightVolume.frag", lightVolOpts);
             }
 
             // Tone mapping: reads SceneHDR, outputs final color
-            tonemapPipeline = std::make_unique<Pipeline>(*device, hdrFormat, VK_FORMAT_UNDEFINED, tonemapUnis, false, "fullscreen.vert", "tonemap.frag", false);
+            {
+                PipelineOptions tonemapOpts;
+                tonemapOpts.pushConstantSize = sizeof(float);
+                tonemapOpts.pushConstantStages = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+                tonemapPipeline = std::make_unique<Pipeline>(*device, hdrFormat, VK_FORMAT_UNDEFINED, tonemapUnis, false, "fullscreen.vert", "tonemap.frag", tonemapOpts, false);
+            }
 
             raytracingPipeline = std::make_unique<RaytracingPipeline>(*device, rtunis);
         }
