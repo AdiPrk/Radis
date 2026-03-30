@@ -88,6 +88,7 @@ namespace Radis
         std::unique_ptr<Pipeline> pipeline;
         std::unique_ptr<Pipeline> wireframePipeline;
         std::unique_ptr<Pipeline> gBufferPipeline;
+        std::unique_ptr<Pipeline> gBufferWireframePipeline;
         std::unique_ptr<Pipeline> deferredLightingPipeline;
         std::unique_ptr<Pipeline> lightVolumePipeline;
         std::unique_ptr<Pipeline> tonemapPipeline;
@@ -117,6 +118,7 @@ namespace Radis
         
         // Env map
         uint32_t envMapIndex;
+        uint32_t irMapIndex;
         float exposure = 1.0f;
 
         bool SupportsVulkan();

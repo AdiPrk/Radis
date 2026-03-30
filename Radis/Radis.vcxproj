@@ -267,6 +267,8 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Radis\Graphics\Common\Animation\Animator.cpp" />
     <ClCompile Include="src\Radis\Graphics\Common\Animation\Bone.cpp" />
     <ClCompile Include="src\Radis\Graphics\Common\AssimpGlmHelper.cpp" />
+    <ClCompile Include="src\Radis\Graphics\Common\IBL\rgbe.cpp" />
+    <ClCompile Include="src\Radis\Graphics\Common\IBL\IrradianceMap.cpp" />
     <ClCompile Include="src\Radis\Graphics\Common\Model.cpp" />
     <ClCompile Include="src\Radis\Graphics\Common\ModelLibrary.cpp" />
     <ClCompile Include="src\Radis\Graphics\Common\Path\ArcLengthTable.cpp" />
@@ -382,6 +384,8 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Radis\Graphics\Common\Animation\Bone.h" />
     <ClInclude Include="src\Radis\Graphics\Common\Animation\VQS.h" />
     <ClInclude Include="src\Radis\Graphics\Common\AssimpGlmHelper.h" />
+    <ClInclude Include="src\Radis\Graphics\Common\IBL\rgbe.h" />
+    <ClInclude Include="src\Radis\Graphics\Common\IBL\IrradianceMap.h" />
     <ClInclude Include="src\Radis\Graphics\Common\Model.h" />
     <ClInclude Include="src\Radis\Graphics\Common\ModelLibrary.h" />
     <ClInclude Include="src\Radis\Graphics\Common\Path\ArcLengthTable.h" />
@@ -434,8 +438,6 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <None Include="Assets\Scenes\cube.json" />
     <None Include="Assets\Scenes\lighttest.json" />
     <None Include="Assets\Scenes\sponza.json" />
-    <None Include="Assets\Shaders\deferredLightShadow.frag" />
-    <None Include="src\Radis\Graphics\Vulkan\Uniform\Uniform.inl" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="Assets\Shaders\*.*" Exclude="Assets\Shaders\*.spv;Assets\Shaders\spv\*.*">

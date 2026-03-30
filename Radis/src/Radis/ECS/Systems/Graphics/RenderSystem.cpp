@@ -58,6 +58,25 @@ namespace Radis
         mDrawCalls.reserve(128);
         mLightData.reserve(64);
         mMeshInstanceCounts.reserve(128);
+
+        constexpr int N = 100;
+        float hammersley[2 * N];
+
+        int kk;
+        float p, u;
+        int pos = 0;
+        for (int k = 0; k < N; k++) {
+            for (p = 0.5f, kk = k, u = 0.0f; kk; p *= 0.5f, kk >>= 1)
+                if (kk & 1)
+                    u += p;
+            float v = (k + 0.5f) / N;
+            hammersley[pos++] = u;
+            hammersley[pos++] = v;
+        }
+        printf("Hammersley points:\n");
+        for (int i = 0; i < N; i++) {
+            printf("(%f, %f), ", hammersley[2 * i], hammersley[2 * i + 1]);
+        }
     }
 
     void RenderSystem::Exit()
@@ -880,7 +899,7 @@ namespace Radis
         ScopedDebugLabel sceneDebugLabel(rr->device.get(), cmd, "Deferred G-Buffer Pass", glm::vec4(0.2f, 0.8f, 0.2f, 1.0f));
 
         // Bind Pipeline, Uniforms, and Mesh
-        auto& pipeline = rr->gBufferPipeline;
+        auto& pipeline = rr->renderWireframe ? rr->gBufferWireframePipeline : rr->gBufferPipeline;
         pipeline->Bind(cmd);
         rr->cameraUniform->Bind(cmd, pipeline->GetLayout(), rr->currentFrameIndex);
         SetViewportAndScissor(cmd, rr->swapChain->GetSwapChainExtent());

@@ -252,7 +252,7 @@ void main()
     }
 
     vec3 ambient = vec3(0.01) * albedo * ao;
-    vec3 color = Lo + ambient + emissive;
+    vec3 color = Lo /*+ ambient*/ + emissive;
 
     outColor = vec4(color, 1.0);
 }

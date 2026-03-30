@@ -28,5 +28,5 @@ int main(int argc, char* argv[])
     specs.graphicsAPI = Radis::GraphicsAPI::Vulkan;
 
     Radis::Engine engine(specs, argc, argv);
-    return engine.Run("cube");
+    return engine.Run("sponza2");
 }

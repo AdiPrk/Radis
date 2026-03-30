@@ -154,14 +154,15 @@ void main()
     }
 
     vec4 albedoSample = texture(gAlbedo, fragTexCoord);
-    vec4 normalPBR    = vec4(texture(gNormal, fragTexCoord).rg, texture(gPBR, fragTexCoord).rg);
+    vec4 pbrSample = texture(gPBR, fragTexCoord);
+    vec4 normalPBR = vec4(texture(gNormal, fragTexCoord).rg, pbrSample.rg);
     vec3 emissive     = texture(gEmissive, fragTexCoord).rgb;
 
     vec3  albedo    = albedoSample.rgb;
     vec3  N         = OctDecode(normalPBR.xy);
     float metallic  = normalPBR.z;
     float roughness = normalPBR.w;
-    float ao        = texture(gPBR, fragTexCoord).b;
+    float ao        = pbrSample.b;
 
     vec3 worldPos = ReconstructWorldPos(fragTexCoord, depth);
     vec3 V = normalize(uniforms.cameraPos - worldPos);
@@ -181,7 +182,7 @@ void main()
         Lo += computePBRLight(albedo, metallic, roughness, N, V, L, lightCol);
     }
 
-    vec3 ambient = vec3(0.01) * albedo * ao;
+    vec3 ambient = vec3(0.0) /*vec3(0.01) * albedo * ao*/;
     vec3 color = Lo + ambient + emissive;
 
     outColor = vec4(color, 1.0);

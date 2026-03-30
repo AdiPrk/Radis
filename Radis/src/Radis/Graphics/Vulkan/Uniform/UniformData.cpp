@@ -171,8 +171,11 @@ namespace Radis
         VKTexture* envMapTex = static_cast<VKTexture*>(
             renderData.textureLibrary->GetTextureByIndex(renderData.envMapIndex)
         );
+        VKTexture* irMapTex = static_cast<VKTexture*>(
+            renderData.textureLibrary->GetTextureByIndex(renderData.irMapIndex)
+        );
 
-        if (!gAlbedoTex || !gNormalTex || !gPBRTex || !gEmissiveTex || !gDepthTex || !shadowMomentsTex || !shadowDepthTex || !envMapTex)
+        if (!gAlbedoTex || !gNormalTex || !gPBRTex || !gEmissiveTex || !gDepthTex || !shadowMomentsTex || !shadowDepthTex || !envMapTex || !irMapTex)
         {
             RADIS_ERROR("One or more textures not found!");
             return;
@@ -264,6 +267,13 @@ namespace Radis
             };
             writer.WriteImage(9, &envMapInfo);
 
+            VkDescriptorImageInfo irMapInfo{
+                .sampler = defaultSampler,
+                .imageView = irMapTex->GetImageView(),
+                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            };
+            writer.WriteImage(10, &irMapInfo);
+
             writer.Build(uniform.GetDescriptorSets()[frameIndex]);
         }
     }
@@ -285,7 +295,11 @@ namespace Radis
             renderData.textureLibrary->GetTextureByIndex(renderData.envMapIndex)
         );
 
-        if (!gAlbedoTex || !gNormalTex || !gPBRTex || !gEmissiveTex || !gDepthTex || !shadowMomentsTex || !shadowDepthTex || !envMapTex)
+        VKTexture* irMapTex = static_cast<VKTexture*>(
+            renderData.textureLibrary->GetTextureByIndex(renderData.irMapIndex)
+        );
+
+        if (!gAlbedoTex || !gNormalTex || !gPBRTex || !gEmissiveTex || !gDepthTex || !shadowMomentsTex || !shadowDepthTex || !envMapTex || !irMapTex)
         {
             RADIS_ERROR("One or more textures not found!");
             return;
@@ -375,6 +389,13 @@ namespace Radis
                 .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             };
             writer.WriteImage(9, &envMapInfo);
+
+            VkDescriptorImageInfo irMapInfo{
+                .sampler = defaultSampler,
+                .imageView = irMapTex->GetImageView(),
+                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            };
+            writer.WriteImage(10, &irMapInfo);
 
             writer.Overwrite(uniform.GetDescriptorSets()[frameIndex]);
         }
