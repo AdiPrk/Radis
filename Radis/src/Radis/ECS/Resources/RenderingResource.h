@@ -114,6 +114,9 @@ namespace Radis
         bool supportsVulkan = true;
 
         MSMBlurPC msmPC;
+        
+        // Env map
+        uint32_t envMapIndex;
 
         bool SupportsVulkan();
 

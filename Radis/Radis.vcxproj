@@ -434,6 +434,7 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <None Include="Assets\Scenes\cube.json" />
     <None Include="Assets\Scenes\lighttest.json" />
     <None Include="Assets\Scenes\sponza.json" />
+    <None Include="Assets\Shaders\deferredLightShadow.frag" />
     <None Include="src\Radis\Graphics\Vulkan\Uniform\Uniform.inl" />
   </ItemGroup>
   <ItemGroup>

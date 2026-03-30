@@ -534,10 +534,10 @@ namespace Radis
 
         VkDescriptorImageInfo outImageInfo{};
         outImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL; // storage image layout
-        outImageInfo.sampler = VK_NULL_HANDLE; // storage images donÅft use samplers
+        outImageInfo.sampler = VK_NULL_HANDLE; // storage images donÔøΩft use samplers
         VkDescriptorImageInfo heatmapImageInfo{};
         heatmapImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL; // storage image layout
-        heatmapImageInfo.sampler = VK_NULL_HANDLE; // storage images donÅft use samplers
+        heatmapImageInfo.sampler = VK_NULL_HANDLE; // storage images donÔøΩft use samplers
 
         for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex) 
         {
