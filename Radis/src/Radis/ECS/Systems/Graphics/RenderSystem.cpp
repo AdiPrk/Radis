@@ -920,6 +920,8 @@ namespace Radis
         rr->deferredLightingUniform->Bind(cmd, pipeline->GetLayout(), rr->currentFrameIndex);
         SetViewportAndScissor(cmd, rr->swapChain->GetSwapChainExtent());
 
+        vkCmdPushConstants(cmd, rr->tonemapPipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &rr->useIrrDefuse);
+
         // Draw Fullscreen Quad
         vkCmdDraw(cmd, 3, 1, 0, 0);
     }

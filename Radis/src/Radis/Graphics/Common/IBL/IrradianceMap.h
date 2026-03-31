@@ -60,7 +60,7 @@ namespace Radis::IBL {
     /// @param outW      Output width  (default 400).
     /// @param outH      Output height (default 200).
     /// @returns         true on success.
-    [[nodiscard]] bool bakeToHDR(const SHCoefficients& sh,
+    bool bakeToHDR(const SHCoefficients& sh,
         const std::string& outPath,
         int outW = 400,
         int outH = 200);
@@ -69,7 +69,7 @@ namespace Radis::IBL {
     ///
     /// @param outSH     Optional; receives the intermediate SH coefficients so the
     ///                  caller can also upload them directly to the GPU.
-    [[nodiscard]] bool generateIrradianceMap(const std::string& hdrPath,
+    bool generateIrradianceMap(const std::string& hdrPath,
         const std::string& outPath,
         SHCoefficients* outSH = nullptr,
         int outW = 400,
@@ -77,27 +77,22 @@ namespace Radis::IBL {
 
 } // namespace IBL
 
-// ─────────────────────────────────────────────────────────────────────────────
-// GLSL reference (paste into your lighting fragment shader)
-// ─────────────────────────────────────────────────────────────────────────────
+// potentially
+//  
+// vec3 E[9]; // SHCoefficients::E[]
 //
-//  layout(set=0, binding=N, std140) uniform IrradianceBlock {
-//      vec3 E[9];          // SHCoefficients::E[], each padded to vec4 by std140
-//  } irr;
+// vec3 evalIrradiance(vec3 N)  // N must be Z-up unit vector
+// {
+//     return irr.E[0] * 0.28209479f
+//          + irr.E[1] * 0.48860251f * N.y
+//          + irr.E[2] * 0.48860251f * N.z
+//          + irr.E[3] * 0.48860251f * N.x
+//          + irr.E[4] * 1.09254843f * N.x * N.y
+//          + irr.E[5] * 1.09254843f * N.y * N.z
+//          + irr.E[6] * 0.31539157f * (3.0f * N.z * N.z - 1.0f)
+//          + irr.E[7] * 1.09254843f * N.x * N.z
+//          + irr.E[8] * 0.54627422f * (N.x * N.x - N.y * N.y);
+// }
 //
-//  vec3 evalIrradiance(vec3 N)  // N must be Z-up unit vector
-//  {
-//      return irr.E[0] * 0.28209479f
-//           + irr.E[1] * 0.48860251f * N.y
-//           + irr.E[2] * 0.48860251f * N.z
-//           + irr.E[3] * 0.48860251f * N.x
-//           + irr.E[4] * 1.09254843f * N.x * N.y
-//           + irr.E[5] * 1.09254843f * N.y * N.z
-//           + irr.E[6] * 0.31539157f * (3.0f * N.z * N.z - 1.0f)
-//           + irr.E[7] * 1.09254843f * N.x * N.z
-//           + irr.E[8] * 0.54627422f * (N.x * N.x - N.y * N.y);
-//  }
-//
-//  // In computePBRLight / IBL diffuse term:
-//  vec3 irradiance = evalIrradiance(N);           // or texture(irradianceMap, uvOf(N)).rgb
-//  vec3 iblDiffuse = kD * albedo * INV_PI * irradiance * ao;
+// vec3 irradiance = evalIrradiance(N);           // or texture(irradianceMap, uvOf(N)).rgb
+// vec3 iblDiffuse = kD * albedo * INV_PI * irradiance * ao;
