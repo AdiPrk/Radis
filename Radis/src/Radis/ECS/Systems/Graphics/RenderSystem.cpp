@@ -331,7 +331,7 @@ namespace Radis
                     std::bind(&RenderSystem::RenderSceneDeferredGeometryVK, this, std::placeholders::_1)
                 );
 
-                // Lighting pass - directional/ambient -> raw HDR to SceneHDR
+                // directional/ambient -> into SceneHDR
                 rg->AddPass("LightingPass",
                     [&](RGPassBuilder& b) {
                         b.reads("gAlbedo");
@@ -345,7 +345,7 @@ namespace Radis
                     std::bind(&RenderSystem::RenderSceneDeferredLightingVK, this, std::placeholders::_1)
                 );
 
-                // Light volumes pass - additive local lights -> SceneHDR
+                // Additive local lights -> SceneHDR
                 rg->AddPass("LightVolumesPass",
                     [&](RGPassBuilder& b) {
                         b.reads("gAlbedo");
@@ -358,7 +358,7 @@ namespace Radis
                     std::bind(&RenderSystem::RenderLightVolumesVK, this, std::placeholders::_1)
                 );
 
-                // Tone map pass - reads accumulated HDR, writes final output
+                // Reads accumulated HDR, writes final output
                 rg->AddPass("ToneMapPass",
                     [&](RGPassBuilder& b) {
                         b.reads("SceneHDR");

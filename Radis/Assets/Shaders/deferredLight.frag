@@ -119,8 +119,8 @@ vec3 computePBRLight(vec3 albedo, float metallic, float roughness,
 vec2 uvOf(vec3 dir)
 {
     return vec2(
-        0.5 - atan(dir.y, dir.x) * (0.5 * INV_PI),
-        acos(clamp(dir.z, -1.0, 1.0)) * INV_PI
+        0.5 - atan(dir.z, dir.x) * (0.5 * INV_PI),
+        asin(clamp(dir.y, -1.0, 1.0)) * INV_PI + 0.5
     );
 }
 
@@ -167,7 +167,7 @@ vec3 GetSkyDirection(vec2 uv)
     return normalize(worldPos.xyz / worldPos.w - uniforms.cameraPos);
 }
 
-// Outside-sphere UV — used only for the skybox draw. Do NOT use for IBL lookups.
+// Outside-sphere UV
 vec2 DirToEquirect(vec3 dir)
 {
     const vec2 invAtan = vec2(0.1591, 0.3183); // (1/2pi, 1/pi)
@@ -242,13 +242,15 @@ void main()
     {
         outColor = vec4(N, 1.0);
     }
-    else if (useIrrDiffuse == 3) // Splitscreen (Left = Final Render, Right = Amplified Irradiance)
+    else if (useIrrDiffuse == 3) // Splitscreen (Left = IrrMap Diffuse, Right = Old Ambient)
     {
         vec3 iblDiffuse = computeIBLDiffuse(albedo, metallic, ao, N);
         vec3 finalColor = Lo + iblDiffuse + emissive;
         
         if (fragTexCoord.x > 0.5) {
-            finalColor = Lo + emissive;
+            //finalColor = Lo + emissive;
+            vec3 ambient = vec3(0.01) * albedo * ao;
+            finalColor = (Lo * ao) + ambient + emissive;
         }
 
         outColor = vec4(finalColor, 1.0);
