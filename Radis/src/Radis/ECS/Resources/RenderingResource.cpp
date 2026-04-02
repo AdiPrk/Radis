@@ -235,7 +235,7 @@ namespace Radis
             textureLibrary->CreateTexture(
                 "SceneTexture",
                 extent.width, extent.height,
-                VK_FORMAT_R8G8B8A8_SRGB,
+                VK_FORMAT_R8G8B8A8_UNORM,
                 VK_IMAGE_TILING_OPTIMAL,
                 VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
@@ -321,6 +321,7 @@ namespace Radis
             VkFormat swapDepthFormat = swapChain->FindDepthFormat();
             VkFormat momentsFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
             VkFormat hdrFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+            VkFormat ldrFormat = VK_FORMAT_R8G8B8A8_UNORM;
             VkFormat albedoFormat = VK_FORMAT_R8G8B8A8_SRGB;
             VkFormat normalFormat = VK_FORMAT_R16G16_SFLOAT;
             VkFormat pbrFormat = VK_FORMAT_R8G8B8A8_UNORM;
@@ -343,7 +344,7 @@ namespace Radis
             
             {
                 PipelineOptions defLightOpts;
-                defLightOpts.pushConstantSize = sizeof(int);
+                defLightOpts.pushConstantSize = sizeof(int) * 2;
                 defLightOpts.pushConstantStages = VK_SHADER_STAGE_FRAGMENT_BIT;
 
                 deferredLightingPipeline = std::make_unique<Pipeline>(*device, hdrFormat, VK_FORMAT_UNDEFINED, deferredLightingUnis, false, "fullscreen.vert", "deferredLight.frag", defLightOpts, false);
@@ -367,7 +368,7 @@ namespace Radis
                 tonemapOpts.pushConstantSize = sizeof(float);
                 tonemapOpts.pushConstantStages = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-                tonemapPipeline = std::make_unique<Pipeline>(*device, hdrFormat, VK_FORMAT_UNDEFINED, tonemapUnis, false, "fullscreen.vert", "tonemap.frag", tonemapOpts, false);
+                tonemapPipeline = std::make_unique<Pipeline>(*device, ldrFormat, VK_FORMAT_UNDEFINED, tonemapUnis, false, "fullscreen.vert", "tonemap.frag", tonemapOpts, false);
             }
 
             raytracingPipeline = std::make_unique<RaytracingPipeline>(*device, rtunis);

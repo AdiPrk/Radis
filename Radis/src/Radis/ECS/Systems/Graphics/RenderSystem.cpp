@@ -59,7 +59,7 @@ namespace Radis
         mLightData.reserve(64);
         mMeshInstanceCounts.reserve(128);
 
-        constexpr int N = 100;
+        constexpr int N = 20;
         float hammersley[2 * N];
 
         int kk;
@@ -77,6 +77,23 @@ namespace Radis
         for (int i = 0; i < N; i++) {
             printf("(%f, %f), ", hammersley[2 * i], hammersley[2 * i + 1]);
         }
+        printf("\n\n\n");
+
+        printf("const uint SAMPLE_COUNT = %d;\n", N);
+        printf("const vec2 hammersley[%d] = vec2[%d](\n    ", N, N);
+
+        for (int i = 0; i < N; i++) {
+            printf("vec2(%f, %f)", hammersley[2 * i], hammersley[2 * i + 1]);
+
+            if (i < N - 1) {
+                printf(", ");
+
+                if ((i + 1) % 4 == 0) {
+                    printf("\n    ");
+                }
+            }
+        }
+        printf("\n);\n");
     }
 
     void RenderSystem::Exit()
@@ -920,7 +937,16 @@ namespace Radis
         rr->deferredLightingUniform->Bind(cmd, pipeline->GetLayout(), rr->currentFrameIndex);
         SetViewportAndScissor(cmd, rr->swapChain->GetSwapChainExtent());
 
-        vkCmdPushConstants(cmd, rr->tonemapPipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &rr->useIrrDefuse);
+        struct DLPC
+        {
+            int useIrrDefuse;
+            int specTestMode;
+        };
+        DLPC pc;
+        pc.useIrrDefuse = rr->useIrrDefuse;
+        pc.specTestMode = rr->specTestMode;
+
+        vkCmdPushConstants(cmd, pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DLPC), &pc);
 
         // Draw Fullscreen Quad
         vkCmdDraw(cmd, 3, 1, 0, 0);

@@ -121,6 +121,7 @@ namespace Radis
         uint32_t irMapIndex;
         float exposure = 1.0f;
         int useIrrDefuse = 0;
+        int specTestMode = 0;
 
         bool SupportsVulkan();
 

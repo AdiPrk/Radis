@@ -342,6 +342,10 @@ namespace Radis
         ImGui::Text("Irradiance Debug:");
         const char* dModeItems[] = { "Ambient Irradiant Diffuse", "Raw Irradiance", "Normals", "Split" };
         ImGui::Combo("##DebugLMode", &rr->useIrrDefuse, dModeItems, IM_ARRAYSIZE(dModeItems));
+
+        ImGui::Text("specTestMode Debug:");
+        const char* sModeItems[] = { "Final", "Mirror", "Ghosting", "Monte Carlo" };
+        ImGui::Combo("##DebugSMode", &rr->specTestMode, sModeItems, IM_ARRAYSIZE(sModeItems));
         ImGui::End();
     }
 
