@@ -76,32 +76,30 @@ namespace Radis
 
     struct CameraComponent
     {
+        // Projection
         float FOV = 45.0f;
         float Near = 0.1f;
         float Far = 1000.0f;
 
-        glm::vec3 Forward = glm::vec3(0.0f, 0.0f, -1.0f);
-        glm::vec3 Up = glm::vec3(0.0f, 1.0f, 0.0f);
+        // Derived basis vectors  (written by CameraSystem, read by renderer)
+        glm::vec3 Forward = { 0.0f, 0.0f, -1.0f };
+        glm::vec3 Up = { 0.0f, 1.0f,  0.0f };
 
-        float Yaw = 0.0f;
-        float Pitch = 0.0f;
+        // Hot smoothing state  (read + written every frame by CameraSystem)
+        float     SmoothedYaw = 0.0f;
+        float     SmoothedPitch = 0.0f;
+        glm::vec3 SmoothedVelocity = { 0.0f, 0.0f, 0.0f };   // replaces SmoothedPosition
+        float     TargetYaw = 0.0f;
+        float     TargetPitch = 0.0f;
+
+        // Tuning parameters
         float MouseSensitivity = 0.15f;
-        bool InvertY = true;
         float MoveSpeed = 10.0f;
-
-        // Internal smoothing state
-        float TargetYaw = 0.0f;
-        float TargetPitch = 0.0f;
-        float SmoothedYaw = 0.0f;
-        float SmoothedPitch = 0.0f;
-        glm::vec3 SmoothedPosition = glm::vec3(0.0f);
-        float SmoothedMouseDX = 0.0f;
-        float SmoothedMouseDY = 0.0f;
-
-        // Smoothing parameters
-        float MouseSmoothness = 20.0f;
-        float RotationSmoothness = 18.0f;
+        float RotationSmoothness = 18.0f;   // k in alpha = 1 - e^(-k*dt); larger = snappier
         float PositionSmoothness = 12.0f;
+
+        // Flags
+        bool InvertY = true;
         bool IsInitialized = false;
     };
 

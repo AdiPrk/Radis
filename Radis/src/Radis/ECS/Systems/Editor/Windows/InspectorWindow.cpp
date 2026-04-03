@@ -172,17 +172,44 @@ namespace Radis
                 }
             });
 
-            DrawComponentUI<CameraComponent>("CameraComponent", selectedEnt, [](auto& component)
-            {
-                // Displaying rotation in degrees
-                ImGui::DragFloat("FOV", &component.FOV, 0.1f, 1.0f, 120.0f);
-                ImGui::DragFloat("Near", &component.Near, 0.01f, 0.01f, 100.0f);
-                ImGui::DragFloat("Far", &component.Far, 1.0f, 10.0f, 10000.0f);
-                ImGui::DragFloat("Move Speed", &component.MoveSpeed, 0.1f, 0.1f, 100.0f);
-                ImGui::DragFloat("Mouse Sensitivity", &component.MouseSensitivity, 0.01f, 0.01f, 10.0f);
-                ImGui::DragFloat("Yaw", &component.Yaw, 0.1f, -360.0f, 360.0f);
-                ImGui::DragFloat("Pitch", &component.Pitch, 0.1f, -89.0f, 89.0f);
-            });
+            // ── ImGui UI ────────────────────────────────────────────────────────────────
+
+            DrawComponentUI<CameraComponent>("CameraComponent", selectedEnt, [](auto& c)
+                {
+                    // Projection
+                    if (ImGui::CollapsingHeader("Projection", ImGuiTreeNodeFlags_DefaultOpen))
+                    {
+                        ImGui::DragFloat("FOV", &c.FOV, 0.1f, 1.0f, 120.0f, "%.1f deg");
+                        ImGui::DragFloat("Near", &c.Near, 0.001f, 0.001f, 10.0f, "%.3f");
+                        ImGui::DragFloat("Far", &c.Far, 1.0f, 10.0f, 100000.0f, "%.0f");
+                    }
+
+                    // Controls
+                    if (ImGui::CollapsingHeader("Controls", ImGuiTreeNodeFlags_DefaultOpen))
+                    {
+                        ImGui::DragFloat("Move Speed", &c.MoveSpeed, 0.1f, 0.1f, 500.0f, "%.1f");
+                        ImGui::DragFloat("Mouse Sensitivity", &c.MouseSensitivity, 0.001f, 0.001f, 2.0f, "%.3f");
+                        ImGui::Checkbox("Invert Y", &c.InvertY);
+                    }
+
+                    // Smoothing
+                    if (ImGui::CollapsingHeader("Smoothing"))
+                    {
+                        ImGui::TextDisabled("Larger k = snappier  (alpha = 1 - e^(-k*dt))");
+                        ImGui::DragFloat("Rotation Smoothness", &c.RotationSmoothness, 0.5f, 0.1f, 100.0f, "%.1f");
+                        ImGui::DragFloat("Position Smoothness", &c.PositionSmoothness, 0.5f, 0.1f, 100.0f, "%.1f");
+                    }
+
+                    // Read-only runtime state
+                    if (ImGui::CollapsingHeader("State (read-only)"))
+                    {
+                        ImGui::BeginDisabled();
+                        ImGui::DragFloat("Smoothed Yaw", &c.SmoothedYaw, 0.0f, -360.0f, 360.0f, "%.2f deg");
+                        ImGui::DragFloat("Smoothed Pitch", &c.SmoothedPitch, 0.0f, -90.0f, 90.0f, "%.2f deg");
+                        ImGui::DragFloat3("Velocity", glm::value_ptr(c.SmoothedVelocity), 0.0f, 0.0f, 0.0f, "%.2f");
+                        ImGui::EndDisabled();
+                    }
+                });
 
             DrawComponentUI<ModelComponent>("Model", selectedEnt, [&](ModelComponent& component)
             {
