@@ -10,7 +10,7 @@ const float PI           = 3.14159265359;
 const float INV_PI       = 0.31830988618;
 const float TWO_PI       = 6.28318530718;
 const float HALF_PI      = 1.57079632679;
-const float EPSILON      = 1e-4;
+const float EPSILON      = 1e-7;
 const vec3  F0_NON_METAL = vec3(0.04);
 
 #ifdef VULKAN
@@ -202,8 +202,10 @@ vec3 computeIBLSpecular(vec3 N, vec3 V, float a, float a2, vec3 F0, float NdotV)
 
         // Fast Trig Identities for GGX
         float phi = TWO_PI * (0.5 - xi1);
-        float cosTheta = sqrt((1.0 - xi2) / (1.0 + (a2 - 1.0) * xi2));
-        float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
+        // float cosTheta = sqrt((1.0 - xi2) / (1.0 + (a2 - 1.0) * xi2));
+        // float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
+        float cosTheta = sqrt(clamp((1.0 - xi2) / (1.0 + (a2 - 1.0) * xi2), 0.0, 1.0));
+        float sinTheta = sqrt(max(0.0, 1.0 - cosTheta * cosTheta));
 
         // Spherical to Cartesian (Local D vector)
         vec3 D = vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
@@ -220,8 +222,11 @@ vec3 computeIBLSpecular(vec3 N, vec3 V, float a, float a2, vec3 F0, float NdotV)
             float VdotH = max(dot(V, H), 0.0);
 
             // Calculate appropriate Mipmap Level
-            float D_val = D_GGX(NdotH, a2);
-            float level = max(0.0, resolutionScale - 0.5 * log2(D_val / 4.0));
+            //float D_val = D_GGX(NdotH, a2);
+            //float level = max(0.0, resolutionScale - 0.5 * log2(max(D_val, 1e-5) / 4.0));
+            float a2_mip = max(a2, 1e-4);
+            float D_val  = D_GGX(NdotH, a2_mip);   // for level only
+            float level  = max(0.0, resolutionScale - 0.5 * log2(D_val / 4.0));
             if (forceLodZero) { level = 0.0; } 
 
             // Sample Environment Map
@@ -262,7 +267,7 @@ void main()
     vec3  albedo    = albedoSample.rgb;
     vec3  N         = OctDecode(normalEnc);
     float metallic  = pbrSample.r;
-    float roughness = pbrSample.g;
+    float roughness = max(pbrSample.g, 0.05);
     float ao        = pbrSample.b;
 
     vec3 worldPos = ReconstructWorldPos(fragTexCoord, depth);

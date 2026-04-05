@@ -96,6 +96,7 @@ namespace Radis
             IBL::SHCoefficients sh;
             IBL::generateIrradianceMap(Assets::ImagesPath + "Alexs_Apt_2k.hdr", Assets::ImagesPath + "Alexs_Apt_2k.IRMAP.hdr", &sh);
             IBL::generateIrradianceMap(Assets::ImagesPath + "Newport_Loft_Ref.hdr", Assets::ImagesPath + "Newport_Loft_Ref.IRMAP.hdr", &sh);
+            IBL::generateIrradianceMap(Assets::ImagesPath + "autumn_field_puresky_4k.hdr", Assets::ImagesPath + "autumn_field_puresky_4k.IRMAP.hdr", &sh);
 
             textureLibrary = std::make_unique<TextureLibrary>(device.get());
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "ErrorTexture.png");
@@ -116,8 +117,11 @@ namespace Radis
             envMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Newport_Loft_Ref.hdr");
             irMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Alexs_Apt_2k.IRMAP.hdr");
             irMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Newport_Loft_Ref.IRMAP.hdr");
-            textureLibrary->LoadQueuedTextures();
 
+            envMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "autumn_field_puresky_4k.hdr");
+            irMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "autumn_field_puresky_4k.IRMAP.hdr");
+
+            textureLibrary->LoadQueuedTextures();
             //textureLibrary->QueueTextureLoad(Assets::ImagesPath + "M_Soul_Rocks2_Inst_8_BaseColor.dds");
         }
         else
@@ -184,7 +188,7 @@ namespace Radis
             VkExtent2D extent = swapChain->GetSwapChainExtent();
 
             // HDR format for scene color (before tonemapping)
-            VkFormat hdrFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+            VkFormat hdrFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
             VkFormat momentsFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
 
             // Choose shadow resolution
@@ -320,7 +324,7 @@ namespace Radis
             VkFormat swapImageFormat = swapChain->GetImageFormat();
             VkFormat swapDepthFormat = swapChain->FindDepthFormat();
             VkFormat momentsFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
-            VkFormat hdrFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+            VkFormat hdrFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
             VkFormat ldrFormat = VK_FORMAT_R8G8B8A8_UNORM;
             VkFormat albedoFormat = VK_FORMAT_R8G8B8A8_SRGB;
             VkFormat normalFormat = VK_FORMAT_R16G16_SFLOAT;
