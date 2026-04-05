@@ -58,6 +58,42 @@ namespace Radis
         mDrawCalls.reserve(128);
         mLightData.reserve(64);
         mMeshInstanceCounts.reserve(128);
+
+        constexpr int N = 20;
+        float hammersley[2 * N];
+
+        int kk;
+        float p, u;
+        int pos = 0;
+        for (int k = 0; k < N; k++) {
+            for (p = 0.5f, kk = k, u = 0.0f; kk; p *= 0.5f, kk >>= 1)
+                if (kk & 1)
+                    u += p;
+            float v = (k + 0.5f) / N;
+            hammersley[pos++] = u;
+            hammersley[pos++] = v;
+        }
+        printf("Hammersley points:\n");
+        for (int i = 0; i < N; i++) {
+            printf("(%f, %f), ", hammersley[2 * i], hammersley[2 * i + 1]);
+        }
+        printf("\n\n\n");
+
+        printf("const uint SAMPLE_COUNT = %d;\n", N);
+        printf("const vec2 hammersley[%d] = vec2[%d](\n    ", N, N);
+
+        for (int i = 0; i < N; i++) {
+            printf("vec2(%f, %f)", hammersley[2 * i], hammersley[2 * i + 1]);
+
+            if (i < N - 1) {
+                printf(", ");
+
+                if ((i + 1) % 4 == 0) {
+                    printf("\n    ");
+                }
+            }
+        }
+        printf("\n);\n");
     }
 
     void RenderSystem::Exit()
@@ -312,7 +348,7 @@ namespace Radis
                     std::bind(&RenderSystem::RenderSceneDeferredGeometryVK, this, std::placeholders::_1)
                 );
 
-                // Lighting pass - directional/ambient -> raw HDR to SceneHDR
+                // directional/ambient -> into SceneHDR
                 rg->AddPass("LightingPass",
                     [&](RGPassBuilder& b) {
                         b.reads("gAlbedo");
@@ -326,7 +362,7 @@ namespace Radis
                     std::bind(&RenderSystem::RenderSceneDeferredLightingVK, this, std::placeholders::_1)
                 );
 
-                // Light volumes pass - additive local lights -> SceneHDR
+                // Additive local lights -> SceneHDR
                 rg->AddPass("LightVolumesPass",
                     [&](RGPassBuilder& b) {
                         b.reads("gAlbedo");
@@ -339,7 +375,7 @@ namespace Radis
                     std::bind(&RenderSystem::RenderLightVolumesVK, this, std::placeholders::_1)
                 );
 
-                // Tone map pass - reads accumulated HDR, writes final output
+                // Reads accumulated HDR, writes final output
                 rg->AddPass("ToneMapPass",
                     [&](RGPassBuilder& b) {
                         b.reads("SceneHDR");
@@ -880,7 +916,7 @@ namespace Radis
         ScopedDebugLabel sceneDebugLabel(rr->device.get(), cmd, "Deferred G-Buffer Pass", glm::vec4(0.2f, 0.8f, 0.2f, 1.0f));
 
         // Bind Pipeline, Uniforms, and Mesh
-        auto& pipeline = rr->gBufferPipeline;
+        auto& pipeline = rr->renderWireframe ? rr->gBufferWireframePipeline : rr->gBufferPipeline;
         pipeline->Bind(cmd);
         rr->cameraUniform->Bind(cmd, pipeline->GetLayout(), rr->currentFrameIndex);
         SetViewportAndScissor(cmd, rr->swapChain->GetSwapChainExtent());
@@ -900,6 +936,17 @@ namespace Radis
         pipeline->Bind(cmd);
         rr->deferredLightingUniform->Bind(cmd, pipeline->GetLayout(), rr->currentFrameIndex);
         SetViewportAndScissor(cmd, rr->swapChain->GetSwapChainExtent());
+
+        struct DLPC
+        {
+            int useIrrDefuse;
+            int specTestMode;
+        };
+        DLPC pc;
+        pc.useIrrDefuse = rr->useIrrDefuse;
+        pc.specTestMode = rr->specTestMode;
+
+        vkCmdPushConstants(cmd, pipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DLPC), &pc);
 
         // Draw Fullscreen Quad
         vkCmdDraw(cmd, 3, 1, 0, 0);
@@ -949,6 +996,8 @@ namespace Radis
         rr->tonemapPipeline->Bind(cmd);
         rr->tonemapUniform->Bind(cmd, rr->tonemapPipeline->GetLayout(), rr->currentFrameIndex);
         SetViewportAndScissor(cmd, rr->swapChain->GetSwapChainExtent());
+
+        vkCmdPushConstants(cmd, rr->tonemapPipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(float), &rr->exposure);
 
         // Fullscreen triangle
         vkCmdDraw(cmd, 3, 1, 0, 0);

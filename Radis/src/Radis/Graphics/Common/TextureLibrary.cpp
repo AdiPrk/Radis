@@ -338,6 +338,8 @@ namespace Radis
         samplerInfo.compareEnable = VK_FALSE;
         samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
         samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        samplerInfo.minLod = -VK_LOD_CLAMP_NONE;
+        samplerInfo.maxLod = VK_LOD_CLAMP_NONE;
 
         if (vkCreateSampler(device->GetDevice(), &samplerInfo, nullptr, &mTextureSampler) != VK_SUCCESS)
         {
@@ -534,10 +536,10 @@ namespace Radis
 
         VkDescriptorImageInfo outImageInfo{};
         outImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL; // storage image layout
-        outImageInfo.sampler = VK_NULL_HANDLE; // storage images donÅft use samplers
+        outImageInfo.sampler = VK_NULL_HANDLE; // storage images donÔøΩft use samplers
         VkDescriptorImageInfo heatmapImageInfo{};
         heatmapImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL; // storage image layout
-        heatmapImageInfo.sampler = VK_NULL_HANDLE; // storage images donÅft use samplers
+        heatmapImageInfo.sampler = VK_NULL_HANDLE; // storage images donÔøΩft use samplers
 
         for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex) 
         {

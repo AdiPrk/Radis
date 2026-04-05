@@ -31,6 +31,7 @@
 #include "Graphics/Common/Animation/AnimationLibrary.h"
 #include "Graphics/Common/Animation/Animator.h"
 #include "Graphics/Common/Model.h"
+#include "Graphics/Common/IBL/IrradianceMap.h"
 
 #include "Assets/Assets.h"
 #include "Engine.h"
@@ -40,6 +41,8 @@
 namespace Radis
 {
     RenderingResource::RenderingResource(IWindow* window)
+        : envMapIndex{ TextureLibrary::INVALID_TEXTURE_INDEX }
+        , irMapIndex{ TextureLibrary::INVALID_TEXTURE_INDEX }
     {
         Create(window);
     }
@@ -90,6 +93,11 @@ namespace Radis
         bool recreateTextures = textureLibrary != nullptr;
         if (!textureLibrary)
         {
+            IBL::SHCoefficients sh;
+            IBL::generateIrradianceMap(Assets::ImagesPath + "Alexs_Apt_2k.hdr", Assets::ImagesPath + "Alexs_Apt_2k.IRMAP.hdr", &sh);
+            IBL::generateIrradianceMap(Assets::ImagesPath + "Newport_Loft_Ref.hdr", Assets::ImagesPath + "Newport_Loft_Ref.IRMAP.hdr", &sh);
+            IBL::generateIrradianceMap(Assets::ImagesPath + "autumn_field_puresky_4k.hdr", Assets::ImagesPath + "autumn_field_puresky_4k.IRMAP.hdr", &sh);
+
             textureLibrary = std::make_unique<TextureLibrary>(device.get());
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "ErrorTexture.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "circle.png");
@@ -105,6 +113,15 @@ namespace Radis
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "folderIcon.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "unknownFileIcon.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "shikaout.ktx2");
+            envMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Alexs_Apt_2k.hdr");
+            envMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Newport_Loft_Ref.hdr");
+            irMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Alexs_Apt_2k.IRMAP.hdr");
+            irMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Newport_Loft_Ref.IRMAP.hdr");
+
+            envMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "autumn_field_puresky_4k.hdr");
+            irMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "autumn_field_puresky_4k.IRMAP.hdr");
+
+            textureLibrary->LoadQueuedTextures();
             //textureLibrary->QueueTextureLoad(Assets::ImagesPath + "M_Soul_Rocks2_Inst_8_BaseColor.dds");
         }
         else
@@ -126,8 +143,8 @@ namespace Radis
             modelLibrary->AddModel(Assets::ModelsPath + "SteampunkRobot.gltf", true);
             modelLibrary->AddModel(Assets::ModelsPath + "DragonAttenuation.glb", true);
             modelLibrary->AddModel(Assets::ModelsPath + "Sponza.gltf", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Curtains.gltf", true, false, false);
-            modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Main.gltf", true, false);
+            // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Curtains.gltf", true, false, false);
+            // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Main.gltf", true, false);
 
             // Model* sponzaModel = modelLibrary->GetModel(sponzaInd);
             //VFS::ModelSerializer::save(*sponzaModel, "Assets/Models/dm/Sponza.dm", 0xDEADBEEF);
@@ -171,7 +188,7 @@ namespace Radis
             VkExtent2D extent = swapChain->GetSwapChainExtent();
 
             // HDR format for scene color (before tonemapping)
-            VkFormat hdrFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+            VkFormat hdrFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
             VkFormat momentsFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
 
             // Choose shadow resolution
@@ -222,7 +239,7 @@ namespace Radis
             textureLibrary->CreateTexture(
                 "SceneTexture",
                 extent.width, extent.height,
-                hdrFormat,
+                VK_FORMAT_R8G8B8A8_UNORM,
                 VK_IMAGE_TILING_OPTIMAL,
                 VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
@@ -307,7 +324,8 @@ namespace Radis
             VkFormat swapImageFormat = swapChain->GetImageFormat();
             VkFormat swapDepthFormat = swapChain->FindDepthFormat();
             VkFormat momentsFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
-            VkFormat hdrFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+            VkFormat hdrFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
+            VkFormat ldrFormat = VK_FORMAT_R8G8B8A8_UNORM;
             VkFormat albedoFormat = VK_FORMAT_R8G8B8A8_SRGB;
             VkFormat normalFormat = VK_FORMAT_R16G16_SFLOAT;
             VkFormat pbrFormat = VK_FORMAT_R8G8B8A8_UNORM;
@@ -326,7 +344,15 @@ namespace Radis
             shadowBlurVPipeline = std::make_unique<ComputePipeline>(*device, blurVUnis, "msmBlurV.comp", computePC);
             
             gBufferPipeline = std::make_unique<Pipeline>(*device, gBufferFormats, swapDepthFormat, unis, false, "deferred.vert", "deferred.frag");
-            deferredLightingPipeline = std::make_unique<Pipeline>(*device, hdrFormat, VK_FORMAT_UNDEFINED, deferredLightingUnis, false, "fullscreen.vert", "deferredLight.frag", false);
+            gBufferWireframePipeline = std::make_unique<Pipeline>(*device, gBufferFormats, swapDepthFormat, unis, true, "deferred.vert", "deferred.frag");
+            
+            {
+                PipelineOptions defLightOpts;
+                defLightOpts.pushConstantSize = sizeof(int) * 2;
+                defLightOpts.pushConstantStages = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+                deferredLightingPipeline = std::make_unique<Pipeline>(*device, hdrFormat, VK_FORMAT_UNDEFINED, deferredLightingUnis, false, "fullscreen.vert", "deferredLight.frag", defLightOpts, false);
+            }
 
             // Light volume pipeline: additive blend, no depth test, front-face culling, push constants
             {
@@ -334,14 +360,20 @@ namespace Radis
                 lightVolOpts.additiveBlend = true;
                 lightVolOpts.depthTestDisable = true;
                 lightVolOpts.depthWriteDisable = true;
-                //lightVolOpts.cullFrontFace = true;
+                lightVolOpts.cullFrontFace = true;
                 lightVolOpts.pushConstantSize = sizeof(LightVolumePushConstants);
                 lightVolOpts.pushConstantStages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-                lightVolumePipeline = std::make_unique<Pipeline>(*device, hdrFormat, VK_FORMAT_UNDEFINED, deferredLightingUnis, "lightVolume.vert", "lightVolume.frag", lightVolOpts);
+                lightVolumePipeline = std::make_unique<Pipeline>(*device, hdrFormat, VK_FORMAT_UNDEFINED, deferredLightingUnis, false, "lightVolume.vert", "lightVolume.frag", lightVolOpts);
             }
 
             // Tone mapping: reads SceneHDR, outputs final color
-            tonemapPipeline = std::make_unique<Pipeline>(*device, hdrFormat, VK_FORMAT_UNDEFINED, tonemapUnis, false, "fullscreen.vert", "tonemap.frag", false);
+            {
+                PipelineOptions tonemapOpts;
+                tonemapOpts.pushConstantSize = sizeof(float);
+                tonemapOpts.pushConstantStages = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+                tonemapPipeline = std::make_unique<Pipeline>(*device, ldrFormat, VK_FORMAT_UNDEFINED, tonemapUnis, false, "fullscreen.vert", "tonemap.frag", tonemapOpts, false);
+            }
 
             raytracingPipeline = std::make_unique<RaytracingPipeline>(*device, rtunis);
         }
@@ -395,6 +427,7 @@ namespace Radis
             shadowBlurHPipeline.reset();
             shadowBlurVPipeline.reset();
             gBufferPipeline.reset();
+            gBufferWireframePipeline.reset();
             deferredLightingPipeline.reset();
             lightVolumePipeline.reset();
             raytracingPipeline.reset();

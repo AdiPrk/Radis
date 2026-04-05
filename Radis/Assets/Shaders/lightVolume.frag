@@ -39,7 +39,7 @@ layout(set = 0, binding = 6, std430) readonly buffer LightData {
     Light lights[MAX_LIGHTS];
 } lightData;
 
-// NEW: blurred moments + params
+// blurred moments + params
 layout(set=0, binding=7) uniform sampler2D shadowMoments;
 
 layout(set=0, binding=8) uniform ShadowParams {
@@ -48,83 +48,6 @@ layout(set=0, binding=8) uniform ShadowParams {
     vec4 zParams;   // (z0, z1, invRange, alpha)
     vec4 mapParams; // (invW, invH, blurRadius, pad)
 } sh;
-
-// ---- MSM Hamburger 4 ----
-float MSM_Hamburger4(vec4 b, float zf, float alpha)
-{
-    vec4 bp = mix(b, vec4(0.5), alpha);
-    bp = clamp(bp, 0.0, 1.0);
-
-    float m11 = 1.0;
-    float m12 = bp.x;
-    float m13 = bp.y;
-    float m22 = bp.y;
-    float m23 = bp.z;
-    float m33 = bp.w;
-
-    float z1 = 1.0;
-    float z2 = zf;
-    float z3 = zf*zf;
-
-    const float EPS = 1e-6;
-
-    float a = sqrt(max(m11, EPS));
-    float bL = m12 / a;
-    float cL = m13 / a;
-
-    float d2 = m22 - bL*bL;
-    float d  = sqrt(max(d2, EPS));
-
-    float eL = (m23 - bL*cL) / d;
-
-    float f2 = m33 - cL*cL - eL*eL;
-    float f  = sqrt(max(f2, EPS));
-
-    float chat1 = z1 / a;
-    float chat2 = (z2 - bL*chat1) / d;
-    float chat3 = (z3 - cL*chat1 - eL*chat2) / f;
-
-    float c3 = chat3 / f;
-    float c2 = (chat2 - eL*c3) / d;
-    float c1 = (chat1 - bL*c2 - cL*c3) / a;
-
-    float A = c3;
-    float B = c2;
-    float C = c1;
-
-    if (abs(A) < 1e-8)
-    {
-        float mu  = bp.x;
-        float var = max(bp.y - mu*mu, 0.0);
-        float dmu = zf - mu;
-        float p   = var / (var + dmu*dmu + EPS);
-        return clamp(1.0 - p, 0.0, 1.0);
-    }
-
-    float disc = max(B*B - 4.0*A*C, 0.0);
-    float sdisc = sqrt(disc);
-
-    float r1 = (-B - sdisc) / (2.0*A);
-    float r2 = (-B + sdisc) / (2.0*A);
-
-    float zLo = min(r1, r2);
-    float zHi = max(r1, r2);
-
-    if (zf <= zLo) return 0.0;
-
-    if (zf <= zHi)
-    {
-        float numer = zf*zHi - bp.x*(zf + zHi) + bp.y;
-        float denom = (zHi - zLo) * (zf - zLo);
-        return clamp(numer / max(denom, EPS), 0.0, 1.0);
-    }
-    else
-    {
-        float numer = zLo*zHi - bp.x*(zLo + zHi) + bp.y;
-        float denom = (zf - zLo) * (zf - zHi);
-        return clamp(1.0 - numer / max(denom, EPS), 0.0, 1.0);
-    }
-}
 
 // Optimized GGX D term
 float D_GGX(float NdotH, float a2)

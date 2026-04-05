@@ -20,6 +20,8 @@ layout(location = 7) flat out vec4 metallicRoughnessFactor;
 layout(location = 8) flat out vec4 emissiveFactor;
 layout(location = 9) flat out uint instanceIndex;
 layout(location = 10) out vec3 fragWorldPos;
+layout(location = 11) out vec3 localPos;
+
 // -------------------------------------------------
 
 const float PI = 3.14159265359;
@@ -137,4 +139,5 @@ void main()
     instanceIndex = INSTANCE_ID;
     fragWorldPos = worldPos.xyz;
     fragWorldNormal = worldNormal;
+    localPos = totalPosition.xyz;
 }

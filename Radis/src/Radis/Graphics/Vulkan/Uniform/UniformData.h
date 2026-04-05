@@ -60,7 +60,9 @@ namespace Radis
         .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("G-Buffer Depth")
         .AddSSBOBinding(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(LightUniform) * LightUniform::MAX_LIGHTS + sizeof(uint32_t)).SetDebugName("Deferred Light SSBO")
         .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("ShadowMoments (blurred)")
-        .AddUBBinding(VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(ShadowParamsUniform)).SetDebugName("Shadow Params UBO");
+        .AddUBBinding(VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(ShadowParamsUniform)).SetDebugName("Shadow Params UBO")
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("Environment Map")
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("Irradiance Map");
 
     // Tone mapping pass - just reads the accumulated HDR texture
     const UniformSettings tonemapUniformSettings = UniformSettings(TonemapUniformInit)

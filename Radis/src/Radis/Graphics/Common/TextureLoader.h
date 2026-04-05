@@ -44,5 +44,9 @@ namespace Radis
         // Helpers
         static bool IsKTX2Path(const std::string& path);
         static void CreateKTX2File(const std::string& path, const std::string& outputPath);
+
+    private:
+        static void FillHDRTexture(TextureData& out, const std::string& name, float* data, int width, int height);
+        static void FillLDRTexture(TextureData& out, const std::string& name, unsigned char* data, int width, int height);
     };
 }

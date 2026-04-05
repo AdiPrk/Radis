@@ -189,28 +189,62 @@ namespace Radis
         return true;
     }
 
+    void TextureLoader::FillHDRTexture(TextureData& out, const std::string& name, float* data, int width, int height)
+    {
+        out.width = width;
+        out.height = height;
+        out.channels = 4;
+        out.name = name;
+        out.isHDR = true;
+        out.isCompressed = false;
+        out.mipLevels = 1;
+        out.imageFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
+        out.mipInfos.clear();
+        out.floatPixels.assign(data, data + width * height * 4);
+        stbi_image_free(data);
+    }
+
+    void TextureLoader::FillLDRTexture(TextureData& out, const std::string& name, unsigned char* data, int width, int height)
+    {
+        out.width = width;
+        out.height = height;
+        out.channels = 4;
+        out.name = name;
+        out.isHDR = false;
+        out.isCompressed = false;
+        out.mipLevels = 1;
+        out.imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
+        out.mipInfos.clear();
+        out.pixels.assign(data, data + width * height * 4);
+        stbi_image_free(data);
+    }
+
     bool TextureLoader::FromSTBFile(const std::string& path, TextureData& outTexture)
     {
         stbi_set_flip_vertically_on_load(true);
-        int width, height;
-        unsigned char* data = stbi_load(path.c_str(), &width, &height, &outTexture.channels, STBI_rgb_alpha);
-        if (!data)
+        int width, height, channels;
+
+        if (stbi_is_hdr(path.c_str()))
         {
-            RADIS_ERROR("Failed to load texture: {0}", path);
-            return false;
+            float* data = stbi_loadf(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+            if (!data)
+            {
+                RADIS_ERROR("Failed to load HDR texture: {0}", path); 
+                return false;
+            }
+
+            FillHDRTexture(outTexture, path, data, width, height);
+            return true;
         }
 
-        outTexture.channels = 4; // we force RGBA
-        outTexture.width = width;
-        outTexture.height = height;
-        outTexture.pixels.assign(data, data + width * height * outTexture.channels);
-        outTexture.name = path;
-        outTexture.imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
-        outTexture.isCompressed = false;
-        outTexture.mipLevels = 1;
-        outTexture.mipInfos.clear();
+        unsigned char* data = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+        if (!data) 
+        {
+            RADIS_ERROR("Failed to load texture: {0}", path); 
+            return false; 
+        }
 
-        stbi_image_free(data);
+        FillLDRTexture(outTexture, path, data, width, height);
         return true;
     }
 
@@ -218,30 +252,35 @@ namespace Radis
     {
         if (!textureData || textureSize == 0)
         {
-            RADIS_ERROR("Invalid texture data provided");
+            RADIS_ERROR("Invalid texture data provided for: {0}", name);
             return false;
         }
 
         stbi_set_flip_vertically_on_load(true);
         int width, height, channels;
-        unsigned char* data = stbi_load_from_memory(textureData, textureSize, &width, &height, &channels, STBI_rgb_alpha);
-        if (!data)
+        const int size = static_cast<int>(textureSize);
+
+        if (stbi_is_hdr_from_memory(textureData, size))
         {
-            RADIS_ERROR("Failed to load texture from memory");
-            return false;
+            float* data = stbi_loadf_from_memory(textureData, size, &width, &height, &channels, STBI_rgb_alpha);
+            if (!data)
+            {
+                RADIS_ERROR("Failed to load HDR texture from memory: {0}", name);
+                return false;
+            }
+
+            FillHDRTexture(outTexture, name, data, width, height);
+            return true;
         }
 
-        outTexture.channels = 4; // we force RGBA
-        outTexture.width = width;
-        outTexture.height = height;
-        outTexture.pixels.assign(data, data + width * height * outTexture.channels);
-        outTexture.name = name;
-        outTexture.imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
-        outTexture.isCompressed = false;
-        outTexture.mipLevels = 1;
-        outTexture.mipInfos.clear();
+        unsigned char* data = stbi_load_from_memory(textureData, size, &width, &height, &channels, STBI_rgb_alpha);
+        if (!data) 
+        {
+            RADIS_ERROR("Failed to load texture from memory: {0}", name);
+            return false; 
+        }
 
-        stbi_image_free(data);
+        FillLDRTexture(outTexture, name, data, width, height);
         return true;
     }
 

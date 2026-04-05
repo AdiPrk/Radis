@@ -17,6 +17,7 @@ layout(location = 7) flat in vec4 metallicRoughnessFactor;
 layout(location = 8) flat in vec4 emissiveFactor;
 layout(location = 9) flat in uint instanceIndex;
 layout(location = 10) in vec3 fragWorldPos;
+layout(location = 11) in vec3 localPos;
 
 // G-Buffer outputs (MRT)
 layout(location = 0) out vec4 gAlbedo;    // R8G8B8A8_SRGB  - RGB = albedo, A = alpha

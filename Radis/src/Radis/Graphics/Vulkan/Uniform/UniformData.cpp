@@ -168,9 +168,16 @@ namespace Radis
         VKTexture* shadowMomentsTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("ShadowMoments"));
         VKTexture* shadowDepthTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("ShadowDepth"));
 
-        if (!gAlbedoTex || !gNormalTex || !gPBRTex || !gEmissiveTex || !gDepthTex)
+        VKTexture* envMapTex = static_cast<VKTexture*>(
+            renderData.textureLibrary->GetTextureByIndex(renderData.envMapIndex)
+        );
+        VKTexture* irMapTex = static_cast<VKTexture*>(
+            renderData.textureLibrary->GetTextureByIndex(renderData.irMapIndex)
+        );
+
+        if (!gAlbedoTex || !gNormalTex || !gPBRTex || !gEmissiveTex || !gDepthTex || !shadowMomentsTex || !shadowDepthTex || !envMapTex || !irMapTex)
         {
-            RADIS_ERROR("DeferredLightingUniformInit: One or more G-Buffer textures not found!");
+            RADIS_ERROR("One or more textures not found!");
             return;
         }
 
@@ -253,6 +260,20 @@ namespace Radis
             };
             writer.WriteBuffer(8, &shadowBufInfo);
 
+            VkDescriptorImageInfo envMapInfo{
+                .sampler = defaultSampler,
+                .imageView = envMapTex->GetImageView(),
+                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            };
+            writer.WriteImage(9, &envMapInfo);
+
+            VkDescriptorImageInfo irMapInfo{
+                .sampler = defaultSampler,
+                .imageView = irMapTex->GetImageView(),
+                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            };
+            writer.WriteImage(10, &irMapInfo);
+
             writer.Build(uniform.GetDescriptorSets()[frameIndex]);
         }
     }
@@ -269,10 +290,18 @@ namespace Radis
         VKTexture* gDepthTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("SceneDepth"));
         VKTexture* shadowMomentsTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("ShadowMoments"));
         VKTexture* shadowDepthTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("ShadowDepth"));
+        
+        VKTexture* envMapTex = static_cast<VKTexture*>(
+            renderData.textureLibrary->GetTextureByIndex(renderData.envMapIndex)
+        );
 
-        if (!gAlbedoTex || !gNormalTex || !gPBRTex || !gEmissiveTex || !gDepthTex)
+        VKTexture* irMapTex = static_cast<VKTexture*>(
+            renderData.textureLibrary->GetTextureByIndex(renderData.irMapIndex)
+        );
+
+        if (!gAlbedoTex || !gNormalTex || !gPBRTex || !gEmissiveTex || !gDepthTex || !shadowMomentsTex || !shadowDepthTex || !envMapTex || !irMapTex)
         {
-            RADIS_ERROR("One or more G-Buffer textures not found!");
+            RADIS_ERROR("One or more textures not found!");
             return;
         }
 
@@ -353,6 +382,20 @@ namespace Radis
                 .offset = 0,
                 .range = shadowBuf.bufferSize
             };
+
+            VkDescriptorImageInfo envMapInfo{
+                .sampler = defaultSampler,
+                .imageView = envMapTex->GetImageView(),
+                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            };
+            writer.WriteImage(9, &envMapInfo);
+
+            VkDescriptorImageInfo irMapInfo{
+                .sampler = defaultSampler,
+                .imageView = irMapTex->GetImageView(),
+                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            };
+            writer.WriteImage(10, &irMapInfo);
 
             writer.Overwrite(uniform.GetDescriptorSets()[frameIndex]);
         }
