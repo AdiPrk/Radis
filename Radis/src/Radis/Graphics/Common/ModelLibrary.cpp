@@ -54,7 +54,7 @@ namespace Radis
         
         uint32_t modelID = static_cast<uint32_t>(mModels.size());
         mModels.push_back(std::move(model));
-        AddToUnifiedMesh(modelID);
+        // AddToUnifiedMesh(modelID);
 
         // std::string mModelName = std::filesystem::path(filePath).stem().string();
         mModelMap[filePath] = modelID;
@@ -83,6 +83,12 @@ namespace Radis
         {
             mUnifiedMesh->AddMesh(mDevice, *mesh);
         }
+    }
+
+    void ModelLibrary::UpdateUnifiedMesh()
+    {
+        mUnifiedMesh->GetUnifiedMesh().ReleaseGPU();
+        mUnifiedMesh->AddModels(mDevice, mModels);
     }
 
     Model* ModelLibrary::GetModel(uint32_t index)

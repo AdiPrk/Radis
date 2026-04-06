@@ -32,6 +32,8 @@ namespace Radis
 
         void SetBoneData(int boneID, float weight);
     };
+    static_assert(std::is_trivially_copyable_v<Vertex>, "Vertex must be trivially copyable");
+    static_assert(sizeof(Vertex) == 76, "Vertex has unexpected padding");
 
     /**
      * \brief Abstract GPU buffer - handles upload, bind, draw operations.

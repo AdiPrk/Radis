@@ -143,6 +143,7 @@ namespace Radis
             modelLibrary->AddModel(Assets::ModelsPath + "SteampunkRobot.gltf", true);
             modelLibrary->AddModel(Assets::ModelsPath + "DragonAttenuation.glb", true);
             modelLibrary->AddModel(Assets::ModelsPath + "Sponza.gltf", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "sanmiguellow.glb", true);
             // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Curtains.gltf", true, false, false);
             // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Main.gltf", true, false);
 
@@ -155,6 +156,7 @@ namespace Radis
 
             // modelLibrary->AddModel("Assets/Models/okayu.pmx");
             // modelLibrary->AddModel("Assets/Models/AlisaMikhailovna.fbx");
+            modelLibrary->UpdateUnifiedMesh();
         }
 
         if (!animationLibrary)

@@ -388,27 +388,13 @@ bool ModelSerializer::load(Model& model, const std::string& filename)
         uint32_t vertexCount = r.U32();
         uint32_t indexCount = r.U32();
 
+        // Verticies
         mesh.mVertices.resize(vertexCount);
+        r.PODArray(mesh.mVertices.data(), vertexCount);
+
+        // Indicies
         mesh.mIndices.resize(indexCount);
-
-        // Vertices
-        for (auto& vertex : mesh.mVertices)
-        {
-            vertex.position = r.Vec3();
-            vertex.color = r.Vec3();
-            vertex.normal = r.Vec3();
-            vertex.uv = r.Vec2();
-
-            for (int i = 0; i < 4; ++i)
-                vertex.boneIDs[i] = r.I32();
-
-            for (int i = 0; i < 4; ++i)
-                vertex.weights[i] = r.F32();
-        }
-
-        // Indices
-        for (uint32_t i = 0; i < indexCount; ++i)
-            mesh.mIndices[i] = r.U32();
+        r.PODArray(mesh.mIndices.data(), indexCount);
 
         // Textures
         auto ReadTextureData = [&](std::string& texturePath, std::vector<unsigned char>& textureData)

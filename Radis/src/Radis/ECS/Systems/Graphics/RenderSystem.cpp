@@ -115,6 +115,8 @@ namespace Radis
             auto uMeshes = rr->modelLibrary->GetUnifiedMesh();
             if (uMeshes)
             {            
+                mRTMeshData.reserve(uMeshes->GetUnifiedMesh().mVertices.size());
+
                 MeshDataUniform vertexData;
                 for (auto& v : uMeshes->GetUnifiedMesh().mVertices)
                 {
@@ -135,6 +137,9 @@ namespace Radis
             
                 mRTMeshIndices = uMeshes->GetUnifiedMesh().mIndices;
             }
+
+            // log number of vertex/index for raytracing
+            RADIS_INFO("Setting up raytracing acceleration structures with {} vertices and {} indices", mRTMeshData.size(), mRTMeshIndices.size());
             
             auto rtr = ecs->GetResource<RaytracingResource>();
             rtr->CreateBLAS();  // Set up BLAS infrastructure
@@ -150,6 +155,9 @@ namespace Radis
                 writer.WriteAccelerationStructure(0, &asInfo);
                 writer.Overwrite(rr->rtUniform->GetDescriptorSets()[frameIndex]);
 
+                // log doing memcpy with data about how much data is being copied
+                RADIS_INFO("Uploading raytracing mesh data to GPU for frame {}: {} vertices and {} indices", frameIndex, mRTMeshData.size(), mRTMeshIndices.size());
+                
                 rr->rtUniform->SetUniformData(mRTMeshData, 3, frameIndex);
                 rr->rtUniform->SetUniformData(mRTMeshIndices, 4, frameIndex);
             }
@@ -778,7 +786,7 @@ namespace Radis
 
         if (rr->renderMode != RenderMode::Raytracing && !debugData.empty())
         {
-            cubeModel = ml->TryAddGetModel("Assets/Models/cube.obj");
+            cubeModel = ml->GetModel("Assets/Models/cube.obj");
             if (cubeModel && !cubeModel->mMeshes.empty())
             {
                 cubeMeshID = cubeModel->mMeshes[0]->GetID();
@@ -791,7 +799,7 @@ namespace Radis
         auto modelTransformEntities = registry.view<ModelComponent, TransformComponent>();
         modelTransformEntities.each([&](auto entity, ModelComponent& mc, TransformComponent& tc)
         {
-            Model* model = ml->TryAddGetModel(mc);
+            Model* model = ml->GetModel(mc);
             if (!model) return;
 
             for (auto& mesh : model->mMeshes)
@@ -1010,7 +1018,7 @@ namespace Radis
         ScopedDebugLabel label(rr->device.get(), cmd, "Light Volumes Pass", glm::vec4(1.0f, 0.5f, 0.0f, 1.0f));
 
         // Load sphere mesh on first use
-        Model* sphereModel = ml->TryAddGetModel("Assets/Models/sphere.glb");
+        Model* sphereModel = ml->GetModel("Assets/Models/sphere.glb");
         if (!sphereModel) return;
 
         uint32_t sphereID = sphereModel->mMeshes[0]->GetID();
