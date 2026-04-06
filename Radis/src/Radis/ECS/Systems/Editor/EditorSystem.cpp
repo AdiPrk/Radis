@@ -324,6 +324,10 @@ namespace Radis
         ImGui::EndDisabled();
 
         ImGui::BeginDisabled(rr->renderMode != RenderMode::Raytracing);
+        ImGui::Text("Raytrace Debug:");
+        const char* rModeItems[] = { "Raytrace", "Path Accum", "Path Final" };
+        ImGui::Combo("##DebugRMode", &rr->raytraceRenderMode, rModeItems, IM_ARRAYSIZE(rModeItems));
+
         ImGui::Checkbox("Raytracing Heatmap Estimation", &er->renderRaytracingHeatmap);
         ImGui::EndDisabled();
 

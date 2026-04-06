@@ -113,6 +113,7 @@ namespace Radis
         bool renderWireframe = false;
         uint32_t lightVolumeDebugMode = 0;
         bool supportsVulkan = true;
+        int raytraceRenderMode = 0;
 
         MSMBlurPC msmPC;
         

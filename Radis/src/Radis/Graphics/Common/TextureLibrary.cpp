@@ -546,6 +546,16 @@ namespace Radis
         VKTexture* sceneHDRTex = static_cast<VKTexture*>(rr.textureLibrary->GetTexture("SceneHDR"));
         VkSampler defaultSampler = rr.textureLibrary->GetSampler();
 
+        VKTexture* envMapTex = static_cast<VKTexture*>(
+            rr.textureLibrary->GetTextureByIndex(rr.envMapIndex)
+          );
+
+        if (!envMapTex)
+        {
+            RADIS_ERROR("Environment map texture not found!");
+            return;
+        }
+
         for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex)
         {
             int historyIndex = (frameIndex + SwapChain::MAX_FRAMES_IN_FLIGHT - 1) % SwapChain::MAX_FRAMES_IN_FLIGHT;
@@ -574,6 +584,11 @@ namespace Radis
             historyWriteInfo.sampler = VK_NULL_HANDLE;
             historyWriteInfo.imageView = rtAccumTextures[frameIndex]->GetImageView();
 
+            VkDescriptorImageInfo envMapInfo{};
+            envMapInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            envMapInfo.sampler = defaultSampler;
+            envMapInfo.imageView = envMapTex->GetImageView();
+
             DescriptorWriter writer(*rr.rtUniform->GetDescriptorLayout(), *rr.rtUniform->GetDescriptorPool());
 
             // Write the updated image descriptors to their respective bindings
@@ -581,6 +596,7 @@ namespace Radis
             writer.WriteImage(2, &heatmapImageInfo);
             writer.WriteImage(5, &historyReadInfo);
             writer.WriteImage(6, &historyWriteInfo);
+            writer.WriteImage(7, &envMapInfo);
 
             writer.Overwrite(rr.rtUniform->GetDescriptorSets()[frameIndex]);
         }

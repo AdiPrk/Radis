@@ -59,6 +59,7 @@ namespace Radis
         mLightData.reserve(64);
         mMeshInstanceCounts.reserve(128);
 
+        /*
         constexpr int N = 20;
         float hammersley[2 * N];
 
@@ -94,6 +95,7 @@ namespace Radis
             }
         }
         printf("\n);\n");
+        */
     }
 
     void RenderSystem::Exit()
@@ -938,6 +940,9 @@ namespace Radis
         rr->cameraUniform->Bind(cmd, cp->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_COMPUTE);
         rr->rtUniform->Bind(cmd, cp->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_COMPUTE);
 
+        // Push Constant
+        vkCmdPushConstants(cmd, cp->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(int), &rr->raytraceRenderMode);
+
         // Dispatch Compute Shader!
         const VkExtent2D& size = rr->swapChain->GetSwapChainExtent();
 
@@ -946,25 +951,6 @@ namespace Radis
         uint32_t groupY = (size.height + 15) / 16;
 
         vkCmdDispatch(cmd, groupX, groupY, 1);
-
-        // Synchronize compute writes with subsequent reads (e.g., Tone mapping)
-        VkMemoryBarrier2 memoryBarrier = {
-            .sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER_2,
-            .pNext = nullptr,
-            .srcStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT, // Changed from RT Shader bit
-            .srcAccessMask = VK_ACCESS_2_SHADER_WRITE_BIT,
-            .dstStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
-            .dstAccessMask = VK_ACCESS_2_SHADER_READ_BIT
-        };
-
-        VkDependencyInfo dependencyInfo = {
-            .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
-            .pNext = nullptr,
-            .memoryBarrierCount = 1,
-            .pMemoryBarriers = &memoryBarrier
-        };
-
-        vkCmdPipelineBarrier2(cmd, &dependencyInfo);
     }
 
     // -----------------------------------------

@@ -378,6 +378,8 @@ namespace Radis
             // raytracingPipeline = std::make_unique<RaytracingPipeline>(*device, rtunis);
 
             PushConstantInfo rtPC{};
+            rtPC.size = sizeof(int);
+            rtPC.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
             raytracingPipeline = std::make_unique<ComputePipeline>(*device, rtunis, "rayquery.comp", rtPC);
         }
     }

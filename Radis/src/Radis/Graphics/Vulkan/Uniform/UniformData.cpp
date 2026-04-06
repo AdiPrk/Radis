@@ -113,6 +113,16 @@ namespace Radis
         VKTexture* sceneHDRTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("SceneHDR"));
         VkSampler defaultSampler = renderData.textureLibrary->GetSampler();
 
+        VKTexture* envMapTex = static_cast<VKTexture*>(
+            renderData.textureLibrary->GetTextureByIndex(renderData.envMapIndex)
+            );
+
+        if (!envMapTex)
+        {
+            RADIS_ERROR("Environment map texture not found!");
+            return;
+        }
+
         uniform.GetDescriptorSets().resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
 
         for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex)
@@ -135,12 +145,18 @@ namespace Radis
             VkDescriptorBufferInfo bufferInfo2{ .buffer = ubuf2.buffer, .range = ubuf2.bufferSize };
             VkDescriptorBufferInfo bufferInfo3{ .buffer = ubuf3.buffer, .range = ubuf3.bufferSize };
 
+            VkDescriptorImageInfo envMapInfo{};
+            envMapInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            envMapInfo.sampler = defaultSampler;
+            envMapInfo.imageView = envMapTex->GetImageView();
+
             writer.WriteImage(1, &outSceneHDRInfo);
             writer.WriteImage(2, &heatmapInfo);
             writer.WriteBuffer(3, &bufferInfo2);
             writer.WriteBuffer(4, &bufferInfo3);
             writer.WriteImage(5, &historyReadInfo);
             writer.WriteImage(6, &historyWriteInfo);
+            writer.WriteImage(7, &envMapInfo);
 
             writer.Build(uniform.GetDescriptorSets()[frameIndex]);
         }
@@ -486,7 +502,6 @@ namespace Radis
             writer.Build(uniform.GetDescriptorSets()[frame]);
         }
     }
-
 
     void ShadowBlurUniformInitH(Uniform& uniform, RenderingResource& rd)
     {
