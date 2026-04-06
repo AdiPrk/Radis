@@ -177,6 +177,9 @@ namespace Radis
     void RenderSystem::Update(float dt)
     {
         auto rr = ecs->GetResource<RenderingResource>();
+        rr->frameCount++;
+        rr->accumulationCount++;
+
         float aspectRatio = GetAspectRatio();
         AnimationLibrary* al = rr->animationLibrary.get();
         ModelLibrary* ml = rr->modelLibrary.get();
@@ -387,11 +390,30 @@ namespace Radis
                 break;
             }
             case RenderMode::Raytracing: {
+                std::string currentAccum = "RTAccum_" + std::to_string(rr->currentFrameIndex);
+                std::string prevAccum = "RTAccum_" + std::to_string((rr->currentFrameIndex + SwapChain::MAX_FRAMES_IN_FLIGHT - 1) % SwapChain::MAX_FRAMES_IN_FLIGHT);
+                std::string currentHeatmap = "RTHeatmapImage_" + std::to_string(rr->currentFrameIndex);
+
                 rg->AddPass(
                     "ScenePass",
-                    [&](RGPassBuilder& b) {},
+                    [&](RGPassBuilder& b) {
+                        b.setCompute(); // Tells RenderGraph to transition writes to GENERAL
+                        b.reads(prevAccum);
+                        b.writes(currentAccum);
+                        b.writes(currentHeatmap);
+                        b.writes("SceneHDR"); // Expose the output to the graph!
+                    },
                     std::bind(&RenderSystem::RaytraceSceneVK, this, std::placeholders::_1)
                 );
+
+                rg->AddPass("ToneMapPass",
+                    [&](RGPassBuilder& b) {
+                        b.reads("SceneHDR"); // Tonemapper safely reads the RT output
+                        b.writes(colorWriteTarget);
+                    },
+                    std::bind(&RenderSystem::RenderToneMapVK, this, std::placeholders::_1)
+                );
+
                 break;
             }
             }
@@ -628,8 +650,22 @@ namespace Radis
         vkCmdSetScissor(cmd, 0, 1, &scissor);
     }
 
+    // Helper function to generate Halton Sequence
+    float Halton(uint32_t index, uint32_t base) {
+        float f = 1.0f;
+        float r = 0.0f;
+        while (index > 0) {
+            f = f / static_cast<float>(base);
+            r = r + f * static_cast<float>(index % base);
+            index = index / base;
+        }
+        return r;
+    }
+
     CameraUniforms RenderSystem::CollectCameraData(float aspectRatio)
     {
+        auto rr = ecs->GetResource<RenderingResource>();
+
         CameraUniforms camData{};
         camData.view = glm::mat4(1.0f);
         camData.projection = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 100.0f);
@@ -653,6 +689,24 @@ namespace Radis
 
         camData.projectionView = camData.projection * camData.view;
         camData.inverseProjView = glm::inverse(camData.projectionView);
+
+        // For path tracing:
+        camData.frameCount = rr->frameCount;
+
+        if (camData.projectionView != rr->previousViewProj) {
+            rr->accumulationCount = 0;
+            rr->previousViewProj = camData.projectionView;
+        }
+        else {
+            rr->accumulationCount++;
+        }
+
+        camData.accumulationCount = rr->accumulationCount;
+        uint32_t jitterPhase = rr->accumulationCount % 16;
+        float jitterX = Halton(jitterPhase + 1, 2);
+        float jitterY = Halton(jitterPhase + 1, 3);
+        camData.pixelJitter = glm::vec2(jitterX, jitterY);
+
         return camData;
     }
 
@@ -876,22 +930,30 @@ namespace Radis
             rtr->UpdateTopLevelASImmediate(tlasInstances);
         }
 
-        // Bind Pipeline and Uniforms
-        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, rp->GetPipeline());
-        rr->cameraUniform->Bind(cmd, rp->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR);
-        rr->rtUniform->Bind(cmd, rp->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR);
+        // Bind Compute Pipeline
+        auto& cp = rr->raytracingPipeline;
+        cp->Bind(cmd);
 
-        // Trace Rays!
+        // Bind Uniforms (Note the change to VK_PIPELINE_BIND_POINT_COMPUTE)
+        rr->cameraUniform->Bind(cmd, cp->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_COMPUTE);
+        rr->rtUniform->Bind(cmd, cp->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_COMPUTE);
+
+        // Dispatch Compute Shader!
         const VkExtent2D& size = rr->swapChain->GetSwapChainExtent();
-        vkCmdTraceRaysKHR(cmd, &rp->GetRaygenRegion(), &rp->GetMissRegion(), &rp->GetHitRegion(), &rp->GetCallableRegion(), size.width, size.height, 1);
 
-        // Synchronize ray tracing writes with subsequent reads
+        // Group size of 16x16, calculate how many groups we need
+        uint32_t groupX = (size.width + 15) / 16;
+        uint32_t groupY = (size.height + 15) / 16;
+
+        vkCmdDispatch(cmd, groupX, groupY, 1);
+
+        // Synchronize compute writes with subsequent reads (e.g., Tone mapping)
         VkMemoryBarrier2 memoryBarrier = {
             .sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER_2,
             .pNext = nullptr,
-            .srcStageMask = VK_PIPELINE_STAGE_2_RAY_TRACING_SHADER_BIT_KHR,
+            .srcStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT, // Changed from RT Shader bit
             .srcAccessMask = VK_ACCESS_2_SHADER_WRITE_BIT,
-            .dstStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT,
+            .dstStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
             .dstAccessMask = VK_ACCESS_2_SHADER_READ_BIT
         };
 

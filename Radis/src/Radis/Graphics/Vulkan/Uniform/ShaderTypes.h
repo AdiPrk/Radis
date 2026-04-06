@@ -17,6 +17,10 @@ namespace Radis
         glm::mat4 view;
         glm::mat4 inverseProjView;
         glm::vec3 cameraPos;
+        int pad0 = 7777;
+        glm::vec2 pixelJitter;
+        int frameCount;
+        int accumulationCount;
     };
 
     struct InstanceUniforms 

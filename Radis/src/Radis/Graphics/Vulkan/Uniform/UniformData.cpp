@@ -92,62 +92,55 @@ namespace Radis
         uint32_t height = renderData.swapChain->GetSwapChainExtent().height;
         VkFormat format = VK_FORMAT_R32G32B32A32_SFLOAT;
         VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT |
-            VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
-            VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+            VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
         VkImageLayout layout = VK_IMAGE_LAYOUT_GENERAL;
 
-        // Create a vector to hold the pointers to our new textures
         std::vector<VKTexture*> rtTextures(SwapChain::MAX_FRAMES_IN_FLIGHT * 2);
 
-        // Loop and create one texture for each frame
-        for (int i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i)
-        {
-            // Give each texture a unique name
-            std::string texName = "RTColorImage_" + std::to_string(i);
+        // 1. Create Ping-Pong Accumulation Textures (Notice the name change to RTAccum)
+        for (int i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i) {
+            std::string texName = "RTAccum_" + std::to_string(i);
             uint32_t rtInd = renderData.textureLibrary->CreateStorageImage(texName, width, height, format, usage, layout);
             rtTextures[i] = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture(rtInd));
         }
-        for (int i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i)
-        {
-            // Give each texture a unique name
+        for (int i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i) {
             std::string texName = "RTHeatmapImage_" + std::to_string(i);
             uint32_t rtInd = renderData.textureLibrary->CreateStorageImage(texName, width, height, format, usage, layout);
             rtTextures[i + SwapChain::MAX_FRAMES_IN_FLIGHT] = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture(rtInd));
         }
 
+        // 2. Fetch SceneHDR (The bridge to the Tonemapper)
+        VKTexture* sceneHDRTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("SceneHDR"));
+        VkSampler defaultSampler = renderData.textureLibrary->GetSampler();
+
         uniform.GetDescriptorSets().resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
 
-        // This info struct will be updated inside the loop
-        VkDescriptorImageInfo outImageInfo{};
-        outImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL; // storage image layout
-        outImageInfo.sampler = VK_NULL_HANDLE; // storage images don't use samplers
-        VkDescriptorImageInfo outImageInfo2{};
-        outImageInfo2.imageLayout = VK_IMAGE_LAYOUT_GENERAL; // storage image layout
-        outImageInfo2.sampler = VK_NULL_HANDLE; // storage images don't use samplers
-
-        // Build descriptor sets for each frame
         for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex)
         {
-            outImageInfo.imageView = rtTextures[frameIndex]->GetImageView();
-            outImageInfo2.imageView = rtTextures[frameIndex + SwapChain::MAX_FRAMES_IN_FLIGHT]->GetImageView();
+            int historyIndex = (frameIndex + SwapChain::MAX_FRAMES_IN_FLIGHT - 1) % SwapChain::MAX_FRAMES_IN_FLIGHT;
+
+            VkDescriptorImageInfo outSceneHDRInfo{ VK_NULL_HANDLE, sceneHDRTex->GetImageView(), VK_IMAGE_LAYOUT_GENERAL };
+            VkDescriptorImageInfo heatmapInfo{ VK_NULL_HANDLE, rtTextures[frameIndex + SwapChain::MAX_FRAMES_IN_FLIGHT]->GetImageView(), VK_IMAGE_LAYOUT_GENERAL };
+
+            // HISTORY READ: Bound as a Sampler! RenderGraph will safely transition this to READ_ONLY_OPTIMAL
+            VkDescriptorImageInfo historyReadInfo{ defaultSampler, rtTextures[historyIndex]->GetImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
+
+            // HISTORY WRITE: Bound as a Storage Image (GENERAL layout)
+            VkDescriptorImageInfo historyWriteInfo{ VK_NULL_HANDLE, rtTextures[frameIndex]->GetImageView(), VK_IMAGE_LAYOUT_GENERAL };
 
             DescriptorWriter writer(*uniform.GetDescriptorLayout(), *uniform.GetDescriptorPool());
 
             const Buffer& ubuf2 = uniform.GetUniformBuffer(3, frameIndex);
             const Buffer& ubuf3 = uniform.GetUniformBuffer(4, frameIndex);
-            VkDescriptorBufferInfo bufferInfo2{
-                .buffer = ubuf2.buffer,
-                .range = ubuf2.bufferSize
-            };
-            VkDescriptorBufferInfo bufferInfo3{
-                .buffer = ubuf3.buffer,
-                .range = ubuf3.bufferSize
-            };
+            VkDescriptorBufferInfo bufferInfo2{ .buffer = ubuf2.buffer, .range = ubuf2.bufferSize };
+            VkDescriptorBufferInfo bufferInfo3{ .buffer = ubuf3.buffer, .range = ubuf3.bufferSize };
 
-            writer.WriteImage(1, &outImageInfo);
-            writer.WriteImage(2, &outImageInfo2);
+            writer.WriteImage(1, &outSceneHDRInfo);
+            writer.WriteImage(2, &heatmapInfo);
             writer.WriteBuffer(3, &bufferInfo2);
             writer.WriteBuffer(4, &bufferInfo3);
+            writer.WriteImage(5, &historyReadInfo);
+            writer.WriteImage(6, &historyWriteInfo);
 
             writer.Build(uniform.GetDescriptorSets()[frameIndex]);
         }

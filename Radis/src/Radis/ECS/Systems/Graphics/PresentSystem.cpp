@@ -36,8 +36,8 @@ namespace Radis
         if (!tl) return;
 
         const auto& extent = rr->swapChain->GetSwapChainExtent();
-        tl->ResizeStorageImage("RTColorImage_0", extent.width, extent.height);
-        tl->ResizeStorageImage("RTColorImage_1", extent.width, extent.height);
+        tl->ResizeStorageImage("RTAccum_0", extent.width, extent.height);
+        tl->ResizeStorageImage("RTAccum_1", extent.width, extent.height);
         tl->ResizeStorageImage("RTHeatmapImage_0", extent.width, extent.height);
         tl->ResizeStorageImage("RTHeatmapImage_1", extent.width, extent.height);
         tl->ResizeTexture("SceneTexture", extent.width, extent.height);
@@ -123,6 +123,15 @@ namespace Radis
 
         // Import resources!
         auto tl = rr->textureLibrary.get();
+
+        for (int i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i)
+        {
+            std::string accumName = "RTAccum_" + std::to_string(i);
+            std::string heatmapName = "RTHeatmapImage_" + std::to_string(i);
+
+            rg->ImportTexture(accumName.c_str(), (VKTexture*)tl->GetTexture(accumName));
+            rg->ImportTexture(heatmapName.c_str(), (VKTexture*)tl->GetTexture(heatmapName));
+        }
 
         rg->ImportTexture("SceneTexture", (VKTexture*)tl->GetTexture("SceneTexture"));
         rg->ImportTexture("SceneDepth", (VKTexture*)tl->GetTexture("SceneDepth"));

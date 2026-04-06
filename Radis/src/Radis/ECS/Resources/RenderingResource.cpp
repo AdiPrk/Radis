@@ -93,10 +93,10 @@ namespace Radis
         bool recreateTextures = textureLibrary != nullptr;
         if (!textureLibrary)
         {
-            IBL::SHCoefficients sh;
-            IBL::generateIrradianceMap(Assets::ImagesPath + "Alexs_Apt_2k.hdr", Assets::ImagesPath + "Alexs_Apt_2k.IRMAP.hdr", &sh);
-            IBL::generateIrradianceMap(Assets::ImagesPath + "Newport_Loft_Ref.hdr", Assets::ImagesPath + "Newport_Loft_Ref.IRMAP.hdr", &sh);
-            IBL::generateIrradianceMap(Assets::ImagesPath + "autumn_field_puresky_4k.hdr", Assets::ImagesPath + "autumn_field_puresky_4k.IRMAP.hdr", &sh);
+            // IBL::SHCoefficients sh;
+            // IBL::generateIrradianceMap(Assets::ImagesPath + "Alexs_Apt_2k.hdr", Assets::ImagesPath + "Alexs_Apt_2k.IRMAP.hdr", &sh);
+            // IBL::generateIrradianceMap(Assets::ImagesPath + "Newport_Loft_Ref.hdr", Assets::ImagesPath + "Newport_Loft_Ref.IRMAP.hdr", &sh);
+            // IBL::generateIrradianceMap(Assets::ImagesPath + "autumn_field_puresky_4k.hdr", Assets::ImagesPath + "autumn_field_puresky_4k.IRMAP.hdr", &sh);
 
             textureLibrary = std::make_unique<TextureLibrary>(device.get());
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "ErrorTexture.png");
@@ -113,13 +113,13 @@ namespace Radis
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "folderIcon.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "unknownFileIcon.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "shikaout.ktx2");
+            envMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "autumn_field_puresky_4k.hdr");
             envMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Alexs_Apt_2k.hdr");
             envMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Newport_Loft_Ref.hdr");
+            irMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "autumn_field_puresky_4k.IRMAP.hdr");
             irMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Alexs_Apt_2k.IRMAP.hdr");
             irMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Newport_Loft_Ref.IRMAP.hdr");
 
-            envMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "autumn_field_puresky_4k.hdr");
-            irMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "autumn_field_puresky_4k.IRMAP.hdr");
 
             textureLibrary->LoadQueuedTextures();
             //textureLibrary->QueueTextureLoad(Assets::ImagesPath + "M_Soul_Rocks2_Inst_8_BaseColor.dds");
@@ -293,7 +293,7 @@ namespace Radis
                 extent.width, extent.height,
                 hdrFormat,
                 VK_IMAGE_TILING_OPTIMAL,
-                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             );
         }
@@ -375,7 +375,10 @@ namespace Radis
                 tonemapPipeline = std::make_unique<Pipeline>(*device, ldrFormat, VK_FORMAT_UNDEFINED, tonemapUnis, false, "fullscreen.vert", "tonemap.frag", tonemapOpts, false);
             }
 
-            raytracingPipeline = std::make_unique<RaytracingPipeline>(*device, rtunis);
+            // raytracingPipeline = std::make_unique<RaytracingPipeline>(*device, rtunis);
+
+            PushConstantInfo rtPC{};
+            raytracingPipeline = std::make_unique<ComputePipeline>(*device, rtunis, "rayquery.comp", rtPC);
         }
     }
 

@@ -32,20 +32,23 @@ namespace Radis
                                         VK_SHADER_STAGE_MISS_BIT_KHR |
                                         VK_SHADER_STAGE_INTERSECTION_BIT_KHR |
                                         VK_SHADER_STAGE_CALLABLE_BIT_KHR;
+    inline VkShaderStageFlags compFlags = VK_SHADER_STAGE_COMPUTE_BIT;
 
     const UniformSettings cameraUniformSettings = UniformSettings(CameraUniformInit)
-        .AddUBBinding(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags, sizeof(CameraUniforms)).SetDebugName("Camera Uniforms")
-        .AddSSBOBinding(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags, sizeof(InstanceUniforms), InstanceUniforms::MAX_INSTANCES).SetDebugName("Instance SSBO")
+        .AddUBBinding(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags | compFlags, sizeof(CameraUniforms)).SetDebugName("Camera Uniforms")
+        .AddSSBOBinding(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags | compFlags, sizeof(InstanceUniforms), InstanceUniforms::MAX_INSTANCES).SetDebugName("Instance SSBO")
         .AddSSBOBinding(VK_SHADER_STAGE_VERTEX_BIT, sizeof(VQS), 10000).SetDebugName("Animation SSBO")
-        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags, TextureLibrary::MAX_TEXTURE_COUNT).SetDebugName("Texture SSBO")
-        .AddSSBOBinding(VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags, sizeof(LightUniform) * LightUniform::MAX_LIGHTS + sizeof(uint32_t)).SetDebugName("Light SSBO");
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags | compFlags, TextureLibrary::MAX_TEXTURE_COUNT).SetDebugName("Texture SSBO")
+        .AddSSBOBinding(VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags | compFlags, sizeof(LightUniform) * LightUniform::MAX_LIGHTS + sizeof(uint32_t)).SetDebugName("Light SSBO");
 
     const UniformSettings rayTracingUniformSettings = UniformSettings(RTUniformInit)
-        .AddASBinding(rtFlags, 1).SetDebugName("RT TLAS Buffer")
-        .AddSSBIBinding(rtFlags, 1).SetDebugName("RT Color Image")
-        .AddSSBIBinding(rtFlags, 1).SetDebugName("RT Heatmap Image")
-        .AddSSBOBinding(rtFlags, sizeof(MeshDataUniform), 10'000'000).SetDebugName("RT Vertices SSBO")
-        .AddSSBOBinding(rtFlags, sizeof(uint32_t), 30'000'000).SetDebugName("RT Indices SSBO");
+        .AddASBinding(rtFlags | compFlags, 1).SetDebugName("RT TLAS Buffer")
+        .AddSSBIBinding(rtFlags | compFlags, 1).SetDebugName("RT Color Image")
+        .AddSSBIBinding(rtFlags | compFlags, 1).SetDebugName("RT Heatmap Image")
+        .AddSSBOBinding(rtFlags | compFlags, sizeof(MeshDataUniform), 10'000'000).SetDebugName("RT Vertices SSBO")
+        .AddSSBOBinding(rtFlags | compFlags, sizeof(uint32_t), 30'000'000).SetDebugName("RT Indices SSBO")
+        .AddISBinding(rtFlags | compFlags, 1).SetDebugName("RT History Read")
+        .AddSSBIBinding(rtFlags | compFlags, 1).SetDebugName("RT History Write");
 
     // Deferred lighting pass uniform settings
     // Binding 0: Camera UBO
