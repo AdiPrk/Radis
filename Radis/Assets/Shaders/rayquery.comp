@@ -32,11 +32,9 @@ const int FINAL_SPP         = 8;  // Samples per pixel for final mode
 // Data Structures
 // ---------------------------------------------------------------------------
 struct Vertex {
-    float posX, posY, posZ;
-    float cR,   cG,   cB;
-    float nX,   nY,   nZ;
-    float texU, texV;
-    float _padding;
+    uint  packedColor;  // was 12 bytes (3 floats), now 4 — RGBA8 unorm
+    uint  packedNormal; // was 12 bytes (3 floats), now 4 — oct-encoded snorm16x2
+    vec2  uv;           // unchanged, 8 bytes
 };
 
 struct Instance {
@@ -172,6 +170,25 @@ vec3 baryWeights(vec2 b) {
     return vec3(1.0 - b.x - b.y, b.x, b.y);
 }
 
+vec3 unpackColor(uint packed) {
+    return vec3(
+        float((packed >>  0) & 0xFFu) / 255.0,
+        float((packed >>  8) & 0xFFu) / 255.0,
+        float((packed >> 16) & 0xFFu) / 255.0
+    );
+}
+
+vec3 unpackNormal(uint packed) {
+    vec2 e = vec2(
+        float(int(packed & 0xFFFFu) << 16 >> 16) / 32767.0,
+        float(int(packed) >> 16)                 / 32767.0
+    );
+    vec3 n = vec3(e, 1.0 - abs(e.x) - abs(e.y));
+    if (n.z < 0.0)
+        n.xy = (1.0 - abs(n.yx)) * sign(n.xy);
+    return normalize(n);
+}
+
 // Fetch the three vertex indices for a given primitive, accounting for the
 // instance's index offset.  Returns actual vertex indices (not primitive-local).
 uvec3 fetchTriangleIndices(Instance inst, int primitiveId) {
@@ -188,9 +205,9 @@ vec2 interpolateUV(uvec3 tri, Instance inst, vec3 bary) {
     uint v0 = tri.x + inst.vertexOffset;
     uint v1 = tri.y + inst.vertexOffset;
     uint v2 = tri.z + inst.vertexOffset;
-    return vec2(meshBuffer.vertices[v0].texU, meshBuffer.vertices[v0].texV) * bary.x
-         + vec2(meshBuffer.vertices[v1].texU, meshBuffer.vertices[v1].texV) * bary.y
-         + vec2(meshBuffer.vertices[v2].texU, meshBuffer.vertices[v2].texV) * bary.z;
+    return meshBuffer.vertices[v0].uv * bary.x
+         + meshBuffer.vertices[v1].uv * bary.y
+         + meshBuffer.vertices[v2].uv * bary.z;
 }
 
 // ---------------------------------------------------------------------------
@@ -301,19 +318,19 @@ void main() {
 
             // Interpolate geometry attributes.
             vec3 normalLocal =
-                vec3(vert0.nX, vert0.nY, vert0.nZ) * bary.x +
-                vec3(vert1.nX, vert1.nY, vert1.nZ) * bary.y +
-                vec3(vert2.nX, vert2.nY, vert2.nZ) * bary.z;
+                unpackNormal(vert0.packedNormal) * bary.x +
+                unpackNormal(vert1.packedNormal) * bary.y +
+                unpackNormal(vert2.packedNormal) * bary.z;
 
             vec2 hitUV =
-                vec2(vert0.texU, vert0.texV) * bary.x +
-                vec2(vert1.texU, vert1.texV) * bary.y +
-                vec2(vert2.texU, vert2.texV) * bary.z;
+                vert0.uv * bary.x +
+                vert1.uv * bary.y +
+                vert2.uv * bary.z;
 
             vec3 vertColor =
-                vec3(vert0.cR, vert0.cG, vert0.cB) * bary.x +
-                vec3(vert1.cR, vert1.cG, vert1.cB) * bary.y +
-                vec3(vert2.cR, vert2.cG, vert2.cB) * bary.z;
+                unpackColor(vert0.packedColor) * bary.x +
+                unpackColor(vert1.packedColor) * bary.y +
+                unpackColor(vert2.packedColor) * bary.z;
 
             // Transform interpolated normal to world space.
             mat3 normalMatrix = transpose(inverse(mat3(objToWorld)));

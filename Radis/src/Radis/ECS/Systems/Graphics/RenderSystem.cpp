@@ -117,22 +117,13 @@ namespace Radis
             {            
                 mRTMeshData.reserve(uMeshes->GetUnifiedMesh().mVertices.size());
 
-                MeshDataUniform vertexData;
                 for (auto& v : uMeshes->GetUnifiedMesh().mVertices)
                 {
-                    vertexData.posX = v.position.x;
-                    vertexData.posY = v.position.y;
-                    vertexData.posZ = v.position.z;
-                    vertexData.colorR = v.color.r;
-                    vertexData.colorG = v.color.g;
-                    vertexData.colorB = v.color.b;
-                    vertexData.normalX = v.normal.x;
-                    vertexData.normalY = v.normal.y;
-                    vertexData.normalZ = v.normal.z;
-                    vertexData.texU = v.uv.x;
-                    vertexData.texV = v.uv.y;
-
-                    mRTMeshData.push_back(vertexData);
+                    mRTMeshData.emplace_back(
+                        PackColor(v.color),
+                        PackNormal(v.normal),
+                        v.uv.x, v.uv.y
+                    );
                 }
             
                 mRTMeshIndices = uMeshes->GetUnifiedMesh().mIndices;

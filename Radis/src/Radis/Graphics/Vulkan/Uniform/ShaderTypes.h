@@ -74,10 +74,9 @@ namespace Radis
 
     struct MeshDataUniform
     {
-        float posX, posY, posZ;
-        float colorR, colorG, colorB;
-        float normalX, normalY, normalZ;
-        float texU, texV; float _padding = 777.0f;
+        uint32_t color;
+        uint32_t normal;
+        float texU, texV;
     };
 
     struct ShadowCameraUniform {
@@ -101,4 +100,24 @@ namespace Radis
         int width;
         int height;
     };
+
+    static uint32_t PackColor(const glm::vec3& c)
+    {
+        return (uint32_t(glm::clamp(c.r, 0.f, 1.f) * 255.f))
+            | (uint32_t(glm::clamp(c.g, 0.f, 1.f) * 255.f) << 8)
+            | (uint32_t(glm::clamp(c.b, 0.f, 1.f) * 255.f) << 16);
+    }
+
+    static uint32_t PackNormal(glm::vec3 n)
+    {
+        n /= std::abs(n.x) + std::abs(n.y) + std::abs(n.z);
+        if (n.z < 0.f) {
+            float x = n.x, y = n.y;
+            n.x = (1.f - std::abs(y)) * (x >= 0.f ? 1.f : -1.f);
+            n.y = (1.f - std::abs(x)) * (y >= 0.f ? 1.f : -1.f);
+        }
+        auto ex = int16_t(glm::clamp(n.x, -1.f, 1.f) * 32767.f);
+        auto ey = int16_t(glm::clamp(n.y, -1.f, 1.f) * 32767.f);
+        return uint32_t(uint16_t(ex)) | (uint32_t(uint16_t(ey)) << 16);
+    }
 }
