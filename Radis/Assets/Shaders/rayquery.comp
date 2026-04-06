@@ -5,46 +5,41 @@
 
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
-// ==========================================
-// 1. BINDINGS
-// ==========================================
-layout(set = 0, binding = 0) uniform Uniforms {
-    mat4 projectionView;
-    mat4 projection;
-    mat4 view;
-    mat4 invProjView;
-    vec3 cameraPos;
-    vec2 pixelJitter;
-    int frameCount;
-    int accumulationCount;
-} uniforms;
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+const float PI                 = 3.14159265359;
+const uint  NO_TEXTURE         = 10001u;
+const int   MAX_BOUNCES        = 3;
+const float RAY_TMIN           = 1e-3;
+const float RAY_TMAX           = 1e38;
+const float NORMAL_OFFSET      = 1e-3;
+const float ALPHA_CUTOUT       = 0.1;
+const float MIN_ROUGHNESS      = 0.04;
+const float FRESNEL_DIELECTRIC = 0.04;
 
-layout(set = 1, binding = 0) uniform accelerationStructureEXT topLevelAS;
-layout(set = 1, binding = 1, rgba32f) uniform image2D colorImage; // Bridge to Tonemapper (SceneHDR)
-layout(set = 1, binding = 2, rgba32f) uniform image2D heatmapImage;
-
-struct Instance {
-    mat4 model;
-    vec4 tint;
-    uvec4 textureIndices;
-    uvec4 textureIndices2;
-    vec4 baseColorFactor;
-    vec4 metallicRoughnessFactor;
-    vec4 emissiveFactor;
-    uint boneOffset;
-    uint indexOffset;
-    uint vertexOffset;
-};
-
-layout(set = 0, binding = 1) readonly buffer InstanceData { Instance instances[]; };
-layout(set = 0, binding = 3) uniform sampler2D uTextures[];
-
+// ---------------------------------------------------------------------------
+// Data Structures
+// ---------------------------------------------------------------------------
 struct Vertex {
     float posX, posY, posZ;
-    float cR, cG, cB;
-    float nX, nY, nZ;
-    float texU, texV; 
+    float cR,   cG,   cB;
+    float nX,   nY,   nZ;
+    float texU, texV;
     float _padding;
+};
+
+struct Instance {
+    mat4  model;
+    vec4  tint;
+    uvec4 textureIndices;
+    uvec4 textureIndices2;
+    vec4  baseColorFactor;
+    vec4  metallicRoughnessFactor;
+    vec4  emissiveFactor;
+    uint  boneOffset;
+    uint  indexOffset;
+    uint  vertexOffset;
 };
 
 struct Light {
@@ -54,298 +49,340 @@ struct Light {
     vec4 outerConeType;
 };
 
+// ---------------------------------------------------------------------------
+// Bindings Set 0 (Frame-level)
+// ---------------------------------------------------------------------------
+layout(set = 0, binding = 0) uniform Uniforms {
+    mat4 projectionView;
+    mat4 projection;
+    mat4 view;
+    mat4 invProjView;
+    vec3 cameraPos;
+    vec2 pixelJitter;
+    int  frameCount;
+    int  accumulationCount;
+} uniforms;
+
+layout(set = 0, binding = 1) readonly buffer InstanceData { Instance instances[]; };
+layout(set = 0, binding = 3) uniform sampler2D uTextures[];
 layout(set = 0, binding = 4) readonly buffer LightData {
-    uint lightCount;
+    uint  lightCount;
     Light lights[];
 } lightData;
 
-layout(set = 1, binding = 3, std430) readonly buffer MeshBuffer { Vertex vertices[]; } meshBuffer;
-layout(set = 1, binding = 4, std430) readonly buffer MeshIndexBuffer { uint indices[]; } indexBuffer;
+// ---------------------------------------------------------------------------
+// Bindings Set 1 (Pass-level)
+// ---------------------------------------------------------------------------
+layout(set = 1, binding = 0)          uniform accelerationStructureEXT topLevelAS;
+layout(set = 1, binding = 1, rgba32f) uniform image2D colorImage;
+layout(set = 1, binding = 2, rgba32f) uniform image2D heatmapImage;
 
-// NEW: Ping-Pong History Bindings
-layout(set = 1, binding = 5) uniform sampler2D historyRead;      // Sampler for reading previous frame
-layout(set = 1, binding = 6, rgba32f) uniform image2D historyWrite; // Storage for writing current frame
+layout(set = 1, binding = 3, std430) readonly buffer MeshBuffer      { Vertex vertices[]; } meshBuffer;
+layout(set = 1, binding = 4, std430) readonly buffer MeshIndexBuffer { uint    indices[];  } indexBuffer;
 
-// ==========================================
-// 2. MATH & RNG CORE
-// ==========================================
-const float PI = 3.14159265359;
+layout(set = 1, binding = 5)          uniform sampler2D historyRead;
+layout(set = 1, binding = 6, rgba32f) uniform image2D  historyWrite;
 
-// PCG Hash for fast, high-quality random numbers
-uint pcg_hash(inout uint seed) {
-    seed = seed * 747796405u + 2891336453u;
+// ---------------------------------------------------------------------------
+// Math & RNG
+// ---------------------------------------------------------------------------
+uint pcgHash(inout uint seed) {
+    seed      = seed * 747796405u + 2891336453u;
     uint word = ((seed >> ((seed >> 28u) + 4u)) ^ seed) * 277803737u;
     return (word >> 22u) ^ word;
 }
 
 float rnd(inout uint seed) {
-    return float(pcg_hash(seed)) / 4294967296.0;
+    return float(pcgHash(seed)) / 4294967296.0;
 }
 
-// Builds a Tangent-Bitangent-Normal matrix
-mat3 buildTBN(vec3 normal) {
-    vec3 up = abs(normal.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
-    vec3 tangent = normalize(cross(up, normal));
-    vec3 bitangent = cross(normal, tangent);
-    return mat3(tangent, bitangent, normal);
+mat3 buildTBN(vec3 n) {
+    vec3 up      = (abs(n.z) < 0.999) ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
+    vec3 tangent = normalize(cross(up, n));
+    vec3 bitan   = cross(n, tangent);
+    return mat3(tangent, bitan, n);
 }
 
-// Cosine-weighted hemisphere sampling for Diffuse bounces
+// Cosine-weighted hemisphere sample in the oriented frame of `normal`.
 vec3 cosineSampleHemisphere(vec3 normal, inout uint seed) {
-    float r1 = rnd(seed);
-    float r2 = rnd(seed);
-    float phi = 2.0 * PI * r1;
+    float r1       = rnd(seed);
+    float r2       = rnd(seed);
+    float phi      = 2.0 * PI * r1;
     float cosTheta = sqrt(r2);
     float sinTheta = sqrt(1.0 - r2);
-    vec3 H = vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
-    return normalize(buildTBN(normal) * H);
+    vec3  h        = vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
+    return normalize(buildTBN(normal) * h);
 }
 
-// ==========================================
-// 3. PBR EVALUATION
-// ==========================================
-float DistributionGGX(float NdotH, float roughness) {
-    float a = roughness * roughness;
-    float a2 = a * a;
-    float NdotH2 = NdotH * NdotH;
-    float num = a2;
-    float den = (NdotH2 * (a2 - 1.0) + 1.0);
-    den = PI * den * den;
-    return num / max(den, 0.0001);
+// ---------------------------------------------------------------------------
+// PBR GGX Microfacet Model
+// ---------------------------------------------------------------------------
+float distributionGGX(float NdotH, float roughness) {
+    float a     = roughness * roughness;
+    float a2    = a * a;
+    float denom = NdotH * NdotH * (a2 - 1.0) + 1.0;
+    return a2 / max(PI * denom * denom, 1e-4);
 }
 
-float GeometrySchlickGGX(float NdotV, float roughness) {
-    float r = (roughness + 1.0);
-    float k = (r * r) / 8.0;
-    return NdotV / (NdotV * (1.0 - k) + k);
+float geometrySchlickGGX(float NdotX, float roughness) {
+    float r = roughness + 1.0;
+    float k = (r * r) * 0.125;
+    return NdotX / (NdotX * (1.0 - k) + k);
 }
 
-float GeometrySmith(float NdotV, float NdotL, float roughness) {
-    return GeometrySchlickGGX(NdotV, roughness) * GeometrySchlickGGX(NdotL, roughness);
+float geometrySmith(float NdotV, float NdotL, float roughness) {
+    return geometrySchlickGGX(NdotV, roughness) * geometrySchlickGGX(NdotL, roughness);
 }
 
-vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness) {
+vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness) {
     return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
-// ==========================================
-// 4. MAIN PATH TRACER
-// ==========================================
-void main() 
-{
+// ---------------------------------------------------------------------------
+// Geometry Helpers
+// ---------------------------------------------------------------------------
+
+// Expand 2-component barycentric coords to the full 3-component form.
+vec3 baryWeights(vec2 b) {
+    return vec3(1.0 - b.x - b.y, b.x, b.y);
+}
+
+// Fetch the three vertex indices for a given primitive, accounting for the
+// instance's index offset.  Returns actual vertex indices (not primitive-local).
+uvec3 fetchTriangleIndices(Instance inst, int primitiveId) {
+    uint base = uint(primitiveId) * 3u + inst.indexOffset;
+    return uvec3(
+        indexBuffer.indices[base],
+        indexBuffer.indices[base + 1u],
+        indexBuffer.indices[base + 2u]
+    );
+}
+
+// Barycentric interpolation of texture coordinates across a triangle.
+vec2 interpolateUV(uvec3 tri, Instance inst, vec3 bary) {
+    uint v0 = tri.x + inst.vertexOffset;
+    uint v1 = tri.y + inst.vertexOffset;
+    uint v2 = tri.z + inst.vertexOffset;
+    return vec2(meshBuffer.vertices[v0].texU, meshBuffer.vertices[v0].texV) * bary.x
+         + vec2(meshBuffer.vertices[v1].texU, meshBuffer.vertices[v1].texV) * bary.y
+         + vec2(meshBuffer.vertices[v2].texU, meshBuffer.vertices[v2].texV) * bary.z;
+}
+
+// ---------------------------------------------------------------------------
+// Main
+// ---------------------------------------------------------------------------
+void main() {
     ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
-    ivec2 resolution = imageSize(colorImage);
+    ivec2 resolution  = imageSize(colorImage);
     if (pixelCoords.x >= resolution.x || pixelCoords.y >= resolution.y) return;
 
-    // Initialize RNG Seed (Pixel coordinates + Frame Count prevents static noise)
-    uint seed = pixelCoords.y * resolution.x + pixelCoords.x + uniforms.frameCount * 719393;
+    // Unique RNG seed per pixel per frame.
+    uint seed = uint(pixelCoords.y * resolution.x + pixelCoords.x)
+              + uint(uniforms.frameCount) * 719393u;
 
-    // --- CAMERA SETUP WITH JITTER ---
-    // Instead of always hitting the pixel center (+0.5), we apply the Halton sequence jitter
-    vec2 uv = (vec2(pixelCoords) + uniforms.pixelJitter) / vec2(resolution);
-    
+    // --- Ray Generation ---
+    vec2 uv         = (vec2(pixelCoords) + uniforms.pixelJitter) / vec2(resolution);
     vec2 clipCoords = uv * 2.0 - 1.0;
-    vec4 viewCoords = inverse(uniforms.projection) * vec4(clipCoords, 1.0, 1.0);
-    viewCoords /= viewCoords.w;
-    
-    vec3 origin = (inverse(uniforms.view) * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
-    vec3 direction = normalize((inverse(uniforms.view) * vec4(viewCoords.xyz, 0.0)).xyz);
 
+    vec4 worldTarget = uniforms.invProjView * vec4(clipCoords, 1.0, 1.0);
+    worldTarget     /= worldTarget.w;
+
+    vec3 origin    = uniforms.cameraPos;
+    vec3 direction = normalize(worldTarget.xyz - origin);
+
+    // --- Path Tracing Loop ---
     vec3 finalColor = vec3(0.0);
     vec3 throughput = vec3(1.0);
 
-    const int MAX_DEPTH = 3; // Keep to 3 for performance during testing
-    for (int bounce = 0; bounce < MAX_DEPTH; ++bounce) 
-    {
+    for (int bounce = 0; bounce < MAX_BOUNCES; ++bounce) {
+        // Primary / GI ray
         rayQueryEXT q;
-        rayQueryInitializeEXT(q, topLevelAS, gl_RayFlagsNoneEXT, 0xFF, origin, 0.001, direction, 1e38);
+        rayQueryInitializeEXT(q, topLevelAS, gl_RayFlagsNoneEXT, 0xFF,
+                              origin, RAY_TMIN, direction, RAY_TMAX);
 
-        // --- TRAVERSAL (Handle Alpha Cutout) ---
-        while(rayQueryProceedEXT(q)) 
-        {
-            if (rayQueryGetIntersectionTypeEXT(q, false) == gl_RayQueryCandidateIntersectionTriangleEXT) 
-            {
-                int instanceId = rayQueryGetIntersectionInstanceCustomIndexEXT(q, false);
-                int primitiveId = rayQueryGetIntersectionPrimitiveIndexEXT(q, false);
-                vec2 barys = rayQueryGetIntersectionBarycentricsEXT(q, false);
-                Instance instance = instances[instanceId];
-                
-                uint texIndex = instance.textureIndices.x;
-                if (texIndex != 10001) {
-                    uvec3 tri = uvec3(primitiveId * 3u, primitiveId * 3u + 1u, primitiveId * 3u + 2u);
-                    uint i0 = indexBuffer.indices[tri.x + instance.indexOffset];
-                    uint i1 = indexBuffer.indices[tri.y + instance.indexOffset];
-                    uint i2 = indexBuffer.indices[tri.z + instance.indexOffset];
-                    
-                    vec2 v0UV = vec2(meshBuffer.vertices[i0 + instance.vertexOffset].texU, meshBuffer.vertices[i0 + instance.vertexOffset].texV); 
-                    vec2 v1UV = vec2(meshBuffer.vertices[i1 + instance.vertexOffset].texU, meshBuffer.vertices[i1 + instance.vertexOffset].texV); 
-                    vec2 v2UV = vec2(meshBuffer.vertices[i2 + instance.vertexOffset].texU, meshBuffer.vertices[i2 + instance.vertexOffset].texV);
-                    
-                    vec3 bary = vec3(1.0 - barys.x - barys.y, barys.x, barys.y);
-                    vec2 hitUV = v0UV * bary.x + v1UV * bary.y + v2UV * bary.z;
-                    
-                    float alpha = (instance.baseColorFactor * instance.tint * texture(uTextures[nonuniformEXT(texIndex)], hitUV)).a;
-                    if (alpha >= 0.1) rayQueryConfirmIntersectionEXT(q);
-                } else {
-                    rayQueryConfirmIntersectionEXT(q); // No texture, assume opaque
-                }
+        // Candidate traversal
+        while (rayQueryProceedEXT(q)) {
+            if (rayQueryGetIntersectionTypeEXT(q, false) != gl_RayQueryCandidateIntersectionTriangleEXT)
+                continue;
+
+            int      instId  = rayQueryGetIntersectionInstanceCustomIndexEXT(q, false);
+            int      primId  = rayQueryGetIntersectionPrimitiveIndexEXT(q, false);
+            Instance inst    = instances[instId];
+            uint     texIdx  = inst.textureIndices.x;
+
+            if (texIdx == NO_TEXTURE) {
+                rayQueryConfirmIntersectionEXT(q);
+            } else {
+                vec2  barys2 = rayQueryGetIntersectionBarycentricsEXT(q, false);
+                vec3  bary   = baryWeights(barys2);
+                uvec3 tri    = fetchTriangleIndices(inst, primId);
+                vec2  hitUV  = interpolateUV(tri, inst, bary);
+                float alpha  = (inst.baseColorFactor * inst.tint
+                                * texture(uTextures[nonuniformEXT(texIdx)], hitUV)).a;
+                if (alpha >= ALPHA_CUTOUT)
+                    rayQueryConfirmIntersectionEXT(q);
             }
         }
 
-        // --- HIT RESOLUTION ---
-        if (rayQueryGetIntersectionTypeEXT(q, true) == gl_RayQueryCommittedIntersectionTriangleEXT) 
-        {
-            float hitT = rayQueryGetIntersectionTEXT(q, true);
-            int instanceId = rayQueryGetIntersectionInstanceCustomIndexEXT(q, true);
-            int primitiveId = rayQueryGetIntersectionPrimitiveIndexEXT(q, true);
-            vec2 barys = rayQueryGetIntersectionBarycentricsEXT(q, true);
-            mat4x3 objToWorld = rayQueryGetIntersectionObjectToWorldEXT(q, true);
-            
-            Instance instance = instances[instanceId];
-            vec3 bary = vec3(1.0 - barys.x - barys.y, barys.x, barys.y);
-            
-            uvec3 tri = uvec3(primitiveId * 3u, primitiveId * 3u + 1u, primitiveId * 3u + 2u);
-            uint i0 = indexBuffer.indices[tri.x + instance.indexOffset];
-            uint i1 = indexBuffer.indices[tri.y + instance.indexOffset];
-            uint i2 = indexBuffer.indices[tri.z + instance.indexOffset];
-            
-            Vertex v0 = meshBuffer.vertices[i0 + instance.vertexOffset];
-            Vertex v1 = meshBuffer.vertices[i1 + instance.vertexOffset];
-            Vertex v2 = meshBuffer.vertices[i2 + instance.vertexOffset];
-
-            vec3 fragPos = origin + direction * hitT;
-            
-            // Extract Normal
-            vec3 normalLocal = vec3(v0.nX, v0.nY, v0.nZ) * bary.x + vec3(v1.nX, v1.nY, v1.nZ) * bary.y + vec3(v2.nX, v2.nY, v2.nZ) * bary.z;
-            mat3 normalMatrix = transpose(inverse(mat3(objToWorld)));
-            vec3 N = normalize(normalMatrix * normalLocal);
-            vec3 V = normalize(-direction);
-            
-            // Extract UVs and Colors
-            vec2 hitUV = vec2(v0.texU, v0.texV) * bary.x + vec2(v1.texU, v1.texV) * bary.y + vec2(v2.texU, v2.texV) * bary.z;
-            vec3 vertColor = vec3(v0.cR, v0.cG, v0.cB) * bary.x + vec3(v1.cR, v1.cG, v1.cB) * bary.y + vec3(v2.cR, v2.cG, v2.cB) * bary.z;
-
-            // Material Fetch
-            vec4 baseColor = vec4(vertColor, 1.0) * instance.tint * instance.baseColorFactor;
-            if (instance.textureIndices.x != 10001) baseColor *= texture(uTextures[nonuniformEXT(instance.textureIndices.x)], hitUV);
-            vec3 albedo = baseColor.rgb;
-
-            float metallic = instance.metallicRoughnessFactor.x;
-            if (instance.textureIndices.z != 10001) metallic = texture(uTextures[nonuniformEXT(instance.textureIndices.z)], hitUV).b;
-
-            float roughness = instance.metallicRoughnessFactor.y;
-            if (instance.textureIndices.w != 10001) roughness *= texture(uTextures[nonuniformEXT(instance.textureIndices.w)], hitUV).g;
-            roughness = clamp(roughness, 0.04, 1.0);
-
-            vec3 emissive = instance.emissiveFactor.rgb;
-            if (instance.textureIndices2.y != 10001) emissive *= texture(uTextures[nonuniformEXT(instance.textureIndices2.y)], hitUV).rgb;
-
-            // --- DIRECT LIGHTING (Next Event Estimation) ---
-            vec3 Lo = vec3(0.0);
-            for (uint i = 0; i < lightData.lightCount; ++i) 
-            {
-                Light light = lightData.lights[i];
-                vec3 lightDir = normalize(light.positionRadius.xyz - fragPos);
-                float lightDist = length(light.positionRadius.xyz - fragPos);
-                
-                float NdotL = max(dot(N, lightDir), 0.0);
-                if (NdotL > 0.0) 
-                {
-                    // Cast Shadow Ray (Inline)
-                    rayQueryEXT shadowQ;
-                    rayQueryInitializeEXT(shadowQ, topLevelAS, gl_RayFlagsTerminateOnFirstHitEXT, 0xFF, fragPos + N * 0.001, 0.001, lightDir, lightDist);
-                    
-                    // Shadow Ray Alpha Cutout
-                    while(rayQueryProceedEXT(shadowQ)) {
-                        if (rayQueryGetIntersectionTypeEXT(shadowQ, false) == gl_RayQueryCandidateIntersectionTriangleEXT) {
-                            int sInstId = rayQueryGetIntersectionInstanceCustomIndexEXT(shadowQ, false);
-                            uint sTexIndex = instances[sInstId].textureIndices.x;
-                            if (sTexIndex != 10001) {
-                                rayQueryConfirmIntersectionEXT(shadowQ); 
-                            } else {
-                                rayQueryConfirmIntersectionEXT(shadowQ);
-                            }
-                        }
-                    }
-
-                    // If light is visible, calculate PBR
-                    if (rayQueryGetIntersectionTypeEXT(shadowQ, true) == gl_RayQueryCommittedIntersectionNoneEXT) 
-                    {
-                        vec3 F0 = mix(vec3(0.04), albedo, metallic);
-                        vec3 H = normalize(V + lightDir);
-                        float NdotV = max(dot(N, V), 0.0);
-                        float NdotH = max(dot(N, H), 0.0);
-                        float VdotH = max(dot(V, H), 0.0);
-
-                        float D = DistributionGGX(NdotH, roughness);
-                        float G = GeometrySmith(NdotV, NdotL, roughness);
-                        vec3 F = FresnelSchlickRoughness(VdotH, F0, roughness);
-
-                        vec3 specular = (D * G * F) / max(4.0 * NdotV * NdotL, 0.001);
-                        vec3 kD = (1.0 - F) * (1.0 - metallic);
-                        vec3 diffuse = kD * albedo / PI;
-
-                        // Attenuation (Simplified Point Light)
-                        float attenuation = 1.0 / (lightDist * lightDist);
-                        Lo += (diffuse + specular) * light.colorIntensity.xyz * light.colorIntensity.w * attenuation * NdotL;
-                    }
-                }
-            }
-
-            finalColor += throughput * (Lo + emissive);
-
-            // --- NEXT BOUNCE (Indirect Lighting) ---
-            float isSpecular = (rnd(seed) < metallic) ? 1.0 : 0.0;
-            
-            if (isSpecular == 1.0) {
-                // Shiny bounce
-                direction = reflect(-V, N);
-                direction = normalize(direction + cosineSampleHemisphere(direction, seed) * roughness);
-                throughput *= mix(vec3(0.04), albedo, metallic);
-            } else {
-                // Matte bounce
-                direction = cosineSampleHemisphere(N, seed);
-                throughput *= albedo; 
-            }
-            
-            origin = fragPos + N * 0.001;
-
-            // Russian Roulette
-            float survivalProb = max(throughput.r, max(throughput.g, throughput.b));
-            if (rnd(seed) > survivalProb) break;
-            throughput /= max(survivalProb, 0.001);
-
-        } 
-        else 
-        {
-            // --- MISS SHADER (Sky) ---
-            vec3 skyCol = vec3(0.05, 0.1, 0.2); // Replace with your sky logic
-            finalColor += throughput * skyCol;
+        // Miss; accumulate sky radiance and end the path.
+        if (rayQueryGetIntersectionTypeEXT(q, true) != gl_RayQueryCommittedIntersectionTriangleEXT) {
+            const vec3 SKY_RADIANCE = vec3(0.05, 0.1, 0.2);
+            finalColor += throughput * SKY_RADIANCE;
             break;
         }
+
+        // --- Hit Resolution ---
+        float    hitT       = rayQueryGetIntersectionTEXT(q, true);
+        int      instId     = rayQueryGetIntersectionInstanceCustomIndexEXT(q, true);
+        int      primId     = rayQueryGetIntersectionPrimitiveIndexEXT(q, true);
+        vec2     barys2     = rayQueryGetIntersectionBarycentricsEXT(q, true);
+        mat4x3   objToWorld = rayQueryGetIntersectionObjectToWorldEXT(q, true);
+        Instance inst       = instances[instId];
+        vec3     bary       = baryWeights(barys2);
+
+        uvec3 tri = fetchTriangleIndices(inst, primId);
+        uint  iv0 = tri.x + inst.vertexOffset;
+        uint  iv1 = tri.y + inst.vertexOffset;
+        uint  iv2 = tri.z + inst.vertexOffset;
+
+        Vertex vert0 = meshBuffer.vertices[iv0];
+        Vertex vert1 = meshBuffer.vertices[iv1];
+        Vertex vert2 = meshBuffer.vertices[iv2];
+
+        vec3 hitPos = origin + direction * hitT;
+
+        // Interpolate geometry attributes.
+        vec3 normalLocal =
+            vec3(vert0.nX, vert0.nY, vert0.nZ) * bary.x +
+            vec3(vert1.nX, vert1.nY, vert1.nZ) * bary.y +
+            vec3(vert2.nX, vert2.nY, vert2.nZ) * bary.z;
+
+        vec2 hitUV =
+            vec2(vert0.texU, vert0.texV) * bary.x +
+            vec2(vert1.texU, vert1.texV) * bary.y +
+            vec2(vert2.texU, vert2.texV) * bary.z;
+
+        vec3 vertColor =
+            vec3(vert0.cR, vert0.cG, vert0.cB) * bary.x +
+            vec3(vert1.cR, vert1.cG, vert1.cB) * bary.y +
+            vec3(vert2.cR, vert2.cG, vert2.cB) * bary.z;
+
+        // Transform interpolated normal to world space.
+        mat3 normalMatrix = transpose(inverse(mat3(objToWorld)));
+        vec3 N = normalize(normalMatrix * normalLocal);
+        vec3 V = normalize(-direction);
+
+        // --- Material ---
+        vec4 baseColor = vec4(vertColor, 1.0) * inst.tint * inst.baseColorFactor;
+        if (inst.textureIndices.x != NO_TEXTURE)
+            baseColor *= texture(uTextures[nonuniformEXT(inst.textureIndices.x)], hitUV);
+        vec3 albedo = baseColor.rgb;
+
+        float metallic = inst.metallicRoughnessFactor.x;
+        if (inst.textureIndices.z != NO_TEXTURE)
+            metallic = texture(uTextures[nonuniformEXT(inst.textureIndices.z)], hitUV).b;
+
+        float roughness = inst.metallicRoughnessFactor.y;
+        if (inst.textureIndices.w != NO_TEXTURE)
+            roughness *= texture(uTextures[nonuniformEXT(inst.textureIndices.w)], hitUV).g;
+        roughness = clamp(roughness, MIN_ROUGHNESS, 1.0);
+
+        vec3 emissive = inst.emissiveFactor.rgb;
+        if (inst.textureIndices2.y != NO_TEXTURE)
+            emissive *= texture(uTextures[nonuniformEXT(inst.textureIndices2.y)], hitUV).rgb;
+
+        vec3 F0 = mix(vec3(FRESNEL_DIELECTRIC), albedo, metallic);
+
+        // --- Direct Lighting (Next Event Estimation) ---
+        vec3 Lo = vec3(0.0);
+        for (uint i = 0; i < lightData.lightCount; ++i) {
+            Light light     = lightData.lights[i];
+            vec3  toLight   = light.positionRadius.xyz - hitPos;
+            float lightDist = length(toLight);
+            vec3  lightDir  = toLight / lightDist;
+            float NdotL     = max(dot(N, lightDir), 0.0);
+
+            if (NdotL <= 0.0) continue;
+
+            // Shadow ray with alpha-cutout traversal.
+            rayQueryEXT shadowQ;
+            rayQueryInitializeEXT(shadowQ, topLevelAS, gl_RayFlagsTerminateOnFirstHitEXT, 0xFF,
+                                  hitPos + N * NORMAL_OFFSET, RAY_TMIN, lightDir, lightDist);
+
+            while (rayQueryProceedEXT(shadowQ)) {
+                if (rayQueryGetIntersectionTypeEXT(shadowQ, false) != gl_RayQueryCandidateIntersectionTriangleEXT)
+                    continue;
+
+                int      sInstId = rayQueryGetIntersectionInstanceCustomIndexEXT(shadowQ, false);
+                int      sPrimId = rayQueryGetIntersectionPrimitiveIndexEXT(shadowQ, false);
+                Instance sInst   = instances[sInstId];
+                uint     sTexIdx = sInst.textureIndices.x;
+
+                if (sTexIdx == NO_TEXTURE) {
+                    rayQueryConfirmIntersectionEXT(shadowQ);
+                } else {
+                    vec2  sBarys2 = rayQueryGetIntersectionBarycentricsEXT(shadowQ, false);
+                    vec3  sBary   = baryWeights(sBarys2);
+                    uvec3 sTri    = fetchTriangleIndices(sInst, sPrimId);
+                    vec2  sUV     = interpolateUV(sTri, sInst, sBary);
+                    float sAlpha  = (sInst.baseColorFactor * sInst.tint
+                                     * texture(uTextures[nonuniformEXT(sTexIdx)], sUV)).a;
+                    if (sAlpha >= ALPHA_CUTOUT)
+                        rayQueryConfirmIntersectionEXT(shadowQ);
+                }
+            }
+
+            if (rayQueryGetIntersectionTypeEXT(shadowQ, true) != gl_RayQueryCommittedIntersectionNoneEXT)
+                continue;
+
+            // PBR evaluation for this light.
+            float NdotV = max(dot(N, V), 0.0);
+            vec3  H     = normalize(V + lightDir);
+            float NdotH = max(dot(N, H), 0.0);
+            float VdotH = max(dot(V, H), 0.0);
+
+            float D = distributionGGX(NdotH, roughness);
+            float G = geometrySmith(NdotV, NdotL, roughness);
+            vec3  F = fresnelSchlickRoughness(VdotH, F0, roughness);
+
+            vec3  specular    = (D * G * F) / max(4.0 * NdotV * NdotL, 1e-3);
+            vec3  kD          = (1.0 - F) * (1.0 - metallic);
+            vec3  diffuse     = kD * albedo / PI;
+            float attenuation = 1.0 / (lightDist * lightDist);
+
+            Lo += (diffuse + specular) * light.colorIntensity.rgb
+                  * light.colorIntensity.w * attenuation * NdotL;
+        }
+
+        finalColor += throughput * (Lo + emissive);
+
+        // --- Next Bounce ---
+        bool isSpecularBounce = rnd(seed) < metallic;
+        if (isSpecularBounce) {
+            vec3 reflDir = reflect(-V, N);
+            direction    = normalize(reflDir + cosineSampleHemisphere(reflDir, seed) * roughness);
+            throughput  *= mix(vec3(FRESNEL_DIELECTRIC), albedo, metallic);
+        } else {
+            direction   = cosineSampleHemisphere(N, seed);
+            throughput *= albedo;
+        }
+        origin = hitPos + N * NORMAL_OFFSET;
+
+        // Russian Roulette (skipping on the first bounce to reduce variance)
+        if (bounce > 0) {
+            float q = max(throughput.r, max(throughput.g, throughput.b));
+            if (rnd(seed) > q) break;
+            throughput /= max(q, 1e-3);
+        }
     }
 
-    // ==========================================
-    // 5. TEMPORAL ACCUMULATION
-    // ==========================================
-    
-    vec3 previousColor = vec3(0.0);
-    if (uniforms.accumulationCount > 0) {
-        // Because we are jittering the UV, reading `texture(historyRead, uv)` could cause slight blurring.
-        // It is safer to use texelFetch to pull the exact pixel index from the history buffer.
-        previousColor = texelFetch(historyRead, pixelCoords, 0).rgb;
-    }
-
-    // Running Average Formula
+    // --- Temporal Accumulation ---
+    vec3 prevColor = (uniforms.accumulationCount > 0)
+                   ? texelFetch(historyRead, pixelCoords, 0).rgb
+                   : vec3(0.0);
     float blendFactor = 1.0 / float(uniforms.accumulationCount + 1);
-    vec3 accumulatedColor = mix(previousColor, finalColor, blendFactor);
+    vec3  accumulated = mix(prevColor, finalColor, blendFactor);
 
-    // Write the RAW LINEAR color to both outputs. 
-    // Do NOT apply Gamma correction here! Your ToneMapPass handles that now.
-    
-    // 1. Save to History for the next frame
-    imageStore(historyWrite, pixelCoords, vec4(accumulatedColor, 1.0));
-
-    // 2. Pass to SceneHDR for the Tonemapper this frame
-    imageStore(colorImage, pixelCoords, vec4(accumulatedColor, 1.0));
+    imageStore(historyWrite, pixelCoords, vec4(accumulated, 1.0));
+    imageStore(colorImage,   pixelCoords, vec4(accumulated, 1.0));
 }
