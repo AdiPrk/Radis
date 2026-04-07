@@ -133,19 +133,18 @@ namespace Radis
         {
             modelLibrary = std::make_unique<ModelLibrary>(*device, *textureLibrary);
 
-            modelLibrary->AddModel(Assets::ModelsPath + "cube.obj", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "quad.obj", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "sphere.glb", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "pbrreference.glb", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "trotting_cat.glb");
+            modelLibrary->AddModel(Assets::ModelsPath + "cube.dm", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "quad.dm", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "sphere.dm", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "pbrreference.dm", true);
             modelLibrary->AddModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "jack_samba.glb", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "SteampunkRobot.gltf", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "DragonAttenuation.glb", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "Sponza.gltf", true);
-            // modelLibrary->AddModel(Assets::ModelsPath + "sanmiguellow.glb", true);
-            // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Curtains.gltf", true, false, false);
-            // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Main.gltf", true, false);
+            modelLibrary->AddModel(Assets::ModelsPath + "jack_samba.dm", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "SteampunkRobot.dm", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "DragonAttenuation.dm", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "Sponza.dm", true);
+            // modelLibrary->AddModel(Assets::ModelsPath + "sanmiguellow.dm", true);
+            // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Curtains.dm", true, false);
+            // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Main.dm", true);
 
             // Model* sponzaModel = modelLibrary->GetModel(sponzaInd);
             //VFS::ModelSerializer::save(*sponzaModel, "Assets/Models/dm/Sponza.dm", 0xDEADBEEF);
@@ -162,7 +161,6 @@ namespace Radis
         if (!animationLibrary)
         {
             animationLibrary = std::make_unique<AnimationLibrary>();
-            animationLibrary->AddAnimation(Assets::ModelsPath + "trotting_cat.glb", modelLibrary->GetModel(Assets::ModelsPath + "trotting_cat.glb"));
             animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/idle.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
             animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/idle.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
             animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/jump.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));

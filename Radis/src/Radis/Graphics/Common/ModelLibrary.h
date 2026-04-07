@@ -48,6 +48,8 @@ namespace Radis
 		void ClearAllBuffers(class Device* device);
 		void RecreateAllBuffers(class Device* device);
 
+        const auto& GetModelMap() const { return mModelMap; }
+
 	private:
 		friend class Model;
 
