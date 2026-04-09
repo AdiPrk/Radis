@@ -24,6 +24,8 @@ namespace Radis
     void ShadowMomentsUniformInit(Uniform& uniform, RenderingResource& renderData);
     void ShadowBlurUniformInitH(Uniform& uniform, RenderingResource& renderData);
     void ShadowBlurUniformInitV(Uniform& uniform, RenderingResource& renderData);
+    void AlchemyAOUniformInit(Uniform& uniform, RenderingResource& renderData);
+    void AlchemyAOUniformUpdate(Uniform& uniform, RenderingResource& renderData);
 
     // Called camera uniform but it's just everything until rhi is better set up
     inline VkShaderStageFlags rtFlags = VK_SHADER_STAGE_RAYGEN_BIT_KHR |
@@ -84,4 +86,8 @@ namespace Radis
     const UniformSettings shadowBlurVUniformSettings = UniformSettings(ShadowBlurUniformInitV)
         .AddISBinding(VK_SHADER_STAGE_COMPUTE_BIT, 1).SetDebugName("Blur Src (sampled)")
         .AddSSBIBinding(VK_SHADER_STAGE_COMPUTE_BIT, 1).SetDebugName("Blur Dst (storage image)");
+
+    const UniformSettings alchemyAOUniformSettings = UniformSettings(AlchemyAOUniformInit)
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("SceneDepth")
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("gNormal");
 }

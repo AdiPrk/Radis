@@ -352,6 +352,15 @@ namespace Radis
                     std::bind(&RenderSystem::RenderSceneDeferredGeometryVK, this, std::placeholders::_1)
                 );
 
+                rg->AddPass("AlchemyAOPass",
+                    [&](RGPassBuilder& b) {
+                        b.reads("SceneDepth");
+                        b.reads("gNormal");
+                        b.writes("RawAO");
+                    },
+                    std::bind(&RenderSystem::RenderAlchemyAOVK, this, std::placeholders::_1)
+                );
+
                 // directional/ambient -> into SceneHDR
                 rg->AddPass("LightingPass",
                     [&](RGPassBuilder& b) {
@@ -971,6 +980,40 @@ namespace Radis
 
         // Execute Draw Calls
         ExecuteInstancedDrawCalls(cmd);
+    }
+
+    void RenderSystem::RenderAlchemyAOVK(VkCommandBuffer cmd)
+    {
+        auto rr = ecs->GetResource<RenderingResource>();
+        ScopedDebugLabel label(rr->device.get(), cmd, "Alchemy AO Pass", glm::vec4(0.2f, 0.2f, 0.2f, 1.0f));
+
+        rr->alchemyAOPipeline->Bind(cmd);
+
+        rr->cameraUniform->Bind(cmd, rr->alchemyAOPipeline->GetLayout(), rr->currentFrameIndex);
+        rr->alchemyAOUniform->Bind(cmd, rr->alchemyAOPipeline->GetLayout(), rr->currentFrameIndex);
+
+        SetViewportAndScissor(cmd, rr->swapChain->GetSwapChainExtent());
+
+        // Push Constants for the Alchemy parameters
+        struct AOPC {
+            float radius;
+            int numSamples;
+            float scale;
+            float contrast;
+            int debugMode;
+        };
+
+        AOPC pc;
+        pc.radius = 1.0f;
+        pc.numSamples = 15;
+        pc.scale = 1.0f;
+        pc.contrast = 1.0f;
+        pc.debugMode = 4;
+
+        vkCmdPushConstants(cmd, rr->alchemyAOPipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(AOPC), &pc);
+
+        // Draw a fullscreen triangle to trigger the fragment shader
+        vkCmdDraw(cmd, 3, 1, 0, 0);
     }
 
     void RenderSystem::RenderSceneDeferredLightingVK(VkCommandBuffer cmd)

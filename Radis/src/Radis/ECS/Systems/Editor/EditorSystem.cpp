@@ -246,6 +246,7 @@ namespace Radis
                     b.reads("gPBR");
                     b.reads("gEmissive");
                     b.reads("SceneHDR");
+                    b.reads("RawAO");
                     b.writes("BackBuffer"); 
                 },
                 std::bind(&EditorSystem::RenderImGui, this, std::placeholders::_1)

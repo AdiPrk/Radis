@@ -545,5 +545,77 @@ namespace Radis
         }
     }
 
+    void AlchemyAOUniformInit(Uniform& uniform, RenderingResource& renderData)
+    {
+        uniform.GetDescriptorSets().resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
+
+        VkSampler defaultSampler = renderData.textureLibrary->GetSampler();
+        VKTexture* gDepthTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("SceneDepth"));
+        VKTexture* gNormalTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("gNormal"));
+
+        if (!gDepthTex || !gNormalTex)
+        {
+            RADIS_ERROR("AlchemyAOUniformInit: Depth or Normal texture not found!");
+            return;
+        }
+
+        for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex)
+        {
+            DescriptorWriter writer(*uniform.GetDescriptorLayout(), *uniform.GetDescriptorPool());
+
+            // Binding 0: Scene Depth
+            VkDescriptorImageInfo depthImageInfo{
+                .sampler = defaultSampler,
+                .imageView = gDepthTex->GetImageView(),
+                .imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
+            };
+            writer.WriteImage(0, &depthImageInfo);
+
+            // Binding 1: G-Buffer Normal
+            VkDescriptorImageInfo normalImageInfo{
+                .sampler = defaultSampler,
+                .imageView = gNormalTex->GetImageView(),
+                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            };
+            writer.WriteImage(1, &normalImageInfo);
+
+            writer.Build(uniform.GetDescriptorSets()[frameIndex]);
+        }
+    }
+
+    void AlchemyAOUniformUpdate(Uniform& uniform, RenderingResource& renderData)
+    {
+        VkSampler defaultSampler = renderData.textureLibrary->GetSampler();
+        VKTexture* gDepthTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("SceneDepth"));
+        VKTexture* gNormalTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("gNormal"));
+        if (!gDepthTex || !gNormalTex)
+        {
+            RADIS_ERROR("AlchemyAOUniformUpdate: Depth or Normal texture not found!");
+            return;
+        }
+        for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex)
+        {
+            DescriptorWriter writer(*uniform.GetDescriptorLayout(), *uniform.GetDescriptorPool());
+
+            // Binding 0: Scene Depth
+            VkDescriptorImageInfo depthImageInfo{
+                .sampler = defaultSampler,
+                .imageView = gDepthTex->GetImageView(),
+                .imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
+            };
+            writer.WriteImage(0, &depthImageInfo);
+
+            // Binding 1: G-Buffer Normal
+            VkDescriptorImageInfo normalImageInfo{
+                .sampler = defaultSampler,
+                .imageView = gNormalTex->GetImageView(),
+                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            };
+            writer.WriteImage(1, &normalImageInfo);
+
+            writer.Overwrite(uniform.GetDescriptorSets()[frameIndex]);
+        }
+    }
+
 
 }

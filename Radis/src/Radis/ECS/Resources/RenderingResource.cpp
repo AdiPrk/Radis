@@ -327,6 +327,16 @@ namespace Radis
                 VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             );
+
+            // AO
+            textureLibrary->CreateTexture(
+                "RawAO",
+                extent.width, extent.height,
+                VK_FORMAT_R8G8B8A8_UNORM,
+                VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            );
         }
 
         modelLibrary->QueueTextures();
@@ -413,6 +423,15 @@ namespace Radis
             rtPC.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
             raytracingPipeline = std::make_unique<ComputePipeline>(*device, rtunis, "rayquery.comp", rtPC);
         }
+
+        alchemyAOUniform = std::make_unique<Uniform>(*device, *this, alchemyAOUniformSettings);
+        std::vector<Uniform*> aoUnis{ cameraUniform.get(), alchemyAOUniform.get() };
+
+        PipelineOptions aoOpts;
+        aoOpts.pushConstantSize = 20; // radius, numSamples, scale, contrast, debug mode
+        aoOpts.pushConstantStages = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        alchemyAOPipeline = std::make_unique<Pipeline>(*device, VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_UNDEFINED, aoUnis, false, "fullscreen.vert", "AO.frag", aoOpts, false);
     }
 
     void RenderingResource::Cleanup(bool closingExe)
@@ -457,6 +476,7 @@ namespace Radis
             shadowBlurVUniform.reset();
             deferredLightingUniform.reset();
             tonemapUniform.reset();
+            alchemyAOUniform.reset();
             pipeline.reset();
             wireframePipeline.reset();
             shadowMomentsPipeline.reset();
@@ -468,6 +488,7 @@ namespace Radis
             lightVolumePipeline.reset();
             raytracingPipeline.reset();
             tonemapPipeline.reset();
+            alchemyAOPipeline.reset();
             syncObjects.reset();
 
             for (auto& blas : blasAccel)

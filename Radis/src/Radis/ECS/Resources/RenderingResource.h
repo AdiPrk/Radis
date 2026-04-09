@@ -57,6 +57,7 @@ namespace Radis
         std::unique_ptr<Uniform> shadowMomentsUniform;
         std::unique_ptr<Uniform> shadowBlurHUniform;
         std::unique_ptr<Uniform> shadowBlurVUniform;
+        std::unique_ptr<Uniform> alchemyAOUniform;
         // -------------------------
 
         std::vector<VkCommandBuffer> commandBuffers;
@@ -96,6 +97,7 @@ namespace Radis
         std::unique_ptr<Pipeline> shadowMomentsPipeline;
         std::unique_ptr<ComputePipeline> shadowBlurHPipeline;
         std::unique_ptr<ComputePipeline> shadowBlurVPipeline;
+        std::unique_ptr<Pipeline> alchemyAOPipeline;
         // -----------
 
         // OPENGL STUFFS
