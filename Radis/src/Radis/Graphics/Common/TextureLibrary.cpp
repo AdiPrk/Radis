@@ -454,6 +454,11 @@ namespace Radis
                 {
                     if (vktex->mData.name == "SceneTexture") continue;
                     if (vktex->mData.name == "SceneDepth") continue;
+                    if (vktex->mData.name == "RTAccum_0") continue;
+                    if (vktex->mData.name == "RTAccum_1") continue;
+                    if (vktex->mData.name == "RTHeatmapImage_0") continue;
+                    if (vktex->mData.name == "RTHeatmapImage_1") continue;
+
                     imageInfos[j].imageView = vktex->GetImageView();
                 }
             }
@@ -520,35 +525,79 @@ namespace Radis
         if (!mNeedReuploadRTImage) return;
         mNeedReuploadRTImage = false;
 
-        std::vector<VKTexture*> rtTextures(SwapChain::MAX_FRAMES_IN_FLIGHT * 2);
+        std::vector<VKTexture*> rtAccumTextures(SwapChain::MAX_FRAMES_IN_FLIGHT);
+        std::vector<VKTexture*> rtHeatmapTextures(SwapChain::MAX_FRAMES_IN_FLIGHT);
 
-        // Loop and create one texture for each frame
+        // 1. Fetch the renamed Ping-Pong accumulation textures
         for (int i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i)
         {
-            std::string texName = "RTColorImage_" + std::to_string(i);
-            rtTextures[i] = static_cast<VKTexture*>(rr.textureLibrary->GetTexture(texName));
+            std::string texName = "RTAccum_" + std::to_string(i);
+            rtAccumTextures[i] = static_cast<VKTexture*>(rr.textureLibrary->GetTexture(texName));
         }
+
+        // 2. Fetch the Heatmap textures
         for (int i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i)
         {
             std::string texName = "RTHeatmapImage_" + std::to_string(i);
-            rtTextures[i + SwapChain::MAX_FRAMES_IN_FLIGHT] = static_cast<VKTexture*>(rr.textureLibrary->GetTexture(texName));
+            rtHeatmapTextures[i] = static_cast<VKTexture*>(rr.textureLibrary->GetTexture(texName));
         }
 
-        VkDescriptorImageInfo outImageInfo{};
-        outImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL; // storage image layout
-        outImageInfo.sampler = VK_NULL_HANDLE; // storage images don�ft use samplers
-        VkDescriptorImageInfo heatmapImageInfo{};
-        heatmapImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL; // storage image layout
-        heatmapImageInfo.sampler = VK_NULL_HANDLE; // storage images don�ft use samplers
+        // 3. Fetch the SceneHDR (Tonemapper bridge) and the sampler
+        VKTexture* sceneHDRTex = static_cast<VKTexture*>(rr.textureLibrary->GetTexture("SceneHDR"));
+        VkSampler defaultSampler = rr.textureLibrary->GetSampler();
 
-        for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex) 
+        VKTexture* envMapTex = static_cast<VKTexture*>(
+            rr.textureLibrary->GetTextureByIndex(rr.envMapIndex)
+          );
+
+        if (!envMapTex)
         {
-            outImageInfo.imageView = rtTextures[frameIndex]->GetImageView();
-            heatmapImageInfo.imageView = rtTextures[frameIndex + SwapChain::MAX_FRAMES_IN_FLIGHT]->GetImageView();
+            RADIS_ERROR("Environment map texture not found!");
+            return;
+        }
+
+        for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex)
+        {
+            int historyIndex = (frameIndex + SwapChain::MAX_FRAMES_IN_FLIGHT - 1) % SwapChain::MAX_FRAMES_IN_FLIGHT;
+
+            // Binding 1: SceneHDR (Write)
+            VkDescriptorImageInfo outSceneHDRInfo{};
+            outSceneHDRInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+            outSceneHDRInfo.sampler = VK_NULL_HANDLE;
+            outSceneHDRInfo.imageView = sceneHDRTex->GetImageView();
+
+            // Binding 2: Heatmap (Write)
+            VkDescriptorImageInfo heatmapImageInfo{};
+            heatmapImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+            heatmapImageInfo.sampler = VK_NULL_HANDLE;
+            heatmapImageInfo.imageView = rtHeatmapTextures[frameIndex]->GetImageView();
+
+            // Binding 5: History Read (Sampler)
+            VkDescriptorImageInfo historyReadInfo{};
+            historyReadInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            historyReadInfo.sampler = defaultSampler;
+            historyReadInfo.imageView = rtAccumTextures[historyIndex]->GetImageView();
+
+            // Binding 6: History Write (Storage)
+            VkDescriptorImageInfo historyWriteInfo{};
+            historyWriteInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+            historyWriteInfo.sampler = VK_NULL_HANDLE;
+            historyWriteInfo.imageView = rtAccumTextures[frameIndex]->GetImageView();
+
+            VkDescriptorImageInfo envMapInfo{};
+            envMapInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            envMapInfo.sampler = defaultSampler;
+            envMapInfo.imageView = envMapTex->GetImageView();
 
             DescriptorWriter writer(*rr.rtUniform->GetDescriptorLayout(), *rr.rtUniform->GetDescriptorPool());
-            writer.WriteImage(1, &outImageInfo);
+
+            // Write the updated image descriptors to their respective bindings
+            writer.WriteImage(1, &outSceneHDRInfo);
             writer.WriteImage(2, &heatmapImageInfo);
+            writer.WriteImage(5, &historyReadInfo);
+            writer.WriteImage(6, &historyWriteInfo);
+            writer.WriteImage(7, &envMapInfo);
+
             writer.Overwrite(rr.rtUniform->GetDescriptorSets()[frameIndex]);
         }
     }

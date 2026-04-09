@@ -59,6 +59,7 @@ namespace Radis
         mLightData.reserve(64);
         mMeshInstanceCounts.reserve(128);
 
+        /*
         constexpr int N = 20;
         float hammersley[2 * N];
 
@@ -94,6 +95,7 @@ namespace Radis
             }
         }
         printf("\n);\n");
+        */
     }
 
     void RenderSystem::Exit()
@@ -113,26 +115,22 @@ namespace Radis
             auto uMeshes = rr->modelLibrary->GetUnifiedMesh();
             if (uMeshes)
             {            
-                MeshDataUniform vertexData;
+                mRTMeshData.reserve(uMeshes->GetUnifiedMesh().mVertices.size());
+
                 for (auto& v : uMeshes->GetUnifiedMesh().mVertices)
                 {
-                    vertexData.posX = v.position.x;
-                    vertexData.posY = v.position.y;
-                    vertexData.posZ = v.position.z;
-                    vertexData.colorR = v.color.r;
-                    vertexData.colorG = v.color.g;
-                    vertexData.colorB = v.color.b;
-                    vertexData.normalX = v.normal.x;
-                    vertexData.normalY = v.normal.y;
-                    vertexData.normalZ = v.normal.z;
-                    vertexData.texU = v.uv.x;
-                    vertexData.texV = v.uv.y;
-
-                    mRTMeshData.push_back(vertexData);
+                    mRTMeshData.emplace_back(
+                        PackColor(v.color),
+                        PackNormal(v.normal),
+                        v.uv.x, v.uv.y
+                    );
                 }
             
                 mRTMeshIndices = uMeshes->GetUnifiedMesh().mIndices;
             }
+
+            // log number of vertex/index for raytracing
+            RADIS_INFO("Setting up raytracing acceleration structures with {} vertices and {} indices", mRTMeshData.size(), mRTMeshIndices.size());
             
             auto rtr = ecs->GetResource<RaytracingResource>();
             rtr->CreateBLAS();  // Set up BLAS infrastructure
@@ -148,6 +146,9 @@ namespace Radis
                 writer.WriteAccelerationStructure(0, &asInfo);
                 writer.Overwrite(rr->rtUniform->GetDescriptorSets()[frameIndex]);
 
+                // log doing memcpy with data about how much data is being copied
+                RADIS_INFO("Uploading raytracing mesh data to GPU for frame {}: {} vertices and {} indices", frameIndex, mRTMeshData.size(), mRTMeshIndices.size());
+                
                 rr->rtUniform->SetUniformData(mRTMeshData, 3, frameIndex);
                 rr->rtUniform->SetUniformData(mRTMeshIndices, 4, frameIndex);
             }
@@ -168,7 +169,7 @@ namespace Radis
         }
 
         // Draw the editor grid
-        // DebugDrawResource::DrawEditorGrid(50, 1.0f);
+        DebugDrawResource::DrawEditorGrid(50, 1.0f);
 
         // Swap renderer backends
         // ecs->GetResource<SwapRendererResource>()->RequestSwap();
@@ -177,6 +178,9 @@ namespace Radis
     void RenderSystem::Update(float dt)
     {
         auto rr = ecs->GetResource<RenderingResource>();
+        rr->frameCount++;
+        rr->accumulationCount++;
+
         float aspectRatio = GetAspectRatio();
         AnimationLibrary* al = rr->animationLibrary.get();
         ModelLibrary* ml = rr->modelLibrary.get();
@@ -387,11 +391,30 @@ namespace Radis
                 break;
             }
             case RenderMode::Raytracing: {
+                std::string currentAccum = "RTAccum_" + std::to_string(rr->currentFrameIndex);
+                std::string prevAccum = "RTAccum_" + std::to_string((rr->currentFrameIndex + SwapChain::MAX_FRAMES_IN_FLIGHT - 1) % SwapChain::MAX_FRAMES_IN_FLIGHT);
+                std::string currentHeatmap = "RTHeatmapImage_" + std::to_string(rr->currentFrameIndex);
+
                 rg->AddPass(
                     "ScenePass",
-                    [&](RGPassBuilder& b) {},
+                    [&](RGPassBuilder& b) {
+                        b.setCompute(); // Tells RenderGraph to transition writes to GENERAL
+                        b.reads(prevAccum);
+                        b.writes(currentAccum);
+                        b.writes(currentHeatmap);
+                        b.writes("SceneHDR"); // Expose the output to the graph!
+                    },
                     std::bind(&RenderSystem::RaytraceSceneVK, this, std::placeholders::_1)
                 );
+
+                rg->AddPass("ToneMapPass",
+                    [&](RGPassBuilder& b) {
+                        b.reads("SceneHDR"); // Tonemapper safely reads the RT output
+                        b.writes(colorWriteTarget);
+                    },
+                    std::bind(&RenderSystem::RenderToneMapVK, this, std::placeholders::_1)
+                );
+
                 break;
             }
             }
@@ -628,8 +651,22 @@ namespace Radis
         vkCmdSetScissor(cmd, 0, 1, &scissor);
     }
 
+    // Helper function to generate Halton Sequence
+    float Halton(uint32_t index, uint32_t base) {
+        float f = 1.0f;
+        float r = 0.0f;
+        while (index > 0) {
+            f = f / static_cast<float>(base);
+            r = r + f * static_cast<float>(index % base);
+            index = index / base;
+        }
+        return r;
+    }
+
     CameraUniforms RenderSystem::CollectCameraData(float aspectRatio)
     {
+        auto rr = ecs->GetResource<RenderingResource>();
+
         CameraUniforms camData{};
         camData.view = glm::mat4(1.0f);
         camData.projection = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 100.0f);
@@ -653,6 +690,24 @@ namespace Radis
 
         camData.projectionView = camData.projection * camData.view;
         camData.inverseProjView = glm::inverse(camData.projectionView);
+
+        // For path tracing:
+        camData.frameCount = rr->frameCount;
+
+        if (camData.projectionView != rr->previousViewProj) {
+            rr->accumulationCount = 0;
+            rr->previousViewProj = camData.projectionView;
+        }
+        else {
+            rr->accumulationCount++;
+        }
+
+        camData.accumulationCount = rr->accumulationCount;
+        uint32_t jitterPhase = rr->accumulationCount % 16;
+        float jitterX = Halton(jitterPhase + 1, 2);
+        float jitterY = Halton(jitterPhase + 1, 3);
+        camData.pixelJitter = glm::vec2(jitterX, jitterY);
+
         return camData;
     }
 
@@ -722,7 +777,7 @@ namespace Radis
 
         if (rr->renderMode != RenderMode::Raytracing && !debugData.empty())
         {
-            cubeModel = ml->TryAddGetModel("Assets/Models/cube.obj");
+            cubeModel = ml->GetModel("Assets/Models/cube.dm");
             if (cubeModel && !cubeModel->mMeshes.empty())
             {
                 cubeMeshID = cubeModel->mMeshes[0]->GetID();
@@ -735,7 +790,7 @@ namespace Radis
         auto modelTransformEntities = registry.view<ModelComponent, TransformComponent>();
         modelTransformEntities.each([&](auto entity, ModelComponent& mc, TransformComponent& tc)
         {
-            Model* model = ml->TryAddGetModel(mc);
+            Model* model = ml->GetModel(mc);
             if (!model) return;
 
             for (auto& mesh : model->mMeshes)
@@ -876,33 +931,25 @@ namespace Radis
             rtr->UpdateTopLevelASImmediate(tlasInstances);
         }
 
-        // Bind Pipeline and Uniforms
-        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, rp->GetPipeline());
-        rr->cameraUniform->Bind(cmd, rp->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR);
-        rr->rtUniform->Bind(cmd, rp->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR);
+        // Bind Compute Pipeline
+        auto& cp = rr->raytracingPipeline;
+        cp->Bind(cmd);
 
-        // Trace Rays!
+        // Bind Uniforms (Note the change to VK_PIPELINE_BIND_POINT_COMPUTE)
+        rr->cameraUniform->Bind(cmd, cp->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_COMPUTE);
+        rr->rtUniform->Bind(cmd, cp->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_COMPUTE);
+
+        // Push Constant
+        vkCmdPushConstants(cmd, cp->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(int), &rr->raytraceRenderMode);
+
+        // Dispatch Compute Shader!
         const VkExtent2D& size = rr->swapChain->GetSwapChainExtent();
-        vkCmdTraceRaysKHR(cmd, &rp->GetRaygenRegion(), &rp->GetMissRegion(), &rp->GetHitRegion(), &rp->GetCallableRegion(), size.width, size.height, 1);
 
-        // Synchronize ray tracing writes with subsequent reads
-        VkMemoryBarrier2 memoryBarrier = {
-            .sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER_2,
-            .pNext = nullptr,
-            .srcStageMask = VK_PIPELINE_STAGE_2_RAY_TRACING_SHADER_BIT_KHR,
-            .srcAccessMask = VK_ACCESS_2_SHADER_WRITE_BIT,
-            .dstStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT,
-            .dstAccessMask = VK_ACCESS_2_SHADER_READ_BIT
-        };
+        // Group size of 16x16, calculate how many groups we need
+        uint32_t groupX = (size.width + 15) / 16;
+        uint32_t groupY = (size.height + 15) / 16;
 
-        VkDependencyInfo dependencyInfo = {
-            .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
-            .pNext = nullptr,
-            .memoryBarrierCount = 1,
-            .pMemoryBarriers = &memoryBarrier
-        };
-
-        vkCmdPipelineBarrier2(cmd, &dependencyInfo);
+        vkCmdDispatch(cmd, groupX, groupY, 1);
     }
 
     // -----------------------------------------
@@ -962,7 +1009,7 @@ namespace Radis
         ScopedDebugLabel label(rr->device.get(), cmd, "Light Volumes Pass", glm::vec4(1.0f, 0.5f, 0.0f, 1.0f));
 
         // Load sphere mesh on first use
-        Model* sphereModel = ml->TryAddGetModel("Assets/Models/sphere.glb");
+        Model* sphereModel = ml->GetModel("Assets/Models/sphere.glb");
         if (!sphereModel) return;
 
         uint32_t sphereID = sphereModel->mMeshes[0]->GetID();

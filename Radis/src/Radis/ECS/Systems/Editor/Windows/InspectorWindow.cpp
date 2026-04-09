@@ -175,47 +175,59 @@ namespace Radis
             // ── ImGui UI ────────────────────────────────────────────────────────────────
 
             DrawComponentUI<CameraComponent>("CameraComponent", selectedEnt, [](auto& c)
+            {
+                // Projection
+                if (ImGui::CollapsingHeader("Projection", ImGuiTreeNodeFlags_DefaultOpen))
                 {
-                    // Projection
-                    if (ImGui::CollapsingHeader("Projection", ImGuiTreeNodeFlags_DefaultOpen))
-                    {
-                        ImGui::DragFloat("FOV", &c.FOV, 0.1f, 1.0f, 120.0f, "%.1f deg");
-                        ImGui::DragFloat("Near", &c.Near, 0.001f, 0.001f, 10.0f, "%.3f");
-                        ImGui::DragFloat("Far", &c.Far, 1.0f, 10.0f, 100000.0f, "%.0f");
-                    }
+                    ImGui::DragFloat("FOV", &c.FOV, 0.1f, 1.0f, 120.0f, "%.1f deg");
+                    ImGui::DragFloat("Near", &c.Near, 0.001f, 0.001f, 10.0f, "%.3f");
+                    ImGui::DragFloat("Far", &c.Far, 1.0f, 10.0f, 100000.0f, "%.0f");
+                }
 
-                    // Controls
-                    if (ImGui::CollapsingHeader("Controls", ImGuiTreeNodeFlags_DefaultOpen))
-                    {
-                        ImGui::DragFloat("Move Speed", &c.MoveSpeed, 0.1f, 0.1f, 500.0f, "%.1f");
-                        ImGui::DragFloat("Mouse Sensitivity", &c.MouseSensitivity, 0.001f, 0.001f, 2.0f, "%.3f");
-                        ImGui::Checkbox("Invert Y", &c.InvertY);
-                    }
+                // Controls
+                if (ImGui::CollapsingHeader("Controls", ImGuiTreeNodeFlags_DefaultOpen))
+                {
+                    ImGui::DragFloat("Move Speed", &c.MoveSpeed, 0.1f, 0.1f, 500.0f, "%.1f");
+                    ImGui::DragFloat("Mouse Sensitivity", &c.MouseSensitivity, 0.001f, 0.001f, 2.0f, "%.3f");
+                    ImGui::Checkbox("Invert Y", &c.InvertY);
+                }
 
-                    // Smoothing
-                    if (ImGui::CollapsingHeader("Smoothing"))
-                    {
-                        ImGui::TextDisabled("Larger k = snappier  (alpha = 1 - e^(-k*dt))");
-                        ImGui::DragFloat("Rotation Smoothness", &c.RotationSmoothness, 0.5f, 0.1f, 100.0f, "%.1f");
-                        ImGui::DragFloat("Position Smoothness", &c.PositionSmoothness, 0.5f, 0.1f, 100.0f, "%.1f");
-                    }
+                // Smoothing
+                if (ImGui::CollapsingHeader("Smoothing"))
+                {
+                    ImGui::TextDisabled("Larger k = snappier  (alpha = 1 - e^(-k*dt))");
+                    ImGui::DragFloat("Rotation Smoothness", &c.RotationSmoothness, 0.5f, 0.1f, 100.0f, "%.1f");
+                    ImGui::DragFloat("Position Smoothness", &c.PositionSmoothness, 0.5f, 0.1f, 100.0f, "%.1f");
+                }
 
-                    // Read-only runtime state
-                    if (ImGui::CollapsingHeader("State (read-only)"))
-                    {
-                        ImGui::BeginDisabled();
-                        ImGui::DragFloat("Smoothed Yaw", &c.SmoothedYaw, 0.0f, -360.0f, 360.0f, "%.2f deg");
-                        ImGui::DragFloat("Smoothed Pitch", &c.SmoothedPitch, 0.0f, -90.0f, 90.0f, "%.2f deg");
-                        ImGui::DragFloat3("Velocity", glm::value_ptr(c.SmoothedVelocity), 0.0f, 0.0f, 0.0f, "%.2f");
-                        ImGui::EndDisabled();
-                    }
-                });
+                // Read-only runtime state
+                if (ImGui::CollapsingHeader("State (read-only)"))
+                {
+                    ImGui::BeginDisabled();
+                    ImGui::DragFloat("Smoothed Yaw", &c.SmoothedYaw, 0.0f, -360.0f, 360.0f, "%.2f deg");
+                    ImGui::DragFloat("Smoothed Pitch", &c.SmoothedPitch, 0.0f, -90.0f, 90.0f, "%.2f deg");
+                    ImGui::DragFloat3("Velocity", glm::value_ptr(c.SmoothedVelocity), 0.0f, 0.0f, 0.0f, "%.2f");
+                    ImGui::EndDisabled();
+                }
+            });
 
             DrawComponentUI<ModelComponent>("Model", selectedEnt, [&](ModelComponent& component)
             {
-                const std::vector<std::string> modelExtensions = { ".fbx", ".glb", ".obj", ".gltf" };
-                std::vector<std::string> modelFiles = GetFilesWithExtensions("Assets/Models/", modelExtensions);
+                const auto& mMap = rr->modelLibrary->GetModelMap();
+                std::vector<std::string> modelFiles;
+                // modelFiles.reserve(mMap.size());
+                // for (auto& [name,_] : mMap)
+                // {
+                //     modelFiles.push_back(name.s);
+                // }
+
+                //const std::vector<std::string> modelExtensions = { ".fbx", ".glb", ".obj", ".gltf" };
+                //const std::vector<std::string> modelExtensions = { ".dm" };
+                //std::vector<std::string> modelFiles = GetFilesWithExtensions("Assets/Models/dm/", modelExtensions);
+
                 modelFiles.push_back("Assets/Models/TravisLocomotion/TravisLocomotion.fbx"); // Extra
+                modelFiles.push_back("Assets/Models/TakanashiKiara/TakanashiKiara.fbx"); // Extra
+                modelFiles.push_back("Assets/Models/okayu/okayu.fbx"); // Extra
 
                 auto rr = ecs->GetResource<RenderingResource>();
                 auto& mc = rr->modelLibrary;

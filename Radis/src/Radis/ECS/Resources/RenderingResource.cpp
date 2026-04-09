@@ -93,10 +93,10 @@ namespace Radis
         bool recreateTextures = textureLibrary != nullptr;
         if (!textureLibrary)
         {
-            IBL::SHCoefficients sh;
-            IBL::generateIrradianceMap(Assets::ImagesPath + "Alexs_Apt_2k.hdr", Assets::ImagesPath + "Alexs_Apt_2k.IRMAP.hdr", &sh);
-            IBL::generateIrradianceMap(Assets::ImagesPath + "Newport_Loft_Ref.hdr", Assets::ImagesPath + "Newport_Loft_Ref.IRMAP.hdr", &sh);
-            IBL::generateIrradianceMap(Assets::ImagesPath + "autumn_field_puresky_4k.hdr", Assets::ImagesPath + "autumn_field_puresky_4k.IRMAP.hdr", &sh);
+            // IBL::SHCoefficients sh;
+            // IBL::generateIrradianceMap(Assets::ImagesPath + "Alexs_Apt_2k.hdr", Assets::ImagesPath + "Alexs_Apt_2k.IRMAP.hdr", &sh);
+            // IBL::generateIrradianceMap(Assets::ImagesPath + "Newport_Loft_Ref.hdr", Assets::ImagesPath + "Newport_Loft_Ref.IRMAP.hdr", &sh);
+            // IBL::generateIrradianceMap(Assets::ImagesPath + "autumn_field_puresky_4k.hdr", Assets::ImagesPath + "autumn_field_puresky_4k.IRMAP.hdr", &sh);
 
             textureLibrary = std::make_unique<TextureLibrary>(device.get());
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "ErrorTexture.png");
@@ -113,13 +113,13 @@ namespace Radis
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "folderIcon.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "unknownFileIcon.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "shikaout.ktx2");
+            envMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "autumn_field_puresky_4k.hdr");
             envMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Alexs_Apt_2k.hdr");
             envMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Newport_Loft_Ref.hdr");
+            irMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "autumn_field_puresky_4k.IRMAP.hdr");
             irMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Alexs_Apt_2k.IRMAP.hdr");
             irMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Newport_Loft_Ref.IRMAP.hdr");
 
-            envMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "autumn_field_puresky_4k.hdr");
-            irMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "autumn_field_puresky_4k.IRMAP.hdr");
 
             textureLibrary->LoadQueuedTextures();
             //textureLibrary->QueueTextureLoad(Assets::ImagesPath + "M_Soul_Rocks2_Inst_8_BaseColor.dds");
@@ -133,18 +133,20 @@ namespace Radis
         {
             modelLibrary = std::make_unique<ModelLibrary>(*device, *textureLibrary);
 
-            modelLibrary->AddModel(Assets::ModelsPath + "cube.obj", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "quad.obj", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "sphere.glb", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "pbrreference.glb", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "trotting_cat.glb");
+            modelLibrary->AddModel(Assets::ModelsPath + "cube.dm", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "quad.dm", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "sphere.dm", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "pbrreference.dm", true);
             modelLibrary->AddModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "jack_samba.glb", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "SteampunkRobot.gltf", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "DragonAttenuation.glb", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "Sponza.gltf", true);
-            // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Curtains.gltf", true, false, false);
-            // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Main.gltf", true, false);
+            modelLibrary->AddModel(Assets::ModelsPath + "TakanashiKiara/TakanashiKiara.fbx", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "okayu/okayu.fbx", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "jack_samba.dm", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "SteampunkRobot.dm", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "DragonAttenuation.dm", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "Sponza.dm", true);
+            // modelLibrary->AddModel(Assets::ModelsPath + "sanmiguellow.dm", true);
+            // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Curtains.dm", true, false);
+            // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Main.dm", true);
 
             // Model* sponzaModel = modelLibrary->GetModel(sponzaInd);
             //VFS::ModelSerializer::save(*sponzaModel, "Assets/Models/dm/Sponza.dm", 0xDEADBEEF);
@@ -155,23 +157,52 @@ namespace Radis
 
             // modelLibrary->AddModel("Assets/Models/okayu.pmx");
             // modelLibrary->AddModel("Assets/Models/AlisaMikhailovna.fbx");
+            modelLibrary->UpdateUnifiedMesh();
         }
 
         if (!animationLibrary)
         {
             animationLibrary = std::make_unique<AnimationLibrary>();
-            animationLibrary->AddAnimation(Assets::ModelsPath + "trotting_cat.glb", modelLibrary->GetModel(Assets::ModelsPath + "trotting_cat.glb"));
-            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/idle.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/idle.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/jump.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/left strafe walking.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/left strafe.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/left turn 90.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/right strafe walking.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/right strafe.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/right turn 90.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/standard run.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/walking.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
+            Model* travisModel = modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx");
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/idle.fbx", travisModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/idle.fbx", travisModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/jump.fbx", travisModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/left strafe walking.fbx", travisModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/left strafe.fbx", travisModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/left turn 90.fbx", travisModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/right strafe walking.fbx", travisModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/right strafe.fbx", travisModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/right turn 90.fbx", travisModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/standard run.fbx", travisModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/walking.fbx", travisModel);
+
+            Model* okayuModel = modelLibrary->GetModel(Assets::ModelsPath + "okayu/okayu.fbx");
+            animationLibrary->AddAnimation(Assets::ModelsPath + "okayu/idle.fbx", okayuModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "okayu/idle.fbx", okayuModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "okayu/jump.fbx", okayuModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "okayu/left strafe walking.fbx", okayuModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "okayu/left strafe.fbx", okayuModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "okayu/left turn 90.fbx", okayuModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "okayu/right strafe walking.fbx", okayuModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "okayu/right strafe.fbx", okayuModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "okayu/right turn 90.fbx", okayuModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "okayu/standard run.fbx", okayuModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "okayu/walking.fbx", okayuModel);
+
+            Model* kiaraModel = modelLibrary->GetModel(Assets::ModelsPath + "TakanashiKiara/TakanashiKiara.fbx");
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TakanashiKiara/idle.fbx", kiaraModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TakanashiKiara/jump.fbx", kiaraModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TakanashiKiara/left strafe walk.fbx", kiaraModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TakanashiKiara/left strafe.fbx", kiaraModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TakanashiKiara/left turn (2).fbx", kiaraModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TakanashiKiara/left turn.fbx", kiaraModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TakanashiKiara/right strafe walk.fbx", kiaraModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TakanashiKiara/right strafe.fbx", kiaraModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TakanashiKiara/right turn (2).fbx", kiaraModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TakanashiKiara/right turn.fbx", kiaraModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TakanashiKiara/running.fbx", kiaraModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TakanashiKiara/walking.fbx", kiaraModel);
+
             animationLibrary->AddAnimation(Assets::ModelsPath + "jack_samba.glb", modelLibrary->GetModel(Assets::ModelsPath + "jack_samba.glb"));
         }
 
@@ -293,7 +324,7 @@ namespace Radis
                 extent.width, extent.height,
                 hdrFormat,
                 VK_IMAGE_TILING_OPTIMAL,
-                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             );
         }
@@ -332,8 +363,8 @@ namespace Radis
             VkFormat emissiveFormat = VK_FORMAT_B10G11R11_UFLOAT_PACK32;
             std::vector<VkFormat> gBufferFormats = { albedoFormat, normalFormat, pbrFormat, emissiveFormat };
 
-            pipeline = std::make_unique<Pipeline>(*device, hdrFormat, swapDepthFormat, unis, false, "forward.vert", "forward.frag");
-            wireframePipeline = std::make_unique<Pipeline>(*device, hdrFormat, swapDepthFormat, unis, true, "forward.vert", "forward.frag");
+            pipeline = std::make_unique<Pipeline>(*device, ldrFormat, swapDepthFormat, unis, false, "forward.vert", "forward.frag");
+            wireframePipeline = std::make_unique<Pipeline>(*device, ldrFormat, swapDepthFormat, unis, true, "forward.vert", "forward.frag");
             
             shadowMomentsPipeline = std::make_unique<Pipeline>(*device, momentsFormat, swapDepthFormat, shadowUnis, false, "shadowMoments.vert", "shadowMoments.frag");
 
@@ -375,7 +406,12 @@ namespace Radis
                 tonemapPipeline = std::make_unique<Pipeline>(*device, ldrFormat, VK_FORMAT_UNDEFINED, tonemapUnis, false, "fullscreen.vert", "tonemap.frag", tonemapOpts, false);
             }
 
-            raytracingPipeline = std::make_unique<RaytracingPipeline>(*device, rtunis);
+            // raytracingPipeline = std::make_unique<RaytracingPipeline>(*device, rtunis);
+
+            PushConstantInfo rtPC{};
+            rtPC.size = sizeof(int);
+            rtPC.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+            raytracingPipeline = std::make_unique<ComputePipeline>(*device, rtunis, "rayquery.comp", rtPC);
         }
     }
 

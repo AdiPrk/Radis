@@ -21,6 +21,7 @@ layout(set = 0, binding = 0) uniform Uniforms {
     mat4 view;
     mat4 invProjView;
     vec3 cameraPos;
+    int frameCount;
 } uniforms;
 
 struct Light {

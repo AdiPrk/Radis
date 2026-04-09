@@ -34,21 +34,14 @@ namespace Radis
             void* sceneTexturePtr;
             if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
             {
-                if (rr->renderMode == RenderMode::Raytracing)
+                if (rr->renderMode == RenderMode::Raytracing && er->renderRaytracingHeatmap)
                 {
                     uint32_t frameIndex = rr->currentFrameIndex;
-                    if (er->renderRaytracingHeatmap)
-                    {
-                        sceneTexturePtr = tl->GetTexture("RTHeatmapImage_" + std::to_string(frameIndex))->GetTextureID();
-                    }
-                    else
-                    {
-                        sceneTexturePtr = tl->GetTexture("RTColorImage_" + std::to_string(frameIndex))->GetTextureID();
-                    }
+                    sceneTexturePtr = tl->GetTexture("RTHeatmapImage_" + std::to_string(frameIndex))->GetTextureID();
                 }
                 else
                 {
-                    sceneTexturePtr = reinterpret_cast<void*>(rr->textureLibrary->GetTexture("SceneTexture")->GetTextureID());
+                    sceneTexturePtr = reinterpret_cast<void*>(tl->GetTexture("SceneTexture")->GetTextureID());
                 }
             }
             else

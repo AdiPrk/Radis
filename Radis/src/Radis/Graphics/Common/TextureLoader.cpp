@@ -12,6 +12,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
 // ktx2
 #include "ktx.h"
 
@@ -24,17 +27,60 @@ namespace Radis
 
     void TextureLoader::CreateKTX2File(const std::string& path, const std::string& outputPath)
     {
+        std::string inputToToktx = path;
+        std::string tempPngPath = "";
+
+        // 1. Check if the file is a TGA (simple extension check)
+        bool isTga = (path.length() >= 4 &&
+            path.substr(path.length() - 4) == ".tga");
+
+        // 2. If it is a TGA, convert it to a temp PNG in-process
+        if (isTga)
+        {
+            int width, height, channels;
+            // Load TGA (passing 0 preserves original channel count)
+            unsigned char* data = stbi_load(path.c_str(), &width, &height, &channels, 0);
+
+            if (!data) {
+                std::cerr << "Failed to load TGA: " << path << "\nReason: " << stbi_failure_reason() << std::endl;
+                return; // Abort if we can't load the image
+            }
+
+            tempPngPath = path + ".tmp.png";
+
+            // Write the PNG to disk
+            int success = stbi_write_png(tempPngPath.c_str(), width, height, channels, data, width * channels);
+
+            // Free the raw image data immediately
+            stbi_image_free(data);
+
+            if (!success) {
+                std::cerr << "Failed to write temp PNG for: " << path << std::endl;
+                return;
+            }
+
+            // Point toktx to our newly created temporary PNG
+            inputToToktx = tempPngPath;
+        }
+
+        // 3. Run toktx (using either the original file or the temp PNG)
         std::string toktxPath = Assets::BinariesPath + "toktx.exe";
         std::string inner =
             "\"" + toktxPath + "\" "
             "--t2 --encode etc1s --genmipmap --qlevel 128 --clevel 1 --assign_oetf srgb --lower_left_maps_to_s0t0 "
             "\"" + outputPath + "\" "
-            "\"" + path + "\"";
+            "\"" + inputToToktx + "\"";
 
         std::string command = "\"" + inner + "\"";
 
         std::cout << command << std::endl;
         std::system(command.c_str());
+
+        // 4. Cleanup: If we created a temporary PNG, delete it now that toktx is done
+        if (isTga && !tempPngPath.empty())
+        {
+            std::remove(tempPngPath.c_str());
+        }
     }
 
     void TextureLoader::BuildKTX2File(const KTX2BuildInput& input, const std::string& outPath)

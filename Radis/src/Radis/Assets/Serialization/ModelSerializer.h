@@ -14,7 +14,7 @@ namespace Radis
     class Model;
     class Device;
     class TextureLibrary;
-    
+    class BinaryReaderLE;
 
     // Class for serializing and deserializing models
     class ModelSerializer {
@@ -31,6 +31,6 @@ namespace Radis
         static constexpr uint32_t VERSION = 2;
 
         // Validate the file header and version
-        static bool validateHeader(std::ifstream& file);
+        static bool validateHeader(BinaryReaderLE& reader);
     };
 }

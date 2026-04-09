@@ -92,7 +92,7 @@ namespace Radis
         std::unique_ptr<Pipeline> deferredLightingPipeline;
         std::unique_ptr<Pipeline> lightVolumePipeline;
         std::unique_ptr<Pipeline> tonemapPipeline;
-        std::unique_ptr<RaytracingPipeline> raytracingPipeline;
+        std::unique_ptr<ComputePipeline> raytracingPipeline;
         std::unique_ptr<Pipeline> shadowMomentsPipeline;
         std::unique_ptr<ComputePipeline> shadowBlurHPipeline;
         std::unique_ptr<ComputePipeline> shadowBlurVPipeline;
@@ -113,6 +113,7 @@ namespace Radis
         bool renderWireframe = false;
         uint32_t lightVolumeDebugMode = 0;
         bool supportsVulkan = true;
+        int raytraceRenderMode = 1;
 
         MSMBlurPC msmPC;
         
@@ -122,6 +123,11 @@ namespace Radis
         float exposure = 1.0f;
         int useIrrDefuse = 0;
         int specTestMode = 0;
+
+        // Frame data
+        int frameCount = 0;
+        int accumulationCount = 0; // for path tracing accumulation
+        glm::mat4 previousViewProj; // for accumulation
 
         bool SupportsVulkan();
 

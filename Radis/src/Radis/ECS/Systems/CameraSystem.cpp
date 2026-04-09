@@ -181,6 +181,8 @@ namespace Radis
                     }
                 }
 
+                camera.PositionSmoothness = 80.0f;
+
                 const float posAlpha = SmoothAlpha(camera.PositionSmoothness, dt);
                 camera.SmoothedVelocity = glm::mix(camera.SmoothedVelocity, targetVelocity, posAlpha);
 

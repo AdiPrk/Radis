@@ -121,7 +121,7 @@ namespace Radis
         );
         Allocator::SetAllocationName(mIndexBuffer.allocation, "Index Buffer");
 
-        // Copy staging ¨ GPU
+        // Copy staging ï¿½ï¿½ GPU
         device->CopyBuffer(staging.buffer, mIndexBuffer.buffer, bufferSize);
 
         Allocator::DestroyBuffer(staging);

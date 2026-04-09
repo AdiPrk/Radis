@@ -27,6 +27,7 @@ namespace Radis
 
         uint32_t AddModel(const std::string& modelPath, bool fromDM = false, bool toDM = false, bool yUp = true);
         void AddToUnifiedMesh(uint32_t modelIndex);
+		void UpdateUnifiedMesh();
 
         Model* GetModel(uint32_t index);
         Model* GetModel(const std::string& modelPath);
@@ -46,6 +47,8 @@ namespace Radis
 
 		void ClearAllBuffers(class Device* device);
 		void RecreateAllBuffers(class Device* device);
+
+        const auto& GetModelMap() const { return mModelMap; }
 
 	private:
 		friend class Model;

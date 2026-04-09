@@ -329,13 +329,17 @@ namespace Radis
         supportedAs.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
         VkPhysicalDeviceRayTracingPipelineFeaturesKHR supportedRtPipeline{};
         supportedRtPipeline.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
+        VkPhysicalDeviceRayQueryFeaturesKHR supportedRayQuery{};
+        supportedRayQuery.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR;
 
+        supportedRtPipeline.pNext = &supportedRayQuery;
         supportedAs.pNext = &supportedRtPipeline;
         robustness2Supported.pNext = &supportedAs;
         supported13.pNext = &robustness2Supported;
         supported12.pNext = &supported13;
         supported11.pNext = &supported12;
         supportedFeatures2.pNext = &supported11;
+
 
         vkGetPhysicalDeviceFeatures2(physicalDevice, &supportedFeatures2);
 
@@ -393,6 +397,10 @@ namespace Radis
         REQUEST_FEATURE(rtPipelineFeature, supportedRtPipeline, rayTracingPipelineTraceRaysIndirect);
         REQUEST_FEATURE(rtPipelineFeature, supportedRtPipeline, rayTraversalPrimitiveCulling);
 
+        VkPhysicalDeviceRayQueryFeaturesKHR rayQueryFeature{};
+        rayQueryFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR;
+        REQUEST_FEATURE(rayQueryFeature, supportedRayQuery, rayQuery);
+
 #undef REQUEST_FEATURE
 
         if (!supportsAllRequestedFeatures) 
@@ -404,6 +412,7 @@ namespace Radis
         VkDeviceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         
+        rtPipelineFeature.pNext = &rayQueryFeature;
         accelFeature.pNext = &rtPipelineFeature;
         robustness2Features.pNext = &accelFeature;
         vulkan13Features.pNext = &robustness2Features;
