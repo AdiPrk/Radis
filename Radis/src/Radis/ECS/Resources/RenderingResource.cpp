@@ -138,6 +138,8 @@ namespace Radis
             modelLibrary->AddModel(Assets::ModelsPath + "sphere.dm", true);
             modelLibrary->AddModel(Assets::ModelsPath + "pbrreference.dm", true);
             modelLibrary->AddModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "TakanashiKiara/TakanashiKiara.fbx", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "okayu/okayu.fbx", true);
             modelLibrary->AddModel(Assets::ModelsPath + "jack_samba.dm", true);
             modelLibrary->AddModel(Assets::ModelsPath + "SteampunkRobot.dm", true);
             modelLibrary->AddModel(Assets::ModelsPath + "DragonAttenuation.dm", true);
@@ -161,17 +163,46 @@ namespace Radis
         if (!animationLibrary)
         {
             animationLibrary = std::make_unique<AnimationLibrary>();
-            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/idle.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/idle.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/jump.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/left strafe walking.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/left strafe.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/left turn 90.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/right strafe walking.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/right strafe.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/right turn 90.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/standard run.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
-            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/walking.fbx", modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx"));
+            Model* travisModel = modelLibrary->GetModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx");
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/idle.fbx", travisModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/idle.fbx", travisModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/jump.fbx", travisModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/left strafe walking.fbx", travisModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/left strafe.fbx", travisModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/left turn 90.fbx", travisModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/right strafe walking.fbx", travisModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/right strafe.fbx", travisModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/right turn 90.fbx", travisModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/standard run.fbx", travisModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TravisLocomotion/walking.fbx", travisModel);
+
+            Model* okayuModel = modelLibrary->GetModel(Assets::ModelsPath + "okayu/okayu.fbx");
+            animationLibrary->AddAnimation(Assets::ModelsPath + "okayu/idle.fbx", okayuModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "okayu/idle.fbx", okayuModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "okayu/jump.fbx", okayuModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "okayu/left strafe walking.fbx", okayuModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "okayu/left strafe.fbx", okayuModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "okayu/left turn 90.fbx", okayuModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "okayu/right strafe walking.fbx", okayuModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "okayu/right strafe.fbx", okayuModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "okayu/right turn 90.fbx", okayuModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "okayu/standard run.fbx", okayuModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "okayu/walking.fbx", okayuModel);
+
+            Model* kiaraModel = modelLibrary->GetModel(Assets::ModelsPath + "TakanashiKiara/TakanashiKiara.fbx");
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TakanashiKiara/idle.fbx", kiaraModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TakanashiKiara/jump.fbx", kiaraModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TakanashiKiara/left strafe walk.fbx", kiaraModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TakanashiKiara/left strafe.fbx", kiaraModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TakanashiKiara/left turn (2).fbx", kiaraModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TakanashiKiara/left turn.fbx", kiaraModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TakanashiKiara/right strafe walk.fbx", kiaraModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TakanashiKiara/right strafe.fbx", kiaraModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TakanashiKiara/right turn (2).fbx", kiaraModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TakanashiKiara/right turn.fbx", kiaraModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TakanashiKiara/running.fbx", kiaraModel);
+            animationLibrary->AddAnimation(Assets::ModelsPath + "TakanashiKiara/walking.fbx", kiaraModel);
+
             animationLibrary->AddAnimation(Assets::ModelsPath + "jack_samba.glb", modelLibrary->GetModel(Assets::ModelsPath + "jack_samba.glb"));
         }
 
@@ -332,8 +363,8 @@ namespace Radis
             VkFormat emissiveFormat = VK_FORMAT_B10G11R11_UFLOAT_PACK32;
             std::vector<VkFormat> gBufferFormats = { albedoFormat, normalFormat, pbrFormat, emissiveFormat };
 
-            pipeline = std::make_unique<Pipeline>(*device, hdrFormat, swapDepthFormat, unis, false, "forward.vert", "forward.frag");
-            wireframePipeline = std::make_unique<Pipeline>(*device, hdrFormat, swapDepthFormat, unis, true, "forward.vert", "forward.frag");
+            pipeline = std::make_unique<Pipeline>(*device, ldrFormat, swapDepthFormat, unis, false, "forward.vert", "forward.frag");
+            wireframePipeline = std::make_unique<Pipeline>(*device, ldrFormat, swapDepthFormat, unis, true, "forward.vert", "forward.frag");
             
             shadowMomentsPipeline = std::make_unique<Pipeline>(*device, momentsFormat, swapDepthFormat, shadowUnis, false, "shadowMoments.vert", "shadowMoments.frag");
 

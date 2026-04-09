@@ -169,7 +169,7 @@ namespace Radis
         }
 
         // Draw the editor grid
-        // DebugDrawResource::DrawEditorGrid(50, 1.0f);
+        DebugDrawResource::DrawEditorGrid(50, 1.0f);
 
         // Swap renderer backends
         // ecs->GetResource<SwapRendererResource>()->RequestSwap();
@@ -777,7 +777,7 @@ namespace Radis
 
         if (rr->renderMode != RenderMode::Raytracing && !debugData.empty())
         {
-            cubeModel = ml->GetModel("Assets/Models/cube.obj");
+            cubeModel = ml->GetModel("Assets/Models/cube.dm");
             if (cubeModel && !cubeModel->mMeshes.empty())
             {
                 cubeMeshID = cubeModel->mMeshes[0]->GetID();

@@ -109,7 +109,7 @@ namespace Radis
         // --
 
         // Render Mode
-        RenderMode renderMode = RenderMode::Raytracing;
+        RenderMode renderMode = RenderMode::Deferred;
         bool renderWireframe = false;
         uint32_t lightVolumeDebugMode = 0;
         bool supportsVulkan = true;

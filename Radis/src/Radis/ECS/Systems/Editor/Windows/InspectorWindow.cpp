@@ -215,17 +215,19 @@ namespace Radis
             {
                 const auto& mMap = rr->modelLibrary->GetModelMap();
                 std::vector<std::string> modelFiles;
-                modelFiles.reserve(mMap.size());
-                for (auto& [name,_] : mMap)
-                {
-                    modelFiles.push_back(name.s);
-                }
+                // modelFiles.reserve(mMap.size());
+                // for (auto& [name,_] : mMap)
+                // {
+                //     modelFiles.push_back(name.s);
+                // }
 
                 //const std::vector<std::string> modelExtensions = { ".fbx", ".glb", ".obj", ".gltf" };
                 //const std::vector<std::string> modelExtensions = { ".dm" };
                 //std::vector<std::string> modelFiles = GetFilesWithExtensions("Assets/Models/dm/", modelExtensions);
 
                 modelFiles.push_back("Assets/Models/TravisLocomotion/TravisLocomotion.fbx"); // Extra
+                modelFiles.push_back("Assets/Models/TakanashiKiara/TakanashiKiara.fbx"); // Extra
+                modelFiles.push_back("Assets/Models/okayu/okayu.fbx"); // Extra
 
                 auto rr = ecs->GetResource<RenderingResource>();
                 auto& mc = rr->modelLibrary;

@@ -51,6 +51,7 @@ namespace Radis
 
     void Model::LoadMeshes(const std::string& filepath)
     {
+        // importer.SetPropertyBool(AI_CONFIG_PP_OG_EXCLUDE_LIST, true);
         mScene = importer.ReadFile(filepath, aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_GlobalScale | aiProcess_OptimizeGraph);
 
         // Check if the scene was loaded successfully
@@ -92,20 +93,22 @@ namespace Radis
         glm::vec3 meshMin(std::numeric_limits<float>::max());
         glm::vec3 meshMax(std::numeric_limits<float>::lowest());
 
+        const bool isSkinned = mesh->mNumBones > 0;
+
         // Extract vertex data
         for (unsigned int j = 0; j < mesh->mNumVertices; j++)
         {
             Vertex vertex{};
 
-            glm::vec4 pos = transform * glm::vec4(mesh->mVertices[j].x, mesh->mVertices[j].y, mesh->mVertices[j].z, 1.f);
-            vertex.position = { pos.x, pos.y, pos.z };
+            glm::vec4 pos = /*transform * */glm::vec4(mesh->mVertices[j].x, mesh->mVertices[j].y, mesh->mVertices[j].z, 1.f);
+            vertex.position = pos;
 
             //vertex.position = { mesh->mVertices[j].x, mesh->mVertices[j].y, mesh->mVertices[j].z };
 
             // Normals
             if (mesh->HasNormals())
             {
-                glm::vec3 n = normalMat * glm::vec3(mesh->mNormals[j].x, mesh->mNormals[j].y, mesh->mNormals[j].z);
+                glm::vec3 n = /*normalMat * */glm::vec3(mesh->mNormals[j].x, mesh->mNormals[j].y, mesh->mNormals[j].z);
                 vertex.normal = glm::normalize(n);
 
                 //vertex.normal = { mesh->mNormals[j].x, mesh->mNormals[j].y, mesh->mNormals[j].z };
@@ -175,13 +178,18 @@ namespace Radis
             aiBone* bone = mesh->mBones[boneIndex];
             std::string boneName = bone->mName.C_Str();
 
-            int boneID = mBoneCount;
+            int boneID;
             auto it = mBoneInfoMap.find(boneName);
             if (it == mBoneInfoMap.end())
             {
                 BoneInfo info(mBoneCount, aiMatToGlm(bone->mOffsetMatrix));
                 mBoneInfoMap.emplace(boneName, info);
+                boneID = mBoneCount;
                 mBoneCount++;
+            }
+            else
+            {
+                boneID = it->second.id;
             }
 
             for (unsigned int weightIndex = 0; weightIndex < bone->mNumWeights; ++weightIndex)
