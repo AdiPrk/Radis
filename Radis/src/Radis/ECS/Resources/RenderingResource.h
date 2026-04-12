@@ -57,6 +57,10 @@ namespace Radis
         std::unique_ptr<Uniform> shadowMomentsUniform;
         std::unique_ptr<Uniform> shadowBlurHUniform;
         std::unique_ptr<Uniform> shadowBlurVUniform;
+        std::unique_ptr<Uniform> alchemyAOUniform;
+        std::unique_ptr<Uniform> aoBlurHUniform;
+        std::unique_ptr<Uniform> aoBlurVUniform;
+
         // -------------------------
 
         std::vector<VkCommandBuffer> commandBuffers;
@@ -96,6 +100,9 @@ namespace Radis
         std::unique_ptr<Pipeline> shadowMomentsPipeline;
         std::unique_ptr<ComputePipeline> shadowBlurHPipeline;
         std::unique_ptr<ComputePipeline> shadowBlurVPipeline;
+        std::unique_ptr<Pipeline> alchemyAOPipeline;
+        std::unique_ptr<Pipeline> aoBlurHPipeline;
+        std::unique_ptr<Pipeline> aoBlurVPipeline;
         // -----------
 
         // OPENGL STUFFS
@@ -123,6 +130,24 @@ namespace Radis
         float exposure = 1.0f;
         int useIrrDefuse = 0;
         int specTestMode = 0;
+
+        // ao
+        struct AOPC {
+            float radius;
+            int numSamples;
+            float scale;
+            float contrast;
+            int debugMode;
+        };
+        AOPC aoPC{ 1.0f, 15, 1.0f, 1.0f, 4 };
+
+        struct BlurPC {
+            glm::vec2 direction;
+            int radius;
+            float spatialSigma;
+            float rangeSigma;
+        };
+        BlurPC aoBlurPC;
 
         // Frame data
         int frameCount = 0;

@@ -231,21 +231,21 @@
     <CustomBuild Include="Assets\Shaders\shadowMoments.frag" />
     <CustomBuild Include="Assets\Shaders\shadowMoments.vert" />
     <CustomBuild Include="Assets\Shaders\tonemap.frag" />
-    <CustomBuild Include="Assets\Shaders\deferred.frag" />
-    <CustomBuild Include="Assets\Shaders\deferred.vert" />
-    <CustomBuild Include="Assets\Shaders\deferredLight.frag" />
-    <CustomBuild Include="Assets\Shaders\deferredLightShadow.frag" />
-    <CustomBuild Include="Assets\Shaders\forward.frag" />
-    <CustomBuild Include="Assets\Shaders\forward.vert" />
-    <CustomBuild Include="Assets\Shaders\fullscreen.vert" />
-    <CustomBuild Include="Assets\Shaders\lightVolume.frag" />
-    <CustomBuild Include="Assets\Shaders\lightVolume.vert" />
-    <CustomBuild Include="Assets\Shaders\msmBlurH.comp" />
-    <CustomBuild Include="Assets\Shaders\msmBlurV.comp" />
-    <CustomBuild Include="Assets\Shaders\rayquery.comp" />
-    <CustomBuild Include="Assets\Shaders\shadowMoments.frag" />
-    <CustomBuild Include="Assets\Shaders\shadowMoments.vert" />
-    <CustomBuild Include="Assets\Shaders\tonemap.frag" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
@@ -517,5 +517,6 @@
     <None Include="Assets\Scenes\sponza.json" />
     <None Include="Assets\Scenes\lighttest.json" />
     <None Include="Assets\Scenes\cube.json" />
+    <None Include="Assets\Shaders\bilateralBlur.frag" />
   </ItemGroup>
 </Project>

@@ -27,8 +27,14 @@ namespace Radis
         UnifiedMeshes();
         ~UnifiedMeshes();
 
+        // Add a single mesh to the unified mesh.
         void AddMesh(Device& device, const Mesh& mesh);
+
+        // Add all meshes from a list of models to the unified mesh. (This is MUCH faster if uploading lots of models).
         void AddModels(Device& device, const std::vector<std::unique_ptr<Model>>& models);
+
+        // Rebuilds the unified mesh from scratch with the given models.
+        void SetModels(Device& device, const std::vector<std::unique_ptr<Model>>& models);
 
         Mesh& GetUnifiedMesh() { return mUnifiedMesh; }
         const Mesh& GetUnifiedMesh() const { return mUnifiedMesh; }

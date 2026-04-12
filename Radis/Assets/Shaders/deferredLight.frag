@@ -63,6 +63,7 @@ UBO_LAYOUT(0, 8) uniform ShadowParams {
 
 layout(set = 0, binding = 9)  uniform sampler2D envMap;
 layout(set = 0, binding = 10) uniform sampler2D irradianceMap;
+layout(set = 0, binding = 11) uniform sampler2D ssaoMap;
 
 layout(push_constant) uniform PushConstants {
     int useIrrDiffuse;
@@ -255,7 +256,6 @@ void main()
         vec2 envUV  = DirToEquirect(dir);
         vec3 skyCol = texture(envMap, envUV).rgb;
         outColor = vec4(skyCol, 1.0);
-        outColor = vec4(vec3(0.0), 1.0);
         return;
     }
 
@@ -269,7 +269,10 @@ void main()
     vec3  N         = OctDecode(normalEnc);
     float metallic  = pbrSample.r;
     float roughness = max(pbrSample.g, 0.05);
-    float ao        = pbrSample.b;
+    //float ao        = pbrSample.b;
+    float materialAO = pbrSample.b;
+    float screenSpaceAO = texture(ssaoMap, fragTexCoord).r;
+    float ao = /*materialAO * */screenSpaceAO; // Combine baked and dynamic AO!
 
     vec3 worldPos = ReconstructWorldPos(fragTexCoord, depth);
     vec3 V        = normalize(uniforms.cameraPos - worldPos);
@@ -302,7 +305,7 @@ void main()
         vec3 iblDiffuse = computeIBLDiffuse(albedo, metallic, ao, N, F0);
         vec3 iblSpecular = computeIBLSpecular(N, V, a, a2, F0, NdotV);
 
-        vec3 finalColor = Lo + (iblDiffuse + iblSpecular) * ao + emissive;
+        vec3 finalColor = Lo + iblDiffuse + (iblSpecular * ao) + emissive;
         outColor = vec4(finalColor, 1.0);
     }
     else if (useIrrDiffuse == 1) // Raw irradiance map

@@ -133,18 +133,18 @@ namespace Radis
         {
             modelLibrary = std::make_unique<ModelLibrary>(*device, *textureLibrary);
 
-            modelLibrary->AddModel(Assets::ModelsPath + "cube.dm", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "quad.dm", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "sphere.dm", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "pbrreference.dm", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "cube.obj", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "quad.obj", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "sphere.obj", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "pbrreference.glb", true);
             modelLibrary->AddModel(Assets::ModelsPath + "TravisLocomotion/TravisLocomotion.fbx", true);
             modelLibrary->AddModel(Assets::ModelsPath + "TakanashiKiara/TakanashiKiara.fbx", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "jack_samba.glb", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "SteampunkRobot.gltf", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "DragonAttenuation.glb", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "Sponza.gltf", true);
             modelLibrary->AddModel(Assets::ModelsPath + "okayu/okayu.fbx", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "jack_samba.dm", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "SteampunkRobot.dm", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "DragonAttenuation.dm", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "Sponza.dm", true);
-            // modelLibrary->AddModel(Assets::ModelsPath + "sanmiguellow.dm", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "sanmiguellow.glb", true);
             // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Curtains.dm", true, false);
             // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Main.dm", true);
 
@@ -157,7 +157,7 @@ namespace Radis
 
             // modelLibrary->AddModel("Assets/Models/okayu.pmx");
             // modelLibrary->AddModel("Assets/Models/AlisaMikhailovna.fbx");
-            modelLibrary->UpdateUnifiedMesh();
+            modelLibrary->InitializeUnifiedMesh();
         }
 
         if (!animationLibrary)
@@ -327,6 +327,35 @@ namespace Radis
                 VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             );
+
+            // AO
+            textureLibrary->CreateTexture(
+                "RawAO",
+                extent.width, extent.height,
+                VK_FORMAT_R8G8B8A8_UNORM,
+                VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            );
+
+            // AO Blur Textures
+            textureLibrary->CreateTexture(
+                "AOBlurTmp",
+                extent.width, extent.height,
+                VK_FORMAT_R8G8B8A8_UNORM,
+                VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            );
+
+            textureLibrary->CreateTexture(
+                "BlurredAO",
+                extent.width, extent.height,
+                VK_FORMAT_R8G8B8A8_UNORM,
+                VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            );
         }
 
         modelLibrary->QueueTextures();
@@ -413,6 +442,28 @@ namespace Radis
             rtPC.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
             raytracingPipeline = std::make_unique<ComputePipeline>(*device, rtunis, "rayquery.comp", rtPC);
         }
+
+        alchemyAOUniform = std::make_unique<Uniform>(*device, *this, alchemyAOUniformSettings);
+        std::vector<Uniform*> aoUnis{ cameraUniform.get(), alchemyAOUniform.get() };
+
+        PipelineOptions aoOpts;
+        aoOpts.pushConstantSize = 20; // radius, numSamples, scale, contrast, debug mode
+        aoOpts.pushConstantStages = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        alchemyAOPipeline = std::make_unique<Pipeline>(*device, VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_UNDEFINED, aoUnis, false, "fullscreen.vert", "AO.frag", aoOpts, false);
+
+        aoBlurHUniform = std::make_unique<Uniform>(*device, *this, aoBlurHUniformSettings);
+        aoBlurVUniform = std::make_unique<Uniform>(*device, *this, aoBlurVUniformSettings);
+
+        std::vector<Uniform*> blurHUnis{ cameraUniform.get(), aoBlurHUniform.get() };
+        std::vector<Uniform*> blurVUnis{ cameraUniform.get(), aoBlurVUniform.get() };
+
+        PipelineOptions blurOpts;
+        blurOpts.pushConstantSize = 20; // 2 floats + 1 int + 2 floats = 20 bytes
+        blurOpts.pushConstantStages = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        aoBlurHPipeline = std::make_unique<Pipeline>(*device, VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_UNDEFINED, blurHUnis, false, "fullscreen.vert", "bilateralBlur.frag", blurOpts, false);
+        aoBlurVPipeline = std::make_unique<Pipeline>(*device, VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_UNDEFINED, blurVUnis, false, "fullscreen.vert", "bilateralBlur.frag", blurOpts, false);
     }
 
     void RenderingResource::Cleanup(bool closingExe)
@@ -457,6 +508,10 @@ namespace Radis
             shadowBlurVUniform.reset();
             deferredLightingUniform.reset();
             tonemapUniform.reset();
+            alchemyAOUniform.reset();
+            aoBlurHUniform.reset();
+            aoBlurVUniform.reset();
+
             pipeline.reset();
             wireframePipeline.reset();
             shadowMomentsPipeline.reset();
@@ -468,6 +523,9 @@ namespace Radis
             lightVolumePipeline.reset();
             raytracingPipeline.reset();
             tonemapPipeline.reset();
+            alchemyAOPipeline.reset();
+            aoBlurHPipeline.reset();
+            aoBlurVPipeline.reset();
             syncObjects.reset();
 
             for (auto& blas : blasAccel)

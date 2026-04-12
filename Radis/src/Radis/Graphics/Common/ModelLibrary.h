@@ -27,7 +27,10 @@ namespace Radis
 
         uint32_t AddModel(const std::string& modelPath, bool fromDM = false, bool toDM = false, bool yUp = true);
         void AddToUnifiedMesh(uint32_t modelIndex);
-		void UpdateUnifiedMesh();
+
+		// Initializes unified mesh with all models loaded so far
+		void InitializeUnifiedMesh();
+		void SetUnifiedMesh();
 
         Model* GetModel(uint32_t index);
         Model* GetModel(const std::string& modelPath);
