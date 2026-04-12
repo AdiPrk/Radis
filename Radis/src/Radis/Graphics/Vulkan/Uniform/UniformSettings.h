@@ -22,6 +22,8 @@ namespace Radis
         bool buffered = true;                        // True if this binding is stored in a buffer
         bool doubleBuffered = true;
         std::string debugName = "Uniform Buffer";
+        std::string textureName = "";
+        VkImageLayout imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; // For image bindings, specify the layout
     };
 
     struct UniformSettings
@@ -62,15 +64,20 @@ namespace Radis
         }
 
         // Add an image sampler binding
-        UniformSettings& AddISBinding(VkShaderStageFlags stageFlags, uint32_t descriptorCount)
+        UniformSettings& AddISBinding(VkShaderStageFlags stageFlags, uint32_t descriptorCount, const std::string& texName = "", VkImageLayout imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
         {
             bindings.push_back({ { nextBinding++, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, descriptorCount, stageFlags }, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 0, descriptorCount, false });
+            bindings.back().textureName = texName;
+            bindings.back().imageLayout = imageLayout;
+
             return *this;
         }
 
-        UniformSettings& AddSSBIBinding(VkShaderStageFlags stageFlags, uint32_t descriptorCount)
+        UniformSettings& AddSSBIBinding(VkShaderStageFlags stageFlags, uint32_t descriptorCount, const std::string& texName = "")
         {
             bindings.push_back({ { nextBinding++, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, descriptorCount, stageFlags }, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, 0, descriptorCount, false });
+            bindings.back().textureName = texName;
+            bindings.back().imageLayout = VK_IMAGE_LAYOUT_GENERAL;
             return *this;
         }
 

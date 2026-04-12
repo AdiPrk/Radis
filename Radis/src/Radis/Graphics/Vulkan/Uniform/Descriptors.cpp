@@ -11,6 +11,8 @@
 #include "Descriptors.h"
 #include "../Core/Device.h"
 #include "ECS/Resources/RenderingResource.h"
+#include "Graphics/Vulkan/Texture/VKTexture.h"
+#include "Graphics/Vulkan/Core/Buffer.h"
 
 namespace Radis
 {
@@ -278,6 +280,38 @@ namespace Radis
         return *this;
     }
 
+    DescriptorWriter& DescriptorWriter::WriteBuffer(uint32_t binding, const Buffer& buffer, VkDeviceSize offset)
+    {
+        // Allocate info on the heap so the pointer remains valid
+        auto info = std::make_unique<VkDescriptorBufferInfo>();
+        info->buffer = buffer.buffer;
+        info->offset = offset;
+        info->range = buffer.bufferSize;
+
+        // Route to the existing Vulkan method
+        WriteBuffer(binding, info.get(), 1);
+
+        // Store the pointer to keep it alive until Overwrite/Build is called
+        m_BufferInfos.push_back(std::move(info));
+
+        return *this;
+    }
+
+    DescriptorWriter& DescriptorWriter::WriteImage(uint32_t binding, VKTexture* texture, VkSampler sampler, VkImageLayout layout)
+    {
+        // Allocate info on the heap so the pointer remains valid
+        auto info = std::make_unique<VkDescriptorImageInfo>();
+        info->sampler = sampler;
+        info->imageView = texture ? texture->GetImageView() : VK_NULL_HANDLE;
+        info->imageLayout = layout;
+
+        WriteImage(binding, info.get(), 1);
+
+        // Store the pointer to keep it alive
+        m_ImageInfos.push_back(std::move(info));
+
+        return *this;
+    }
 
     bool DescriptorWriter::Build(VkDescriptorSet& set)
     {

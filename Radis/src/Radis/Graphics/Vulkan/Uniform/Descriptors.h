@@ -118,13 +118,18 @@ namespace Radis
         DescriptorWriter& WriteImage(uint32_t binding, VkDescriptorImageInfo* imageInfo, uint32_t imageCount = 1);
         DescriptorWriter& WriteAccelerationStructure(uint32_t binding, VkWriteDescriptorSetAccelerationStructureKHR* asInfo);
 
+        DescriptorWriter& WriteBuffer(uint32_t binding, const struct Buffer& buffer, VkDeviceSize offset = 0);
+        DescriptorWriter& WriteImage(uint32_t binding, class VKTexture* texture, VkSampler sampler, VkImageLayout layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
         bool Build(VkDescriptorSet& set);
         void Overwrite(VkDescriptorSet& set);
 
     private:
+        DescriptorSetLayout& mSetLayout;
+        DescriptorPool& mPool;
+        std::vector<VkWriteDescriptorSet> mWritesToPreform;
 
-        DescriptorSetLayout& mSetLayout;                    //Layout of the sets being written
-        DescriptorPool& mPool;                              //Pool to allocate sets from
-        std::vector<VkWriteDescriptorSet> mWritesToPreform; //Writes to preform on build
+        std::vector<std::unique_ptr<VkDescriptorBufferInfo>> m_BufferInfos;
+        std::vector<std::unique_ptr<VkDescriptorImageInfo>> m_ImageInfos;
     };
 }

@@ -34,7 +34,7 @@
 #include <misc/cpp/imgui_stdlib.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h> // defines IMGUI_IMPL_VULKAN_USE_VOLK
-#include <backends/imgui_impl_opengl3.h>
+
 #include "ImGuizmo.h"
 
 // glm
@@ -97,7 +97,7 @@
 
 // My files
 #include "Utils/Logger.h"
-#include "Utils/VKMath.h"
+#include "Graphics/Vulkan/Utils/VKMath.h"
 #include "Events/Event.h"
 #include "Graphics/Common/AssimpGlmHelper.h"
 #include "Graphics/Common/Animation/VQS.h"

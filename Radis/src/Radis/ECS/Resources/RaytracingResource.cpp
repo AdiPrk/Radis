@@ -15,7 +15,6 @@
 #include "Graphics/Common/ModelLibrary.h"
 #include "Graphics/Vulkan/Uniform/ShaderTypes.h"
 #include "Graphics/Vulkan/Pipeline/Pipeline.h"
-#include "Graphics/Vulkan/Pipeline/RaytracingPipeline.h"
 #include "Graphics/Common/Model.h"
 #include "Graphics/Vulkan/Uniform/Uniform.h"
 #include "Graphics/Vulkan/RenderGraph.h"

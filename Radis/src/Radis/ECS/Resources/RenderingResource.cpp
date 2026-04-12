@@ -15,7 +15,6 @@
 #include "Graphics/Vulkan/Core/Synchronization.h"
 #include "Graphics/Vulkan/Pipeline/Pipeline.h"
 #include "Graphics/Vulkan/Pipeline/ComputePipeline.h"
-#include "Graphics/Vulkan/Pipeline/RaytracingPipeline.h"
 #include "Graphics/Vulkan/RenderGraph.h"
 #include "Graphics/Vulkan/Texture/VKTexture.h"
 #include "Graphics/Vulkan/VulkanWindow.h"
@@ -23,8 +22,6 @@
 #include "Graphics/Vulkan/Uniform/UniformData.h"
 #include "Graphics/Vulkan/Uniform/Descriptors.h"
 #include "Graphics/Vulkan/Uniform/ShaderTypes.h"
-
-#include "Graphics/OpenGL/GLFrameBuffer.h"
 
 #include "Graphics/Common/ModelLibrary.h"
 #include "Graphics/Common/TextureLibrary.h"
@@ -49,48 +46,29 @@ namespace Radis
 
     RenderingResource::~RenderingResource()
     {
-        Cleanup(true);
+        Cleanup();
     }
 
     void RenderingResource::Create(IWindow* window)
     {
-        msmPC.radius = 4;
+        device = std::make_unique<Device>(*dynamic_cast<VulkanWindow*>(window));
 
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+        if (!device->SupportsVulkan())
         {
-            device = std::make_unique<Device>(*dynamic_cast<VulkanWindow*>(window));
-
-            if (!device->SupportsVulkan())
-            {
-                supportsVulkan = false;
-                device.reset();
-                Engine::ForceVulkanUnsupportedSwap();
-                return;
-            }
-
-            RecreateSwapChain(window);
-
-            VkFormat srgbFormat = swapChain->GetImageFormat();
-            VkFormat linearFormat = ToLinearFormat(srgbFormat);
-            device->SetFormats(linearFormat, srgbFormat);
-
-            syncObjects = std::make_unique<Synchronizer>(device->GetDevice(), swapChain->ImageCount());
-        }
-        else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
-        {
-            GLShader::SetupUBO();
-            shader = std::make_unique<GLShader>();
-            shader->load("Assets/Shaders/forward.vert", "Assets/shaders/forward.frag");
-
-            FrameBufferSpecification fbSpec;
-            fbSpec.width = 1280;
-            fbSpec.height = 720;
-            fbSpec.samples = 1;
-            fbSpec.attachments = { FBAttachment::RGBA8_SRGB, FBAttachment::Depth24Stencil8 };
-            sceneFrameBuffer = std::make_unique<GLFrameBuffer>(fbSpec);
+            supportsVulkan = false;
+            device.reset();
+            Engine::ForceVulkanUnsupportedSwap();
+            return;
         }
 
-        bool recreateTextures = textureLibrary != nullptr;
+        RecreateSwapChain(window);
+
+        VkFormat srgbFormat = swapChain->GetImageFormat();
+        VkFormat linearFormat = ToLinearFormat(srgbFormat);
+        device->SetFormats(linearFormat, srgbFormat);
+
+        syncObjects = std::make_unique<Synchronizer>(device->GetDevice(), swapChain->ImageCount());
+
         if (!textureLibrary)
         {
             // IBL::SHCoefficients sh;
@@ -114,14 +92,14 @@ namespace Radis
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "unknownFileIcon.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "shikaout.ktx2");
             envMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "autumn_field_puresky_4k.hdr");
-            envMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Alexs_Apt_2k.hdr");
-            envMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Newport_Loft_Ref.hdr");
-            irMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "autumn_field_puresky_4k.IRMAP.hdr");
-            irMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Alexs_Apt_2k.IRMAP.hdr");
-            irMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Newport_Loft_Ref.IRMAP.hdr");
-
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Alexs_Apt_2k.hdr");
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Newport_Loft_Ref.hdr");
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "autumn_field_puresky_4k.IRMAP.hdr");
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Alexs_Apt_2k.IRMAP.hdr");
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Newport_Loft_Ref.IRMAP.hdr");
 
             textureLibrary->LoadQueuedTextures();
+            // TODO: dds
             //textureLibrary->QueueTextureLoad(Assets::ImagesPath + "M_Soul_Rocks2_Inst_8_BaseColor.dds");
         }
         else
@@ -148,15 +126,6 @@ namespace Radis
             // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Curtains.dm", true, false);
             // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Main.dm", true);
 
-            // Model* sponzaModel = modelLibrary->GetModel(sponzaInd);
-            //VFS::ModelSerializer::save(*sponzaModel, "Assets/Models/dm/Sponza.dm", 0xDEADBEEF);
-            // load it to test
-            //Model newModelTest;
-            //VFS::ModelSerializer::load(newModelTest, "Assets/Models/dm/Sponza.dm");
-            //printf("done"); 
-
-            // modelLibrary->AddModel("Assets/Models/okayu.pmx");
-            // modelLibrary->AddModel("Assets/Models/AlisaMikhailovna.fbx");
             modelLibrary->InitializeUnifiedMesh();
         }
 
@@ -209,10 +178,6 @@ namespace Radis
         // Recreation if needed
         textureLibrary->CreateTextureSampler();
         textureLibrary->CreateDescriptors();
-        if (recreateTextures)
-        {
-            textureLibrary->RecreateAllBuffers(device.get());
-        }
 
         if (swapChain)
         {
@@ -221,50 +186,6 @@ namespace Radis
             // HDR format for scene color (before tonemapping)
             VkFormat hdrFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
             VkFormat momentsFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
-
-            // Choose shadow resolution
-            uint32_t shadowW = 2048;
-            uint32_t shadowH = 2048;
-
-            // Raw moments written by raster pass
-            textureLibrary->CreateTexture(
-                "ShadowMomentsRaw",
-                shadowW, shadowH,
-                momentsFormat,
-                VK_IMAGE_TILING_OPTIMAL,
-                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-            );
-
-            // Temp (H blur output)
-            textureLibrary->CreateTexture(
-                "ShadowMomentsTmp",
-                shadowW, shadowH,
-                momentsFormat,
-                VK_IMAGE_TILING_OPTIMAL,
-                VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
-                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-            );
-
-            // Final blurred moments sampled by lighting
-            textureLibrary->CreateTexture(
-                "ShadowMoments",
-                shadowW, shadowH,
-                momentsFormat,
-                VK_IMAGE_TILING_OPTIMAL,
-                VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
-                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-            );
-
-            // Optional depth for shadow pass (recommended)
-            textureLibrary->CreateTexture(
-                "ShadowDepth",
-                shadowW, shadowH,
-                swapChain->FindDepthFormat(),
-                VK_IMAGE_TILING_OPTIMAL,
-                VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-                VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
-            );
 
             // Create HDR scene texture
             textureLibrary->CreateTexture(
@@ -356,6 +277,27 @@ namespace Radis
                 VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             );
+
+            for (int i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i)
+            {
+                textureLibrary->CreateTexture(
+                    "RTAccum_" + std::to_string(i),
+                    extent.width, extent.height,
+                    VK_FORMAT_R32G32B32A32_SFLOAT,
+                    VK_IMAGE_TILING_OPTIMAL,
+                    VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+                    VK_IMAGE_LAYOUT_GENERAL
+                );
+
+                textureLibrary->CreateTexture(
+                    "RTHeatmapImage_" + std::to_string(i),
+                    extent.width, extent.height,
+                    VK_FORMAT_R32G32B32A32_SFLOAT,
+                    VK_IMAGE_TILING_OPTIMAL,
+                    VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+                    VK_IMAGE_LAYOUT_GENERAL
+                );
+            }
         }
 
         modelLibrary->QueueTextures();
@@ -369,17 +311,11 @@ namespace Radis
             rtUniform = std::make_unique<Uniform>(*device, *this, rayTracingUniformSettings);
             deferredLightingUniform = std::make_unique<Uniform>(*device, *this, deferredLightingUniformSettings);
             tonemapUniform = std::make_unique<Uniform>(*device, *this, tonemapUniformSettings);
-            shadowMomentsUniform = std::make_unique<Uniform>(*device, *this, shadowMomentsUniformSettings);
-            shadowBlurHUniform = std::make_unique<Uniform>(*device, *this, shadowBlurHUniformSettings);
-            shadowBlurVUniform = std::make_unique<Uniform>(*device, *this, shadowBlurVUniformSettings);
-
+            
             std::vector<Uniform*> unis{ cameraUniform.get() };
             std::vector<Uniform*> rtunis{ cameraUniform.get(), rtUniform.get() };
             std::vector<Uniform*> deferredLightingUnis{ deferredLightingUniform.get() };
             std::vector<Uniform*> tonemapUnis{ tonemapUniform.get() };
-            std::vector<Uniform*> shadowUnis{ shadowMomentsUniform.get() };
-            std::vector<Uniform*> blurHUnis{ shadowBlurHUniform.get() };
-            std::vector<Uniform*> blurVUnis{ shadowBlurVUniform.get() };
             
             VkFormat swapImageFormat = swapChain->GetImageFormat();
             VkFormat swapDepthFormat = swapChain->FindDepthFormat();
@@ -394,14 +330,6 @@ namespace Radis
 
             pipeline = std::make_unique<Pipeline>(*device, ldrFormat, swapDepthFormat, unis, false, "forward.vert", "forward.frag");
             wireframePipeline = std::make_unique<Pipeline>(*device, ldrFormat, swapDepthFormat, unis, true, "forward.vert", "forward.frag");
-            
-            shadowMomentsPipeline = std::make_unique<Pipeline>(*device, momentsFormat, swapDepthFormat, shadowUnis, false, "shadowMoments.vert", "shadowMoments.frag");
-
-            PushConstantInfo computePC;
-            computePC.size = sizeof(MSMBlurPC);
-            computePC.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-            shadowBlurHPipeline = std::make_unique<ComputePipeline>(*device, blurHUnis, "msmBlurH.comp", computePC);
-            shadowBlurVPipeline = std::make_unique<ComputePipeline>(*device, blurVUnis, "msmBlurV.comp", computePC);
             
             gBufferPipeline = std::make_unique<Pipeline>(*device, gBufferFormats, swapDepthFormat, unis, false, "deferred.vert", "deferred.frag");
             gBufferWireframePipeline = std::make_unique<Pipeline>(*device, gBufferFormats, swapDepthFormat, unis, true, "deferred.vert", "deferred.frag");
@@ -466,87 +394,22 @@ namespace Radis
         aoBlurVPipeline = std::make_unique<Pipeline>(*device, VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_UNDEFINED, blurVUnis, false, "fullscreen.vert", "bilateralBlur.frag", blurOpts, false);
     }
 
-    void RenderingResource::Cleanup(bool closingExe)
+    void RenderingResource::Cleanup()
     {
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+        if (!device || !device->GetDevice())
+            return;
+
+        vkDeviceWaitIdle(*device);
+
+        for (auto& blas : blasAccel)
         {
-            if (!device)
-            {
-                return;
-            }
-
-            if (device->GetDevice()) 
-            {
-                vkDeviceWaitIdle(*device);
-            }
-
-            vkFreeCommandBuffers(
-                device->GetDevice(),
-                device->GetCommandPool(),
-                static_cast<uint32_t>(commandBuffers.size()),
-                commandBuffers.data()
-            );
-
-            if (!closingExe)
-            {
-                if (modelLibrary) modelLibrary->ClearAllBuffers(device.get());
-                if (textureLibrary) textureLibrary->ClearAllBuffers(device.get());
-            }
-            else
-            {
-                if (modelLibrary) modelLibrary->ClearAllBuffers(device.get());
-                if (textureLibrary) textureLibrary->ClearAllBuffers(device.get());
-                modelLibrary.reset();
-                textureLibrary.reset();
-                animationLibrary.reset();
-            }
-            renderGraph.reset();
-            cameraUniform.reset();
-            rtUniform.reset();
-            shadowMomentsUniform.reset();
-            shadowBlurHUniform.reset();
-            shadowBlurVUniform.reset();
-            deferredLightingUniform.reset();
-            tonemapUniform.reset();
-            alchemyAOUniform.reset();
-            aoBlurHUniform.reset();
-            aoBlurVUniform.reset();
-
-            pipeline.reset();
-            wireframePipeline.reset();
-            shadowMomentsPipeline.reset();
-            shadowBlurHPipeline.reset();
-            shadowBlurVPipeline.reset();
-            gBufferPipeline.reset();
-            gBufferWireframePipeline.reset();
-            deferredLightingPipeline.reset();
-            lightVolumePipeline.reset();
-            raytracingPipeline.reset();
-            tonemapPipeline.reset();
-            alchemyAOPipeline.reset();
-            aoBlurHPipeline.reset();
-            aoBlurVPipeline.reset();
-            syncObjects.reset();
-
-            for (auto& blas : blasAccel)
-            {
-                Allocator::DestroyAcceleration(blas);
-            }
-            blasAccel.clear();
-            if (tlasAccel.accel != VK_NULL_HANDLE) {
-                Allocator::DestroyAcceleration(tlasAccel);
-            }
-
-            swapChain.reset();
-            device.reset();
+            Allocator::DestroyAcceleration(blas);
         }
-        else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
+        blasAccel.clear();
+
+        if (tlasAccel.accel != VK_NULL_HANDLE)
         {
-            if (modelLibrary) modelLibrary->ClearAllBuffers(device.get());
-            if (textureLibrary) textureLibrary->ClearAllBuffers(device.get());
-            sceneFrameBuffer.reset();
-            shader.reset();
-            GLShader::CleanupUBO();
+            Allocator::DestroyAcceleration(tlasAccel);
         }
     }
 

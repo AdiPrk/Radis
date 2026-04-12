@@ -24,6 +24,7 @@
 
 #include "Graphics/Common/TextureLibrary.h"
 #include "Graphics/Vulkan/Texture/VKTexture.h"
+#include "Graphics/Vulkan/Uniform/Uniform.h"
 
 #include "Engine.h"
 
@@ -51,29 +52,24 @@ namespace Radis
         tl->ResizeTexture("AOBlurTmp", extent.width, extent.height);
         tl->ResizeTexture("BlurredAO", extent.width, extent.height);
 
-        if (rr->deferredLightingUniform)
-        {
-            DeferredLightingUniformUpdate(*rr->deferredLightingUniform, *rr);
-        }
-        if (rr->tonemapUniform)
-        {
-            TonemapUniformUpdate(*rr->tonemapUniform, *rr);
-        }
+        if (rr->deferredLightingUniform) rr->deferredLightingUniform->UpdateDescriptorSets(*rr);
+        if (rr->tonemapUniform) rr->tonemapUniform->UpdateDescriptorSets(*rr);
+        
         if (rr->alchemyAOUniform)
         {
-            AlchemyAOUniformUpdate(*rr->alchemyAOUniform, *rr);
-            AOBlurUniformUpdateH(*rr->aoBlurHUniform, *rr);
-            AOBlurUniformUpdateV(*rr->aoBlurVUniform, *rr);
+            rr->alchemyAOUniform->UpdateDescriptorSets(*rr);
+            rr->aoBlurHUniform->UpdateDescriptorSets(*rr);
+            rr->aoBlurVUniform->UpdateDescriptorSets(*rr);
         }
     }
 
 	void PresentSystem::Init()
 	{
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
-        {
-            auto rr = ecs->GetResource<RenderingResource>();
-            ResizeRenderTargets(rr);
-        }
+        //if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+        //{
+        //    auto rr = ecs->GetResource<RenderingResource>();
+        //    ResizeRenderTargets(rr);
+        //}
 	}
 
 	void PresentSystem::FrameStart()
@@ -149,10 +145,6 @@ namespace Radis
         rg->ImportTexture("gNormal", (VKTexture*)tl->GetTexture("gNormal"));
         rg->ImportTexture("gPBR", (VKTexture*)tl->GetTexture("gPBR"));
         rg->ImportTexture("gEmissive", (VKTexture*)tl->GetTexture("gEmissive"));
-        rg->ImportTexture("ShadowMomentsRaw", (VKTexture*)tl->GetTexture("ShadowMomentsRaw"));
-        rg->ImportTexture("ShadowMomentsTmp", (VKTexture*)tl->GetTexture("ShadowMomentsTmp"));
-        rg->ImportTexture("ShadowMoments", (VKTexture*)tl->GetTexture("ShadowMoments"));
-        rg->ImportTexture("ShadowDepth", (VKTexture*)tl->GetTexture("ShadowDepth"));
         rg->ImportTexture("RawAO", (VKTexture*)tl->GetTexture("RawAO"));
         rg->ImportTexture("AOBlurTmp", (VKTexture*)tl->GetTexture("AOBlurTmp"));
         rg->ImportTexture("BlurredAO", (VKTexture*)tl->GetTexture("BlurredAO"));

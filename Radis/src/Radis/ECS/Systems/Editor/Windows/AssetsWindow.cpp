@@ -143,7 +143,7 @@ namespace Radis
 
 			static FileBrowser browser;
 
-			float flipY = static_cast<float>(Engine::GetGraphicsAPI() != GraphicsAPI::OpenGL);
+			float flipY = 1.0f;
 			ImVec2 uv0 = { 0.0f, 1.0f };
 			ImVec2 uv1 = { 1.0f, 0.0f };
 

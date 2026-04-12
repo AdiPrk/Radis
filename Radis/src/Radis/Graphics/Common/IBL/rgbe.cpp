@@ -1,11 +1,13 @@
+/*
+THIS FILE HAS BEEN MODIFIED FOR USE IN RADIS ENGINE ~ Aditya Prakash 2026.
+*/
+
 /* THIS CODE CARRIES NO GUARANTEE OF USABILITY OR FITNESS FOR ANY PURPOSE.
  * WHILE THE AUTHORS HAVE TRIED TO ENSURE THE PROGRAM WORKS CORRECTLY,
  * IT IS STRICTLY USE AT YOUR OWN RISK.  */
 
-// Aditya Prakash: Minor edits to remove warnings
 #include <PCH/pch.h>
 #include "rgbe.h"
-
 
 /* This file contains code to read and write four byte rgbe file format
  developed by Greg Ward.  It handles the conversions between rgbe and

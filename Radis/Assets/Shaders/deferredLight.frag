@@ -51,19 +51,9 @@ SSBO_LAYOUT(0, 6) readonly buffer LightData {
     Light lights[MAX_LIGHTS];
 } lightData;
 
-// MSM shadow inputs
-layout(set = 0, binding = 7) uniform sampler2D shadowMoments;
-
-UBO_LAYOUT(0, 8) uniform ShadowParams {
-    mat4 lightViewProj;
-    mat4 lightView;
-    vec4 zParams;     // (z0, z1, invRange, alpha)
-    vec4 mapParams;   // (invW, invH, blurRadius, unused)
-} sh;
-
-layout(set = 0, binding = 9)  uniform sampler2D envMap;
-layout(set = 0, binding = 10) uniform sampler2D irradianceMap;
-layout(set = 0, binding = 11) uniform sampler2D ssaoMap;
+layout(set = 0, binding = 7)  uniform sampler2D envMap;
+layout(set = 0, binding = 8) uniform sampler2D irradianceMap;
+layout(set = 0, binding = 9) uniform sampler2D ssaoMap;
 
 layout(push_constant) uniform PushConstants {
     int useIrrDiffuse;

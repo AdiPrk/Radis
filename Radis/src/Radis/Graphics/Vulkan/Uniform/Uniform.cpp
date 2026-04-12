@@ -9,19 +9,20 @@
 #include <PCH/pch.h>
 
 #include "Uniform.h"
+#include "UniformData.h"
 #include "Descriptors.h"
 #include "UniformSettings.h"
 #include "ECS/Resources/RenderingResource.h"
 #include "../Core/Device.h"
 #include "../Core/SwapChain.h"
 #include "../Core/Buffer.h"
-#include "../Core/AccelerationStructures.h"
-
+#include "../Texture/VKTexture.h"
 
 namespace Radis
 {
     Uniform::Uniform(Device& device, RenderingResource& renderData, const UniformSettings& settings)
         : mDevice(device)
+        , mSettings(settings)
     {
         DescriptorPool::Builder poolBuilder = DescriptorPool::Builder(device).SetMaxSets(SwapChain::MAX_FRAMES_IN_FLIGHT);
         for (const auto& bindingInfo : settings.bindings)
@@ -93,7 +94,14 @@ namespace Radis
         }
         mUniformDescriptorLayout = layoutBuilder.Build();
 
-        settings.Init(*this, renderData);
+        if (settings.Init)
+        {
+            settings.Init(*this, renderData);
+        }
+        else
+        {
+            UpdateDescriptorSets(renderData, true);
+        }
     }
 
     void Uniform::Bind(VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, int frameIndex, VkPipelineBindPoint bindPoint)
@@ -107,6 +115,39 @@ namespace Radis
             &mUniformDescriptorSets[frameIndex],
             0,
             nullptr);
+    }
+
+    void Uniform::UpdateDescriptorSets(RenderingResource& renderData, bool isInit)
+    {
+        if (isInit) mUniformDescriptorSets.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
+        VkSampler defaultSampler = renderData.textureLibrary->GetSampler();
+
+        for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex)
+        {
+            DescriptorWriter writer(*mUniformDescriptorLayout, *mUniformPool);
+
+            for (const auto& binding : mSettings.bindings)
+            {
+                uint32_t bIndex = binding.layoutBinding.binding;
+
+                if (binding.buffered)
+                {
+                    writer.WriteBuffer(bIndex, GetUniformBuffer(bIndex, frameIndex));
+                }
+                else /* Texture */
+                {
+                    VKTexture* tex = renderData.textureLibrary->GetVKTexture(binding.textureName);
+                    if (tex)
+                    {
+                        writer.WriteImage(bIndex, tex, defaultSampler, binding.imageLayout);
+                    }
+                    else RADIS_ERROR("Uniform Update: Texture '%s' not found!", binding.textureName.c_str());
+                }
+            }
+
+            if (isInit) writer.Build(mUniformDescriptorSets[frameIndex]);
+            else        writer.Overwrite(mUniformDescriptorSets[frameIndex]);
+        }
     }
 
     Uniform::~Uniform()

@@ -10,7 +10,6 @@
 
 #include "IResource.h"
 #include "Graphics/Vulkan/Core/AccelerationStructures.h"
-#include "Graphics/OpenGL/GLShader.h"
 #include "Graphics/Common/RenderMode.h"
 #include "Graphics/Vulkan/Uniform/ShaderTypes.h"
 
@@ -29,8 +28,6 @@ namespace Radis
     class ModelLibrary;
     class TextureLibrary;
     class AnimationLibrary;
-    class GLFrameBuffer;
-    class GLShader;
 
     struct RenderingResource : public IResource
     {
@@ -38,31 +35,42 @@ namespace Radis
         ~RenderingResource();
 
         void Create(IWindow* window);
-        void Cleanup(bool closingExe = false);
+        void Cleanup();
 
         std::unique_ptr<Device> device;
         std::unique_ptr<SwapChain> swapChain;
         std::unique_ptr<Synchronizer> syncObjects;
 
+        std::unique_ptr<RenderGraph> renderGraph;
         std::unique_ptr<ModelLibrary> modelLibrary;
         std::unique_ptr<TextureLibrary> textureLibrary;
         std::unique_ptr<AnimationLibrary> animationLibrary;
-        std::unique_ptr<RenderGraph> renderGraph;
 
         // Uniforms ----------------
         std::unique_ptr<Uniform> cameraUniform;
         std::unique_ptr<Uniform> rtUniform;
         std::unique_ptr<Uniform> deferredLightingUniform;
         std::unique_ptr<Uniform> tonemapUniform;
-        std::unique_ptr<Uniform> shadowMomentsUniform;
-        std::unique_ptr<Uniform> shadowBlurHUniform;
-        std::unique_ptr<Uniform> shadowBlurVUniform;
         std::unique_ptr<Uniform> alchemyAOUniform;
         std::unique_ptr<Uniform> aoBlurHUniform;
         std::unique_ptr<Uniform> aoBlurVUniform;
-
         // -------------------------
 
+        // Pipelines
+        std::unique_ptr<Pipeline> pipeline;
+        std::unique_ptr<Pipeline> wireframePipeline;
+        std::unique_ptr<Pipeline> gBufferPipeline;
+        std::unique_ptr<Pipeline> gBufferWireframePipeline;
+        std::unique_ptr<Pipeline> deferredLightingPipeline;
+        std::unique_ptr<Pipeline> lightVolumePipeline;
+        std::unique_ptr<Pipeline> tonemapPipeline;
+        std::unique_ptr<ComputePipeline> raytracingPipeline;
+        std::unique_ptr<Pipeline> alchemyAOPipeline;
+        std::unique_ptr<Pipeline> aoBlurHPipeline;
+        std::unique_ptr<Pipeline> aoBlurVPipeline;
+        // -----------
+
+        // Command Buffers and Sync
         std::vector<VkCommandBuffer> commandBuffers;
         uint32_t currentImageIndex = 0;
         uint32_t currentFrameIndex = 0;
@@ -88,28 +96,6 @@ namespace Radis
         VkImageView gEmissiveImageView{ VK_NULL_HANDLE };
         // --------------------------------
 
-        // Pipelines
-        std::unique_ptr<Pipeline> pipeline;
-        std::unique_ptr<Pipeline> wireframePipeline;
-        std::unique_ptr<Pipeline> gBufferPipeline;
-        std::unique_ptr<Pipeline> gBufferWireframePipeline;
-        std::unique_ptr<Pipeline> deferredLightingPipeline;
-        std::unique_ptr<Pipeline> lightVolumePipeline;
-        std::unique_ptr<Pipeline> tonemapPipeline;
-        std::unique_ptr<ComputePipeline> raytracingPipeline;
-        std::unique_ptr<Pipeline> shadowMomentsPipeline;
-        std::unique_ptr<ComputePipeline> shadowBlurHPipeline;
-        std::unique_ptr<ComputePipeline> shadowBlurVPipeline;
-        std::unique_ptr<Pipeline> alchemyAOPipeline;
-        std::unique_ptr<Pipeline> aoBlurHPipeline;
-        std::unique_ptr<Pipeline> aoBlurVPipeline;
-        // -----------
-
-        // OPENGL STUFFS
-        std::unique_ptr<GLShader> shader;
-        std::unique_ptr<GLFrameBuffer> sceneFrameBuffer;
-        // --------------------------------
-
         // RT
         std::vector<AccelerationStructure> blasAccel;
         AccelerationStructure tlasAccel;
@@ -121,8 +107,6 @@ namespace Radis
         uint32_t lightVolumeDebugMode = 0;
         bool supportsVulkan = true;
         int raytraceRenderMode = 1;
-
-        MSMBlurPC msmPC;
         
         // Env map
         uint32_t envMapIndex;

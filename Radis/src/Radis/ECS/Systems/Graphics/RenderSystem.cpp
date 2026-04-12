@@ -14,7 +14,6 @@
 #include "ECS/Resources/DebugDrawResource.h"
 #include "ECS/Resources/WindowResource.h"
 #include "ECS/Resources/AnimationResource.h"
-#include "ECS/Resources/SwapRendererResource.h"
 #include "ECS/Resources/RaytracingResource.h"
 
 #include "../InputSystem.h"
@@ -26,7 +25,6 @@
 #include "Graphics/Vulkan/Uniform/ShaderTypes.h"
 #include "Graphics/Vulkan/Pipeline/Pipeline.h"
 #include "Graphics/Vulkan/Pipeline/ComputePipeline.h"
-#include "Graphics/Vulkan/Pipeline/RaytracingPipeline.h"
 #include "Graphics/Common/Model.h"
 #include "Graphics/Vulkan/Uniform/Uniform.h"
 #include "Graphics/Vulkan/RenderGraph.h"
@@ -42,8 +40,6 @@
 #include "ECS/Components/Components.h"
 
 #include "Engine.h"
-#include "Graphics/OpenGL/GLFrameBuffer.h"
-#include "Graphics/OpenGL/GLTexture.h"
 #include "Graphics/IWindow.h"
 
 namespace Radis
@@ -53,49 +49,11 @@ namespace Radis
 
     void RenderSystem::Init()
     {
-        // Pre-allocate reasonable initial capacity to avoid early reallocations
+        // Pre-allocate reasonable initial capacity to avoid as many reallocations
         mInstanceData.reserve(1024);
         mDrawCalls.reserve(128);
         mLightData.reserve(64);
         mMeshInstanceCounts.reserve(128);
-
-        /*
-        constexpr int N = 20;
-        float hammersley[2 * N];
-
-        int kk;
-        float p, u;
-        int pos = 0;
-        for (int k = 0; k < N; k++) {
-            for (p = 0.5f, kk = k, u = 0.0f; kk; p *= 0.5f, kk >>= 1)
-                if (kk & 1)
-                    u += p;
-            float v = (k + 0.5f) / N;
-            hammersley[pos++] = u;
-            hammersley[pos++] = v;
-        }
-        printf("Hammersley points:\n");
-        for (int i = 0; i < N; i++) {
-            printf("(%f, %f), ", hammersley[2 * i], hammersley[2 * i + 1]);
-        }
-        printf("\n\n\n");
-
-        printf("const uint SAMPLE_COUNT = %d;\n", N);
-        printf("const vec2 hammersley[%d] = vec2[%d](\n    ", N, N);
-
-        for (int i = 0; i < N; i++) {
-            printf("vec2(%f, %f)", hammersley[2 * i], hammersley[2 * i + 1]);
-
-            if (i < N - 1) {
-                printf(", ");
-
-                if ((i + 1) % 4 == 0) {
-                    printf("\n    ");
-                }
-            }
-        }
-        printf("\n);\n");
-        */
     }
 
     void RenderSystem::Exit()
@@ -105,36 +63,28 @@ namespace Radis
     void RenderSystem::FrameStart()
     {
         auto rr = ecs->GetResource<RenderingResource>();
+        auto uMeshes = rr->modelLibrary->GetUnifiedMesh();
 
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan && !rr->tlasAccel.accel && rr->blasAccel.empty())
+        // Setup acceleration structures if needed
+        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan && !rr->tlasAccel.accel && rr->blasAccel.empty() && uMeshes)
         {
-            // get num entities with model component
             mRTMeshData.clear();
             mRTMeshIndices.clear();
             
-            auto uMeshes = rr->modelLibrary->GetUnifiedMesh();
-            if (uMeshes)
-            {            
-                mRTMeshData.reserve(uMeshes->GetUnifiedMesh().mVertices.size());
+            mRTMeshData.reserve(uMeshes->GetUnifiedMesh().mVertices.size());
 
-                for (auto& v : uMeshes->GetUnifiedMesh().mVertices)
-                {
-                    mRTMeshData.emplace_back(
-                        PackColor(v.color),
-                        PackNormal(v.normal),
-                        v.uv.x, v.uv.y
-                    );
-                }
-            
-                mRTMeshIndices = uMeshes->GetUnifiedMesh().mIndices;
+            for (auto& v : uMeshes->GetUnifiedMesh().mVertices)
+            {
+                mRTMeshData.emplace_back(PackColor(v.color), PackNormal(v.normal), v.uv.x, v.uv.y);
             }
+            
+            mRTMeshIndices = uMeshes->GetUnifiedMesh().mIndices;
 
-            // log number of vertex/index for raytracing
             RADIS_INFO("Setting up raytracing acceleration structures with {} vertices and {} indices", mRTMeshData.size(), mRTMeshIndices.size());
             
             auto rtr = ecs->GetResource<RaytracingResource>();
-            rtr->CreateBLAS();  // Set up BLAS infrastructure
-            rtr->CreateTLAS();  // Set up TLAS infrastructure
+            rtr->CreateBLAS();
+            rtr->CreateTLAS();
             
             VkWriteDescriptorSetAccelerationStructureKHR asInfo{};
             asInfo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
@@ -145,9 +95,6 @@ namespace Radis
                 DescriptorWriter writer(*rr->rtUniform->GetDescriptorLayout(), *rr->rtUniform->GetDescriptorPool());
                 writer.WriteAccelerationStructure(0, &asInfo);
                 writer.Overwrite(rr->rtUniform->GetDescriptorSets()[frameIndex]);
-
-                // log doing memcpy with data about how much data is being copied
-                RADIS_INFO("Uploading raytracing mesh data to GPU for frame {}: {} vertices and {} indices", frameIndex, mRTMeshData.size(), mRTMeshIndices.size());
                 
                 rr->rtUniform->SetUniformData(mRTMeshData, 3, frameIndex);
                 rr->rtUniform->SetUniformData(mRTMeshIndices, 4, frameIndex);
@@ -170,9 +117,6 @@ namespace Radis
 
         // Draw the editor grid
         DebugDrawResource::DrawEditorGrid(50, 1.0f);
-
-        // Swap renderer backends
-        // ecs->GetResource<SwapRendererResource>()->RequestSwap();
     }
 
     void RenderSystem::Update(float dt)
@@ -193,275 +137,140 @@ namespace Radis
         // Build Instances
         BuildInstanceData();
 
-        mShadowCamData = {};
-        bool foundShadowCam = false;
-        ecs->GetRegistry().view<LightComponent, TransformComponent>().each([&](auto, LightComponent& lc, TransformComponent& tc)
+        auto ar = ecs->GetResource<AnimationResource>();
+
+        rr->cameraUniform->SetUniformData(camData, 0, rr->currentFrameIndex);                // Set Camera Data
+        rr->cameraUniform->SetUniformData(mInstanceData, 1, rr->currentFrameIndex);          // Set Instance Data
+        rr->cameraUniform->SetUniformData(ar->bonesMatrices, 2, rr->currentFrameIndex);      // Set Animation Data
+        rr->cameraUniform->SetUniformData(mLightBuffer, 4, rr->currentFrameIndex);           // Set Light Data
+        rr->deferredLightingUniform->SetUniformData(camData, 0, rr->currentFrameIndex);      // Camera data
+        rr->deferredLightingUniform->SetUniformData(mLightBuffer, 6, rr->currentFrameIndex); // Light data
+            
+        // Add Render Passes!
+        auto& rg = rr->renderGraph;
+        std::string colorWriteTarget = Engine::GetEditorEnabled() ? "SceneTexture" : "BackBuffer";
+
+        switch (rr->renderMode)
         {
-            if (foundShadowCam) return;
-            if (lc.LightType != LightComponent::Types::Directional) return;
-
-            glm::vec3 L = glm::normalize(lc.Direction);
-            glm::vec3 up = (std::abs(L.y) > 0.99f) ? glm::vec3(0, 0, 1) : glm::vec3(0, 1, 0);
-
-            // Fixed stable shadow frustum
-            constexpr float kShadowHalfWidth = 15.0f; // tune to scene size
-            constexpr float kShadowNear = 0.1f;
-            constexpr float kShadowFar = 35.0f;
-            constexpr float kDistBack = 15.0f;
-
-            glm::vec3 sceneCenter(0.0f);
-            glm::vec3 eye = sceneCenter - L * kDistBack;
-            glm::mat4 lightView = glm::lookAt(eye, sceneCenter, up);
-            glm::mat4 lightProj = glm::orthoRH_ZO(
-                -kShadowHalfWidth, kShadowHalfWidth,
-                -kShadowHalfWidth, kShadowHalfWidth,
-                kShadowNear, kShadowFar
+        case RenderMode::Forward: {
+            rg->AddPass(
+                "ScenePass",
+                [&](RGPassBuilder& b)
+                {
+                    b.writes(colorWriteTarget);
+                    b.writes("SceneDepth");
+                },
+                std::bind(&RenderSystem::RenderSceneVK, this, std::placeholders::_1)
             );
-            lightProj[1][1] *= -1;
-
-            mShadowCamData.lightView = lightView;
-            mShadowCamData.lightViewProj = lightProj * lightView;
-            mShadowCamData.z0 = kShadowNear;
-            mShadowCamData.z1 = kShadowFar;
-
-            foundShadowCam = true;
-        });
-
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
-        {
-            auto ar = ecs->GetResource<AnimationResource>();
-
-            rr->cameraUniform->SetUniformData(camData, 0, rr->currentFrameIndex);                  // Set Camera Data
-            rr->cameraUniform->SetUniformData(mInstanceData, 1, rr->currentFrameIndex);            // Set Instance Data
-            rr->cameraUniform->SetUniformData(ar->bonesMatrices, 2, rr->currentFrameIndex);        // Set Animation Data
-            rr->cameraUniform->SetUniformData(mLightBuffer, 4, rr->currentFrameIndex);             // Set Light Data
-            rr->shadowMomentsUniform->SetUniformData(mShadowCamData, 0, rr->currentFrameIndex);     // Set Shadow Camera Data
-            rr->shadowMomentsUniform->SetUniformData(mInstanceData, 1, rr->currentFrameIndex);     // Set Instance Data
-            rr->shadowMomentsUniform->SetUniformData(ar->bonesMatrices, 2, rr->currentFrameIndex); // Set Animation Data
-
-            rr->deferredLightingUniform->SetUniformData(camData, 0, rr->currentFrameIndex);      // Camera data
-            rr->deferredLightingUniform->SetUniformData(mLightBuffer, 6, rr->currentFrameIndex); // Light data
-            UpdateShadowParamsUBO(*rr, rr->currentFrameIndex);
-
-            // Add Render Passes!
-            auto& rg = rr->renderGraph;
-            std::string colorWriteTarget = Engine::GetEditorEnabled() ? "SceneTexture" : "BackBuffer";
-
-            switch (rr->renderMode)
-            {
-            case RenderMode::Forward: {
-                rg->AddPass(
-                    "ScenePass",
-                    [&](RGPassBuilder& b)
-                    {
-                        b.writes(colorWriteTarget);
-                        b.writes("SceneDepth");
-                    },
-                    std::bind(&RenderSystem::RenderSceneVK, this, std::placeholders::_1)
-                );
-                break;
-            }
-/*            case RenderMode::Deferred: {
-                // MSM pass
-                rg->AddPass("ShadowMomentsPass",
-                    [&](RGPassBuilder& b) {
-                        b.writes("ShadowMomentsRaw");
-                        b.writes("ShadowDepth");
-                    },
-                    std::bind(&RenderSystem::RenderShadowMomentsVK, this, std::placeholders::_1)
-                );
-
-                rg->AddPass("ShadowBlurH",
-                    [&](RGPassBuilder& b) {
-                        b.setCompute();
-                        b.reads("ShadowMomentsRaw");
-                        b.writes("ShadowMomentsTmp");
-                    },
-                    std::bind(&RenderSystem::RenderShadowBlurHVK, this, std::placeholders::_1)
-                );
-                
-                rg->AddPass("ShadowBlurV",
-                    [&](RGPassBuilder& b) {
-                        b.setCompute(); 
-                        b.reads("ShadowMomentsTmp");
-                        b.writes("ShadowMoments");
-                    },
-                    std::bind(&RenderSystem::RenderShadowBlurVVK, this, std::placeholders::_1)
-                );
-
-                // G-Buffer pass
-                rg->AddPass("GBufferPass",
-                    [&](RGPassBuilder& b) {
-                        b.writes("gAlbedo");
-                        b.writes("gNormal");
-                        b.writes("gPBR");
-                        b.writes("gEmissive");
-                        b.writes("SceneDepth");
-                    },
-                    std::bind(&RenderSystem::RenderSceneDeferredGeometryVK, this, std::placeholders::_1)
-                );
-
-                // Lighting pass - directional/ambient -> raw HDR to SceneHDR
-                rg->AddPass("LightingPass",
-                    [&](RGPassBuilder& b) {
-                        b.reads("gAlbedo");
-                        b.reads("gNormal");
-                        b.reads("gPBR");
-                        b.reads("gEmissive");
-                        b.reads("SceneDepth");
-                        b.reads("ShadowMoments");
-                        b.writes("SceneHDR");
-                    },
-                    std::bind(&RenderSystem::RenderSceneDeferredLightingVK, this, std::placeholders::_1)
-                );
-
-                // Light volumes pass - additive local lights -> SceneHDR
-                rg->AddPass("LightVolumesPass",
-                    [&](RGPassBuilder& b) {
-                        b.reads("gAlbedo");
-                        b.reads("gNormal");
-                        b.reads("gPBR");
-                        b.reads("gEmissive");
-                        b.reads("SceneDepth");
-                        b.writes("SceneHDR");
-                    },
-                    std::bind(&RenderSystem::RenderLightVolumesVK, this, std::placeholders::_1)
-                );
-
-                // Tone map pass - reads accumulated HDR, writes final output
-                rg->AddPass("ToneMapPass",
-                    [&](RGPassBuilder& b) {
-                        b.reads("SceneHDR");
-                        b.writes(colorWriteTarget);
-                    },
-                    std::bind(&RenderSystem::RenderToneMapVK, this, std::placeholders::_1)
-                );
-
-                break;
-            }*/
-            case RenderMode::Deferred: {
-                // G-Buffer pass
-                rg->AddPass("GBufferPass",
-                    [&](RGPassBuilder& b) {
-                        b.writes("gAlbedo");
-                        b.writes("gNormal");
-                        b.writes("gPBR");
-                        b.writes("gEmissive");
-                        b.writes("SceneDepth");
-                    },
-                    std::bind(&RenderSystem::RenderSceneDeferredGeometryVK, this, std::placeholders::_1)
-                );
-
-                rg->AddPass("AlchemyAOPass",
-                    [&](RGPassBuilder& b) {
-                        b.reads("SceneDepth");
-                        b.reads("gNormal");
-                        b.writes("RawAO");
-                    },
-                    std::bind(&RenderSystem::RenderAlchemyAOVK, this, std::placeholders::_1)
-                );
-
-                rg->AddPass("AOBlurHPass",
-                    [&](RGPassBuilder& b) {
-                        b.reads("RawAO");
-                        b.reads("SceneDepth");
-                        b.reads("gNormal");
-                        b.writes("AOBlurTmp");
-                    },
-                    std::bind(&RenderSystem::RenderAOBlurHVK, this, std::placeholders::_1)
-                );
-
-                rg->AddPass("AOBlurVPass",
-                    [&](RGPassBuilder& b) {
-                        b.reads("AOBlurTmp");
-                        b.reads("SceneDepth");
-                        b.reads("gNormal");
-                        b.writes("BlurredAO");
-                    },
-                    std::bind(&RenderSystem::RenderAOBlurVVK, this, std::placeholders::_1)
-                );
-
-                // directional/ambient -> into SceneHDR
-                rg->AddPass("LightingPass",
-                    [&](RGPassBuilder& b) {
-                        b.reads("gAlbedo");
-                        b.reads("gNormal");
-                        b.reads("gPBR");
-                        b.reads("gEmissive");
-                        b.reads("SceneDepth");
-                        b.reads("ShadowMoments");
-                        b.reads("BlurredAO");
-                        b.writes("SceneHDR");
-                    },
-                    std::bind(&RenderSystem::RenderSceneDeferredLightingVK, this, std::placeholders::_1)
-                );
-
-                // Additive local lights -> SceneHDR
-                rg->AddPass("LightVolumesPass",
-                    [&](RGPassBuilder& b) {
-                        b.reads("gAlbedo");
-                        b.reads("gNormal");
-                        b.reads("gPBR");
-                        b.reads("gEmissive");
-                        b.reads("SceneDepth");
-                        b.writes("SceneHDR");
-                    },
-                    std::bind(&RenderSystem::RenderLightVolumesVK, this, std::placeholders::_1)
-                );
-
-                // Reads accumulated HDR, writes final output
-                rg->AddPass("ToneMapPass",
-                    [&](RGPassBuilder& b) {
-                        b.reads("SceneHDR");
-                        b.writes(colorWriteTarget);
-                    },
-                    std::bind(&RenderSystem::RenderToneMapVK, this, std::placeholders::_1)
-                );
-
-                break;
-            }
-            case RenderMode::Raytracing: {
-                std::string currentAccum = "RTAccum_" + std::to_string(rr->currentFrameIndex);
-                std::string prevAccum = "RTAccum_" + std::to_string((rr->currentFrameIndex + SwapChain::MAX_FRAMES_IN_FLIGHT - 1) % SwapChain::MAX_FRAMES_IN_FLIGHT);
-                std::string currentHeatmap = "RTHeatmapImage_" + std::to_string(rr->currentFrameIndex);
-
-                rg->AddPass(
-                    "ScenePass",
-                    [&](RGPassBuilder& b) {
-                        b.setCompute(); // Tells RenderGraph to transition writes to GENERAL
-                        b.reads(prevAccum);
-                        b.writes(currentAccum);
-                        b.writes(currentHeatmap);
-                        b.writes("SceneHDR"); // Expose the output to the graph!
-                    },
-                    std::bind(&RenderSystem::RaytraceSceneVK, this, std::placeholders::_1)
-                );
-
-                rg->AddPass("ToneMapPass",
-                    [&](RGPassBuilder& b) {
-                        b.reads("SceneHDR"); // Tonemapper safely reads the RT output
-                        b.writes(colorWriteTarget);
-                    },
-                    std::bind(&RenderSystem::RenderToneMapVK, this, std::placeholders::_1)
-                );
-
-                break;
-            }
-            }
+            break;
         }
-        else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
-        {
-            auto ar = ecs->GetResource<AnimationResource>();
-            rr->shader->Use();
-            rr->shader->SetCameraUBO(camData);
+        case RenderMode::Deferred: {
+            // G-Buffer pass
+            rg->AddPass("GBufferPass",
+                [&](RGPassBuilder& b) {
+                    b.writes("gAlbedo");
+                    b.writes("gNormal");
+                    b.writes("gPBR");
+                    b.writes("gEmissive");
+                    b.writes("SceneDepth");
+                },
+                std::bind(&RenderSystem::RenderSceneDeferredGeometryVK, this, std::placeholders::_1)
+            );
 
-            GLShader::SetupAnimationSSBO();
-            GLuint animationVBO = GLShader::GetAnimationSSBO();
-            glBindBuffer(GL_SHADER_STORAGE_BUFFER, animationVBO);
-            glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, ar->bonesMatrices.size() * sizeof(VQS), ar->bonesMatrices.data());
-            glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+            rg->AddPass("AlchemyAOPass",
+                [&](RGPassBuilder& b) {
+                    b.reads("SceneDepth");
+                    b.reads("gNormal");
+                    b.writes("RawAO");
+                },
+                std::bind(&RenderSystem::RenderAlchemyAOVK, this, std::placeholders::_1)
+            );
 
-            RenderSceneGL();
+            rg->AddPass("AOBlurHPass",
+                [&](RGPassBuilder& b) {
+                    b.reads("RawAO");
+                    b.reads("SceneDepth");
+                    b.reads("gNormal");
+                    b.writes("AOBlurTmp");
+                },
+                std::bind(&RenderSystem::RenderAOBlurHVK, this, std::placeholders::_1)
+            );
+
+            rg->AddPass("AOBlurVPass",
+                [&](RGPassBuilder& b) {
+                    b.reads("AOBlurTmp");
+                    b.reads("SceneDepth");
+                    b.reads("gNormal");
+                    b.writes("BlurredAO");
+                },
+                std::bind(&RenderSystem::RenderAOBlurVVK, this, std::placeholders::_1)
+            );
+
+            // directional/ambient -> into SceneHDR
+            rg->AddPass("LightingPass",
+                [&](RGPassBuilder& b) {
+                    b.reads("gAlbedo");
+                    b.reads("gNormal");
+                    b.reads("gPBR");
+                    b.reads("gEmissive");
+                    b.reads("SceneDepth");
+                    b.reads("BlurredAO");
+                    b.writes("SceneHDR");
+                },
+                std::bind(&RenderSystem::RenderSceneDeferredLightingVK, this, std::placeholders::_1)
+            );
+
+            // Additive local lights -> SceneHDR
+            rg->AddPass("LightVolumesPass",
+                [&](RGPassBuilder& b) {
+                    b.reads("gAlbedo");
+                    b.reads("gNormal");
+                    b.reads("gPBR");
+                    b.reads("gEmissive");
+                    b.reads("SceneDepth");
+                    b.writes("SceneHDR");
+                },
+                std::bind(&RenderSystem::RenderLightVolumesVK, this, std::placeholders::_1)
+            );
+
+            // Reads accumulated HDR, writes final output
+            rg->AddPass("ToneMapPass",
+                [&](RGPassBuilder& b) {
+                    b.reads("SceneHDR");
+                    b.writes(colorWriteTarget);
+                },
+                std::bind(&RenderSystem::RenderToneMapVK, this, std::placeholders::_1)
+            );
+
+            break;
+        }
+        case RenderMode::Raytracing: {
+            std::string currentAccum = "RTAccum_" + std::to_string(rr->currentFrameIndex);
+            std::string prevAccum = "RTAccum_" + std::to_string((rr->currentFrameIndex + SwapChain::MAX_FRAMES_IN_FLIGHT - 1) % SwapChain::MAX_FRAMES_IN_FLIGHT);
+            std::string currentHeatmap = "RTHeatmapImage_" + std::to_string(rr->currentFrameIndex);
+
+            rg->AddPass(
+                "ScenePass",
+                [&](RGPassBuilder& b) {
+                    b.setCompute(); // Tells RenderGraph to transition writes to GENERAL
+                    b.reads(prevAccum);
+                    b.writes(currentAccum);
+                    b.writes(currentHeatmap);
+                    b.writes("SceneHDR"); // Expose the output to the graph!
+                },
+                std::bind(&RenderSystem::RaytraceSceneVK, this, std::placeholders::_1)
+            );
+
+            rg->AddPass("ToneMapPass",
+                [&](RGPassBuilder& b) {
+                    b.reads("SceneHDR"); // Tonemapper safely reads the RT output
+                    b.writes(colorWriteTarget);
+                },
+                std::bind(&RenderSystem::RenderToneMapVK, this, std::placeholders::_1)
+            );
+
+            break;
+        }
         }
     }
 
@@ -501,136 +310,6 @@ namespace Radis
         ExecuteInstancedDrawCalls(cmd);
     }
 
-    void RenderSystem::RenderShadowMomentsVK(VkCommandBuffer cmd)
-    {
-        auto rr = ecs->GetResource<RenderingResource>();
-        ScopedDebugLabel label(rr->device.get(), cmd, "Shadow Moments Pass", glm::vec4(0.2f, 0.2f, 0.9f, 1.0f));
-
-        // Bind pipeline
-        rr->shadowMomentsPipeline->Bind(cmd);
-
-        // Bind shadow uniform (light matrices + instances)
-        rr->shadowMomentsUniform->Bind(cmd, rr->shadowMomentsPipeline->GetLayout(), rr->currentFrameIndex);
-
-        // Set viewport/scissor to shadow resolution
-        VKTexture* sm = static_cast<VKTexture*>(rr->textureLibrary->GetTexture("ShadowMomentsRaw"));
-        VkExtent2D ext{ (uint32_t)sm->GetWidth(), (uint32_t)sm->GetHeight() };
-        SetViewportAndScissor(cmd, ext);
-
-        // Bind unified mesh + draw instances
-        UnifiedMeshes* uMeshes = rr->modelLibrary->GetUnifiedMesh();
-        uMeshes->GetUnifiedMesh().Bind(cmd);
-        ExecuteInstancedDrawCalls(cmd);
-    }
-
-    static inline uint32_t DivUp(uint32_t a, uint32_t b) { return (a + b - 1) / b; }
-
-    void RenderSystem::RenderShadowBlurHVK(VkCommandBuffer cmd)
-    {
-        auto rr = ecs->GetResource<RenderingResource>();
-        ScopedDebugLabel label(rr->device.get(), cmd, "Shadow Blur H", glm::vec4(0.2f, 0.6f, 0.9f, 1.0f));
-
-        rr->shadowBlurHPipeline->Bind(cmd);
-        rr->shadowBlurHUniform->Bind(cmd, rr->shadowBlurHPipeline->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_COMPUTE);
-
-        VKTexture* src = static_cast<VKTexture*>(rr->textureLibrary->GetTexture("ShadowMomentsRaw"));
-
-        rr->msmPC.width = (int)src->GetWidth();
-        rr->msmPC.height = (int)src->GetHeight();
-
-        vkCmdPushConstants(cmd, rr->shadowBlurHPipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(MSMBlurPC), &rr->msmPC);
-
-        const uint32_t gx = DivUp(src->GetWidth(), 16);
-        const uint32_t gy = DivUp(src->GetHeight(), 16);
-        vkCmdDispatch(cmd, gx, gy, 1);
-    }
-
-    void RenderSystem::RenderShadowBlurVVK(VkCommandBuffer cmd)
-    {
-        auto rr = ecs->GetResource<RenderingResource>();
-        ScopedDebugLabel label(rr->device.get(), cmd, "Shadow Blur V", glm::vec4(0.2f, 0.6f, 0.9f, 1.0f));
-
-        rr->shadowBlurVPipeline->Bind(cmd);
-        rr->shadowBlurVUniform->Bind(cmd, rr->shadowBlurVPipeline->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_COMPUTE);
-
-        VKTexture* src = static_cast<VKTexture*>(rr->textureLibrary->GetTexture("ShadowMomentsTmp"));
-
-        rr->msmPC.width = (int)src->GetWidth();
-        rr->msmPC.height = (int)src->GetHeight();
-
-        vkCmdPushConstants(cmd, rr->shadowBlurVPipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(MSMBlurPC), &rr->msmPC);
-
-        const uint32_t gx = DivUp(src->GetWidth(), 16);
-        const uint32_t gy = DivUp(src->GetHeight(), 16);
-        vkCmdDispatch(cmd, gx, gy, 1);
-    }
-
-    void RenderSystem::RenderSceneGL()
-    {
-        auto rr = ecs->GetResource<RenderingResource>();
-        auto er = ecs->GetResource<EditorResource>();
-
-        rr->shader->Use();
-
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        if (Engine::GetEditorEnabled()) {
-            rr->sceneFrameBuffer->Bind();
-            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        }
-
-        std::vector<uint64_t> textureData{};
-        for (uint32_t i = 0; i < rr->textureLibrary->GetTextureCount(); ++i)
-        {
-            if (auto itex = rr->textureLibrary->GetTextureByIndex(i))
-            {
-                GLTexture* gltex = static_cast<GLTexture*>(itex);
-                textureData.push_back(gltex->textureHandle);
-            }
-        }
-
-        GLShader::SetupInstanceSSBO();
-        GLuint iSSBO = GLShader::GetInstanceSSBO();
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, iSSBO);
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, mInstanceData.size() * sizeof(InstanceUniforms), mInstanceData.data());
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-
-        GLShader::SetupTextureSSBO();
-        GLuint textureSSBO = GLShader::GetTextureSSBO();
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, textureSSBO);
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, textureData.size() * sizeof(uint64_t), textureData.data());
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-
-        GLShader::SetupLightSSBO();
-        GLuint lightSSBO = GLShader::GetLightSSBO();
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, lightSSBO);
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, mLightBuffer.size(), mLightBuffer.data());
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-
-        UnifiedMeshes* uMeshes = rr->modelLibrary->GetUnifiedMesh();
-        uMeshes->GetUnifiedMesh().Bind();
-
-        for (const auto& drawCall : mDrawCalls)
-        {
-            glDrawElementsInstancedBaseVertexBaseInstance(
-                GL_TRIANGLES,
-                static_cast<GLsizei>(drawCall.indexCount),
-                GL_UNSIGNED_INT,
-                (void*)(sizeof(uint32_t) * drawCall.firstIndex),
-                drawCall.instanceCount,
-                drawCall.vertexOffset,
-                drawCall.firstInstance
-            );
-        }
-
-        if (Engine::GetEditorEnabled())
-        {
-            rr->sceneFrameBuffer->Unbind();
-        }
-    }
-
     float RenderSystem::GetAspectRatio()
     {
         if (Engine::GetEditorEnabled())
@@ -642,28 +321,6 @@ namespace Radis
         WindowResource* wr = ecs->GetResource<WindowResource>();
         glm::uvec2 extant = wr->window->GetExtent();
         return static_cast<float>(extant.x) / static_cast<float>(extant.y);
-    }
-
-    // Utilities
-    void RenderSystem::UpdateShadowParamsUBO(RenderingResource& rr, int frameIndex)
-    {
-        ShadowParamsUniform sp{};
-
-        sp.lightViewProj = mShadowCamData.lightViewProj;
-        sp.lightView = mShadowCamData.lightView;
-        float z0 = mShadowCamData.z0;
-        float z1 = mShadowCamData.z1;
-
-        float invRange = 1.0f / std::max(z1 - z0, 1e-6f);
-
-        const float alpha = 1e-5f;
-        sp.zParams = glm::vec4(z0, z1, invRange, alpha);
-
-        VKTexture* sm = static_cast<VKTexture*>(rr.textureLibrary->GetTexture("ShadowMoments"));
-        sp.mapParams = glm::vec4(1.0f / sm->GetWidth(), 1.0f / sm->GetHeight(), 7.5f, 0.0f);
-
-        // Write to deferred lighting UBO binding
-        rr.deferredLightingUniform->SetUniformData(sp, 8, frameIndex);
     }
 
     void RenderSystem::SetViewportAndScissor(VkCommandBuffer cmd, const VkExtent2D& extent)
@@ -679,18 +336,6 @@ namespace Radis
 
         VkRect2D scissor{ {0, 0}, extent };
         vkCmdSetScissor(cmd, 0, 1, &scissor);
-    }
-
-    // Helper function to generate Halton Sequence
-    float Halton(uint32_t index, uint32_t base) {
-        float f = 1.0f;
-        float r = 0.0f;
-        while (index > 0) {
-            f = f / static_cast<float>(base);
-            r = r + f * static_cast<float>(index % base);
-            index = index / base;
-        }
-        return r;
     }
 
     CameraUniforms RenderSystem::CollectCameraData(float aspectRatio)
@@ -749,39 +394,36 @@ namespace Radis
         auto& registry = ecs->GetRegistry();
 
         // Pass 1: Directional lights first
-        registry.view<LightComponent, TransformComponent>().each(
-            [this](auto, LightComponent& lc, TransformComponent& tc)
-            {
-                if (lc.LightType != LightComponent::Types::Directional) return; // Skip non-directional
-                mLightData.push_back({
-                    .positionRadius = glm::vec4(tc.Translation, lc.Radius),
-                    .colorIntensity = glm::vec4(lc.Color, lc.Intensity),
-                    .directionInner = glm::vec4(glm::normalize(lc.Direction), lc.InnerCone),
-                    .outerConeType = glm::vec4(lc.OuterCone, static_cast<float>(lc.LightType), 0.0f, 0.0f)
-                    });
+        registry.view<LightComponent, TransformComponent>().each([this](auto, LightComponent& lc, TransformComponent& tc)
+        {
+            if (lc.LightType != LightComponent::Types::Directional) return; // Skip non-directional
+            mLightData.push_back({
+                .positionRadius = glm::vec4(tc.Translation, lc.Radius),
+                .colorIntensity = glm::vec4(lc.Color, lc.Intensity),
+                .directionInner = glm::vec4(glm::normalize(lc.Direction), lc.InnerCone),
+                .outerConeType = glm::vec4(lc.OuterCone, static_cast<float>(lc.LightType), 0.0f, 0.0f)
             });
+        });
         mDirectionalLightCount = static_cast<uint32_t>(mLightData.size());
 
         // Pass 2: Local lights (point + spot) after directional
-        registry.view<LightComponent, TransformComponent>().each(
-            [this](auto, LightComponent& lc, TransformComponent& tc)
-            {
-                if (lc.LightType == LightComponent::Types::Directional) return; // Skip directional
-                mLightData.push_back({
-                    .positionRadius = glm::vec4(tc.Translation, lc.Radius),
-                    .colorIntensity = glm::vec4(lc.Color, lc.Intensity),
-                    .directionInner = glm::vec4(glm::normalize(lc.Direction), lc.InnerCone),
-                    .outerConeType = glm::vec4(lc.OuterCone, static_cast<float>(lc.LightType), 0.0f, 0.0f)
-                    });
+        registry.view<LightComponent, TransformComponent>().each([this](auto, LightComponent& lc, TransformComponent& tc)
+        {
+            if (lc.LightType == LightComponent::Types::Directional) return; // Skip directional
+            mLightData.push_back({
+                .positionRadius = glm::vec4(tc.Translation, lc.Radius),
+                .colorIntensity = glm::vec4(lc.Color, lc.Intensity),
+                .directionInner = glm::vec4(glm::normalize(lc.Direction), lc.InnerCone),
+                .outerConeType = glm::vec4(lc.OuterCone, static_cast<float>(lc.LightType), 0.0f, 0.0f)
             });
+        });
         mLocalLightCount = static_cast<uint32_t>(mLightData.size()) - mDirectionalLightCount;
 
         struct LightHeader { uint32_t lightCount; uint32_t _pad[3]; };
         LightHeader header{ .lightCount = static_cast<uint32_t>(mLightData.size()) };
         mLightBuffer.resize(sizeof(LightHeader) + sizeof(LightUniform) * mLightData.size());
         memcpy(mLightBuffer.data(), &header, sizeof(LightHeader));
-        memcpy(mLightBuffer.data() + sizeof(LightHeader), mLightData.data(),
-            sizeof(LightUniform) * mLightData.size());
+        memcpy(mLightBuffer.data() + sizeof(LightHeader), mLightData.data(), sizeof(LightUniform) * mLightData.size());
     }
 
     void RenderSystem::BuildInstanceData()
@@ -792,8 +434,7 @@ namespace Radis
         AnimationLibrary* al = rr->animationLibrary.get();
         UnifiedMeshes* uMeshes = ml->GetUnifiedMesh();
 
-        // ============================================================
-        // Two-pass instancing: Count first, then fill
+        // Reset counts
         for (auto& [meshID, count] : mMeshInstanceCounts)
         {
             count = 0;
@@ -910,7 +551,7 @@ namespace Radis
 
                 data.tint = mc.TintColor;
                 data.textureIndices = glm::uvec4(mesh->albedoTextureIndex, mesh->normalTextureIndex, metallicIndex, roughnessIndex);
-                data.textureIndices2 = glm::uvec4(mesh->occlusionTextureIndex, mesh->emissiveTextureIndex, 10001, 10001);
+                data.textureIndices2 = glm::uvec4(mesh->occlusionTextureIndex, mesh->emissiveTextureIndex, TextureLibrary::INVALID_TEXTURE_INDEX, TextureLibrary::INVALID_TEXTURE_INDEX);
                 data.boneOffset = boneOffset;
                 data.baseColorFactor = mesh->baseColorFactor;
                 data.metallicRoughnessFactor = glm::vec4(meshMetallic, meshRoughness, 0.f, 0.f);

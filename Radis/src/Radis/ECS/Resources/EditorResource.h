@@ -19,10 +19,8 @@ namespace Radis
     struct EditorResource : public IResource
     {
         EditorResource(Device* device, SwapChain* swapChain, GLFWwindow* glfwWindow, float dpiScale);
-        EditorResource(GLFWwindow* glfwWindow, float dpiScale);
 
         void Create(Device* device, SwapChain* swapChain, GLFWwindow* glfwWindow, float dpiScale);
-        void Create(GLFWwindow* glfwWindow, float dpiScale);
         void Cleanup(Device* device);
 
         void SetupFonts(float dpiScale);

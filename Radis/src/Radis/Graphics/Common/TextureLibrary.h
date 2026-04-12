@@ -15,6 +15,7 @@ namespace Radis
 {
     class Device;
 	class ITexture;
+	class VKTexture;
 	class Uniform;
 
 	class TextureLibrary
@@ -44,6 +45,7 @@ namespace Radis
 
 		ITexture* GetTexture(uint32_t textureID);
 		ITexture* GetTexture(const std::string& texturePath);
+		VKTexture* GetVKTexture(const std::string& texturePath);
 		ITexture* GetTextureByIndex(uint32_t index);
 
 		uint32_t GetTextureCount() const { return mNextIndex; }
@@ -69,9 +71,9 @@ namespace Radis
 		std::unordered_map<std::string, uint32_t> mTextureMap;
 
 		Device* device;
-		VkSampler mTextureSampler;
-		VkDescriptorSetLayout mImageDescriptorSetLayout;
-		VkDescriptorPool mImageDescriptorPool;
+		VkSampler mTextureSampler = VK_NULL_HANDLE;
+		VkDescriptorSetLayout mImageDescriptorSetLayout = VK_NULL_HANDLE;
+		VkDescriptorPool mImageDescriptorPool = VK_NULL_HANDLE;
 
         std::vector<TextureLoadData> mPendingTextureLoads;
         uint32_t mNextIndex = 0;

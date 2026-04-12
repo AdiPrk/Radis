@@ -1,13 +1,11 @@
+/*
+THIS FILE HAS BEEN MODIFIED FOR USE IN RADIS ENGINE ~ Aditya Prakash 2026.
+*/
+
 #ifndef _H_RGBE
 #define _H_RGBE
 
-#ifdef _WIN32
-  extern "C" __declspec(dllexport)
-  #define EXPORT_DLL __declspec(dllexport)
-#else
-  #define EXPORT_DLL
-#endif
-
+#define EXPORT_DLL
 
 /* THIS CODE CARRIES NO GUARANTEE OF USABILITY OR FITNESS FOR ANY PURPOSE.
  * WHILE THE AUTHORS HAVE TRIED TO ENSURE THE PROGRAM WORKS CORRECTLY,

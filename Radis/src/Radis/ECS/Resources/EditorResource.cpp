@@ -24,6 +24,8 @@
 namespace Radis
 {
     EditorResource::EditorResource(Device* device, SwapChain* swapChain, GLFWwindow* glfwWindow, float dpiScale)
+        : descriptorPool(VK_NULL_HANDLE)
+        , samplerSetLayout(VK_NULL_HANDLE)
     {
 		if (!device || !swapChain || !glfwWindow)
 			return;
@@ -31,14 +33,6 @@ namespace Radis
         Create(device, swapChain, glfwWindow, dpiScale);
 		
     }
-
-	EditorResource::EditorResource(GLFWwindow* glfwWindow, float dpiScale)
-	{
-		if (!glfwWindow) 
-			return;
-
-        Create(glfwWindow, dpiScale);
-	}
 
 	void EditorResource::Create(Device* device, SwapChain* swapChain, GLFWwindow* glfwWindow, float dpiScale)
 	{
@@ -123,49 +117,23 @@ namespace Radis
 		SetupFonts(dpiScale);
 	}
 
-	void EditorResource::Create(GLFWwindow* glfwWindow, float dpiScale)
-	{
-		isInitialized = true;
-
-		IMGUI_CHECKVERSION();
-		ImGui::CreateContext();
-		ImGuiIO& io = ImGui::GetIO();
-		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-		io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
-		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-
-		ImGui_ImplGlfw_InitForOpenGL(glfwWindow, false);
-		ImGui_ImplOpenGL3_Init();
-
-		SetupFonts(dpiScale);
-	}
-
 	void EditorResource::Cleanup(Device* device)
 	{
 		if (!isInitialized) return;
 
-		if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
-		{
-			ImGui_ImplVulkan_Shutdown();
-			ImGui_ImplGlfw_Shutdown();
-			ImGui::DestroyContext();
+		ImGui_ImplVulkan_Shutdown();
+		ImGui_ImplGlfw_Shutdown();
+		ImGui::DestroyContext();
 
-			if (samplerSetLayout != VK_NULL_HANDLE)
-			{
-				vkDestroyDescriptorSetLayout(device->GetDevice(), samplerSetLayout, nullptr);
-				samplerSetLayout = VK_NULL_HANDLE;
-			}
-			if (descriptorPool != VK_NULL_HANDLE)
-			{
-				vkDestroyDescriptorPool(device->GetDevice(), descriptorPool, nullptr);
-				descriptorPool = VK_NULL_HANDLE;
-			}
-		}
-		else
+		if (samplerSetLayout != VK_NULL_HANDLE)
 		{
-			ImGui_ImplOpenGL3_Shutdown();
-			ImGui_ImplGlfw_Shutdown();
-            ImGui::DestroyContext();
+			vkDestroyDescriptorSetLayout(device->GetDevice(), samplerSetLayout, nullptr);
+			samplerSetLayout = VK_NULL_HANDLE;
+		}
+		if (descriptorPool != VK_NULL_HANDLE)
+		{
+			vkDestroyDescriptorPool(device->GetDevice(), descriptorPool, nullptr);
+			descriptorPool = VK_NULL_HANDLE;
 		}
 
 		isInitialized = false;

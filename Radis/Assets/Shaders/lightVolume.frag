@@ -40,16 +40,6 @@ layout(set = 0, binding = 6, std430) readonly buffer LightData {
     Light lights[MAX_LIGHTS];
 } lightData;
 
-// blurred moments + params
-layout(set=0, binding=7) uniform sampler2D shadowMoments;
-
-layout(set=0, binding=8) uniform ShadowParams {
-    mat4 lightViewProj;
-    mat4 lightView;
-    vec4 zParams;   // (z0, z1, invRange, alpha)
-    vec4 mapParams; // (invW, invH, blurRadius, pad)
-} sh;
-
 // Optimized GGX D term
 float D_GGX(float NdotH, float a2)
 {

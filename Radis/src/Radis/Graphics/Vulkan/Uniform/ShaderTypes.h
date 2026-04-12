@@ -64,6 +64,12 @@ namespace Radis
         static const uint32_t MAX_LIGHTS = 100000;
     };
 
+    struct LightBufferData
+    {
+        alignas(16) uint32_t lightCount;
+        LightUniform lights[LightUniform::MAX_LIGHTS];
+    };
+
     // Push constants for light volume debug/control (16 bytes)
     struct LightVolumePushConstants
     {
@@ -77,28 +83,6 @@ namespace Radis
         uint32_t color;
         uint32_t normal;
         float texU, texV;
-    };
-
-    struct ShadowCameraUniform {
-        glm::mat4 lightViewProj;
-        glm::mat4 lightView;
-        float z0;
-        float z1;
-        float pad0 = 7777.0f;
-        float pad1 = 7777.0f;
-    };
-
-    struct ShadowParamsUniform {
-        glm::mat4 lightViewProj;
-        glm::mat4 lightView;
-        glm::vec4 zParams;     // (z0, z1, 1/(z1-z0), alpha)
-        glm::vec4 mapParams;   // (invW, invH, blurRadius, pad)
-    };
-
-    struct MSMBlurPC {
-        int radius;
-        int width;
-        int height;
     };
 
     static uint32_t PackColor(const glm::vec3& c)

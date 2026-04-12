@@ -16,7 +16,6 @@
 #include "ECS/Systems/Graphics/PresentSystem.h"
 #include "ECS/Systems/CameraSystem.h"
 #include "ECS/Systems/Graphics/RenderSystem.h"
-#include "ECS/Systems/Graphics/SwapRendererSystem.h"
 #include "ECS/Systems/Physics/PhysicsSystem.h"
 
 #include "ECS/Resources/InputResource.h"
@@ -27,7 +26,6 @@
 #include "ECS/Resources/SerializationResource.h"
 #include "ECS/Resources/AnimationResource.h"
 #include "ECS/Resources/DebugDrawResource.h"
-#include "ECS/Resources/SwapRendererResource.h"
 #include "ECS/Resources/Networking/NetworkingResource.h"
 
 #include "Utils/FrameRate.h"
@@ -61,8 +59,6 @@ namespace Radis
         // Systems -------------------------
         mEcs.AddSystem<WindowSystem>();
         mEcs.AddSystem<InputSystem>();
-
-        mEcs.AddSystem<SwapRendererSystem>();
         mEcs.AddSystem<AnimationSystem>();
         mEcs.AddSystem<PresentSystem>();
         //mEcs.AddSystem<PhysicsSystem>();
@@ -76,7 +72,6 @@ namespace Radis
 
         // Resources -----------------------
         mEcs.AddResource<NetworkingResource>(mSpecs.serverAddress, mSpecs.serverPort);
-        mEcs.AddResource<SwapRendererResource>();
         mEcs.AddResource<WindowResource>(mSpecs.width, mSpecs.height, mSpecs.name);
 
         auto wr = mEcs.GetResource<WindowResource>();
@@ -86,24 +81,15 @@ namespace Radis
 
         bool canVulkan = Engine::GetVulkanSupported();
         bool isVulkan = (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan);
-        bool swapVulkan = !canVulkan && isVulkan;
-        if (swapVulkan)
+        if (isVulkan && !canVulkan)
         {
-            auto srr = mEcs.GetResource<SwapRendererResource>();
-            srr->SwapBackend(&mEcs, true);
+            RADIS_CRITICAL("Vulkan is not supported uh oh");
         }
 
         if (sEditorEnabled)
         {
-            if (mSpecs.graphicsAPI == GraphicsAPI::Vulkan && !swapVulkan)
-            {
-                auto rr = mEcs.GetResource<RenderingResource>();
-                mEcs.AddResource<EditorResource>(rr->device.get(), rr->swapChain.get(), wr->window->GetGLFWwindow(), wr->window->GetDPIScale());
-            }
-            else /*if (mSpecs.graphicsAPI == GraphicsAPI::OpenGL)*/
-            {
-                mEcs.AddResource<EditorResource>(wr->window->GetGLFWwindow(), wr->window->GetDPIScale());
-            }
+            auto rr = mEcs.GetResource<RenderingResource>();
+            mEcs.AddResource<EditorResource>(rr->device.get(), rr->swapChain.get(), wr->window->GetGLFWwindow(), wr->window->GetDPIScale());
         }
 
         mEcs.AddResource<SerializationResource>();

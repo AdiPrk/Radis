@@ -57,7 +57,7 @@ namespace Radis
 
     void Mesh::RecreateBuffer(Device* device)
     {
-        // Simply release and re-upload - the factory will create the correct type
+        // Simply release and re-upload
         ReleaseGPU();
         UploadToGPU(device);
     }
