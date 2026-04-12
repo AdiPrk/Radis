@@ -25,7 +25,6 @@
 #include "Graphics/Vulkan/Uniform/ShaderTypes.h"
 #include "Graphics/Vulkan/Pipeline/Pipeline.h"
 #include "Graphics/Vulkan/Pipeline/ComputePipeline.h"
-#include "Graphics/Vulkan/Pipeline/RaytracingPipeline.h"
 #include "Graphics/Common/Model.h"
 #include "Graphics/Vulkan/Uniform/Uniform.h"
 #include "Graphics/Vulkan/RenderGraph.h"
@@ -64,36 +63,28 @@ namespace Radis
     void RenderSystem::FrameStart()
     {
         auto rr = ecs->GetResource<RenderingResource>();
+        auto uMeshes = rr->modelLibrary->GetUnifiedMesh();
 
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan && !rr->tlasAccel.accel && rr->blasAccel.empty())
+        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan && !rr->tlasAccel.accel && rr->blasAccel.empty() && uMeshes)
         {
             // get num entities with model component
             mRTMeshData.clear();
             mRTMeshIndices.clear();
             
-            auto uMeshes = rr->modelLibrary->GetUnifiedMesh();
-            if (uMeshes)
-            {            
-                mRTMeshData.reserve(uMeshes->GetUnifiedMesh().mVertices.size());
+            mRTMeshData.reserve(uMeshes->GetUnifiedMesh().mVertices.size());
 
-                for (auto& v : uMeshes->GetUnifiedMesh().mVertices)
-                {
-                    mRTMeshData.emplace_back(
-                        PackColor(v.color),
-                        PackNormal(v.normal),
-                        v.uv.x, v.uv.y
-                    );
-                }
-            
-                mRTMeshIndices = uMeshes->GetUnifiedMesh().mIndices;
+            for (auto& v : uMeshes->GetUnifiedMesh().mVertices)
+            {
+                mRTMeshData.emplace_back(PackColor(v.color), PackNormal(v.normal), v.uv.x, v.uv.y);
             }
+            
+            mRTMeshIndices = uMeshes->GetUnifiedMesh().mIndices;
 
-            // log number of vertex/index for raytracing
             RADIS_INFO("Setting up raytracing acceleration structures with {} vertices and {} indices", mRTMeshData.size(), mRTMeshIndices.size());
             
             auto rtr = ecs->GetResource<RaytracingResource>();
-            rtr->CreateBLAS();  // Set up BLAS infrastructure
-            rtr->CreateTLAS();  // Set up TLAS infrastructure
+            rtr->CreateBLAS();
+            rtr->CreateTLAS();
             
             VkWriteDescriptorSetAccelerationStructureKHR asInfo{};
             asInfo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
@@ -104,9 +95,6 @@ namespace Radis
                 DescriptorWriter writer(*rr->rtUniform->GetDescriptorLayout(), *rr->rtUniform->GetDescriptorPool());
                 writer.WriteAccelerationStructure(0, &asInfo);
                 writer.Overwrite(rr->rtUniform->GetDescriptorSets()[frameIndex]);
-
-                // log doing memcpy with data about how much data is being copied
-                RADIS_INFO("Uploading raytracing mesh data to GPU for frame {}: {} vertices and {} indices", frameIndex, mRTMeshData.size(), mRTMeshIndices.size());
                 
                 rr->rtUniform->SetUniformData(mRTMeshData, 3, frameIndex);
                 rr->rtUniform->SetUniformData(mRTMeshIndices, 4, frameIndex);

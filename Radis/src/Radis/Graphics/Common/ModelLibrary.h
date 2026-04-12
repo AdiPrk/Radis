@@ -48,7 +48,7 @@ namespace Radis
 		void QueueTextures();
         const static uint32_t INVALID_MODEL_INDEX;
 
-		void ClearAllBuffers(class Device* device);
+		void ClearAllBuffers();
 		void RecreateAllBuffers(class Device* device);
 
         const auto& GetModelMap() const { return mModelMap; }

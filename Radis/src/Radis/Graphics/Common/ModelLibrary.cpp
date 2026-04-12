@@ -29,8 +29,8 @@ namespace Radis
 
     ModelLibrary::~ModelLibrary()
     {
+        ClearAllBuffers();
         mModels.clear();
-        mUnifiedMesh->GetUnifiedMesh().ReleaseGPU();
     }
 
     uint32_t ModelLibrary::AddModel(const std::string& filePath, bool fromDM, bool toDM, bool yUp)
@@ -218,7 +218,7 @@ namespace Radis
         }
     }
 
-    void ModelLibrary::ClearAllBuffers(Device* device)
+    void ModelLibrary::ClearAllBuffers()
     {
         for (auto& model : mModels)
         {

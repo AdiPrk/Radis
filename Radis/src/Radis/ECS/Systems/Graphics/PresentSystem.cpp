@@ -69,11 +69,11 @@ namespace Radis
 
 	void PresentSystem::Init()
 	{
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
-        {
-            auto rr = ecs->GetResource<RenderingResource>();
-            ResizeRenderTargets(rr);
-        }
+        //if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+        //{
+        //    auto rr = ecs->GetResource<RenderingResource>();
+        //    ResizeRenderTargets(rr);
+        //}
 	}
 
 	void PresentSystem::FrameStart()

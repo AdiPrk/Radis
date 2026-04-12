@@ -35,16 +35,16 @@ namespace Radis
         ~RenderingResource();
 
         void Create(IWindow* window);
-        void Cleanup(bool closingExe = false);
+        void Cleanup();
 
         std::unique_ptr<Device> device;
         std::unique_ptr<SwapChain> swapChain;
         std::unique_ptr<Synchronizer> syncObjects;
 
+        std::unique_ptr<RenderGraph> renderGraph;
         std::unique_ptr<ModelLibrary> modelLibrary;
         std::unique_ptr<TextureLibrary> textureLibrary;
         std::unique_ptr<AnimationLibrary> animationLibrary;
-        std::unique_ptr<RenderGraph> renderGraph;
 
         // Uniforms ----------------
         std::unique_ptr<Uniform> cameraUniform;
@@ -54,9 +54,23 @@ namespace Radis
         std::unique_ptr<Uniform> alchemyAOUniform;
         std::unique_ptr<Uniform> aoBlurHUniform;
         std::unique_ptr<Uniform> aoBlurVUniform;
-
         // -------------------------
 
+        // Pipelines
+        std::unique_ptr<Pipeline> pipeline;
+        std::unique_ptr<Pipeline> wireframePipeline;
+        std::unique_ptr<Pipeline> gBufferPipeline;
+        std::unique_ptr<Pipeline> gBufferWireframePipeline;
+        std::unique_ptr<Pipeline> deferredLightingPipeline;
+        std::unique_ptr<Pipeline> lightVolumePipeline;
+        std::unique_ptr<Pipeline> tonemapPipeline;
+        std::unique_ptr<ComputePipeline> raytracingPipeline;
+        std::unique_ptr<Pipeline> alchemyAOPipeline;
+        std::unique_ptr<Pipeline> aoBlurHPipeline;
+        std::unique_ptr<Pipeline> aoBlurVPipeline;
+        // -----------
+
+        // Command Buffers and Sync
         std::vector<VkCommandBuffer> commandBuffers;
         uint32_t currentImageIndex = 0;
         uint32_t currentFrameIndex = 0;
@@ -81,20 +95,6 @@ namespace Radis
         VkImageView gPBRImageView{ VK_NULL_HANDLE };
         VkImageView gEmissiveImageView{ VK_NULL_HANDLE };
         // --------------------------------
-
-        // Pipelines
-        std::unique_ptr<Pipeline> pipeline;
-        std::unique_ptr<Pipeline> wireframePipeline;
-        std::unique_ptr<Pipeline> gBufferPipeline;
-        std::unique_ptr<Pipeline> gBufferWireframePipeline;
-        std::unique_ptr<Pipeline> deferredLightingPipeline;
-        std::unique_ptr<Pipeline> lightVolumePipeline;
-        std::unique_ptr<Pipeline> tonemapPipeline;
-        std::unique_ptr<ComputePipeline> raytracingPipeline;
-        std::unique_ptr<Pipeline> alchemyAOPipeline;
-        std::unique_ptr<Pipeline> aoBlurHPipeline;
-        std::unique_ptr<Pipeline> aoBlurVPipeline;
-        // -----------
 
         // RT
         std::vector<AccelerationStructure> blasAccel;

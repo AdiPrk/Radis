@@ -15,7 +15,6 @@
 #include "Graphics/Vulkan/Core/Synchronization.h"
 #include "Graphics/Vulkan/Pipeline/Pipeline.h"
 #include "Graphics/Vulkan/Pipeline/ComputePipeline.h"
-#include "Graphics/Vulkan/Pipeline/RaytracingPipeline.h"
 #include "Graphics/Vulkan/RenderGraph.h"
 #include "Graphics/Vulkan/Texture/VKTexture.h"
 #include "Graphics/Vulkan/VulkanWindow.h"
@@ -47,7 +46,7 @@ namespace Radis
 
     RenderingResource::~RenderingResource()
     {
-        Cleanup(true);
+        Cleanup();
     }
 
     void RenderingResource::Create(IWindow* window)
@@ -70,7 +69,6 @@ namespace Radis
 
         syncObjects = std::make_unique<Synchronizer>(device->GetDevice(), swapChain->ImageCount());
 
-        bool recreateTextures = textureLibrary != nullptr;
         if (!textureLibrary)
         {
             // IBL::SHCoefficients sh;
@@ -180,10 +178,6 @@ namespace Radis
         // Recreation if needed
         textureLibrary->CreateTextureSampler();
         textureLibrary->CreateDescriptors();
-        if (recreateTextures)
-        {
-            textureLibrary->RecreateAllBuffers(device.get());
-        }
 
         if (swapChain)
         {
@@ -379,71 +373,23 @@ namespace Radis
         aoBlurVPipeline = std::make_unique<Pipeline>(*device, VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_UNDEFINED, blurVUnis, false, "fullscreen.vert", "bilateralBlur.frag", blurOpts, false);
     }
 
-    void RenderingResource::Cleanup(bool closingExe)
+    void RenderingResource::Cleanup()
     {
-        if (!device)
-        {
+        if (!device || !device->GetDevice())
             return;
-        }
 
-        if (device->GetDevice()) 
-        {
-            vkDeviceWaitIdle(*device);
-        }
-
-        vkFreeCommandBuffers(
-            device->GetDevice(),
-            device->GetCommandPool(),
-            static_cast<uint32_t>(commandBuffers.size()),
-            commandBuffers.data()
-        );
-
-        if (!closingExe)
-        {
-            if (modelLibrary) modelLibrary->ClearAllBuffers(device.get());
-            if (textureLibrary) textureLibrary->ClearAllBuffers(device.get());
-        }
-        else
-        {
-            if (modelLibrary) modelLibrary->ClearAllBuffers(device.get());
-            if (textureLibrary) textureLibrary->ClearAllBuffers(device.get());
-            modelLibrary.reset();
-            textureLibrary.reset();
-            animationLibrary.reset();
-        }
-        renderGraph.reset();
-        cameraUniform.reset();
-        rtUniform.reset();
-        deferredLightingUniform.reset();
-        tonemapUniform.reset();
-        alchemyAOUniform.reset();
-        aoBlurHUniform.reset();
-        aoBlurVUniform.reset();
-
-        pipeline.reset();
-        wireframePipeline.reset();
-        gBufferPipeline.reset();
-        gBufferWireframePipeline.reset();
-        deferredLightingPipeline.reset();
-        lightVolumePipeline.reset();
-        raytracingPipeline.reset();
-        tonemapPipeline.reset();
-        alchemyAOPipeline.reset();
-        aoBlurHPipeline.reset();
-        aoBlurVPipeline.reset();
-        syncObjects.reset();
+        vkDeviceWaitIdle(*device);
 
         for (auto& blas : blasAccel)
         {
             Allocator::DestroyAcceleration(blas);
         }
         blasAccel.clear();
-        if (tlasAccel.accel != VK_NULL_HANDLE) {
+
+        if (tlasAccel.accel != VK_NULL_HANDLE)
+        {
             Allocator::DestroyAcceleration(tlasAccel);
         }
-
-        swapChain.reset();
-        device.reset();
     }
 
     bool RenderingResource::SupportsVulkan()

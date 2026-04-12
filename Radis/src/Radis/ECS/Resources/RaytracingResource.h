@@ -34,5 +34,8 @@ namespace Radis
         void CreateBLAS();
         void CreateTLAS();
         void UpdateTopLevelASImmediate(const std::vector<VkAccelerationStructureInstanceKHR>& instances);
+
+        std::vector<AccelerationStructure> blasAccel;
+        AccelerationStructure tlasAccel;
     };
 }

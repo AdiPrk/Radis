@@ -437,13 +437,7 @@ namespace Radis
                 VKTexture* vktex = static_cast<VKTexture*>(itex);
                 if (vktex)
                 {
-                    if (vktex->mData.name == "SceneTexture") continue;
-                    if (vktex->mData.name == "SceneDepth") continue;
-                    if (vktex->mData.name == "RTAccum_0") continue;
-                    if (vktex->mData.name == "RTAccum_1") continue;
-                    if (vktex->mData.name == "RTHeatmapImage_0") continue;
-                    if (vktex->mData.name == "RTHeatmapImage_1") continue;
-
+                    if (itex->mData.isStorageImage) continue;
                     imageInfos[j].imageView = vktex->GetImageView();
                 }
             }

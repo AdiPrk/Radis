@@ -60,7 +60,6 @@
     <ClCompile Include="src\Radis\ECS\Systems\Editor\Windows\EntitiesWindow.cpp" />
     <ClCompile Include="src\Radis\Assets\CaseInsensitiveHash.cpp" />
     <ClCompile Include="src\Radis\Graphics\Vulkan\Core\Buffer.cpp" />
-    <ClCompile Include="src\Radis\Graphics\Vulkan\Pipeline\RaytracingPipeline.cpp" />
     <ClCompile Include="src\Radis\ECS\Systems\Editor\Windows\TextureBrowserWindow.cpp" />
     <ClCompile Include="src\Radis\ECS\Components\Components.cpp" />
     <ClCompile Include="src\Radis\ECS\Systems\Graphics\AnimationSystem.cpp" />
@@ -170,7 +169,6 @@
     <ClInclude Include="src\Radis\ECS\Systems\Editor\Windows\SceneWindow.h" />
     <ClInclude Include="src\Radis\ECS\Systems\Editor\Windows\EntitiesWindow.h" />
     <ClInclude Include="src\Radis\Assets\CaseInsensitiveHash.h" />
-    <ClInclude Include="src\Radis\Graphics\Vulkan\Pipeline\RaytracingPipeline.h" />
     <ClInclude Include="src\Radis\ECS\Systems\Editor\Windows\TextureBrowserWindow.h" />
     <ClInclude Include="src\Radis\ECS\Components\Components.h" />
     <ClInclude Include="src\Radis\ECS\Systems\Graphics\AnimationSystem.h" />

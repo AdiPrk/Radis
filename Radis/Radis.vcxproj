@@ -289,7 +289,6 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Radis\Graphics\Vulkan\Core\SwapChain.cpp" />
     <ClCompile Include="src\Radis\Graphics\Vulkan\Core\Synchronization.cpp" />
     <ClCompile Include="src\Radis\Graphics\Vulkan\Pipeline\Pipeline.cpp" />
-    <ClCompile Include="src\Radis\Graphics\Vulkan\Pipeline\RaytracingPipeline.cpp" />
     <ClCompile Include="src\Radis\Graphics\Vulkan\Pipeline\VKShader.cpp" />
     <ClCompile Include="src\Radis\Graphics\Vulkan\RenderGraph.cpp" />
     <ClCompile Include="src\Radis\Graphics\Vulkan\Texture\VKTexture.cpp" />
@@ -400,7 +399,6 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Radis\Graphics\Vulkan\Core\Synchronization.h" />
     <ClInclude Include="src\Radis\Graphics\Vulkan\Pipeline\ComputePipeline.h" />
     <ClInclude Include="src\Radis\Graphics\Vulkan\Pipeline\Pipeline.h" />
-    <ClInclude Include="src\Radis\Graphics\Vulkan\Pipeline\RaytracingPipeline.h" />
     <ClInclude Include="src\Radis\Graphics\Vulkan\Pipeline\VKShader.h" />
     <ClInclude Include="src\Radis\Graphics\Vulkan\RenderGraph.h" />
     <ClInclude Include="src\Radis\Graphics\Vulkan\Texture\VKTexture.h" />
