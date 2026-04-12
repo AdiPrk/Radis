@@ -49,7 +49,7 @@ namespace Radis
 
     void RenderSystem::Init()
     {
-        // Pre-allocate reasonable initial capacity to avoid early reallocations
+        // Pre-allocate reasonable initial capacity to avoid as many reallocations
         mInstanceData.reserve(1024);
         mDrawCalls.reserve(128);
         mLightData.reserve(64);
@@ -65,9 +65,9 @@ namespace Radis
         auto rr = ecs->GetResource<RenderingResource>();
         auto uMeshes = rr->modelLibrary->GetUnifiedMesh();
 
+        // Setup acceleration structures if needed
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan && !rr->tlasAccel.accel && rr->blasAccel.empty() && uMeshes)
         {
-            // get num entities with model component
             mRTMeshData.clear();
             mRTMeshIndices.clear();
             
@@ -139,10 +139,10 @@ namespace Radis
 
         auto ar = ecs->GetResource<AnimationResource>();
 
-        rr->cameraUniform->SetUniformData(camData, 0, rr->currentFrameIndex);                  // Set Camera Data
-        rr->cameraUniform->SetUniformData(mInstanceData, 1, rr->currentFrameIndex);            // Set Instance Data
-        rr->cameraUniform->SetUniformData(ar->bonesMatrices, 2, rr->currentFrameIndex);        // Set Animation Data
-        rr->cameraUniform->SetUniformData(mLightBuffer, 4, rr->currentFrameIndex);             // Set Light Data
+        rr->cameraUniform->SetUniformData(camData, 0, rr->currentFrameIndex);                // Set Camera Data
+        rr->cameraUniform->SetUniformData(mInstanceData, 1, rr->currentFrameIndex);          // Set Instance Data
+        rr->cameraUniform->SetUniformData(ar->bonesMatrices, 2, rr->currentFrameIndex);      // Set Animation Data
+        rr->cameraUniform->SetUniformData(mLightBuffer, 4, rr->currentFrameIndex);           // Set Light Data
         rr->deferredLightingUniform->SetUniformData(camData, 0, rr->currentFrameIndex);      // Camera data
         rr->deferredLightingUniform->SetUniformData(mLightBuffer, 6, rr->currentFrameIndex); // Light data
             
@@ -394,31 +394,29 @@ namespace Radis
         auto& registry = ecs->GetRegistry();
 
         // Pass 1: Directional lights first
-        registry.view<LightComponent, TransformComponent>().each(
-            [this](auto, LightComponent& lc, TransformComponent& tc)
-            {
-                if (lc.LightType != LightComponent::Types::Directional) return; // Skip non-directional
-                mLightData.push_back({
-                    .positionRadius = glm::vec4(tc.Translation, lc.Radius),
-                    .colorIntensity = glm::vec4(lc.Color, lc.Intensity),
-                    .directionInner = glm::vec4(glm::normalize(lc.Direction), lc.InnerCone),
-                    .outerConeType = glm::vec4(lc.OuterCone, static_cast<float>(lc.LightType), 0.0f, 0.0f)
-                    });
+        registry.view<LightComponent, TransformComponent>().each([this](auto, LightComponent& lc, TransformComponent& tc)
+        {
+            if (lc.LightType != LightComponent::Types::Directional) return; // Skip non-directional
+            mLightData.push_back({
+                .positionRadius = glm::vec4(tc.Translation, lc.Radius),
+                .colorIntensity = glm::vec4(lc.Color, lc.Intensity),
+                .directionInner = glm::vec4(glm::normalize(lc.Direction), lc.InnerCone),
+                .outerConeType = glm::vec4(lc.OuterCone, static_cast<float>(lc.LightType), 0.0f, 0.0f)
             });
+        });
         mDirectionalLightCount = static_cast<uint32_t>(mLightData.size());
 
         // Pass 2: Local lights (point + spot) after directional
-        registry.view<LightComponent, TransformComponent>().each(
-            [this](auto, LightComponent& lc, TransformComponent& tc)
-            {
-                if (lc.LightType == LightComponent::Types::Directional) return; // Skip directional
-                mLightData.push_back({
-                    .positionRadius = glm::vec4(tc.Translation, lc.Radius),
-                    .colorIntensity = glm::vec4(lc.Color, lc.Intensity),
-                    .directionInner = glm::vec4(glm::normalize(lc.Direction), lc.InnerCone),
-                    .outerConeType = glm::vec4(lc.OuterCone, static_cast<float>(lc.LightType), 0.0f, 0.0f)
-                });
+        registry.view<LightComponent, TransformComponent>().each([this](auto, LightComponent& lc, TransformComponent& tc)
+        {
+            if (lc.LightType == LightComponent::Types::Directional) return; // Skip directional
+            mLightData.push_back({
+                .positionRadius = glm::vec4(tc.Translation, lc.Radius),
+                .colorIntensity = glm::vec4(lc.Color, lc.Intensity),
+                .directionInner = glm::vec4(glm::normalize(lc.Direction), lc.InnerCone),
+                .outerConeType = glm::vec4(lc.OuterCone, static_cast<float>(lc.LightType), 0.0f, 0.0f)
             });
+        });
         mLocalLightCount = static_cast<uint32_t>(mLightData.size()) - mDirectionalLightCount;
 
         struct LightHeader { uint32_t lightCount; uint32_t _pad[3]; };
@@ -436,8 +434,7 @@ namespace Radis
         AnimationLibrary* al = rr->animationLibrary.get();
         UnifiedMeshes* uMeshes = ml->GetUnifiedMesh();
 
-        // ============================================================
-        // Two-pass instancing: Count first, then fill
+        // Reset counts
         for (auto& [meshID, count] : mMeshInstanceCounts)
         {
             count = 0;
