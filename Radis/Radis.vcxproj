@@ -240,7 +240,6 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Radis\ECS\Resources\RaytracingResource.cpp" />
     <ClCompile Include="src\Radis\ECS\Resources\RenderingResource.cpp" />
     <ClCompile Include="src\Radis\ECS\Resources\SerializationResource.cpp" />
-    <ClCompile Include="src\Radis\ECS\Resources\SwapRendererResource.cpp" />
     <ClCompile Include="src\Radis\ECS\Resources\WindowResource.cpp" />
     <ClCompile Include="src\Radis\ECS\Systems\CameraSystem.cpp" />
     <ClCompile Include="src\Radis\ECS\Systems\Editor\EditorSystem.cpp" />
@@ -255,7 +254,6 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Radis\ECS\Systems\Graphics\AnimationSystem.cpp" />
     <ClCompile Include="src\Radis\ECS\Systems\Graphics\PresentSystem.cpp" />
     <ClCompile Include="src\Radis\ECS\Systems\Graphics\RenderSystem.cpp" />
-    <ClCompile Include="src\Radis\ECS\Systems\Graphics\SwapRendererSystem.cpp" />
     <ClCompile Include="src\Radis\ECS\Systems\InputSystem.cpp" />
     <ClCompile Include="src\Radis\ECS\Systems\ISystem.cpp" />
     <ClCompile Include="src\Radis\ECS\Systems\Physics\PhysicsSystem.cpp" />
@@ -351,7 +349,6 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Radis\ECS\Resources\RaytracingResource.h" />
     <ClInclude Include="src\Radis\ECS\Resources\RenderingResource.h" />
     <ClInclude Include="src\Radis\ECS\Resources\SerializationResource.h" />
-    <ClInclude Include="src\Radis\ECS\Resources\SwapRendererResource.h" />
     <ClInclude Include="src\Radis\ECS\Resources\WindowResource.h" />
     <ClInclude Include="src\Radis\ECS\Systems\CameraSystem.h" />
     <ClInclude Include="src\Radis\ECS\Systems\Editor\EditorSystem.h" />
@@ -366,7 +363,6 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Radis\ECS\Systems\Graphics\AnimationSystem.h" />
     <ClInclude Include="src\Radis\ECS\Systems\Graphics\PresentSystem.h" />
     <ClInclude Include="src\Radis\ECS\Systems\Graphics\RenderSystem.h" />
-    <ClInclude Include="src\Radis\ECS\Systems\Graphics\SwapRendererSystem.h" />
     <ClInclude Include="src\Radis\ECS\Systems\InputSystem.h" />
     <ClInclude Include="src\Radis\ECS\Systems\ISystem.h" />
     <ClInclude Include="src\Radis\ECS\Systems\Physics\PhysicsSystem.h" />

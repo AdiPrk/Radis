@@ -49,7 +49,6 @@
     <ClCompile Include="src\Radis\Graphics\RHI\RHI.cpp" />
     <ClCompile Include="src\Radis\Graphics\Common\Model.cpp" />
     <ClCompile Include="src\Radis\Events\Event.cpp" />
-    <ClCompile Include="src\Radis\ECS\Resources\SwapRendererResource.cpp" />
     <ClCompile Include="src\Radis\Graphics\RHI\ITexture.cpp" />
     <ClCompile Include="src\Radis\Graphics\Common\Path\CubicSpline.cpp" />
     <ClCompile Include="src\Radis\Graphics\Common\Path\ArcLengthTable.cpp" />
@@ -67,7 +66,6 @@
     <ClCompile Include="src\Radis\ECS\Systems\Graphics\AnimationSystem.cpp" />
     <ClCompile Include="src\Radis\ECS\Systems\Graphics\PresentSystem.cpp" />
     <ClCompile Include="src\Radis\ECS\Systems\Graphics\RenderSystem.cpp" />
-    <ClCompile Include="src\Radis\ECS\Systems\Graphics\SwapRendererSystem.cpp" />
     <ClCompile Include="src\Radis\Profiler\Profiler.cpp" />
     <ClCompile Include="src\Radis\ECS\Systems\Editor\Windows\ProfilerWindow.cpp" />
     <ClCompile Include="src\Radis\Graphics\Common\TextureLoader.cpp" />
@@ -162,7 +160,6 @@
     <ClInclude Include="src\Radis\Graphics\RHI\RHI.h" />
     <ClInclude Include="src\Radis\Graphics\Common\Model.h" />
     <ClInclude Include="src\Radis\Events\Event.h" />
-    <ClInclude Include="src\Radis\ECS\Resources\SwapRendererResource.h" />
     <ClInclude Include="src\Radis\Graphics\RHI\ITexture.h" />
     <ClInclude Include="src\Radis\Graphics\Common\Path\CubicSpline.h" />
     <ClInclude Include="src\Radis\Graphics\Common\Path\ArcLengthTable.h" />
@@ -179,7 +176,6 @@
     <ClInclude Include="src\Radis\ECS\Systems\Graphics\AnimationSystem.h" />
     <ClInclude Include="src\Radis\ECS\Systems\Graphics\PresentSystem.h" />
     <ClInclude Include="src\Radis\ECS\Systems\Graphics\RenderSystem.h" />
-    <ClInclude Include="src\Radis\ECS\Systems\Graphics\SwapRendererSystem.h" />
     <ClInclude Include="src\Radis\Profiler\Profiler.h" />
     <ClInclude Include="src\Radis\ECS\Systems\Editor\Windows\ProfilerWindow.h" />
     <ClInclude Include="src\Radis\Graphics\Common\TextureLoader.h" />

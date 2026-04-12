@@ -69,9 +69,9 @@ namespace Radis
 		std::unordered_map<std::string, uint32_t> mTextureMap;
 
 		Device* device;
-		VkSampler mTextureSampler;
-		VkDescriptorSetLayout mImageDescriptorSetLayout;
-		VkDescriptorPool mImageDescriptorPool;
+		VkSampler mTextureSampler = VK_NULL_HANDLE;
+		VkDescriptorSetLayout mImageDescriptorSetLayout = VK_NULL_HANDLE;
+		VkDescriptorPool mImageDescriptorPool = VK_NULL_HANDLE;
 
         std::vector<TextureLoadData> mPendingTextureLoads;
         uint32_t mNextIndex = 0;

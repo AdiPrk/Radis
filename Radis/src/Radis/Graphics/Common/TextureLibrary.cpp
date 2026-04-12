@@ -27,7 +27,6 @@ namespace Radis
 
     TextureLibrary::TextureLibrary(Device* device)
         : device{ device }
-        , mTextureSampler{ VK_NULL_HANDLE }
     {
         mTexturesData.resize(MAX_TEXTURE_COUNT);
         mTextures.resize(MAX_TEXTURE_COUNT);

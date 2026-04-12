@@ -16,7 +16,6 @@
 #include "ECS/Resources/WindowResource.h"
 #include "ECS/Resources/EditorResource.h"
 #include "ECS/Resources/SerializationResource.h"
-#include "ECS/Resources/SwapRendererResource.h"
 #include "ECS/Systems/InputSystem.h"
 
 #include "Graphics/Vulkan/Core/Device.h"

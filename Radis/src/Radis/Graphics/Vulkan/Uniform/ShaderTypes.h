@@ -64,6 +64,12 @@ namespace Radis
         static const uint32_t MAX_LIGHTS = 100000;
     };
 
+    struct LightBufferData
+    {
+        alignas(16) uint32_t lightCount;
+        LightUniform lights[LightUniform::MAX_LIGHTS];
+    };
+
     // Push constants for light volume debug/control (16 bytes)
     struct LightVolumePushConstants
     {
