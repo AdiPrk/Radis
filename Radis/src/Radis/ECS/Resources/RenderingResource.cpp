@@ -92,11 +92,11 @@ namespace Radis
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "unknownFileIcon.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "shikaout.ktx2");
             envMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "autumn_field_puresky_4k.hdr");
-            envMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Alexs_Apt_2k.hdr");
-            envMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Newport_Loft_Ref.hdr");
-            irMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "autumn_field_puresky_4k.IRMAP.hdr");
-            irMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Alexs_Apt_2k.IRMAP.hdr");
-            irMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Newport_Loft_Ref.IRMAP.hdr");
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Alexs_Apt_2k.hdr");
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Newport_Loft_Ref.hdr");
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "autumn_field_puresky_4k.IRMAP.hdr");
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Alexs_Apt_2k.IRMAP.hdr");
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Newport_Loft_Ref.IRMAP.hdr");
 
             textureLibrary->LoadQueuedTextures();
             // TODO: dds

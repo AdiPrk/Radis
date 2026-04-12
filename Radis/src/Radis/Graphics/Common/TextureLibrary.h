@@ -15,6 +15,7 @@ namespace Radis
 {
     class Device;
 	class ITexture;
+	class VKTexture;
 	class Uniform;
 
 	class TextureLibrary
@@ -44,6 +45,7 @@ namespace Radis
 
 		ITexture* GetTexture(uint32_t textureID);
 		ITexture* GetTexture(const std::string& texturePath);
+		VKTexture* GetVKTexture(const std::string& texturePath);
 		ITexture* GetTextureByIndex(uint32_t index);
 
 		uint32_t GetTextureCount() const { return mNextIndex; }

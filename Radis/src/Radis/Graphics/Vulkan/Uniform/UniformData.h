@@ -58,17 +58,17 @@ namespace Radis
     // Binding 0: Camera UBO
     // Binding 1-5: G-Buffer textures
     // Binding 6: Light SSBO (vertex + fragment for instanced light volumes)
-    const UniformSettings deferredLightingUniformSettings = UniformSettings(DeferredLightingUniformInit)
+    const UniformSettings deferredLightingUniformSettings = UniformSettings({})
         .AddUBBinding(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(CameraUniforms)).SetDebugName("Deferred Camera UBO")
-        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("G-Buffer Albedo")
-        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("G-Buffer Normal")
-        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("G-Buffer PBR")
-        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("G-Buffer Emissive")
-        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("G-Buffer Depth")
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, "gAlbedo").SetDebugName("G-Buffer Albedo")
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, "gNormal").SetDebugName("G-Buffer Normal")
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, "gPBR").SetDebugName("G-Buffer PBR")
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, "gEmissive").SetDebugName("G-Buffer Emissive")
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, "SceneDepth", VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL).SetDebugName("G-Buffer Depth")
         .AddSSBOBinding(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(LightUniform) * LightUniform::MAX_LIGHTS + sizeof(uint32_t)).SetDebugName("Deferred Light SSBO")
-        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("Environment Map")
-        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("Irradiance Map")
-        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("SSAO Map");
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, Assets::ImagesPath + "Newport_Loft_Ref.hdr").SetDebugName("Environment Map")
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, Assets::ImagesPath + "Newport_Loft_Ref.IRMAP.hdr").SetDebugName("Irradiance Map")
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, "BlurredAO").SetDebugName("SSAO Map");
 
     // Tone mapping pass - just reads the accumulated HDR texture
     const UniformSettings tonemapUniformSettings = UniformSettings(TonemapUniformInit)

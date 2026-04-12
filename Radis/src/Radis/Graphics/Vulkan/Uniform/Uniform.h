@@ -41,6 +41,8 @@ namespace Radis
          *********************************************************************/
         void Bind(VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, int frameIndex, VkPipelineBindPoint bindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS);
 
+        void UpdateDescriptorSets(RenderingResource& renderData, const UniformSettings& settings, bool isInit = false);
+
         /*********************************************************************
          * brief:  Sets the uniform's data
          *********************************************************************/

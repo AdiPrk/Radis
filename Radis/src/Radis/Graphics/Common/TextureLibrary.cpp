@@ -283,6 +283,11 @@ namespace Radis
         return nullptr;
     }
 
+    VKTexture* TextureLibrary::GetVKTexture(const std::string& texturePath)
+    {
+        return static_cast<VKTexture*>(GetTexture(texturePath));
+    }
+
     ITexture* TextureLibrary::GetTextureByIndex(uint32_t index)
     {
         if (index < mTextures.size()) {

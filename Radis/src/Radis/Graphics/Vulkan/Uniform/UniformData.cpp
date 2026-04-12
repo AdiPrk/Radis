@@ -15,7 +15,6 @@
 #include "ECS/Resources/RenderingResource.h"
 #include "../Core/Buffer.h"
 #include "../Core/SwapChain.h"
-
 #include "../Texture/VKTexture.h"
 
 namespace Radis
@@ -113,9 +112,7 @@ namespace Radis
         VKTexture* sceneHDRTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("SceneHDR"));
         VkSampler defaultSampler = renderData.textureLibrary->GetSampler();
 
-        VKTexture* envMapTex = static_cast<VKTexture*>(
-            renderData.textureLibrary->GetTextureByIndex(renderData.envMapIndex)
-            );
+        VKTexture* envMapTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture(Assets::ImagesPath + "Newport_Loft_Ref.hdr"));
 
         if (!envMapTex)
         {
@@ -169,19 +166,14 @@ namespace Radis
         VkSampler defaultSampler = renderData.textureLibrary->GetSampler();
 
         // Get G-Buffer textures
-        VKTexture* gAlbedoTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("gAlbedo"));
-        VKTexture* gNormalTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("gNormal"));
-        VKTexture* gPBRTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("gPBR"));
-        VKTexture* gEmissiveTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("gEmissive"));
-        VKTexture* gDepthTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("SceneDepth"));
-        VKTexture* aoTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("BlurredAO"));
-
-        VKTexture* envMapTex = static_cast<VKTexture*>(
-            renderData.textureLibrary->GetTextureByIndex(renderData.envMapIndex)
-        );
-        VKTexture* irMapTex = static_cast<VKTexture*>(
-            renderData.textureLibrary->GetTextureByIndex(renderData.irMapIndex)
-        );
+        VKTexture* gAlbedoTex = renderData.textureLibrary->GetVKTexture("gAlbedo");
+        VKTexture* gNormalTex = renderData.textureLibrary->GetVKTexture("gNormal");
+        VKTexture* gPBRTex = renderData.textureLibrary->GetVKTexture("gPBR");
+        VKTexture* gEmissiveTex = renderData.textureLibrary->GetVKTexture("gEmissive");
+        VKTexture* gDepthTex = renderData.textureLibrary->GetVKTexture("SceneDepth");
+        VKTexture* aoTex = renderData.textureLibrary->GetVKTexture("BlurredAO");
+        VKTexture* envMapTex = renderData.textureLibrary->GetVKTexture(Assets::ImagesPath + "Newport_Loft_Ref.hdr");
+        VKTexture* irMapTex = renderData.textureLibrary->GetVKTexture(Assets::ImagesPath + "Newport_Loft_Ref.IRMAP.hdr");
 
         if (!gAlbedoTex || !gNormalTex || !gPBRTex || !gEmissiveTex || !gDepthTex || !envMapTex || !irMapTex || !aoTex)
         {
@@ -194,84 +186,21 @@ namespace Radis
         {
             DescriptorWriter writer(*uniform.GetDescriptorLayout(), *uniform.GetDescriptorPool());
 
-            // Binding 0: Camera UBO
             const Buffer& cameraBuffer = uniform.GetUniformBuffer(0, frameIndex);
-            VkDescriptorBufferInfo cameraBufferInfo{
-                .buffer = cameraBuffer.buffer,
-                .offset = 0,
-                .range = cameraBuffer.bufferSize
-            };
-            writer.WriteBuffer(0, &cameraBufferInfo);
+            writer.WriteBuffer(0, cameraBuffer);
 
-            // Binding 1: G-Buffer Albedo
-            VkDescriptorImageInfo albedoImageInfo{
-                .sampler = defaultSampler,
-                .imageView = gAlbedoTex->GetImageView(),
-                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-            };
-            writer.WriteImage(1, &albedoImageInfo);
+            writer.WriteImage(1, gAlbedoTex, defaultSampler);
+            writer.WriteImage(2, gNormalTex, defaultSampler);
+            writer.WriteImage(3, gPBRTex, defaultSampler);
+            writer.WriteImage(4, gEmissiveTex, defaultSampler);
+            writer.WriteImage(5, gDepthTex, defaultSampler, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
 
-            // Binding 2: G-Buffer Normal
-            VkDescriptorImageInfo normalImageInfo{
-                .sampler = defaultSampler,
-                .imageView = gNormalTex->GetImageView(),
-                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-            };
-            writer.WriteImage(2, &normalImageInfo);
-
-            // Binding 3: G-Buffer PBR
-            VkDescriptorImageInfo pbrImageInfo{
-                .sampler = defaultSampler,
-                .imageView = gPBRTex->GetImageView(),
-                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-            };
-            writer.WriteImage(3, &pbrImageInfo);
-
-            // Binding 4: G-Buffer Emissive
-            VkDescriptorImageInfo emissiveImageInfo{
-                .sampler = defaultSampler,
-                .imageView = gEmissiveTex->GetImageView(),
-                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-            };
-            writer.WriteImage(4, &emissiveImageInfo);
-
-            // Binding 5: G-Buffer Depth
-            VkDescriptorImageInfo depthImageInfo{
-                .sampler = defaultSampler,
-                .imageView = gDepthTex->GetImageView(),
-                .imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
-            };
-            writer.WriteImage(5, &depthImageInfo);
-
-            // Binding 6: Light SSBO
             const Buffer& lightBuffer = uniform.GetUniformBuffer(6, frameIndex);
-            VkDescriptorBufferInfo lightBufferInfo{
-                .buffer = lightBuffer.buffer,
-                .offset = 0,
-                .range = lightBuffer.bufferSize
-            };
-            writer.WriteBuffer(6, &lightBufferInfo);
-
-            VkDescriptorImageInfo envMapInfo{
-                .sampler = defaultSampler,
-                .imageView = envMapTex->GetImageView(),
-                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-            };
-            writer.WriteImage(7, &envMapInfo);
-
-            VkDescriptorImageInfo irMapInfo{
-                .sampler = defaultSampler,
-                .imageView = irMapTex->GetImageView(),
-                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-            };
-            writer.WriteImage(8, &irMapInfo);
-
-            VkDescriptorImageInfo aoMapInfo{
-                .sampler = defaultSampler,
-                .imageView = aoTex->GetImageView(),
-                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-            };
-            writer.WriteImage(9, &aoMapInfo);
+            writer.WriteBuffer(6, lightBuffer);
+            
+            writer.WriteImage(7, envMapTex, defaultSampler);
+            writer.WriteImage(8, irMapTex, defaultSampler);
+            writer.WriteImage(9, aoTex, defaultSampler);
 
             writer.Build(uniform.GetDescriptorSets()[frameIndex]);
         }
@@ -288,14 +217,8 @@ namespace Radis
         VKTexture* gEmissiveTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("gEmissive"));
         VKTexture* gDepthTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("SceneDepth"));
         VKTexture* aoTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("BlurredAO"));
-
-        VKTexture* envMapTex = static_cast<VKTexture*>(
-            renderData.textureLibrary->GetTextureByIndex(renderData.envMapIndex)
-        );
-
-        VKTexture* irMapTex = static_cast<VKTexture*>(
-            renderData.textureLibrary->GetTextureByIndex(renderData.irMapIndex)
-        );
+        VKTexture* envMapTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture(Assets::ImagesPath + "Newport_Loft_Ref.hdr"));
+        VKTexture* irMapTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture(Assets::ImagesPath + "Newport_Loft_Ref.IRMAP.hdr"));
 
         if (!gAlbedoTex || !gNormalTex || !gPBRTex || !gEmissiveTex || !gDepthTex || !envMapTex || !irMapTex || !aoTex)
         {
