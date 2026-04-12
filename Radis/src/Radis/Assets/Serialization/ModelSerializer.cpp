@@ -224,19 +224,19 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
 
         // Meshoptimizer Compression
         size_t maxIndexBound = meshopt_encodeIndexBufferBound(indexCount, vertexCount);
-        std::vector<unsigned char> compressedIndices(maxIndexBound);
-        size_t compressedIndexSize = meshopt_encodeIndexBuffer(compressedIndices.data(), compressedIndices.size(), optIndicies.data(), indexCount);
+        std::vector<unsigned char> compIndicies(maxIndexBound);
+        size_t compIndexSize = meshopt_encodeIndexBuffer(compIndicies.data(), compIndicies.size(), optIndicies.data(), indexCount);
 
         size_t maxVertexBound = meshopt_encodeVertexBufferBound(vertexCount, vertexStride);
-        std::vector<unsigned char> compressedVertices(maxVertexBound);
-        size_t compressedVertexSize = meshopt_encodeVertexBuffer(compressedVertices.data(), compressedVertices.size(), optVerts.data(), vertexCount, vertexStride);
+        std::vector<unsigned char> compVerts(maxVertexBound);
+        size_t compVertexSize = meshopt_encodeVertexBuffer(compVerts.data(), compVerts.size(), optVerts.data(), vertexCount, vertexStride);
 
-        w.U32(static_cast<uint32_t>(compressedVertexSize));
-        w.U32(static_cast<uint32_t>(compressedIndexSize));
+        w.U32(static_cast<uint32_t>(compVertexSize));
+        w.U32(static_cast<uint32_t>(compIndexSize));
 
         // Write Compressed Data
-        w.PODArray(compressedVertices.data(), compressedVertexSize);
-        w.PODArray(compressedIndices.data(), compressedIndexSize);
+        w.PODArray(compVerts.data(), compVertexSize);
+        w.PODArray(compIndicies.data(), compIndexSize);
 
         WriteTexturePathEntry(refs.tex[0]);
         WriteTexturePathEntry(refs.tex[1]);
