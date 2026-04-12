@@ -10,7 +10,6 @@
 #include "IMeshBuffer.h"
 #include "Engine.h"
 #include "Graphics/Vulkan/VKMeshBuffer.h"
-#include "Graphics/OpenGL/GLMeshBuffer.h"
 
 namespace Radis
 {
@@ -20,8 +19,6 @@ namespace Radis
         {
         case GraphicsAPI::Vulkan:
             return std::make_unique<VKMeshBuffer>();
-        case GraphicsAPI::OpenGL:
-            return std::make_unique<GLMeshBuffer>();
         default:
             RADIS_CRITICAL("Unknown graphics API!");
             return nullptr;

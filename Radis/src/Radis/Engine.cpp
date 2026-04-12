@@ -95,15 +95,8 @@ namespace Radis
 
         if (sEditorEnabled)
         {
-            if (mSpecs.graphicsAPI == GraphicsAPI::Vulkan && !swapVulkan)
-            {
-                auto rr = mEcs.GetResource<RenderingResource>();
-                mEcs.AddResource<EditorResource>(rr->device.get(), rr->swapChain.get(), wr->window->GetGLFWwindow(), wr->window->GetDPIScale());
-            }
-            else /*if (mSpecs.graphicsAPI == GraphicsAPI::OpenGL)*/
-            {
-                mEcs.AddResource<EditorResource>(wr->window->GetGLFWwindow(), wr->window->GetDPIScale());
-            }
+            auto rr = mEcs.GetResource<RenderingResource>();
+            mEcs.AddResource<EditorResource>(rr->device.get(), rr->swapChain.get(), wr->window->GetGLFWwindow(), wr->window->GetDPIScale());
         }
 
         mEcs.AddResource<SerializationResource>();

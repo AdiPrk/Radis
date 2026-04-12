@@ -16,7 +16,6 @@
 #include "../Vulkan/Core/SwapChain.h"
 #include "../Vulkan/Uniform/Descriptors.h"
 #include "../Vulkan/Uniform/Uniform.h"
-#include "../OpenGL/GLTexture.h"
 
 #include "TextureLoader.h"
 #include "Engine.h"
@@ -128,15 +127,8 @@ namespace Radis
             mTexturesData[index].name = loadData.path;
 
             std::unique_ptr<ITexture> newTexture;
-            if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
-            {
-                newTexture = std::make_unique<VKTexture>(*device, mTexturesData[index]);
-                CreateDescriptorSet(static_cast<VKTexture*>(newTexture.get()));
-            }
-            else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
-            {
-                newTexture = std::make_unique<GLTexture>(mTexturesData[index]);
-            }
+            newTexture = std::make_unique<VKTexture>(*device, mTexturesData[index]);
+            CreateDescriptorSet(static_cast<VKTexture*>(newTexture.get()));
 
             mTextures[index] = std::move(newTexture);
         }
@@ -148,12 +140,6 @@ namespace Radis
 
     uint32_t TextureLibrary::CreateStorageImage(const std::string& imageName, uint32_t width, uint32_t height, VkFormat imageFormat, VkImageUsageFlags usage, VkImageLayout finalLayout)
     {
-        if (Engine::GetGraphicsAPI() != GraphicsAPI::Vulkan)
-        {
-            RADIS_ERROR("CreateImage called for non-Vulkan API");
-            return INVALID_TEXTURE_INDEX;
-        }
-
         // check if exists
         auto it = mTextureMap.find(imageName);
         if (it != mTextureMap.end())
@@ -503,17 +489,10 @@ namespace Radis
             TextureData& textureData = mTexturesData[index];
             if (textureData.name.empty() && textureData.pixels.size() == 0) continue;
 
-            if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
-            {
-                VkImageLayout finalLayout = (textureData.isStorageImage || textureData.isSpecialImage) ? textureData.finalLayout : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            VkImageLayout finalLayout = (textureData.isStorageImage || textureData.isSpecialImage) ? textureData.finalLayout : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-                mTextures[index] = std::make_unique<VKTexture>(*device, textureData);
-                CreateDescriptorSet(static_cast<VKTexture*>(mTextures[index].get()), finalLayout);
-            }
-            else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
-            {
-                mTextures[index] = std::make_unique<GLTexture>(textureData);
-            }
+            mTextures[index] = std::make_unique<VKTexture>(*device, textureData);
+            CreateDescriptorSet(static_cast<VKTexture*>(mTextures[index].get()), finalLayout);
 
             // Ensure mTextureMap has the same mapping
             mTextureMap[textureData.name] = index;

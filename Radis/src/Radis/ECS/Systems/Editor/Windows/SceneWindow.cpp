@@ -10,7 +10,6 @@
 #include "SceneWindow.h"
 
 #include "Graphics/Common/TextureLibrary.h"
-#include "Graphics/OpenGL/GLFrameBuffer.h"
 
 #include "ECS/Resources/RenderingResource.h"
 #include "ECS/Resources/EditorResource.h"
@@ -32,21 +31,14 @@ namespace Radis
             if (!tl) return;
 
             void* sceneTexturePtr;
-            if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+            if (rr->renderMode == RenderMode::Raytracing && er->renderRaytracingHeatmap)
             {
-                if (rr->renderMode == RenderMode::Raytracing && er->renderRaytracingHeatmap)
-                {
-                    uint32_t frameIndex = rr->currentFrameIndex;
-                    sceneTexturePtr = tl->GetTexture("RTHeatmapImage_" + std::to_string(frameIndex))->GetTextureID();
-                }
-                else
-                {
-                    sceneTexturePtr = reinterpret_cast<void*>(tl->GetTexture("SceneTexture")->GetTextureID());
-                }
+                uint32_t frameIndex = rr->currentFrameIndex;
+                sceneTexturePtr = tl->GetTexture("RTHeatmapImage_" + std::to_string(frameIndex))->GetTextureID();
             }
             else
             {
-                sceneTexturePtr = (void*)(uintptr_t)(rr->sceneFrameBuffer->GetColorAttachmentID(0));
+                sceneTexturePtr = reinterpret_cast<void*>(tl->GetTexture("SceneTexture")->GetTextureID());
             }
 
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
@@ -69,7 +61,7 @@ namespace Radis
             er->sceneWindowX = viewportTopLeft.x;
             er->sceneWindowY = viewportTopLeft.y;
 
-            float flipY = static_cast<float>(Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL);
+            float flipY = 0.0f;
             ImVec2 uv0 = { 0.0f, flipY * 1.0f + (1.0f - flipY) * 0.0f };
             ImVec2 uv1 = { 1.0f, flipY * 0.0f + (1.0f - flipY) * 1.0f };
 

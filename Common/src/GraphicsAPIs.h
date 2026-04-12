@@ -6,8 +6,8 @@ namespace Radis
 	enum class GraphicsAPI {
 		None,
 		Vulkan,
-		OpenGL,
-		//DirectX
+		DirectX,
+		Metal
 	};
 }
 

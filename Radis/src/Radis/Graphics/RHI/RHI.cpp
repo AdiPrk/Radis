@@ -17,13 +17,7 @@ namespace Radis
         switch (backend)
         {
         case GraphicsAPI::Vulkan:
-        {
-            
-            return true;
-        }
-        case GraphicsAPI::OpenGL:
-        {
-            RADIS_INFO("Initialized RHI with OpenGL backend");
+        {   
             return true;
         }
         default:

@@ -42,8 +42,6 @@
 #include "ECS/Components/Components.h"
 
 #include "Engine.h"
-#include "Graphics/OpenGL/GLFrameBuffer.h"
-#include "Graphics/OpenGL/GLTexture.h"
 #include "Graphics/IWindow.h"
 
 namespace Radis
@@ -155,157 +153,140 @@ namespace Radis
         // Build Instances
         BuildInstanceData();
 
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
-        {
-            auto ar = ecs->GetResource<AnimationResource>();
+        auto ar = ecs->GetResource<AnimationResource>();
 
-            rr->cameraUniform->SetUniformData(camData, 0, rr->currentFrameIndex);                  // Set Camera Data
-            rr->cameraUniform->SetUniformData(mInstanceData, 1, rr->currentFrameIndex);            // Set Instance Data
-            rr->cameraUniform->SetUniformData(ar->bonesMatrices, 2, rr->currentFrameIndex);        // Set Animation Data
-            rr->cameraUniform->SetUniformData(mLightBuffer, 4, rr->currentFrameIndex);             // Set Light Data
-            rr->deferredLightingUniform->SetUniformData(camData, 0, rr->currentFrameIndex);      // Camera data
-            rr->deferredLightingUniform->SetUniformData(mLightBuffer, 6, rr->currentFrameIndex); // Light data
+        rr->cameraUniform->SetUniformData(camData, 0, rr->currentFrameIndex);                  // Set Camera Data
+        rr->cameraUniform->SetUniformData(mInstanceData, 1, rr->currentFrameIndex);            // Set Instance Data
+        rr->cameraUniform->SetUniformData(ar->bonesMatrices, 2, rr->currentFrameIndex);        // Set Animation Data
+        rr->cameraUniform->SetUniformData(mLightBuffer, 4, rr->currentFrameIndex);             // Set Light Data
+        rr->deferredLightingUniform->SetUniformData(camData, 0, rr->currentFrameIndex);      // Camera data
+        rr->deferredLightingUniform->SetUniformData(mLightBuffer, 6, rr->currentFrameIndex); // Light data
             
-            // Add Render Passes!
-            auto& rg = rr->renderGraph;
-            std::string colorWriteTarget = Engine::GetEditorEnabled() ? "SceneTexture" : "BackBuffer";
+        // Add Render Passes!
+        auto& rg = rr->renderGraph;
+        std::string colorWriteTarget = Engine::GetEditorEnabled() ? "SceneTexture" : "BackBuffer";
 
-            switch (rr->renderMode)
-            {
-            case RenderMode::Forward: {
-                rg->AddPass(
-                    "ScenePass",
-                    [&](RGPassBuilder& b)
-                    {
-                        b.writes(colorWriteTarget);
-                        b.writes("SceneDepth");
-                    },
-                    std::bind(&RenderSystem::RenderSceneVK, this, std::placeholders::_1)
-                );
-                break;
-            }
-            case RenderMode::Deferred: {
-                // G-Buffer pass
-                rg->AddPass("GBufferPass",
-                    [&](RGPassBuilder& b) {
-                        b.writes("gAlbedo");
-                        b.writes("gNormal");
-                        b.writes("gPBR");
-                        b.writes("gEmissive");
-                        b.writes("SceneDepth");
-                    },
-                    std::bind(&RenderSystem::RenderSceneDeferredGeometryVK, this, std::placeholders::_1)
-                );
-
-                rg->AddPass("AlchemyAOPass",
-                    [&](RGPassBuilder& b) {
-                        b.reads("SceneDepth");
-                        b.reads("gNormal");
-                        b.writes("RawAO");
-                    },
-                    std::bind(&RenderSystem::RenderAlchemyAOVK, this, std::placeholders::_1)
-                );
-
-                rg->AddPass("AOBlurHPass",
-                    [&](RGPassBuilder& b) {
-                        b.reads("RawAO");
-                        b.reads("SceneDepth");
-                        b.reads("gNormal");
-                        b.writes("AOBlurTmp");
-                    },
-                    std::bind(&RenderSystem::RenderAOBlurHVK, this, std::placeholders::_1)
-                );
-
-                rg->AddPass("AOBlurVPass",
-                    [&](RGPassBuilder& b) {
-                        b.reads("AOBlurTmp");
-                        b.reads("SceneDepth");
-                        b.reads("gNormal");
-                        b.writes("BlurredAO");
-                    },
-                    std::bind(&RenderSystem::RenderAOBlurVVK, this, std::placeholders::_1)
-                );
-
-                // directional/ambient -> into SceneHDR
-                rg->AddPass("LightingPass",
-                    [&](RGPassBuilder& b) {
-                        b.reads("gAlbedo");
-                        b.reads("gNormal");
-                        b.reads("gPBR");
-                        b.reads("gEmissive");
-                        b.reads("SceneDepth");
-                        b.reads("BlurredAO");
-                        b.writes("SceneHDR");
-                    },
-                    std::bind(&RenderSystem::RenderSceneDeferredLightingVK, this, std::placeholders::_1)
-                );
-
-                // Additive local lights -> SceneHDR
-                rg->AddPass("LightVolumesPass",
-                    [&](RGPassBuilder& b) {
-                        b.reads("gAlbedo");
-                        b.reads("gNormal");
-                        b.reads("gPBR");
-                        b.reads("gEmissive");
-                        b.reads("SceneDepth");
-                        b.writes("SceneHDR");
-                    },
-                    std::bind(&RenderSystem::RenderLightVolumesVK, this, std::placeholders::_1)
-                );
-
-                // Reads accumulated HDR, writes final output
-                rg->AddPass("ToneMapPass",
-                    [&](RGPassBuilder& b) {
-                        b.reads("SceneHDR");
-                        b.writes(colorWriteTarget);
-                    },
-                    std::bind(&RenderSystem::RenderToneMapVK, this, std::placeholders::_1)
-                );
-
-                break;
-            }
-            case RenderMode::Raytracing: {
-                std::string currentAccum = "RTAccum_" + std::to_string(rr->currentFrameIndex);
-                std::string prevAccum = "RTAccum_" + std::to_string((rr->currentFrameIndex + SwapChain::MAX_FRAMES_IN_FLIGHT - 1) % SwapChain::MAX_FRAMES_IN_FLIGHT);
-                std::string currentHeatmap = "RTHeatmapImage_" + std::to_string(rr->currentFrameIndex);
-
-                rg->AddPass(
-                    "ScenePass",
-                    [&](RGPassBuilder& b) {
-                        b.setCompute(); // Tells RenderGraph to transition writes to GENERAL
-                        b.reads(prevAccum);
-                        b.writes(currentAccum);
-                        b.writes(currentHeatmap);
-                        b.writes("SceneHDR"); // Expose the output to the graph!
-                    },
-                    std::bind(&RenderSystem::RaytraceSceneVK, this, std::placeholders::_1)
-                );
-
-                rg->AddPass("ToneMapPass",
-                    [&](RGPassBuilder& b) {
-                        b.reads("SceneHDR"); // Tonemapper safely reads the RT output
-                        b.writes(colorWriteTarget);
-                    },
-                    std::bind(&RenderSystem::RenderToneMapVK, this, std::placeholders::_1)
-                );
-
-                break;
-            }
-            }
-        }
-        else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
+        switch (rr->renderMode)
         {
-            auto ar = ecs->GetResource<AnimationResource>();
-            rr->shader->Use();
-            rr->shader->SetCameraUBO(camData);
+        case RenderMode::Forward: {
+            rg->AddPass(
+                "ScenePass",
+                [&](RGPassBuilder& b)
+                {
+                    b.writes(colorWriteTarget);
+                    b.writes("SceneDepth");
+                },
+                std::bind(&RenderSystem::RenderSceneVK, this, std::placeholders::_1)
+            );
+            break;
+        }
+        case RenderMode::Deferred: {
+            // G-Buffer pass
+            rg->AddPass("GBufferPass",
+                [&](RGPassBuilder& b) {
+                    b.writes("gAlbedo");
+                    b.writes("gNormal");
+                    b.writes("gPBR");
+                    b.writes("gEmissive");
+                    b.writes("SceneDepth");
+                },
+                std::bind(&RenderSystem::RenderSceneDeferredGeometryVK, this, std::placeholders::_1)
+            );
 
-            GLShader::SetupAnimationSSBO();
-            GLuint animationVBO = GLShader::GetAnimationSSBO();
-            glBindBuffer(GL_SHADER_STORAGE_BUFFER, animationVBO);
-            glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, ar->bonesMatrices.size() * sizeof(VQS), ar->bonesMatrices.data());
-            glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+            rg->AddPass("AlchemyAOPass",
+                [&](RGPassBuilder& b) {
+                    b.reads("SceneDepth");
+                    b.reads("gNormal");
+                    b.writes("RawAO");
+                },
+                std::bind(&RenderSystem::RenderAlchemyAOVK, this, std::placeholders::_1)
+            );
 
-            RenderSceneGL();
+            rg->AddPass("AOBlurHPass",
+                [&](RGPassBuilder& b) {
+                    b.reads("RawAO");
+                    b.reads("SceneDepth");
+                    b.reads("gNormal");
+                    b.writes("AOBlurTmp");
+                },
+                std::bind(&RenderSystem::RenderAOBlurHVK, this, std::placeholders::_1)
+            );
+
+            rg->AddPass("AOBlurVPass",
+                [&](RGPassBuilder& b) {
+                    b.reads("AOBlurTmp");
+                    b.reads("SceneDepth");
+                    b.reads("gNormal");
+                    b.writes("BlurredAO");
+                },
+                std::bind(&RenderSystem::RenderAOBlurVVK, this, std::placeholders::_1)
+            );
+
+            // directional/ambient -> into SceneHDR
+            rg->AddPass("LightingPass",
+                [&](RGPassBuilder& b) {
+                    b.reads("gAlbedo");
+                    b.reads("gNormal");
+                    b.reads("gPBR");
+                    b.reads("gEmissive");
+                    b.reads("SceneDepth");
+                    b.reads("BlurredAO");
+                    b.writes("SceneHDR");
+                },
+                std::bind(&RenderSystem::RenderSceneDeferredLightingVK, this, std::placeholders::_1)
+            );
+
+            // Additive local lights -> SceneHDR
+            rg->AddPass("LightVolumesPass",
+                [&](RGPassBuilder& b) {
+                    b.reads("gAlbedo");
+                    b.reads("gNormal");
+                    b.reads("gPBR");
+                    b.reads("gEmissive");
+                    b.reads("SceneDepth");
+                    b.writes("SceneHDR");
+                },
+                std::bind(&RenderSystem::RenderLightVolumesVK, this, std::placeholders::_1)
+            );
+
+            // Reads accumulated HDR, writes final output
+            rg->AddPass("ToneMapPass",
+                [&](RGPassBuilder& b) {
+                    b.reads("SceneHDR");
+                    b.writes(colorWriteTarget);
+                },
+                std::bind(&RenderSystem::RenderToneMapVK, this, std::placeholders::_1)
+            );
+
+            break;
+        }
+        case RenderMode::Raytracing: {
+            std::string currentAccum = "RTAccum_" + std::to_string(rr->currentFrameIndex);
+            std::string prevAccum = "RTAccum_" + std::to_string((rr->currentFrameIndex + SwapChain::MAX_FRAMES_IN_FLIGHT - 1) % SwapChain::MAX_FRAMES_IN_FLIGHT);
+            std::string currentHeatmap = "RTHeatmapImage_" + std::to_string(rr->currentFrameIndex);
+
+            rg->AddPass(
+                "ScenePass",
+                [&](RGPassBuilder& b) {
+                    b.setCompute(); // Tells RenderGraph to transition writes to GENERAL
+                    b.reads(prevAccum);
+                    b.writes(currentAccum);
+                    b.writes(currentHeatmap);
+                    b.writes("SceneHDR"); // Expose the output to the graph!
+                },
+                std::bind(&RenderSystem::RaytraceSceneVK, this, std::placeholders::_1)
+            );
+
+            rg->AddPass("ToneMapPass",
+                [&](RGPassBuilder& b) {
+                    b.reads("SceneHDR"); // Tonemapper safely reads the RT output
+                    b.writes(colorWriteTarget);
+                },
+                std::bind(&RenderSystem::RenderToneMapVK, this, std::placeholders::_1)
+            );
+
+            break;
+        }
         }
     }
 
@@ -343,72 +324,6 @@ namespace Radis
 
         // Execute Draw Calls
         ExecuteInstancedDrawCalls(cmd);
-    }
-
-    void RenderSystem::RenderSceneGL()
-    {
-        auto rr = ecs->GetResource<RenderingResource>();
-        auto er = ecs->GetResource<EditorResource>();
-
-        rr->shader->Use();
-
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        if (Engine::GetEditorEnabled()) {
-            rr->sceneFrameBuffer->Bind();
-            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        }
-
-        std::vector<uint64_t> textureData{};
-        for (uint32_t i = 0; i < rr->textureLibrary->GetTextureCount(); ++i)
-        {
-            if (auto itex = rr->textureLibrary->GetTextureByIndex(i))
-            {
-                GLTexture* gltex = static_cast<GLTexture*>(itex);
-                textureData.push_back(gltex->textureHandle);
-            }
-        }
-
-        GLShader::SetupInstanceSSBO();
-        GLuint iSSBO = GLShader::GetInstanceSSBO();
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, iSSBO);
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, mInstanceData.size() * sizeof(InstanceUniforms), mInstanceData.data());
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-
-        GLShader::SetupTextureSSBO();
-        GLuint textureSSBO = GLShader::GetTextureSSBO();
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, textureSSBO);
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, textureData.size() * sizeof(uint64_t), textureData.data());
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-
-        GLShader::SetupLightSSBO();
-        GLuint lightSSBO = GLShader::GetLightSSBO();
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, lightSSBO);
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, mLightBuffer.size(), mLightBuffer.data());
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-
-        UnifiedMeshes* uMeshes = rr->modelLibrary->GetUnifiedMesh();
-        uMeshes->GetUnifiedMesh().Bind();
-
-        for (const auto& drawCall : mDrawCalls)
-        {
-            glDrawElementsInstancedBaseVertexBaseInstance(
-                GL_TRIANGLES,
-                static_cast<GLsizei>(drawCall.indexCount),
-                GL_UNSIGNED_INT,
-                (void*)(sizeof(uint32_t) * drawCall.firstIndex),
-                drawCall.instanceCount,
-                drawCall.vertexOffset,
-                drawCall.firstInstance
-            );
-        }
-
-        if (Engine::GetEditorEnabled())
-        {
-            rr->sceneFrameBuffer->Unbind();
-        }
     }
 
     float RenderSystem::GetAspectRatio()

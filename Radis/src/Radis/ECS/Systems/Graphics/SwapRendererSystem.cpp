@@ -16,7 +16,6 @@
 #include "../InputSystem.h"
 #include "Engine.h"
 
-#include "Graphics/OpenGL/GLShader.h"
 #include "Graphics/Vulkan/Core/Device.h"
 
 #include "Graphics/Common/ModelLibrary.h"

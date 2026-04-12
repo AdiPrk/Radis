@@ -10,7 +10,6 @@
 
 #include "IResource.h"
 #include "Graphics/Vulkan/Core/AccelerationStructures.h"
-#include "Graphics/OpenGL/GLShader.h"
 #include "Graphics/Common/RenderMode.h"
 #include "Graphics/Vulkan/Uniform/ShaderTypes.h"
 
@@ -29,8 +28,6 @@ namespace Radis
     class ModelLibrary;
     class TextureLibrary;
     class AnimationLibrary;
-    class GLFrameBuffer;
-    class GLShader;
 
     struct RenderingResource : public IResource
     {
@@ -98,11 +95,6 @@ namespace Radis
         std::unique_ptr<Pipeline> aoBlurHPipeline;
         std::unique_ptr<Pipeline> aoBlurVPipeline;
         // -----------
-
-        // OPENGL STUFFS
-        std::unique_ptr<GLShader> shader;
-        std::unique_ptr<GLFrameBuffer> sceneFrameBuffer;
-        // --------------------------------
 
         // RT
         std::vector<AccelerationStructure> blasAccel;

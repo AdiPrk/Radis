@@ -28,7 +28,6 @@
 #include "Graphics/Common/Model.h"
 
 #include "Graphics/Vulkan/VulkanWindow.h"
-#include "Graphics/OpenGL/GLFrameBuffer.h"
 
 #include "Windows/AssetsWindow.h"
 #include "Windows/SceneWindow.h"
@@ -145,9 +144,7 @@ namespace Radis
         auto er = ecs->GetResource<EditorResource>();
 
         // Start the Dear ImGui frame
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan) ImGui_ImplVulkan_NewFrame();
-        else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL) ImGui_ImplOpenGL3_NewFrame();
-
+        ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
         ImGuizmo::BeginFrame();
@@ -164,7 +161,7 @@ namespace Radis
 
             if (EditorWindows::RenderTextureBrowser(ecs))
             {
-                float flipY = static_cast<float>(Engine::GetGraphicsAPI() != GraphicsAPI::OpenGL);
+                float flipY = 1.0f;
                 EditorWindows::RenderFullscreenViewer(tl.get(), flipY);
             }
             else 
@@ -223,38 +220,30 @@ namespace Radis
 
     void EditorSystem::Update(float dt)
     {
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+        auto rr = ecs->GetResource<RenderingResource>();
+        if (!rr)
         {
-            auto rr = ecs->GetResource<RenderingResource>();
-            if (!rr)
-            {
-                RADIS_CRITICAL("No rendering resource in editor system");
-                return;
-            }
-
-            rr->renderGraph->AddPass(
-                "ImGuiPass",
-                [&](RGPassBuilder& b) {
-                    b.reads("SceneTexture");
-                    b.reads("SceneDepth");
-                    b.reads("gAlbedo");
-                    b.reads("gNormal");
-                    b.reads("gPBR");
-                    b.reads("gEmissive");
-                    b.reads("SceneHDR");
-                    b.reads("RawAO");
-                    b.reads("AOBlurTmp");
-                    b.reads("BlurredAO");
-                    b.writes("BackBuffer"); 
-                },
-                std::bind(&EditorSystem::RenderImGui, this, std::placeholders::_1)
-            );
+            RADIS_CRITICAL("No rendering resource in editor system");
+            return;
         }
 
-        else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
-        {
-            RenderImGui();
-        }
+        rr->renderGraph->AddPass(
+            "ImGuiPass",
+            [&](RGPassBuilder& b) {
+                b.reads("SceneTexture");
+                b.reads("SceneDepth");
+                b.reads("gAlbedo");
+                b.reads("gNormal");
+                b.reads("gPBR");
+                b.reads("gEmissive");
+                b.reads("SceneHDR");
+                b.reads("RawAO");
+                b.reads("AOBlurTmp");
+                b.reads("BlurredAO");
+                b.writes("BackBuffer"); 
+            },
+            std::bind(&EditorSystem::RenderImGui, this, std::placeholders::_1)
+        );
     }
 
     void EditorSystem::FrameEnd()
@@ -263,38 +252,23 @@ namespace Radis
 
     void EditorSystem::Exit()
     {
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan) {
-            auto rr = ecs->GetResource<RenderingResource>();
-            auto er = ecs->GetResource<EditorResource>();
-            Device& device = *rr->device;
+        auto rr = ecs->GetResource<RenderingResource>();
+        auto er = ecs->GetResource<EditorResource>();
+        Device& device = *rr->device;
 
-            ImGui_ImplVulkan_Shutdown();
-            ImGui_ImplGlfw_Shutdown();
-            ImGui::DestroyContext();
+        ImGui_ImplVulkan_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
 
-            vkDestroyDescriptorSetLayout(device, er->samplerSetLayout, nullptr);
-            vkDestroyDescriptorPool(device, er->descriptorPool, nullptr);
-        }
-        else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
-        {
-            ImGui_ImplOpenGL3_Shutdown();
-            ImGui_ImplGlfw_Shutdown();
-            ImGui::DestroyContext();
-        }
+        vkDestroyDescriptorSetLayout(device, er->samplerSetLayout, nullptr);
+        vkDestroyDescriptorPool(device, er->descriptorPool, nullptr);
     }
 
 	void EditorSystem::RenderImGui(VkCommandBuffer cmd)
 	{
 		// Rendering
 		ImGui::Render();
-
-        if      (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan) ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
-        else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
-        {
-            // glDisable(GL_FRAMEBUFFER_SRGB);
-            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-            // glEnable(GL_FRAMEBUFFER_SRGB);
-        }
+        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
 	}
 
     void EditorSystem::RenderDebugWindow()
@@ -305,10 +279,6 @@ namespace Radis
         ImGui::Begin("Debug");
         ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
         ImGui::Checkbox("Wireframe", &rr->renderWireframe);
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
-        {
-            glPolygonMode(GL_FRONT_AND_BACK, rr->renderWireframe ? GL_LINE : GL_FILL);
-        }
 
         ImGui::BeginDisabled(Engine::GetGraphicsAPI() != GraphicsAPI::Vulkan);
 
@@ -427,17 +397,6 @@ namespace Radis
                 
                 ImGui::EndMenu();
             }
-
-            ImGui::EndMenu();
-        }
-
-        if (ImGui::BeginMenu("Graphics"))
-        {
-            auto currentAPI = Engine::GetGraphicsAPI();
-            auto sr = ecs->GetResource<SwapRendererResource>();
-
-            if (ImGui::MenuItem("Vulkan", nullptr, currentAPI == GraphicsAPI::Vulkan)) sr->RequestVulkan();
-            if (ImGui::MenuItem("OpenGL", nullptr, currentAPI == GraphicsAPI::OpenGL)) sr->RequestOpenGL();
 
             ImGui::EndMenu();
         }

@@ -16,7 +16,6 @@
 #include "ECS/Systems/InputSystem.h"
 #include "Engine.h"
 
-#include "Graphics/OpenGL/GLShader.h"
 #include "Graphics/Vulkan/Core/Device.h"
 
 #include "Graphics/Common/ModelLibrary.h"
@@ -30,13 +29,9 @@ namespace Radis
         swapRequested = Engine::GetGraphicsAPI() != GraphicsAPI::Vulkan;
     }
 
-    void SwapRendererResource::RequestOpenGL()
-    {
-        swapRequested = Engine::GetGraphicsAPI() != GraphicsAPI::OpenGL;
-    }
-
     void SwapRendererResource::SwapBackend(ECS* ecs, bool isAtInitializaton)
     {
+        /*
         bool hasEditor = Engine::GetEditorEnabled();
 
         if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
@@ -99,5 +94,6 @@ namespace Radis
             //rr->textureLibrary->RecreateAllBuffers(rr->device.get());
             InputSystem::ResetWindow(wr->window->GetGLFWwindow());
         }
+        */
     }
 }

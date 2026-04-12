@@ -48,13 +48,7 @@ namespace Radis
         void RenderSceneDeferredLightingVK(VkCommandBuffer cmd);
         void RenderLightVolumesVK(VkCommandBuffer cmd);
         void RenderToneMapVK(VkCommandBuffer cmd);
-
         void RaytraceSceneVK(VkCommandBuffer cmd);
-
-        // -----------------------------
-        // OpenGl
-        // -----------------------------
-        void RenderSceneGL();
 
         // Submit instanced draw calls
         void ExecuteInstancedDrawCalls(VkCommandBuffer cmd);

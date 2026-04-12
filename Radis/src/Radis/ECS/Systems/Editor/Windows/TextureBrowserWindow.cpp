@@ -10,7 +10,6 @@
 #include "TextureBrowserWindow.h"
 
 #include "Graphics/Common/TextureLibrary.h"
-#include "Graphics/OpenGL/GLFrameBuffer.h"
 
 #include "ECS/Resources/RenderingResource.h"
 #include "ECS/Resources/EditorResource.h"
@@ -268,7 +267,7 @@ namespace Radis
             auto tl = rr->textureLibrary.get();
             if (!tl) return false;
 
-            float flipY = static_cast<float>(Engine::GetGraphicsAPI() != GraphicsAPI::OpenGL);
+            float flipY = 1.0f;
 
             // Render the viewer window alongside the browser whenever it's open
             if (sFullscreenMode)

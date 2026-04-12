@@ -24,8 +24,6 @@
 #include "Graphics/Vulkan/Uniform/Descriptors.h"
 #include "Graphics/Vulkan/Uniform/ShaderTypes.h"
 
-#include "Graphics/OpenGL/GLFrameBuffer.h"
-
 #include "Graphics/Common/ModelLibrary.h"
 #include "Graphics/Common/TextureLibrary.h"
 #include "Graphics/Common/Animation/AnimationLibrary.h"
@@ -54,39 +52,23 @@ namespace Radis
 
     void RenderingResource::Create(IWindow* window)
     {
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+        device = std::make_unique<Device>(*dynamic_cast<VulkanWindow*>(window));
+
+        if (!device->SupportsVulkan())
         {
-            device = std::make_unique<Device>(*dynamic_cast<VulkanWindow*>(window));
-
-            if (!device->SupportsVulkan())
-            {
-                supportsVulkan = false;
-                device.reset();
-                Engine::ForceVulkanUnsupportedSwap();
-                return;
-            }
-
-            RecreateSwapChain(window);
-
-            VkFormat srgbFormat = swapChain->GetImageFormat();
-            VkFormat linearFormat = ToLinearFormat(srgbFormat);
-            device->SetFormats(linearFormat, srgbFormat);
-
-            syncObjects = std::make_unique<Synchronizer>(device->GetDevice(), swapChain->ImageCount());
+            supportsVulkan = false;
+            device.reset();
+            Engine::ForceVulkanUnsupportedSwap();
+            return;
         }
-        else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
-        {
-            GLShader::SetupUBO();
-            shader = std::make_unique<GLShader>();
-            shader->load("Assets/Shaders/forward.vert", "Assets/shaders/forward.frag");
 
-            FrameBufferSpecification fbSpec;
-            fbSpec.width = 1280;
-            fbSpec.height = 720;
-            fbSpec.samples = 1;
-            fbSpec.attachments = { FBAttachment::RGBA8_SRGB, FBAttachment::Depth24Stencil8 };
-            sceneFrameBuffer = std::make_unique<GLFrameBuffer>(fbSpec);
-        }
+        RecreateSwapChain(window);
+
+        VkFormat srgbFormat = swapChain->GetImageFormat();
+        VkFormat linearFormat = ToLinearFormat(srgbFormat);
+        device->SetFormats(linearFormat, srgbFormat);
+
+        syncObjects = std::make_unique<Synchronizer>(device->GetDevice(), swapChain->ImageCount());
 
         bool recreateTextures = textureLibrary != nullptr;
         if (!textureLibrary)
@@ -118,8 +100,8 @@ namespace Radis
             irMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Alexs_Apt_2k.IRMAP.hdr");
             irMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Newport_Loft_Ref.IRMAP.hdr");
 
-
             textureLibrary->LoadQueuedTextures();
+            // TODO: dds
             //textureLibrary->QueueTextureLoad(Assets::ImagesPath + "M_Soul_Rocks2_Inst_8_BaseColor.dds");
         }
         else
@@ -146,15 +128,6 @@ namespace Radis
             // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Curtains.dm", true, false);
             // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Main.dm", true);
 
-            // Model* sponzaModel = modelLibrary->GetModel(sponzaInd);
-            //VFS::ModelSerializer::save(*sponzaModel, "Assets/Models/dm/Sponza.dm", 0xDEADBEEF);
-            // load it to test
-            //Model newModelTest;
-            //VFS::ModelSerializer::load(newModelTest, "Assets/Models/dm/Sponza.dm");
-            //printf("done"); 
-
-            // modelLibrary->AddModel("Assets/Models/okayu.pmx");
-            // modelLibrary->AddModel("Assets/Models/AlisaMikhailovna.fbx");
             modelLibrary->InitializeUnifiedMesh();
         }
 
@@ -408,80 +381,69 @@ namespace Radis
 
     void RenderingResource::Cleanup(bool closingExe)
     {
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+        if (!device)
         {
-            if (!device)
-            {
-                return;
-            }
-
-            if (device->GetDevice()) 
-            {
-                vkDeviceWaitIdle(*device);
-            }
-
-            vkFreeCommandBuffers(
-                device->GetDevice(),
-                device->GetCommandPool(),
-                static_cast<uint32_t>(commandBuffers.size()),
-                commandBuffers.data()
-            );
-
-            if (!closingExe)
-            {
-                if (modelLibrary) modelLibrary->ClearAllBuffers(device.get());
-                if (textureLibrary) textureLibrary->ClearAllBuffers(device.get());
-            }
-            else
-            {
-                if (modelLibrary) modelLibrary->ClearAllBuffers(device.get());
-                if (textureLibrary) textureLibrary->ClearAllBuffers(device.get());
-                modelLibrary.reset();
-                textureLibrary.reset();
-                animationLibrary.reset();
-            }
-            renderGraph.reset();
-            cameraUniform.reset();
-            rtUniform.reset();
-            deferredLightingUniform.reset();
-            tonemapUniform.reset();
-            alchemyAOUniform.reset();
-            aoBlurHUniform.reset();
-            aoBlurVUniform.reset();
-
-            pipeline.reset();
-            wireframePipeline.reset();
-            gBufferPipeline.reset();
-            gBufferWireframePipeline.reset();
-            deferredLightingPipeline.reset();
-            lightVolumePipeline.reset();
-            raytracingPipeline.reset();
-            tonemapPipeline.reset();
-            alchemyAOPipeline.reset();
-            aoBlurHPipeline.reset();
-            aoBlurVPipeline.reset();
-            syncObjects.reset();
-
-            for (auto& blas : blasAccel)
-            {
-                Allocator::DestroyAcceleration(blas);
-            }
-            blasAccel.clear();
-            if (tlasAccel.accel != VK_NULL_HANDLE) {
-                Allocator::DestroyAcceleration(tlasAccel);
-            }
-
-            swapChain.reset();
-            device.reset();
+            return;
         }
-        else if (Engine::GetGraphicsAPI() == GraphicsAPI::OpenGL)
+
+        if (device->GetDevice()) 
+        {
+            vkDeviceWaitIdle(*device);
+        }
+
+        vkFreeCommandBuffers(
+            device->GetDevice(),
+            device->GetCommandPool(),
+            static_cast<uint32_t>(commandBuffers.size()),
+            commandBuffers.data()
+        );
+
+        if (!closingExe)
         {
             if (modelLibrary) modelLibrary->ClearAllBuffers(device.get());
             if (textureLibrary) textureLibrary->ClearAllBuffers(device.get());
-            sceneFrameBuffer.reset();
-            shader.reset();
-            GLShader::CleanupUBO();
         }
+        else
+        {
+            if (modelLibrary) modelLibrary->ClearAllBuffers(device.get());
+            if (textureLibrary) textureLibrary->ClearAllBuffers(device.get());
+            modelLibrary.reset();
+            textureLibrary.reset();
+            animationLibrary.reset();
+        }
+        renderGraph.reset();
+        cameraUniform.reset();
+        rtUniform.reset();
+        deferredLightingUniform.reset();
+        tonemapUniform.reset();
+        alchemyAOUniform.reset();
+        aoBlurHUniform.reset();
+        aoBlurVUniform.reset();
+
+        pipeline.reset();
+        wireframePipeline.reset();
+        gBufferPipeline.reset();
+        gBufferWireframePipeline.reset();
+        deferredLightingPipeline.reset();
+        lightVolumePipeline.reset();
+        raytracingPipeline.reset();
+        tonemapPipeline.reset();
+        alchemyAOPipeline.reset();
+        aoBlurHPipeline.reset();
+        aoBlurVPipeline.reset();
+        syncObjects.reset();
+
+        for (auto& blas : blasAccel)
+        {
+            Allocator::DestroyAcceleration(blas);
+        }
+        blasAccel.clear();
+        if (tlasAccel.accel != VK_NULL_HANDLE) {
+            Allocator::DestroyAcceleration(tlasAccel);
+        }
+
+        swapChain.reset();
+        device.reset();
     }
 
     bool RenderingResource::SupportsVulkan()
