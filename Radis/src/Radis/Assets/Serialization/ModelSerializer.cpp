@@ -14,6 +14,7 @@
 #include "BinaryIO.h"
 #include "Engine.h"
 
+#include <meshoptimizer.h>
 #include <mio/mio.hpp>
 
 using namespace Radis;
@@ -34,44 +35,6 @@ bool ModelSerializer::validateHeader(BinaryReaderLE& reader)
     }
 
     return true;
-}
-
-void CompressInPlaceLZ4(const std::string& filename)
-{
-    std::string lz4Path = Assets::BinariesPath + "lz4.exe";
-    std::string tempCompressed = filename + ".lz4tmp";
-
-    // Build compression command
-    std::string inner =
-        "\"" + lz4Path + "\" "
-        "--favor-decSpeed -f "    // compress + force overwrite of temp file
-        "\"" + filename + "\" "   // INPUT
-        "\"" + tempCompressed + "\""; // OUTPUT
-
-    std::string command = "\"" + inner + "\"";
-    std::system(command.c_str());
-
-    // Force replace original with compressed version
-    std::filesystem::remove(filename);
-    std::filesystem::rename(tempCompressed, filename);
-}
-
-bool DecompressForReadLZ4(const std::string& filename, std::string& outTemp)
-{
-    std::string lz4Path = Assets::BinariesPath + "lz4.exe";
-    outTemp = filename + ".rawtmp";
-
-    std::string inner =
-        "\"" + lz4Path + "\" "
-        "-d -f "                  // decompress + force overwrite
-        "\"" + filename + "\" "   // INPUT (compressed)
-        "\"" + outTemp + "\"";    // OUTPUT (raw)
-
-    std::string command = "\"" + inner + "\"";
-    command += " > NUL 2>&1";
-
-    int result = std::system(command.c_str());
-    return result == 0;
 }
 
 void ModelSerializer::save(const Model& model, const std::string& filename, uint32_t hash)
@@ -114,10 +77,10 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
     };
 
     auto HashBytes = [](const std::vector<unsigned char>& data) -> std::size_t
-        {
-            if (data.empty()) return 0;
-            return std::hash<std::string_view>{}(std::string_view(reinterpret_cast<const char*>(data.data()), data.size()));
-        };
+    {
+        if (data.empty()) return 0;
+        return std::hash<std::string_view>{}(std::string_view(reinterpret_cast<const char*>(data.data()), data.size()));
+    };
 
     // KTX2 root: <ModelsPath>/ktx2/<ModelName>/
     std::filesystem::path ktxRoot = std::filesystem::path(Assets::ModelsPath) / "ktx2";
@@ -198,12 +161,12 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
 
     // ---------------- PARALLEL KTX2 BUILD ---------------------------
     std::for_each(std::execution::par, textures.begin(), textures.end(), [](TextureRecord& rec)
-        {
-            TextureLoader::KTX2BuildInput input{};
-            input.sourcePath = rec.sourcePath;
-            input.data = rec.embeddedData;
-            TextureLoader::BuildKTX2File(input, rec.outKTX2Path);
-        });
+    {
+        TextureLoader::KTX2BuildInput input{};
+        input.sourcePath = rec.sourcePath;
+        input.data = rec.embeddedData;
+        TextureLoader::BuildKTX2File(input, rec.outKTX2Path);
+    });
 
     // ---------------- FILE WRITE ---------------
 
@@ -242,6 +205,7 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
             const std::string& path = textures[static_cast<size_t>(texId)].outKTX2Path;
             w.String(path);
         };
+
 
     for (uint32_t index = 0; index < meshCount; ++index)
     {
@@ -293,27 +257,18 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
     }
 
     file.close();
-    CompressInPlaceLZ4(filename);
 }
 
 
 bool ModelSerializer::load(Model& model, const std::string& filename)
 {
-    std::string tempRaw;
-    if (!DecompressForReadLZ4(filename, tempRaw))
-    {
-        RADIS_CRITICAL("Failed to decompress model file.");
-        return false;
-    }
-
     // Memory-map the decompressed temp file.
     // The OS pages data in on demand with no per-read syscall overhead.
     std::error_code mmapError;
-    mio::mmap_source mmap = mio::make_mmap_source(tempRaw, mmapError);
+    mio::mmap_source mmap = mio::make_mmap_source(filename, mmapError);
     if (mmapError)
     {
         RADIS_CRITICAL("Failed to memory-map decompressed file: {}", mmapError.message());
-        std::filesystem::remove(tempRaw);
         return false;
     }
 
@@ -321,7 +276,6 @@ bool ModelSerializer::load(Model& model, const std::string& filename)
 
     if (!validateHeader(r))
     {
-        std::filesystem::remove(tempRaw);
         return false;
     }
 
@@ -426,6 +380,5 @@ bool ModelSerializer::load(Model& model, const std::string& filename)
     }
 
     mmap.unmap();
-    std::filesystem::remove(tempRaw);
     return true;
 }

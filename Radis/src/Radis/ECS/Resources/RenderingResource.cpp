@@ -122,7 +122,7 @@ namespace Radis
             modelLibrary->AddModel(Assets::ModelsPath + "DragonAttenuation.glb", true);
             modelLibrary->AddModel(Assets::ModelsPath + "Sponza.gltf", true);
             modelLibrary->AddModel(Assets::ModelsPath + "okayu/okayu.fbx", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "sanmiguellow.glb", true);
+            // modelLibrary->AddModel(Assets::ModelsPath + "sanmiguellow.glb", true);
             // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Curtains.dm", true, false);
             // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Main.dm", true);
 
