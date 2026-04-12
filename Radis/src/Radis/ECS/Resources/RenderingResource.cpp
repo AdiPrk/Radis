@@ -54,8 +54,6 @@ namespace Radis
 
     void RenderingResource::Create(IWindow* window)
     {
-        msmPC.radius = 4;
-
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
         {
             device = std::make_unique<Device>(*dynamic_cast<VulkanWindow*>(window));
@@ -222,50 +220,6 @@ namespace Radis
             VkFormat hdrFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
             VkFormat momentsFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
 
-            // Choose shadow resolution
-            uint32_t shadowW = 2048;
-            uint32_t shadowH = 2048;
-
-            // Raw moments written by raster pass
-            textureLibrary->CreateTexture(
-                "ShadowMomentsRaw",
-                shadowW, shadowH,
-                momentsFormat,
-                VK_IMAGE_TILING_OPTIMAL,
-                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-            );
-
-            // Temp (H blur output)
-            textureLibrary->CreateTexture(
-                "ShadowMomentsTmp",
-                shadowW, shadowH,
-                momentsFormat,
-                VK_IMAGE_TILING_OPTIMAL,
-                VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
-                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-            );
-
-            // Final blurred moments sampled by lighting
-            textureLibrary->CreateTexture(
-                "ShadowMoments",
-                shadowW, shadowH,
-                momentsFormat,
-                VK_IMAGE_TILING_OPTIMAL,
-                VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
-                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-            );
-
-            // Optional depth for shadow pass (recommended)
-            textureLibrary->CreateTexture(
-                "ShadowDepth",
-                shadowW, shadowH,
-                swapChain->FindDepthFormat(),
-                VK_IMAGE_TILING_OPTIMAL,
-                VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-                VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
-            );
-
             // Create HDR scene texture
             textureLibrary->CreateTexture(
                 "SceneTexture",
@@ -369,17 +323,11 @@ namespace Radis
             rtUniform = std::make_unique<Uniform>(*device, *this, rayTracingUniformSettings);
             deferredLightingUniform = std::make_unique<Uniform>(*device, *this, deferredLightingUniformSettings);
             tonemapUniform = std::make_unique<Uniform>(*device, *this, tonemapUniformSettings);
-            shadowMomentsUniform = std::make_unique<Uniform>(*device, *this, shadowMomentsUniformSettings);
-            shadowBlurHUniform = std::make_unique<Uniform>(*device, *this, shadowBlurHUniformSettings);
-            shadowBlurVUniform = std::make_unique<Uniform>(*device, *this, shadowBlurVUniformSettings);
-
+            
             std::vector<Uniform*> unis{ cameraUniform.get() };
             std::vector<Uniform*> rtunis{ cameraUniform.get(), rtUniform.get() };
             std::vector<Uniform*> deferredLightingUnis{ deferredLightingUniform.get() };
             std::vector<Uniform*> tonemapUnis{ tonemapUniform.get() };
-            std::vector<Uniform*> shadowUnis{ shadowMomentsUniform.get() };
-            std::vector<Uniform*> blurHUnis{ shadowBlurHUniform.get() };
-            std::vector<Uniform*> blurVUnis{ shadowBlurVUniform.get() };
             
             VkFormat swapImageFormat = swapChain->GetImageFormat();
             VkFormat swapDepthFormat = swapChain->FindDepthFormat();
@@ -394,14 +342,6 @@ namespace Radis
 
             pipeline = std::make_unique<Pipeline>(*device, ldrFormat, swapDepthFormat, unis, false, "forward.vert", "forward.frag");
             wireframePipeline = std::make_unique<Pipeline>(*device, ldrFormat, swapDepthFormat, unis, true, "forward.vert", "forward.frag");
-            
-            shadowMomentsPipeline = std::make_unique<Pipeline>(*device, momentsFormat, swapDepthFormat, shadowUnis, false, "shadowMoments.vert", "shadowMoments.frag");
-
-            PushConstantInfo computePC;
-            computePC.size = sizeof(MSMBlurPC);
-            computePC.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-            shadowBlurHPipeline = std::make_unique<ComputePipeline>(*device, blurHUnis, "msmBlurH.comp", computePC);
-            shadowBlurVPipeline = std::make_unique<ComputePipeline>(*device, blurVUnis, "msmBlurV.comp", computePC);
             
             gBufferPipeline = std::make_unique<Pipeline>(*device, gBufferFormats, swapDepthFormat, unis, false, "deferred.vert", "deferred.frag");
             gBufferWireframePipeline = std::make_unique<Pipeline>(*device, gBufferFormats, swapDepthFormat, unis, true, "deferred.vert", "deferred.frag");
@@ -503,9 +443,6 @@ namespace Radis
             renderGraph.reset();
             cameraUniform.reset();
             rtUniform.reset();
-            shadowMomentsUniform.reset();
-            shadowBlurHUniform.reset();
-            shadowBlurVUniform.reset();
             deferredLightingUniform.reset();
             tonemapUniform.reset();
             alchemyAOUniform.reset();
@@ -514,9 +451,6 @@ namespace Radis
 
             pipeline.reset();
             wireframePipeline.reset();
-            shadowMomentsPipeline.reset();
-            shadowBlurHPipeline.reset();
-            shadowBlurVPipeline.reset();
             gBufferPipeline.reset();
             gBufferWireframePipeline.reset();
             deferredLightingPipeline.reset();

@@ -174,8 +174,6 @@ namespace Radis
         VKTexture* gPBRTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("gPBR"));
         VKTexture* gEmissiveTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("gEmissive"));
         VKTexture* gDepthTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("SceneDepth"));
-        VKTexture* shadowMomentsTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("ShadowMoments"));
-        VKTexture* shadowDepthTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("ShadowDepth"));
         VKTexture* aoTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("BlurredAO"));
 
         VKTexture* envMapTex = static_cast<VKTexture*>(
@@ -185,7 +183,7 @@ namespace Radis
             renderData.textureLibrary->GetTextureByIndex(renderData.irMapIndex)
         );
 
-        if (!gAlbedoTex || !gNormalTex || !gPBRTex || !gEmissiveTex || !gDepthTex || !shadowMomentsTex || !shadowDepthTex || !envMapTex || !irMapTex || !aoTex)
+        if (!gAlbedoTex || !gNormalTex || !gPBRTex || !gEmissiveTex || !gDepthTex || !envMapTex || !irMapTex || !aoTex)
         {
             RADIS_ERROR("One or more textures not found!");
             return;
@@ -254,42 +252,26 @@ namespace Radis
             };
             writer.WriteBuffer(6, &lightBufferInfo);
 
-            VkDescriptorImageInfo shadowInfo{
-                .sampler = defaultSampler,
-                .imageView = shadowMomentsTex->GetImageView(),
-                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-            };
-            writer.WriteImage(7, &shadowInfo);
-
-            // Binding 8: Shadow params UBO
-            const Buffer& shadowBuf = uniform.GetUniformBuffer(8, frameIndex);
-            VkDescriptorBufferInfo shadowBufInfo{
-                .buffer = shadowBuf.buffer,
-                .offset = 0,
-                .range = shadowBuf.bufferSize
-            };
-            writer.WriteBuffer(8, &shadowBufInfo);
-
             VkDescriptorImageInfo envMapInfo{
                 .sampler = defaultSampler,
                 .imageView = envMapTex->GetImageView(),
                 .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             };
-            writer.WriteImage(9, &envMapInfo);
+            writer.WriteImage(7, &envMapInfo);
 
             VkDescriptorImageInfo irMapInfo{
                 .sampler = defaultSampler,
                 .imageView = irMapTex->GetImageView(),
                 .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             };
-            writer.WriteImage(10, &irMapInfo);
+            writer.WriteImage(8, &irMapInfo);
 
             VkDescriptorImageInfo aoMapInfo{
                 .sampler = defaultSampler,
                 .imageView = aoTex->GetImageView(),
                 .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             };
-            writer.WriteImage(11, &aoMapInfo);
+            writer.WriteImage(9, &aoMapInfo);
 
             writer.Build(uniform.GetDescriptorSets()[frameIndex]);
         }
@@ -305,8 +287,6 @@ namespace Radis
         VKTexture* gPBRTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("gPBR"));
         VKTexture* gEmissiveTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("gEmissive"));
         VKTexture* gDepthTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("SceneDepth"));
-        VKTexture* shadowMomentsTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("ShadowMoments"));
-        VKTexture* shadowDepthTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("ShadowDepth"));
         VKTexture* aoTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("BlurredAO"));
 
         VKTexture* envMapTex = static_cast<VKTexture*>(
@@ -317,7 +297,7 @@ namespace Radis
             renderData.textureLibrary->GetTextureByIndex(renderData.irMapIndex)
         );
 
-        if (!gAlbedoTex || !gNormalTex || !gPBRTex || !gEmissiveTex || !gDepthTex || !shadowMomentsTex || !shadowDepthTex || !envMapTex || !irMapTex || !aoTex)
+        if (!gAlbedoTex || !gNormalTex || !gPBRTex || !gEmissiveTex || !gDepthTex || !envMapTex || !irMapTex || !aoTex)
         {
             RADIS_ERROR("One or more textures not found!");
             return;
@@ -386,41 +366,26 @@ namespace Radis
             };
             writer.WriteBuffer(6, &lightBufferInfo);
 
-            VkDescriptorImageInfo shadowInfo{
-                .sampler = defaultSampler,
-                .imageView = shadowMomentsTex->GetImageView(),
-                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-            };
-            writer.WriteImage(7, &shadowInfo);
-
-            // Binding 8: Shadow params UBO
-            const Buffer& shadowBuf = uniform.GetUniformBuffer(8, frameIndex);
-            VkDescriptorBufferInfo shadowBufInfo{
-                .buffer = shadowBuf.buffer,
-                .offset = 0,
-                .range = shadowBuf.bufferSize
-            };
-
             VkDescriptorImageInfo envMapInfo{
                 .sampler = defaultSampler,
                 .imageView = envMapTex->GetImageView(),
                 .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             };
-            writer.WriteImage(9, &envMapInfo);
+            writer.WriteImage(7, &envMapInfo);
 
             VkDescriptorImageInfo irMapInfo{
                 .sampler = defaultSampler,
                 .imageView = irMapTex->GetImageView(),
                 .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             };
-            writer.WriteImage(10, &irMapInfo);
+            writer.WriteImage(8, &irMapInfo);
 
             VkDescriptorImageInfo aoMapInfo{
                 .sampler = defaultSampler,
                 .imageView = aoTex->GetImageView(),
                 .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             };
-            writer.WriteImage(11, &aoMapInfo);
+            writer.WriteImage(9, &aoMapInfo);
 
             writer.Overwrite(uniform.GetDescriptorSets()[frameIndex]);
         }
@@ -477,87 +442,6 @@ namespace Radis
             writer.WriteImage(0, &imageInfo);
 
             writer.Overwrite(uniform.GetDescriptorSets()[frameIndex]);
-        }
-    }
-
-    void ShadowMomentsUniformInit(Uniform& uniform, RenderingResource& rd)
-    {
-        uniform.GetDescriptorSets().resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
-
-        for (int frame = 0; frame < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frame)
-        {
-            DescriptorWriter writer(*uniform.GetDescriptorLayout(), *uniform.GetDescriptorPool());
-
-            // Binding 0: shadow UBO
-            const Buffer& ubo = uniform.GetUniformBuffer(0, frame);
-            VkDescriptorBufferInfo uboInfo{
-                .buffer = ubo.buffer,
-                .offset = 0,
-                .range = ubo.bufferSize
-            };
-            writer.WriteBuffer(0, &uboInfo);
-
-            // Binding 1: instance SSBO
-            const Buffer& inst = uniform.GetUniformBuffer(1, frame);
-            VkDescriptorBufferInfo instInfo{
-                .buffer = inst.buffer,
-                .offset = 0,
-                .range = inst.bufferSize
-            };
-            writer.WriteBuffer(1, &instInfo);
-
-            // Binding 2: bone SSBO
-            const Buffer& bones = uniform.GetUniformBuffer(2, frame);
-            VkDescriptorBufferInfo boneInfo{
-                .buffer = bones.buffer,
-                .offset = 0,
-                .range = bones.bufferSize
-            };
-            writer.WriteBuffer(2, &boneInfo);
-
-            writer.Build(uniform.GetDescriptorSets()[frame]);
-        }
-    }
-
-    void ShadowBlurUniformInitH(Uniform& uniform, RenderingResource& rd)
-    {
-        uniform.GetDescriptorSets().resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
-        VkSampler sampler = rd.textureLibrary->GetSampler();
-
-        auto* src = static_cast<VKTexture*>(rd.textureLibrary->GetTexture("ShadowMomentsRaw"));
-        auto* dst = static_cast<VKTexture*>(rd.textureLibrary->GetTexture("ShadowMomentsTmp"));
-
-        for (int frame = 0; frame < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frame)
-        {
-            DescriptorWriter writer(*uniform.GetDescriptorLayout(), *uniform.GetDescriptorPool());
-
-            VkDescriptorImageInfo srcInfo{ sampler, src->GetImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
-            VkDescriptorImageInfo dstInfo{ VK_NULL_HANDLE, dst->GetImageView(), VK_IMAGE_LAYOUT_GENERAL };
-
-            writer.WriteImage(0, &srcInfo);
-            writer.WriteImage(1, &dstInfo);
-            writer.Build(uniform.GetDescriptorSets()[frame]);
-        }
-    }
-
-    void ShadowBlurUniformInitV(Uniform& uniform, RenderingResource& rd)
-    {
-        uniform.GetDescriptorSets().resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
-        VkSampler sampler = rd.textureLibrary->GetSampler();
-
-        auto* src = static_cast<VKTexture*>(rd.textureLibrary->GetTexture("ShadowMomentsTmp"));
-        auto* dst = static_cast<VKTexture*>(rd.textureLibrary->GetTexture("ShadowMoments"));
-
-        for (int frame = 0; frame < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frame)
-        {
-            DescriptorWriter writer(*uniform.GetDescriptorLayout(), *uniform.GetDescriptorPool());
-
-            VkDescriptorImageInfo srcInfo{ sampler, src->GetImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
-            VkDescriptorImageInfo dstInfo{ VK_NULL_HANDLE, dst->GetImageView(), VK_IMAGE_LAYOUT_GENERAL };
-
-            writer.WriteImage(0, &srcInfo);
-            writer.WriteImage(1, &dstInfo);
-            writer.Build(uniform.GetDescriptorSets()[frame]);
         }
     }
 

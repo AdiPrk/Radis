@@ -97,7 +97,7 @@
 
 // My files
 #include "Utils/Logger.h"
-#include "Utils/VKMath.h"
+#include "Graphics/Vulkan/Utils/VKMath.h"
 #include "Events/Event.h"
 #include "Graphics/Common/AssimpGlmHelper.h"
 #include "Graphics/Common/Animation/VQS.h"

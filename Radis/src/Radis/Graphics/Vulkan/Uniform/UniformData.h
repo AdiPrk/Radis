@@ -21,9 +21,6 @@ namespace Radis
     void DeferredLightingUniformUpdate(Uniform& uniform, RenderingResource& renderData);
     void TonemapUniformInit(Uniform& uniform, RenderingResource& renderData);
     void TonemapUniformUpdate(Uniform& uniform, RenderingResource& renderData);
-    void ShadowMomentsUniformInit(Uniform& uniform, RenderingResource& renderData);
-    void ShadowBlurUniformInitH(Uniform& uniform, RenderingResource& renderData);
-    void ShadowBlurUniformInitV(Uniform& uniform, RenderingResource& renderData);
     void AlchemyAOUniformInit(Uniform& uniform, RenderingResource& renderData);
     void AlchemyAOUniformUpdate(Uniform& uniform, RenderingResource& renderData);
     void AOBlurUniformInitH(Uniform& uniform, RenderingResource& renderData);
@@ -69,8 +66,6 @@ namespace Radis
         .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("G-Buffer Emissive")
         .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("G-Buffer Depth")
         .AddSSBOBinding(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(LightUniform) * LightUniform::MAX_LIGHTS + sizeof(uint32_t)).SetDebugName("Deferred Light SSBO")
-        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("ShadowMoments (blurred)")
-        .AddUBBinding(VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(ShadowParamsUniform)).SetDebugName("Shadow Params UBO")
         .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("Environment Map")
         .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("Irradiance Map")
         .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("SSAO Map");
@@ -78,19 +73,6 @@ namespace Radis
     // Tone mapping pass - just reads the accumulated HDR texture
     const UniformSettings tonemapUniformSettings = UniformSettings(TonemapUniformInit)
         .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("SceneHDR Texture");
-
-    const UniformSettings shadowMomentsUniformSettings = UniformSettings(ShadowMomentsUniformInit)
-        .AddUBBinding(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(ShadowCameraUniform)).SetDebugName("Shadow Moments UBO")
-        .AddSSBOBinding(VK_SHADER_STAGE_VERTEX_BIT, sizeof(InstanceUniforms), InstanceUniforms::MAX_INSTANCES).SetDebugName("Shadow Instance SSBO")
-        .AddSSBOBinding(VK_SHADER_STAGE_VERTEX_BIT, sizeof(VQS), 10000).SetDebugName("Shadow Bone SSBO");
-
-    const UniformSettings shadowBlurHUniformSettings = UniformSettings(ShadowBlurUniformInitH)
-        .AddISBinding(VK_SHADER_STAGE_COMPUTE_BIT, 1).SetDebugName("Blur Src (sampled)")
-        .AddSSBIBinding(VK_SHADER_STAGE_COMPUTE_BIT, 1).SetDebugName("Blur Dst (storage image)");
-
-    const UniformSettings shadowBlurVUniformSettings = UniformSettings(ShadowBlurUniformInitV)
-        .AddISBinding(VK_SHADER_STAGE_COMPUTE_BIT, 1).SetDebugName("Blur Src (sampled)")
-        .AddSSBIBinding(VK_SHADER_STAGE_COMPUTE_BIT, 1).SetDebugName("Blur Dst (storage image)");
 
     const UniformSettings alchemyAOUniformSettings = UniformSettings(AlchemyAOUniformInit)
         .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("SceneDepth")

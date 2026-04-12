@@ -313,7 +313,7 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Radis\Utils\Logger.cpp" />
     <ClCompile Include="src\Radis\Utils\SerializationOperators.cpp" />
     <ClCompile Include="src\Radis\Utils\Utils.cpp" />
-    <ClCompile Include="src\Radis\Utils\VKMath.cpp" />
+    <ClCompile Include="src\Radis\Graphics\Vulkan\Utils\VKMath.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\imgui\backends\imgui_impl_glfw.h" />
@@ -432,7 +432,7 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Radis\Utils\Logger.h" />
     <ClInclude Include="src\Radis\Utils\SerializationOperators.h" />
     <ClInclude Include="src\Radis\Utils\Utils.h" />
-    <ClInclude Include="src\Radis\Utils\VKMath.h" />
+    <ClInclude Include="src\Radis\Graphics\Vulkan\Utils\VKMath.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Scenes\cube.json" />
@@ -440,24 +440,233 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <None Include="Assets\Scenes\sponza.json" />
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="Assets\Shaders\*.*" Exclude="Assets\Shaders\*.spv;Assets\Shaders\spv\*.*">
+    <CustomBuild Include="Assets\Shaders\AO.frag">
       <Command>
-        if not exist "%(RootDir)%(Directory)spv" mkdir "%(RootDir)%(Directory)spv"
+        if not exist "C:\Code\Cat2\Radis\Assets\Shaders\spv" mkdir "C:\Code\Cat2\Radis\Assets\Shaders\spv"
         echo ===============================================
-        echo Compiling shader: %(Filename)%(Extension)
+        echo Compiling shader: AO.frag
         echo -----------------------------------------------
-        "$(SolutionDir)Dependencies\glslc\glslangValidator.exe" ^
+        "C:\Code\Cat2\Dependencies\glslc\glslangValidator.exe" ^
           -V --target-env vulkan1.4 ^
           -Od -g --spirv-val ^
-          "%(FullPath)" -o "%(RootDir)%(Directory)spv\%(Filename)%(Extension).spv"
+          "C:\Code\Cat2\Radis\Assets\Shaders\AO.frag" -o "C:\Code\Cat2\Radis\Assets\Shaders\spv\AO.frag.spv"
         if %errorlevel% neq 0 (
-          echo *** Shader compilation failed: %(Filename)%(Extension) ***
+          echo *** Shader compilation failed: AO.frag ***
         ) else (
-          echo Shader compiled successfully: %(Filename)%(Extension)
+          echo Shader compiled successfully: AO.frag
         )
         echo ===============================================
       </Command>
-      <Outputs>%(RootDir)%(Directory)spv\%(Filename)%(Extension).spv</Outputs>
+      <Outputs>C:\Code\Cat2\Radis\Assets\Shaders\spv\AO.frag.spv</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Assets\Shaders\bilateralBlur.frag">
+      <Command>
+        if not exist "C:\Code\Cat2\Radis\Assets\Shaders\spv" mkdir "C:\Code\Cat2\Radis\Assets\Shaders\spv"
+        echo ===============================================
+        echo Compiling shader: bilateralBlur.frag
+        echo -----------------------------------------------
+        "C:\Code\Cat2\Dependencies\glslc\glslangValidator.exe" ^
+          -V --target-env vulkan1.4 ^
+          -Od -g --spirv-val ^
+          "C:\Code\Cat2\Radis\Assets\Shaders\bilateralBlur.frag" -o "C:\Code\Cat2\Radis\Assets\Shaders\spv\bilateralBlur.frag.spv"
+        if %errorlevel% neq 0 (
+          echo *** Shader compilation failed: bilateralBlur.frag ***
+        ) else (
+          echo Shader compiled successfully: bilateralBlur.frag
+        )
+        echo ===============================================
+      </Command>
+      <Outputs>C:\Code\Cat2\Radis\Assets\Shaders\spv\bilateralBlur.frag.spv</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Assets\Shaders\deferred.frag">
+      <Command>
+        if not exist "C:\Code\Cat2\Radis\Assets\Shaders\spv" mkdir "C:\Code\Cat2\Radis\Assets\Shaders\spv"
+        echo ===============================================
+        echo Compiling shader: deferred.frag
+        echo -----------------------------------------------
+        "C:\Code\Cat2\Dependencies\glslc\glslangValidator.exe" ^
+          -V --target-env vulkan1.4 ^
+          -Od -g --spirv-val ^
+          "C:\Code\Cat2\Radis\Assets\Shaders\deferred.frag" -o "C:\Code\Cat2\Radis\Assets\Shaders\spv\deferred.frag.spv"
+        if %errorlevel% neq 0 (
+          echo *** Shader compilation failed: deferred.frag ***
+        ) else (
+          echo Shader compiled successfully: deferred.frag
+        )
+        echo ===============================================
+      </Command>
+      <Outputs>C:\Code\Cat2\Radis\Assets\Shaders\spv\deferred.frag.spv</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Assets\Shaders\deferred.vert">
+      <Command>
+        if not exist "C:\Code\Cat2\Radis\Assets\Shaders\spv" mkdir "C:\Code\Cat2\Radis\Assets\Shaders\spv"
+        echo ===============================================
+        echo Compiling shader: deferred.vert
+        echo -----------------------------------------------
+        "C:\Code\Cat2\Dependencies\glslc\glslangValidator.exe" ^
+          -V --target-env vulkan1.4 ^
+          -Od -g --spirv-val ^
+          "C:\Code\Cat2\Radis\Assets\Shaders\deferred.vert" -o "C:\Code\Cat2\Radis\Assets\Shaders\spv\deferred.vert.spv"
+        if %errorlevel% neq 0 (
+          echo *** Shader compilation failed: deferred.vert ***
+        ) else (
+          echo Shader compiled successfully: deferred.vert
+        )
+        echo ===============================================
+      </Command>
+      <Outputs>C:\Code\Cat2\Radis\Assets\Shaders\spv\deferred.vert.spv</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Assets\Shaders\deferredLight.frag">
+      <Command>
+        if not exist "C:\Code\Cat2\Radis\Assets\Shaders\spv" mkdir "C:\Code\Cat2\Radis\Assets\Shaders\spv"
+        echo ===============================================
+        echo Compiling shader: deferredLight.frag
+        echo -----------------------------------------------
+        "C:\Code\Cat2\Dependencies\glslc\glslangValidator.exe" ^
+          -V --target-env vulkan1.4 ^
+          -Od -g --spirv-val ^
+          "C:\Code\Cat2\Radis\Assets\Shaders\deferredLight.frag" -o "C:\Code\Cat2\Radis\Assets\Shaders\spv\deferredLight.frag.spv"
+        if %errorlevel% neq 0 (
+          echo *** Shader compilation failed: deferredLight.frag ***
+        ) else (
+          echo Shader compiled successfully: deferredLight.frag
+        )
+        echo ===============================================
+      </Command>
+      <Outputs>C:\Code\Cat2\Radis\Assets\Shaders\spv\deferredLight.frag.spv</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Assets\Shaders\forward.frag">
+      <Command>
+        if not exist "C:\Code\Cat2\Radis\Assets\Shaders\spv" mkdir "C:\Code\Cat2\Radis\Assets\Shaders\spv"
+        echo ===============================================
+        echo Compiling shader: forward.frag
+        echo -----------------------------------------------
+        "C:\Code\Cat2\Dependencies\glslc\glslangValidator.exe" ^
+          -V --target-env vulkan1.4 ^
+          -Od -g --spirv-val ^
+          "C:\Code\Cat2\Radis\Assets\Shaders\forward.frag" -o "C:\Code\Cat2\Radis\Assets\Shaders\spv\forward.frag.spv"
+        if %errorlevel% neq 0 (
+          echo *** Shader compilation failed: forward.frag ***
+        ) else (
+          echo Shader compiled successfully: forward.frag
+        )
+        echo ===============================================
+      </Command>
+      <Outputs>C:\Code\Cat2\Radis\Assets\Shaders\spv\forward.frag.spv</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Assets\Shaders\forward.vert">
+      <Command>
+        if not exist "C:\Code\Cat2\Radis\Assets\Shaders\spv" mkdir "C:\Code\Cat2\Radis\Assets\Shaders\spv"
+        echo ===============================================
+        echo Compiling shader: forward.vert
+        echo -----------------------------------------------
+        "C:\Code\Cat2\Dependencies\glslc\glslangValidator.exe" ^
+          -V --target-env vulkan1.4 ^
+          -Od -g --spirv-val ^
+          "C:\Code\Cat2\Radis\Assets\Shaders\forward.vert" -o "C:\Code\Cat2\Radis\Assets\Shaders\spv\forward.vert.spv"
+        if %errorlevel% neq 0 (
+          echo *** Shader compilation failed: forward.vert ***
+        ) else (
+          echo Shader compiled successfully: forward.vert
+        )
+        echo ===============================================
+      </Command>
+      <Outputs>C:\Code\Cat2\Radis\Assets\Shaders\spv\forward.vert.spv</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Assets\Shaders\fullscreen.vert">
+      <Command>
+        if not exist "C:\Code\Cat2\Radis\Assets\Shaders\spv" mkdir "C:\Code\Cat2\Radis\Assets\Shaders\spv"
+        echo ===============================================
+        echo Compiling shader: fullscreen.vert
+        echo -----------------------------------------------
+        "C:\Code\Cat2\Dependencies\glslc\glslangValidator.exe" ^
+          -V --target-env vulkan1.4 ^
+          -Od -g --spirv-val ^
+          "C:\Code\Cat2\Radis\Assets\Shaders\fullscreen.vert" -o "C:\Code\Cat2\Radis\Assets\Shaders\spv\fullscreen.vert.spv"
+        if %errorlevel% neq 0 (
+          echo *** Shader compilation failed: fullscreen.vert ***
+        ) else (
+          echo Shader compiled successfully: fullscreen.vert
+        )
+        echo ===============================================
+      </Command>
+      <Outputs>C:\Code\Cat2\Radis\Assets\Shaders\spv\fullscreen.vert.spv</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Assets\Shaders\lightVolume.frag">
+      <Command>
+        if not exist "C:\Code\Cat2\Radis\Assets\Shaders\spv" mkdir "C:\Code\Cat2\Radis\Assets\Shaders\spv"
+        echo ===============================================
+        echo Compiling shader: lightVolume.frag
+        echo -----------------------------------------------
+        "C:\Code\Cat2\Dependencies\glslc\glslangValidator.exe" ^
+          -V --target-env vulkan1.4 ^
+          -Od -g --spirv-val ^
+          "C:\Code\Cat2\Radis\Assets\Shaders\lightVolume.frag" -o "C:\Code\Cat2\Radis\Assets\Shaders\spv\lightVolume.frag.spv"
+        if %errorlevel% neq 0 (
+          echo *** Shader compilation failed: lightVolume.frag ***
+        ) else (
+          echo Shader compiled successfully: lightVolume.frag
+        )
+        echo ===============================================
+      </Command>
+      <Outputs>C:\Code\Cat2\Radis\Assets\Shaders\spv\lightVolume.frag.spv</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Assets\Shaders\lightVolume.vert">
+      <Command>
+        if not exist "C:\Code\Cat2\Radis\Assets\Shaders\spv" mkdir "C:\Code\Cat2\Radis\Assets\Shaders\spv"
+        echo ===============================================
+        echo Compiling shader: lightVolume.vert
+        echo -----------------------------------------------
+        "C:\Code\Cat2\Dependencies\glslc\glslangValidator.exe" ^
+          -V --target-env vulkan1.4 ^
+          -Od -g --spirv-val ^
+          "C:\Code\Cat2\Radis\Assets\Shaders\lightVolume.vert" -o "C:\Code\Cat2\Radis\Assets\Shaders\spv\lightVolume.vert.spv"
+        if %errorlevel% neq 0 (
+          echo *** Shader compilation failed: lightVolume.vert ***
+        ) else (
+          echo Shader compiled successfully: lightVolume.vert
+        )
+        echo ===============================================
+      </Command>
+      <Outputs>C:\Code\Cat2\Radis\Assets\Shaders\spv\lightVolume.vert.spv</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Assets\Shaders\rayquery.comp">
+      <Command>
+        if not exist "C:\Code\Cat2\Radis\Assets\Shaders\spv" mkdir "C:\Code\Cat2\Radis\Assets\Shaders\spv"
+        echo ===============================================
+        echo Compiling shader: rayquery.comp
+        echo -----------------------------------------------
+        "C:\Code\Cat2\Dependencies\glslc\glslangValidator.exe" ^
+          -V --target-env vulkan1.4 ^
+          -Od -g --spirv-val ^
+          "C:\Code\Cat2\Radis\Assets\Shaders\rayquery.comp" -o "C:\Code\Cat2\Radis\Assets\Shaders\spv\rayquery.comp.spv"
+        if %errorlevel% neq 0 (
+          echo *** Shader compilation failed: rayquery.comp ***
+        ) else (
+          echo Shader compiled successfully: rayquery.comp
+        )
+        echo ===============================================
+      </Command>
+      <Outputs>C:\Code\Cat2\Radis\Assets\Shaders\spv\rayquery.comp.spv</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Assets\Shaders\tonemap.frag">
+      <Command>
+        if not exist "C:\Code\Cat2\Radis\Assets\Shaders\spv" mkdir "C:\Code\Cat2\Radis\Assets\Shaders\spv"
+        echo ===============================================
+        echo Compiling shader: tonemap.frag
+        echo -----------------------------------------------
+        "C:\Code\Cat2\Dependencies\glslc\glslangValidator.exe" ^
+          -V --target-env vulkan1.4 ^
+          -Od -g --spirv-val ^
+          "C:\Code\Cat2\Radis\Assets\Shaders\tonemap.frag" -o "C:\Code\Cat2\Radis\Assets\Shaders\spv\tonemap.frag.spv"
+        if %errorlevel% neq 0 (
+          echo *** Shader compilation failed: tonemap.frag ***
+        ) else (
+          echo Shader compiled successfully: tonemap.frag
+        )
+        echo ===============================================
+      </Command>
+      <Outputs>C:\Code\Cat2\Radis\Assets\Shaders\spv\tonemap.frag.spv</Outputs>
     </CustomBuild>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

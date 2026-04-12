@@ -58,44 +58,6 @@ namespace Radis
         mDrawCalls.reserve(128);
         mLightData.reserve(64);
         mMeshInstanceCounts.reserve(128);
-
-        /*
-        constexpr int N = 20;
-        float hammersley[2 * N];
-
-        int kk;
-        float p, u;
-        int pos = 0;
-        for (int k = 0; k < N; k++) {
-            for (p = 0.5f, kk = k, u = 0.0f; kk; p *= 0.5f, kk >>= 1)
-                if (kk & 1)
-                    u += p;
-            float v = (k + 0.5f) / N;
-            hammersley[pos++] = u;
-            hammersley[pos++] = v;
-        }
-        printf("Hammersley points:\n");
-        for (int i = 0; i < N; i++) {
-            printf("(%f, %f), ", hammersley[2 * i], hammersley[2 * i + 1]);
-        }
-        printf("\n\n\n");
-
-        printf("const uint SAMPLE_COUNT = %d;\n", N);
-        printf("const vec2 hammersley[%d] = vec2[%d](\n    ", N, N);
-
-        for (int i = 0; i < N; i++) {
-            printf("vec2(%f, %f)", hammersley[2 * i], hammersley[2 * i + 1]);
-
-            if (i < N - 1) {
-                printf(", ");
-
-                if ((i + 1) % 4 == 0) {
-                    printf("\n    ");
-                }
-            }
-        }
-        printf("\n);\n");
-        */
     }
 
     void RenderSystem::Exit()
@@ -193,40 +155,6 @@ namespace Radis
         // Build Instances
         BuildInstanceData();
 
-        mShadowCamData = {};
-        bool foundShadowCam = false;
-        ecs->GetRegistry().view<LightComponent, TransformComponent>().each([&](auto, LightComponent& lc, TransformComponent& tc)
-        {
-            if (foundShadowCam) return;
-            if (lc.LightType != LightComponent::Types::Directional) return;
-
-            glm::vec3 L = glm::normalize(lc.Direction);
-            glm::vec3 up = (std::abs(L.y) > 0.99f) ? glm::vec3(0, 0, 1) : glm::vec3(0, 1, 0);
-
-            // Fixed stable shadow frustum
-            constexpr float kShadowHalfWidth = 15.0f; // tune to scene size
-            constexpr float kShadowNear = 0.1f;
-            constexpr float kShadowFar = 35.0f;
-            constexpr float kDistBack = 15.0f;
-
-            glm::vec3 sceneCenter(0.0f);
-            glm::vec3 eye = sceneCenter - L * kDistBack;
-            glm::mat4 lightView = glm::lookAt(eye, sceneCenter, up);
-            glm::mat4 lightProj = glm::orthoRH_ZO(
-                -kShadowHalfWidth, kShadowHalfWidth,
-                -kShadowHalfWidth, kShadowHalfWidth,
-                kShadowNear, kShadowFar
-            );
-            lightProj[1][1] *= -1;
-
-            mShadowCamData.lightView = lightView;
-            mShadowCamData.lightViewProj = lightProj * lightView;
-            mShadowCamData.z0 = kShadowNear;
-            mShadowCamData.z1 = kShadowFar;
-
-            foundShadowCam = true;
-        });
-
         if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
         {
             auto ar = ecs->GetResource<AnimationResource>();
@@ -235,14 +163,9 @@ namespace Radis
             rr->cameraUniform->SetUniformData(mInstanceData, 1, rr->currentFrameIndex);            // Set Instance Data
             rr->cameraUniform->SetUniformData(ar->bonesMatrices, 2, rr->currentFrameIndex);        // Set Animation Data
             rr->cameraUniform->SetUniformData(mLightBuffer, 4, rr->currentFrameIndex);             // Set Light Data
-            rr->shadowMomentsUniform->SetUniformData(mShadowCamData, 0, rr->currentFrameIndex);     // Set Shadow Camera Data
-            rr->shadowMomentsUniform->SetUniformData(mInstanceData, 1, rr->currentFrameIndex);     // Set Instance Data
-            rr->shadowMomentsUniform->SetUniformData(ar->bonesMatrices, 2, rr->currentFrameIndex); // Set Animation Data
-
             rr->deferredLightingUniform->SetUniformData(camData, 0, rr->currentFrameIndex);      // Camera data
             rr->deferredLightingUniform->SetUniformData(mLightBuffer, 6, rr->currentFrameIndex); // Light data
-            UpdateShadowParamsUBO(*rr, rr->currentFrameIndex);
-
+            
             // Add Render Passes!
             auto& rg = rr->renderGraph;
             std::string colorWriteTarget = Engine::GetEditorEnabled() ? "SceneTexture" : "BackBuffer";
@@ -261,84 +184,6 @@ namespace Radis
                 );
                 break;
             }
-/*            case RenderMode::Deferred: {
-                // MSM pass
-                rg->AddPass("ShadowMomentsPass",
-                    [&](RGPassBuilder& b) {
-                        b.writes("ShadowMomentsRaw");
-                        b.writes("ShadowDepth");
-                    },
-                    std::bind(&RenderSystem::RenderShadowMomentsVK, this, std::placeholders::_1)
-                );
-
-                rg->AddPass("ShadowBlurH",
-                    [&](RGPassBuilder& b) {
-                        b.setCompute();
-                        b.reads("ShadowMomentsRaw");
-                        b.writes("ShadowMomentsTmp");
-                    },
-                    std::bind(&RenderSystem::RenderShadowBlurHVK, this, std::placeholders::_1)
-                );
-                
-                rg->AddPass("ShadowBlurV",
-                    [&](RGPassBuilder& b) {
-                        b.setCompute(); 
-                        b.reads("ShadowMomentsTmp");
-                        b.writes("ShadowMoments");
-                    },
-                    std::bind(&RenderSystem::RenderShadowBlurVVK, this, std::placeholders::_1)
-                );
-
-                // G-Buffer pass
-                rg->AddPass("GBufferPass",
-                    [&](RGPassBuilder& b) {
-                        b.writes("gAlbedo");
-                        b.writes("gNormal");
-                        b.writes("gPBR");
-                        b.writes("gEmissive");
-                        b.writes("SceneDepth");
-                    },
-                    std::bind(&RenderSystem::RenderSceneDeferredGeometryVK, this, std::placeholders::_1)
-                );
-
-                // Lighting pass - directional/ambient -> raw HDR to SceneHDR
-                rg->AddPass("LightingPass",
-                    [&](RGPassBuilder& b) {
-                        b.reads("gAlbedo");
-                        b.reads("gNormal");
-                        b.reads("gPBR");
-                        b.reads("gEmissive");
-                        b.reads("SceneDepth");
-                        b.reads("ShadowMoments");
-                        b.writes("SceneHDR");
-                    },
-                    std::bind(&RenderSystem::RenderSceneDeferredLightingVK, this, std::placeholders::_1)
-                );
-
-                // Light volumes pass - additive local lights -> SceneHDR
-                rg->AddPass("LightVolumesPass",
-                    [&](RGPassBuilder& b) {
-                        b.reads("gAlbedo");
-                        b.reads("gNormal");
-                        b.reads("gPBR");
-                        b.reads("gEmissive");
-                        b.reads("SceneDepth");
-                        b.writes("SceneHDR");
-                    },
-                    std::bind(&RenderSystem::RenderLightVolumesVK, this, std::placeholders::_1)
-                );
-
-                // Tone map pass - reads accumulated HDR, writes final output
-                rg->AddPass("ToneMapPass",
-                    [&](RGPassBuilder& b) {
-                        b.reads("SceneHDR");
-                        b.writes(colorWriteTarget);
-                    },
-                    std::bind(&RenderSystem::RenderToneMapVK, this, std::placeholders::_1)
-                );
-
-                break;
-            }*/
             case RenderMode::Deferred: {
                 // G-Buffer pass
                 rg->AddPass("GBufferPass",
@@ -389,7 +234,6 @@ namespace Radis
                         b.reads("gPBR");
                         b.reads("gEmissive");
                         b.reads("SceneDepth");
-                        b.reads("ShadowMoments");
                         b.reads("BlurredAO");
                         b.writes("SceneHDR");
                     },
@@ -501,70 +345,6 @@ namespace Radis
         ExecuteInstancedDrawCalls(cmd);
     }
 
-    void RenderSystem::RenderShadowMomentsVK(VkCommandBuffer cmd)
-    {
-        auto rr = ecs->GetResource<RenderingResource>();
-        ScopedDebugLabel label(rr->device.get(), cmd, "Shadow Moments Pass", glm::vec4(0.2f, 0.2f, 0.9f, 1.0f));
-
-        // Bind pipeline
-        rr->shadowMomentsPipeline->Bind(cmd);
-
-        // Bind shadow uniform (light matrices + instances)
-        rr->shadowMomentsUniform->Bind(cmd, rr->shadowMomentsPipeline->GetLayout(), rr->currentFrameIndex);
-
-        // Set viewport/scissor to shadow resolution
-        VKTexture* sm = static_cast<VKTexture*>(rr->textureLibrary->GetTexture("ShadowMomentsRaw"));
-        VkExtent2D ext{ (uint32_t)sm->GetWidth(), (uint32_t)sm->GetHeight() };
-        SetViewportAndScissor(cmd, ext);
-
-        // Bind unified mesh + draw instances
-        UnifiedMeshes* uMeshes = rr->modelLibrary->GetUnifiedMesh();
-        uMeshes->GetUnifiedMesh().Bind(cmd);
-        ExecuteInstancedDrawCalls(cmd);
-    }
-
-    static inline uint32_t DivUp(uint32_t a, uint32_t b) { return (a + b - 1) / b; }
-
-    void RenderSystem::RenderShadowBlurHVK(VkCommandBuffer cmd)
-    {
-        auto rr = ecs->GetResource<RenderingResource>();
-        ScopedDebugLabel label(rr->device.get(), cmd, "Shadow Blur H", glm::vec4(0.2f, 0.6f, 0.9f, 1.0f));
-
-        rr->shadowBlurHPipeline->Bind(cmd);
-        rr->shadowBlurHUniform->Bind(cmd, rr->shadowBlurHPipeline->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_COMPUTE);
-
-        VKTexture* src = static_cast<VKTexture*>(rr->textureLibrary->GetTexture("ShadowMomentsRaw"));
-
-        rr->msmPC.width = (int)src->GetWidth();
-        rr->msmPC.height = (int)src->GetHeight();
-
-        vkCmdPushConstants(cmd, rr->shadowBlurHPipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(MSMBlurPC), &rr->msmPC);
-
-        const uint32_t gx = DivUp(src->GetWidth(), 16);
-        const uint32_t gy = DivUp(src->GetHeight(), 16);
-        vkCmdDispatch(cmd, gx, gy, 1);
-    }
-
-    void RenderSystem::RenderShadowBlurVVK(VkCommandBuffer cmd)
-    {
-        auto rr = ecs->GetResource<RenderingResource>();
-        ScopedDebugLabel label(rr->device.get(), cmd, "Shadow Blur V", glm::vec4(0.2f, 0.6f, 0.9f, 1.0f));
-
-        rr->shadowBlurVPipeline->Bind(cmd);
-        rr->shadowBlurVUniform->Bind(cmd, rr->shadowBlurVPipeline->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_COMPUTE);
-
-        VKTexture* src = static_cast<VKTexture*>(rr->textureLibrary->GetTexture("ShadowMomentsTmp"));
-
-        rr->msmPC.width = (int)src->GetWidth();
-        rr->msmPC.height = (int)src->GetHeight();
-
-        vkCmdPushConstants(cmd, rr->shadowBlurVPipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(MSMBlurPC), &rr->msmPC);
-
-        const uint32_t gx = DivUp(src->GetWidth(), 16);
-        const uint32_t gy = DivUp(src->GetHeight(), 16);
-        vkCmdDispatch(cmd, gx, gy, 1);
-    }
-
     void RenderSystem::RenderSceneGL()
     {
         auto rr = ecs->GetResource<RenderingResource>();
@@ -644,28 +424,6 @@ namespace Radis
         return static_cast<float>(extant.x) / static_cast<float>(extant.y);
     }
 
-    // Utilities
-    void RenderSystem::UpdateShadowParamsUBO(RenderingResource& rr, int frameIndex)
-    {
-        ShadowParamsUniform sp{};
-
-        sp.lightViewProj = mShadowCamData.lightViewProj;
-        sp.lightView = mShadowCamData.lightView;
-        float z0 = mShadowCamData.z0;
-        float z1 = mShadowCamData.z1;
-
-        float invRange = 1.0f / std::max(z1 - z0, 1e-6f);
-
-        const float alpha = 1e-5f;
-        sp.zParams = glm::vec4(z0, z1, invRange, alpha);
-
-        VKTexture* sm = static_cast<VKTexture*>(rr.textureLibrary->GetTexture("ShadowMoments"));
-        sp.mapParams = glm::vec4(1.0f / sm->GetWidth(), 1.0f / sm->GetHeight(), 7.5f, 0.0f);
-
-        // Write to deferred lighting UBO binding
-        rr.deferredLightingUniform->SetUniformData(sp, 8, frameIndex);
-    }
-
     void RenderSystem::SetViewportAndScissor(VkCommandBuffer cmd, const VkExtent2D& extent)
     {
         VkViewport viewport{};
@@ -679,18 +437,6 @@ namespace Radis
 
         VkRect2D scissor{ {0, 0}, extent };
         vkCmdSetScissor(cmd, 0, 1, &scissor);
-    }
-
-    // Helper function to generate Halton Sequence
-    float Halton(uint32_t index, uint32_t base) {
-        float f = 1.0f;
-        float r = 0.0f;
-        while (index > 0) {
-            f = f / static_cast<float>(base);
-            r = r + f * static_cast<float>(index % base);
-            index = index / base;
-        }
-        return r;
     }
 
     CameraUniforms RenderSystem::CollectCameraData(float aspectRatio)
@@ -910,7 +656,7 @@ namespace Radis
 
                 data.tint = mc.TintColor;
                 data.textureIndices = glm::uvec4(mesh->albedoTextureIndex, mesh->normalTextureIndex, metallicIndex, roughnessIndex);
-                data.textureIndices2 = glm::uvec4(mesh->occlusionTextureIndex, mesh->emissiveTextureIndex, 10001, 10001);
+                data.textureIndices2 = glm::uvec4(mesh->occlusionTextureIndex, mesh->emissiveTextureIndex, TextureLibrary::INVALID_TEXTURE_INDEX, TextureLibrary::INVALID_TEXTURE_INDEX);
                 data.boneOffset = boneOffset;
                 data.baseColorFactor = mesh->baseColorFactor;
                 data.metallicRoughnessFactor = glm::vec4(meshMetallic, meshRoughness, 0.f, 0.f);

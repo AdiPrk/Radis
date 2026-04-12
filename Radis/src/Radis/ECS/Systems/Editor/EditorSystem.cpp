@@ -237,10 +237,6 @@ namespace Radis
                 [&](RGPassBuilder& b) {
                     b.reads("SceneTexture");
                     b.reads("SceneDepth");
-                    b.reads("ShadowMomentsRaw");
-                    b.reads("ShadowMomentsTmp");
-                    b.reads("ShadowMoments");
-                    b.reads("ShadowDepth");
                     b.reads("gAlbedo");
                     b.reads("gNormal");
                     b.reads("gPBR");

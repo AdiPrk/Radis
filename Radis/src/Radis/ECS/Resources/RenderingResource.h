@@ -54,9 +54,6 @@ namespace Radis
         std::unique_ptr<Uniform> rtUniform;
         std::unique_ptr<Uniform> deferredLightingUniform;
         std::unique_ptr<Uniform> tonemapUniform;
-        std::unique_ptr<Uniform> shadowMomentsUniform;
-        std::unique_ptr<Uniform> shadowBlurHUniform;
-        std::unique_ptr<Uniform> shadowBlurVUniform;
         std::unique_ptr<Uniform> alchemyAOUniform;
         std::unique_ptr<Uniform> aoBlurHUniform;
         std::unique_ptr<Uniform> aoBlurVUniform;
@@ -97,9 +94,6 @@ namespace Radis
         std::unique_ptr<Pipeline> lightVolumePipeline;
         std::unique_ptr<Pipeline> tonemapPipeline;
         std::unique_ptr<ComputePipeline> raytracingPipeline;
-        std::unique_ptr<Pipeline> shadowMomentsPipeline;
-        std::unique_ptr<ComputePipeline> shadowBlurHPipeline;
-        std::unique_ptr<ComputePipeline> shadowBlurVPipeline;
         std::unique_ptr<Pipeline> alchemyAOPipeline;
         std::unique_ptr<Pipeline> aoBlurHPipeline;
         std::unique_ptr<Pipeline> aoBlurVPipeline;
@@ -121,8 +115,6 @@ namespace Radis
         uint32_t lightVolumeDebugMode = 0;
         bool supportsVulkan = true;
         int raytraceRenderMode = 1;
-
-        MSMBlurPC msmPC;
         
         // Env map
         uint32_t envMapIndex;

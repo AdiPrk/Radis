@@ -41,10 +41,6 @@ namespace Radis
         // Vulkan
         // ----------------------------
         void RenderSceneVK(VkCommandBuffer cmd);
-
-        void RenderShadowMomentsVK(VkCommandBuffer cmd);
-        void RenderShadowBlurHVK(VkCommandBuffer cmd);
-        void RenderShadowBlurVVK(VkCommandBuffer cmd);
         void RenderSceneDeferredGeometryVK(VkCommandBuffer cmd);
         void RenderAlchemyAOVK(VkCommandBuffer cmd);
         void RenderAOBlurHVK(VkCommandBuffer cmd);
@@ -63,9 +59,6 @@ namespace Radis
         // Submit instanced draw calls
         void ExecuteInstancedDrawCalls(VkCommandBuffer cmd);
         
-        // Utilities
-        void UpdateShadowParamsUBO(struct RenderingResource& rr, int frameIndex);
-
         void SetViewportAndScissor(VkCommandBuffer cmd, const VkExtent2D& extent);
         CameraUniforms CollectCameraData(float aspectRatio);
         void CollectLightData();
@@ -81,8 +74,6 @@ namespace Radis
         std::vector<uint8_t> mLightBuffer{};
 
         std::unordered_map<uint32_t, uint32_t> mMeshInstanceCounts{};
-
-        ShadowCameraUniform mShadowCamData;
 
         // Light counts for instanced rendering
         uint32_t mDirectionalLightCount = 0;
