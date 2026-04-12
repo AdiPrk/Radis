@@ -65,7 +65,7 @@ namespace Radis
         std::vector<InstanceUniforms> mInstanceData{};
         std::vector<InstancedDrawCall> mDrawCalls{};
         std::vector<LightUniform> mLightData{};
-        LightBufferData mLightBufferData{};
+        std::vector<uint8_t> mLightBuffer{};
 
         std::unordered_map<uint32_t, uint32_t> mMeshInstanceCounts{};
 

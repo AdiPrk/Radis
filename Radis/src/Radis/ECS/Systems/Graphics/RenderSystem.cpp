@@ -151,15 +151,12 @@ namespace Radis
 
         auto ar = ecs->GetResource<AnimationResource>();
 
-        mLightBufferData.lightCount = static_cast<uint32_t>(mLightData.size());
-        std::ranges::copy(mLightData, mLightBufferData.lights);
-
         rr->cameraUniform->SetUniformData(camData, 0, rr->currentFrameIndex);                  // Set Camera Data
         rr->cameraUniform->SetUniformData(mInstanceData, 1, rr->currentFrameIndex);            // Set Instance Data
         rr->cameraUniform->SetUniformData(ar->bonesMatrices, 2, rr->currentFrameIndex);        // Set Animation Data
-        rr->cameraUniform->SetUniformData(mLightBufferData, 4, rr->currentFrameIndex);             // Set Light Data
+        rr->cameraUniform->SetUniformData(mLightBuffer, 4, rr->currentFrameIndex);             // Set Light Data
         rr->deferredLightingUniform->SetUniformData(camData, 0, rr->currentFrameIndex);      // Camera data
-        rr->deferredLightingUniform->SetUniformData(mLightBufferData, 6, rr->currentFrameIndex); // Light data
+        rr->deferredLightingUniform->SetUniformData(mLightBuffer, 6, rr->currentFrameIndex); // Light data
             
         // Add Render Passes!
         auto& rg = rr->renderGraph;
@@ -432,9 +429,15 @@ namespace Radis
                     .colorIntensity = glm::vec4(lc.Color, lc.Intensity),
                     .directionInner = glm::vec4(glm::normalize(lc.Direction), lc.InnerCone),
                     .outerConeType = glm::vec4(lc.OuterCone, static_cast<float>(lc.LightType), 0.0f, 0.0f)
-                    });
+                });
             });
         mLocalLightCount = static_cast<uint32_t>(mLightData.size()) - mDirectionalLightCount;
+
+        struct LightHeader { uint32_t lightCount; uint32_t _pad[3]; };
+        LightHeader header{ .lightCount = static_cast<uint32_t>(mLightData.size()) };
+        mLightBuffer.resize(sizeof(LightHeader) + sizeof(LightUniform) * mLightData.size());
+        memcpy(mLightBuffer.data(), &header, sizeof(LightHeader));
+        memcpy(mLightBuffer.data() + sizeof(LightHeader), mLightData.data(), sizeof(LightUniform) * mLightData.size());
     }
 
     void RenderSystem::BuildInstanceData()
