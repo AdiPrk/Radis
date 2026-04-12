@@ -85,10 +85,14 @@ namespace Radis
         }
     }
 
-    void ModelLibrary::UpdateUnifiedMesh()
+    void ModelLibrary::InitializeUnifiedMesh()
     {
-        mUnifiedMesh->GetUnifiedMesh().ReleaseGPU();
         mUnifiedMesh->AddModels(mDevice, mModels);
+    }
+
+    void ModelLibrary::SetUnifiedMesh()
+    {
+        mUnifiedMesh->SetModels(mDevice, mModels);
     }
 
     Model* ModelLibrary::GetModel(uint32_t index)

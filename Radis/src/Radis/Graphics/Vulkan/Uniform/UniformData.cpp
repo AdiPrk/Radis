@@ -176,6 +176,7 @@ namespace Radis
         VKTexture* gDepthTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("SceneDepth"));
         VKTexture* shadowMomentsTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("ShadowMoments"));
         VKTexture* shadowDepthTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("ShadowDepth"));
+        VKTexture* aoTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("BlurredAO"));
 
         VKTexture* envMapTex = static_cast<VKTexture*>(
             renderData.textureLibrary->GetTextureByIndex(renderData.envMapIndex)
@@ -184,7 +185,7 @@ namespace Radis
             renderData.textureLibrary->GetTextureByIndex(renderData.irMapIndex)
         );
 
-        if (!gAlbedoTex || !gNormalTex || !gPBRTex || !gEmissiveTex || !gDepthTex || !shadowMomentsTex || !shadowDepthTex || !envMapTex || !irMapTex)
+        if (!gAlbedoTex || !gNormalTex || !gPBRTex || !gEmissiveTex || !gDepthTex || !shadowMomentsTex || !shadowDepthTex || !envMapTex || !irMapTex || !aoTex)
         {
             RADIS_ERROR("One or more textures not found!");
             return;
@@ -283,6 +284,13 @@ namespace Radis
             };
             writer.WriteImage(10, &irMapInfo);
 
+            VkDescriptorImageInfo aoMapInfo{
+                .sampler = defaultSampler,
+                .imageView = aoTex->GetImageView(),
+                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            };
+            writer.WriteImage(11, &aoMapInfo);
+
             writer.Build(uniform.GetDescriptorSets()[frameIndex]);
         }
     }
@@ -299,7 +307,8 @@ namespace Radis
         VKTexture* gDepthTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("SceneDepth"));
         VKTexture* shadowMomentsTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("ShadowMoments"));
         VKTexture* shadowDepthTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("ShadowDepth"));
-        
+        VKTexture* aoTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("BlurredAO"));
+
         VKTexture* envMapTex = static_cast<VKTexture*>(
             renderData.textureLibrary->GetTextureByIndex(renderData.envMapIndex)
         );
@@ -308,7 +317,7 @@ namespace Radis
             renderData.textureLibrary->GetTextureByIndex(renderData.irMapIndex)
         );
 
-        if (!gAlbedoTex || !gNormalTex || !gPBRTex || !gEmissiveTex || !gDepthTex || !shadowMomentsTex || !shadowDepthTex || !envMapTex || !irMapTex)
+        if (!gAlbedoTex || !gNormalTex || !gPBRTex || !gEmissiveTex || !gDepthTex || !shadowMomentsTex || !shadowDepthTex || !envMapTex || !irMapTex || !aoTex)
         {
             RADIS_ERROR("One or more textures not found!");
             return;
@@ -405,6 +414,13 @@ namespace Radis
                 .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             };
             writer.WriteImage(10, &irMapInfo);
+
+            VkDescriptorImageInfo aoMapInfo{
+                .sampler = defaultSampler,
+                .imageView = aoTex->GetImageView(),
+                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            };
+            writer.WriteImage(11, &aoMapInfo);
 
             writer.Overwrite(uniform.GetDescriptorSets()[frameIndex]);
         }
@@ -617,5 +633,100 @@ namespace Radis
         }
     }
 
+    void AOBlurUniformInitH(Uniform& uniform, RenderingResource& renderData)
+    {
+        uniform.GetDescriptorSets().resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
+        VkSampler defaultSampler = renderData.textureLibrary->GetSampler();
+
+        VKTexture* inputTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("RawAO"));
+        VKTexture* depthTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("SceneDepth"));
+        VKTexture* normalTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("gNormal"));
+
+        for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex)
+        {
+            DescriptorWriter writer(*uniform.GetDescriptorLayout(), *uniform.GetDescriptorPool());
+
+            VkDescriptorImageInfo inputInfo{ defaultSampler, inputTex->GetImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
+            writer.WriteImage(0, &inputInfo);
+
+            VkDescriptorImageInfo depthInfo{ defaultSampler, depthTex->GetImageView(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL };
+            writer.WriteImage(1, &depthInfo);
+
+            VkDescriptorImageInfo normalInfo{ defaultSampler, normalTex->GetImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
+            writer.WriteImage(2, &normalInfo);
+
+            writer.Build(uniform.GetDescriptorSets()[frameIndex]);
+        }
+    }
+
+    void AOBlurUniformInitV(Uniform& uniform, RenderingResource& renderData)
+    {
+        uniform.GetDescriptorSets().resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
+        VkSampler defaultSampler = renderData.textureLibrary->GetSampler();
+
+        VKTexture* inputTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("AOBlurTmp"));
+        VKTexture* depthTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("SceneDepth"));
+        VKTexture* normalTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("gNormal"));
+
+        for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex)
+        {
+            DescriptorWriter writer(*uniform.GetDescriptorLayout(), *uniform.GetDescriptorPool());
+
+            VkDescriptorImageInfo inputInfo{ defaultSampler, inputTex->GetImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
+            writer.WriteImage(0, &inputInfo);
+
+            VkDescriptorImageInfo depthInfo{ defaultSampler, depthTex->GetImageView(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL };
+            writer.WriteImage(1, &depthInfo);
+
+            VkDescriptorImageInfo normalInfo{ defaultSampler, normalTex->GetImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
+            writer.WriteImage(2, &normalInfo);
+
+            writer.Build(uniform.GetDescriptorSets()[frameIndex]);
+        }
+    }
+
+    void AOBlurUniformUpdateH(Uniform& uniform, RenderingResource& renderData)
+    {
+        VkSampler defaultSampler = renderData.textureLibrary->GetSampler();
+    
+        VKTexture* inputTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("RawAO"));
+        VKTexture* depthTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("SceneDepth"));
+        VKTexture* normalTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("gNormal"));
+    
+        for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex)
+        {
+            DescriptorWriter writer(*uniform.GetDescriptorLayout(), *uniform.GetDescriptorPool());
+    
+            VkDescriptorImageInfo inputInfo{ defaultSampler, inputTex->GetImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
+            writer.WriteImage(0, &inputInfo);
+    
+            VkDescriptorImageInfo depthInfo{ defaultSampler, depthTex->GetImageView(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL };
+            writer.WriteImage(1, &depthInfo);
+    
+            VkDescriptorImageInfo normalInfo{ defaultSampler, normalTex->GetImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
+            writer.WriteImage(2, &normalInfo);
+    
+            writer.Overwrite(uniform.GetDescriptorSets()[frameIndex]);
+        }
+    }
+
+    void AOBlurUniformUpdateV(Uniform& uniform, RenderingResource& renderData)
+    {
+        VkSampler defaultSampler = renderData.textureLibrary->GetSampler();
+        VKTexture* inputTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("AOBlurTmp"));
+        VKTexture* depthTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("SceneDepth"));
+        VKTexture* normalTex = static_cast<VKTexture*>(renderData.textureLibrary->GetTexture("gNormal"));
+        for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex)
+        {
+            DescriptorWriter writer(*uniform.GetDescriptorLayout(), *uniform.GetDescriptorPool());
+            VkDescriptorImageInfo inputInfo{ defaultSampler, inputTex->GetImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
+            writer.WriteImage(0, &inputInfo);
+            VkDescriptorImageInfo depthInfo{ defaultSampler, depthTex->GetImageView(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL };
+            writer.WriteImage(1, &depthInfo);
+            VkDescriptorImageInfo normalInfo{ defaultSampler, normalTex->GetImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
+            writer.WriteImage(2, &normalInfo);
+            writer.Overwrite(uniform.GetDescriptorSets()[frameIndex]);
+        }
+    }
 
 }

@@ -1,7 +1,7 @@
 /*****************************************************************//**
  * \file   TextureBrowserWindow.cpp
  * \brief  Renders the Texture Browser!
- * 
+ *
  * \author Aditya Prakash
  * \date   January 2026
  *********************************************************************/
@@ -50,17 +50,17 @@ namespace Radis
             ImVec2 uv0 = { 0.0f, actualFlipY };
             ImVec2 uv1 = { 1.0f, 1.0f - actualFlipY };
 
-            // Fullscreen overlay window
-            ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
-                                     ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBringToFrontOnFocus;
-            
-            const ImGuiViewport* viewport = ImGui::GetMainViewport();
-            ImGui::SetNextWindowPos(viewport->WorkPos);
-            ImGui::SetNextWindowSize(viewport->WorkSize);
-            
-            ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.1f, 0.1f, 0.1f, 0.95f));
-            ImGui::Begin("Texture Viewer", nullptr, flags);
-            ImGui::PopStyleColor();
+            bool windowOpen = true;
+            ImGui::Begin("Texture Viewer", &windowOpen);
+
+            if (!windowOpen)
+            {
+                sFullscreenMode = false;
+                sZoomLevel = 1.0f;
+                sPanOffset = { 0.0f, 0.0f };
+                ImGui::End();
+                return;
+            }
 
             // Handle keyboard input
             if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows))
@@ -153,8 +153,9 @@ namespace Radis
 
             ImGui::Separator();
 
-            // Image display area
-            ImGui::BeginChild("ImageArea", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+            // Image display area — leave room at the bottom for the help text
+            const float helpBarHeight = ImGui::GetTextLineHeightWithSpacing() + ImGui::GetStyle().ItemSpacing.y;
+            ImGui::BeginChild("ImageArea", ImVec2(0, -helpBarHeight), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
             {
                 ImVec2 availSize = ImGui::GetContentRegionAvail();
                 float texWidth = static_cast<float>(texture->mData.width);
@@ -183,20 +184,20 @@ namespace Radis
                     {
                         float oldZoom = sZoomLevel;
                         sZoomLevel = std::clamp(sZoomLevel + wheel * 0.1f, 0.1f, 10.0f);
-                        
+
                         // Zoom towards mouse position
                         ImVec2 mousePos = ImGui::GetMousePos();
                         ImVec2 windowPos = ImGui::GetWindowPos();
                         ImVec2 relMouse = { mousePos.x - windowPos.x - availSize.x * 0.5f,
                                             mousePos.y - windowPos.y - availSize.y * 0.5f };
-                        
+
                         float zoomRatio = sZoomLevel / oldZoom;
                         sPanOffset.x = relMouse.x - (relMouse.x - sPanOffset.x) * zoomRatio;
                         sPanOffset.y = relMouse.y - (relMouse.y - sPanOffset.y) * zoomRatio;
                     }
 
                     // Handle panning with middle mouse or left mouse + drag
-                    if (ImGui::IsMouseDragging(ImGuiMouseButton_Middle) || 
+                    if (ImGui::IsMouseDragging(ImGuiMouseButton_Middle) ||
                         (ImGui::IsMouseDragging(ImGuiMouseButton_Left) && ImGui::GetIO().KeyShift))
                     {
                         ImVec2 delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Middle);
@@ -215,7 +216,7 @@ namespace Radis
                 ImVec2 p0 = ImGui::GetCursorScreenPos();
                 ImVec2 p1 = { p0.x + displayWidth, p0.y + displayHeight };
                 ImDrawList* drawList = ImGui::GetWindowDrawList();
-                
+
                 // Simple checkerboard pattern
                 const float checkSize = 16.0f;
                 ImU32 col1 = IM_COL32(60, 60, 60, 255);
@@ -250,9 +251,9 @@ namespace Radis
             }
             ImGui::EndChild();
 
-            // Help text at bottom
-            ImGui::SetCursorPos(ImVec2(10, viewport->WorkSize.y - 25));
-            ImGui::TextDisabled("Controls: Arrow Keys/A/D = Navigate | Mouse Wheel = Zoom | Middle Mouse/Shift+Drag = Pan | Y = Flip | R = Reset | ESC/Double-Click = Close");
+            // Help text pinned to the bottom of the window's content area
+            ImGui::Separator();
+            ImGui::TextDisabled("Arrow Keys/A/D = Navigate | Mouse Wheel = Zoom | Middle Mouse/Shift+Drag = Pan | Y = Flip | R = Reset | ESC/Double-Click = Close");
 
             ImGui::End();
         }
@@ -269,10 +270,10 @@ namespace Radis
 
             float flipY = static_cast<float>(Engine::GetGraphicsAPI() != GraphicsAPI::OpenGL);
 
-            // Handle fullscreen mode
+            // Render the viewer window alongside the browser whenever it's open
             if (sFullscreenMode)
             {
-                return true;
+                RenderFullscreenViewer(tl, flipY);
             }
 
             ImVec2 uv0 = { 0.0f, flipY };
@@ -281,7 +282,7 @@ namespace Radis
             ImGui::Begin("Texture Browser");
 
             const uint32_t textureCount = tl->GetTextureCount();
-            
+
             // Search/filter bar
             static char searchBuffer[256] = "";
             ImGui::SetNextItemWidth(200);
@@ -289,8 +290,8 @@ namespace Radis
             ImGui::SameLine();
             ImGui::Text("(%d textures)", textureCount);
             ImGui::SameLine();
-            ImGui::TextDisabled("(?) Double-click to view fullscreen");
-            
+            ImGui::TextDisabled("(?) Double-click to view");
+
             ImGui::Separator();
 
             const float thumbnailSize = 64.0f;
@@ -299,10 +300,10 @@ namespace Radis
             const float panelWidth = ImGui::GetContentRegionAvail().x;
             int columns = (int)floor((panelWidth + style.ItemSpacing.x) / cellSize);
             if (columns <= 0) columns = 1;
-            
+
             ImGui::BeginChild("TextureGrid", ImVec2(0, 0), false);
             ImGui::Columns(columns, nullptr, false);
-            
+
             std::string searchStr = searchBuffer;
             std::transform(searchStr.begin(), searchStr.end(), searchStr.begin(), ::tolower);
 
@@ -323,12 +324,12 @@ namespace Radis
                 }
 
                 ImGui::PushID(i);
-                
+
                 // Highlight on hover
                 ImVec2 cursorPos = ImGui::GetCursorScreenPos();
-                bool hovered = ImGui::IsMouseHoveringRect(cursorPos, 
+                bool hovered = ImGui::IsMouseHoveringRect(cursorPos,
                     ImVec2(cursorPos.x + thumbnailSize, cursorPos.y + thumbnailSize));
-                
+
                 if (hovered)
                 {
                     ImDrawList* drawList = ImGui::GetWindowDrawList();
@@ -342,7 +343,7 @@ namespace Radis
 
                 ImGui::Image(texture->GetTextureID(), ImVec2(thumbnailSize, thumbnailSize), uv0, uv1);
 
-                // Double-click to open fullscreen viewer
+                // Double-click to open viewer
                 if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                 {
                     sSelectedTextureIndex = static_cast<int32_t>(i);

@@ -48,6 +48,8 @@ namespace Radis
         tl->ResizeTexture("gPBR", extent.width, extent.height);
         tl->ResizeTexture("gEmissive", extent.width, extent.height);
         tl->ResizeTexture("RawAO", extent.width, extent.height);
+        tl->ResizeTexture("AOBlurTmp", extent.width, extent.height);
+        tl->ResizeTexture("BlurredAO", extent.width, extent.height);
 
         if (rr->deferredLightingUniform)
         {
@@ -60,6 +62,8 @@ namespace Radis
         if (rr->alchemyAOUniform)
         {
             AlchemyAOUniformUpdate(*rr->alchemyAOUniform, *rr);
+            AOBlurUniformUpdateH(*rr->aoBlurHUniform, *rr);
+            AOBlurUniformUpdateV(*rr->aoBlurVUniform, *rr);
         }
     }
 
@@ -150,6 +154,8 @@ namespace Radis
         rg->ImportTexture("ShadowMoments", (VKTexture*)tl->GetTexture("ShadowMoments"));
         rg->ImportTexture("ShadowDepth", (VKTexture*)tl->GetTexture("ShadowDepth"));
         rg->ImportTexture("RawAO", (VKTexture*)tl->GetTexture("RawAO"));
+        rg->ImportTexture("AOBlurTmp", (VKTexture*)tl->GetTexture("AOBlurTmp"));
+        rg->ImportTexture("BlurredAO", (VKTexture*)tl->GetTexture("BlurredAO"));
         
         rg->ImportBackbuffer(
             "BackBuffer",

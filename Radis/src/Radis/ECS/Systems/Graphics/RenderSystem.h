@@ -47,6 +47,8 @@ namespace Radis
         void RenderShadowBlurVVK(VkCommandBuffer cmd);
         void RenderSceneDeferredGeometryVK(VkCommandBuffer cmd);
         void RenderAlchemyAOVK(VkCommandBuffer cmd);
+        void RenderAOBlurHVK(VkCommandBuffer cmd);
+        void RenderAOBlurVVK(VkCommandBuffer cmd);
         void RenderSceneDeferredLightingVK(VkCommandBuffer cmd);
         void RenderLightVolumesVK(VkCommandBuffer cmd);
         void RenderToneMapVK(VkCommandBuffer cmd);

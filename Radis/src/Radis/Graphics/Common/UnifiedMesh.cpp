@@ -65,4 +65,13 @@ namespace Radis
         // Re-upload to GPU
         mUnifiedMesh.UploadToGPU(&device);
     }
+
+    void UnifiedMeshes::SetModels(Device& device, const std::vector<std::unique_ptr<Model>>& models)
+    {
+        mUnifiedMesh.mVertices.clear();
+        mUnifiedMesh.mIndices.clear();
+        mMeshInfos.clear();
+
+        AddModels(device, models);
+    }
 }

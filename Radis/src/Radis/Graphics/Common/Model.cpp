@@ -100,7 +100,10 @@ namespace Radis
         {
             Vertex vertex{};
 
-            glm::vec4 pos = /*transform * */glm::vec4(mesh->mVertices[j].x, mesh->mVertices[j].y, mesh->mVertices[j].z, 1.f);
+            glm::vec4 pos = glm::vec4(mesh->mVertices[j].x, mesh->mVertices[j].y, mesh->mVertices[j].z, 1.f);
+            if (!isSkinned) {
+                pos = transform * pos;
+            }
             vertex.position = pos;
 
             //vertex.position = { mesh->mVertices[j].x, mesh->mVertices[j].y, mesh->mVertices[j].z };
@@ -108,8 +111,12 @@ namespace Radis
             // Normals
             if (mesh->HasNormals())
             {
-                glm::vec3 n = /*normalMat * */glm::vec3(mesh->mNormals[j].x, mesh->mNormals[j].y, mesh->mNormals[j].z);
-                vertex.normal = glm::normalize(n);
+                glm::vec3 normal = glm::vec3(mesh->mNormals[j].x, mesh->mNormals[j].y, mesh->mNormals[j].z);
+                if (!isSkinned) {
+                    normal = normalMat * normal;
+                }
+
+                vertex.normal = glm::normalize(normal);
 
                 //vertex.normal = { mesh->mNormals[j].x, mesh->mNormals[j].y, mesh->mNormals[j].z };
             }

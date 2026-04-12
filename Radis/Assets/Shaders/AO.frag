@@ -1,11 +1,8 @@
 #version 460
 
 layout(location = 0) in vec2 fragTexCoord;
-layout(location = 0) out vec4 outAO; // Single channel output for the AO factor
+layout(location = 0) out vec4 outAO;
 
-// ---------------------------------------------------------------------------
-// Uniforms & Bindings
-// ---------------------------------------------------------------------------
 #ifdef VULKAN
     #define UBO_LAYOUT(s, b) layout(set = s, binding = b)
 #else
@@ -24,18 +21,16 @@ layout(set = 1, binding = 0) uniform sampler2D gDepth;
 layout(set = 1, binding = 1) uniform sampler2D gNormal;
 
 layout(push_constant) uniform AOPushConstants {
-    float radius;       // R: Range of influence (e.g., 1.0)
-    int numSamples;     // n: Number of samples (e.g., 10 to 20)
-    float scale;        // s: Contrast scale
-    float contrast;     // k: Contrast exponent
+    float radius;       
+    int numSamples;     
+    float scale;        
+    float contrast;     
     int debugMode;
 } pc;
 
 const float PI = 3.14159265359;
+const float SPIRAL_TURNS = 4.88692190558; 
 
-// ---------------------------------------------------------------------------
-// Utilities
-// ---------------------------------------------------------------------------
 vec3 ReconstructWorldPos(vec2 uv, float depth) {
     vec4 clipPos = vec4(uv * 2.0 - 1.0, depth, 1.0);
     vec4 worldPos = uniforms.invProjView * clipPos;
@@ -50,74 +45,67 @@ vec3 OctDecode(vec2 f) {
     return normalize(n);
 }
 
-// ---------------------------------------------------------------------------
-// Main
-// ---------------------------------------------------------------------------
 void main() {
-    float depth = texture(gDepth, fragTexCoord).r;
+    float depth = textureLod(gDepth, fragTexCoord, 0.0).r;
     if (depth >= 1.0) {
-        outAO = vec4(1.0); // No occlusion on the skybox
+        outAO = vec4(1.0);
         return;
     }
 
     vec3 P = ReconstructWorldPos(fragTexCoord, depth);
-    vec2 normalEnc = texture(gNormal, fragTexCoord).rg;
+    vec2 normalEnc = textureLod(gNormal, fragTexCoord, 0.0).rg;
     vec3 N = OctDecode(normalEnc);
 
-    // Camera space depth for spiral scaling
     vec4 viewPos = uniforms.view * vec4(P, 1.0);
-    float d = max(-viewPos.z, 0.0001); // Avoid division by zero just in case
+    float z_C = viewPos.z; 
+    float d = max(-z_C, 0.0001); 
 
-    // Pseudo-random rotation hash based on integer pixel coordinates
     ivec2 loc = ivec2(gl_FragCoord.xy);
     uint hash = ((30u * uint(loc.x)) ^ uint(loc.y)) + 10u * uint(loc.x) * uint(loc.y);
-    float phi = float(hash); 
+    float phi = float(hash);
 
     float R = pc.radius;
-    float c = 0.1 * R;
-    float delta = 0.001;
-    float n_float = float(pc.numSamples);
+    float invRsq = 1.0 / (R * R); // Used for smooth falloff
+    float s_float = float(pc.numSamples);
+    float invSamples = 1.0 / s_float;
+    
+    // Algorithm constants
+    float epsilon = 0.0001; 
+    float beta = 0.001;     
 
+    float biasThreshold = z_C * beta;
     vec2 uvScale = vec2(uniforms.projection[0][0], uniforms.projection[1][1]) * 0.5;
+    float radiusToScreen = R / d; 
 
     float sum = 0.0;
 
     for (int i = 0; i < pc.numSamples; ++i) {
-        float alpha = (float(i) + 0.5) / n_float;
+        float alpha = (float(i) + 0.5) * invSamples;
+        float h = alpha * radiusToScreen;
         
-        // Base ratio
-        float h = alpha * R / d;
-        // Spiral angle: 7 turns for every 9 points
-        float theta = 2.0 * PI * alpha * (7.0 * n_float / 9.0) + phi; 
+        float theta = (float(i) + 0.5) * SPIRAL_TURNS + phi;
 
         vec2 offset = h * uvScale * vec2(cos(theta), sin(theta));
         vec2 sampleUV = fragTexCoord + offset;
 
-        // Clamp to screen bounds
         if (sampleUV.x < 0.0 || sampleUV.x > 1.0 || sampleUV.y < 0.0 || sampleUV.y > 1.0) continue;
 
-        float sampleDepth = texture(gDepth, sampleUV).r;
+        float sampleDepth = textureLod(gDepth, sampleUV, 0.0).r;
         vec3 Pi = ReconstructWorldPos(sampleUV, sampleDepth);
 
-        vec3 omega = Pi - P;
-        float distSq = dot(omega, omega);
+        vec3 v_i = Pi - P; 
+        float distSq = dot(v_i, v_i);
 
-        // Heaviside step function: 1 if within range R, 0 otherwise
-        float H = (sqrt(distSq) < R) ? 1.0 : 0.0;
+        // Smooth falloff instead of Heaviside step function
+        float falloff = max(0.0, 1.0 - distSq * invRsq); 
 
-        // Depth of Pi for the delta check
-        vec4 viewPi = uniforms.view * vec4(Pi, 1.0);
-        float di = -viewPi.z;
-
-        float numerator = max(0.0, dot(N, omega) - delta * di) * H;
-        float denominator = max(c * c, distSq);
+        float numerator = max(0.0, dot(v_i, N) + biasThreshold) * falloff;
+        float denominator = distSq + epsilon;
 
         sum += numerator / denominator;
     }
 
-    float S = (2.0 * PI * c / n_float) * sum;
-    
-    float A = pow(max(0.0, 1.0 - pc.scale * S), pc.contrast);
+    float A = pow(max(0.0, 1.0 - (2.0 * pc.scale * invSamples) * sum), pc.contrast);
 
     outAO = vec4(A, A, A, 1.0);
 }

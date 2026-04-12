@@ -247,6 +247,8 @@ namespace Radis
                     b.reads("gEmissive");
                     b.reads("SceneHDR");
                     b.reads("RawAO");
+                    b.reads("AOBlurTmp");
+                    b.reads("BlurredAO");
                     b.writes("BackBuffer"); 
                 },
                 std::bind(&EditorSystem::RenderImGui, this, std::placeholders::_1)
@@ -334,6 +336,14 @@ namespace Radis
 
         ImGui::Checkbox("Raytracing Heatmap Estimation", &er->renderRaytracingHeatmap);
         ImGui::EndDisabled();
+
+        // ambient occlusion pc
+        ImGui::Text("AO PC:");
+        const char* aoPCItems[] = { "radius", "samples", "scale", "contrast" };
+        ImGui::DragFloat("radius##AO_Radius", &rr->aoPC.radius, 0.1f, 0.1f, 100.0f);
+        ImGui::DragInt("samples##AO_Samples", &rr->aoPC.numSamples, 1, 1, 64);
+        ImGui::DragFloat("scale##AO_Scale", &rr->aoPC.scale, 0.1f, 0.1f, 10.0f);
+        ImGui::DragFloat("contrast##AO_Contrast", &rr->aoPC.contrast, 0.1f, 0.1f, 10.0f);
 
         // lightVolumeDebugMode, combo of (0=normal, 1=volume tint, 2=density heatmap)
         ImGui::Text("Light Volume Debug Mode:");

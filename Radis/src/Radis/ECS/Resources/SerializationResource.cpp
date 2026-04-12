@@ -116,7 +116,7 @@ namespace Radis
             std::string componentName(cName);
 
             // This is the generic function that will be stored in the map.
-            deserializers[componentName] = [](Entity entity, const nlohmann::json& j_component)
+            deserializers[componentName] = [componentName](Entity entity, const nlohmann::json& j_component)
             {
                 auto& component = entity.TryAddComponent<ComponentType>();
 
@@ -131,6 +131,15 @@ namespace Radis
                         *field.value() = j_component.at(field.name()).get<FieldType>();
                     }
                 });
+
+                if (componentName == "ModelComponent")
+                {
+                    bool hasModel = entity.HasComponent<ModelComponent>();
+                    if (hasModel) {
+                        auto& modelComponent = entity.GetComponent<ModelComponent>();
+                        modelComponent.UpdateModelID = true;
+                    }
+                }
             };
         };
 

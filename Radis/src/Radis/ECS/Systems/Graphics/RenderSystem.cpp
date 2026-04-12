@@ -361,6 +361,26 @@ namespace Radis
                     std::bind(&RenderSystem::RenderAlchemyAOVK, this, std::placeholders::_1)
                 );
 
+                rg->AddPass("AOBlurHPass",
+                    [&](RGPassBuilder& b) {
+                        b.reads("RawAO");
+                        b.reads("SceneDepth");
+                        b.reads("gNormal");
+                        b.writes("AOBlurTmp");
+                    },
+                    std::bind(&RenderSystem::RenderAOBlurHVK, this, std::placeholders::_1)
+                );
+
+                rg->AddPass("AOBlurVPass",
+                    [&](RGPassBuilder& b) {
+                        b.reads("AOBlurTmp");
+                        b.reads("SceneDepth");
+                        b.reads("gNormal");
+                        b.writes("BlurredAO");
+                    },
+                    std::bind(&RenderSystem::RenderAOBlurVVK, this, std::placeholders::_1)
+                );
+
                 // directional/ambient -> into SceneHDR
                 rg->AddPass("LightingPass",
                     [&](RGPassBuilder& b) {
@@ -370,6 +390,7 @@ namespace Radis
                         b.reads("gEmissive");
                         b.reads("SceneDepth");
                         b.reads("ShadowMoments");
+                        b.reads("BlurredAO");
                         b.writes("SceneHDR");
                     },
                     std::bind(&RenderSystem::RenderSceneDeferredLightingVK, this, std::placeholders::_1)
@@ -786,7 +807,7 @@ namespace Radis
 
         if (rr->renderMode != RenderMode::Raytracing && !debugData.empty())
         {
-            cubeModel = ml->GetModel("Assets/Models/cube.dm");
+            cubeModel = ml->GetModel("Assets/Models/cube.obj");
             if (cubeModel && !cubeModel->mMeshes.empty())
             {
                 cubeMeshID = cubeModel->mMeshes[0]->GetID();
@@ -995,24 +1016,51 @@ namespace Radis
         SetViewportAndScissor(cmd, rr->swapChain->GetSwapChainExtent());
 
         // Push Constants for the Alchemy parameters
-        struct AOPC {
-            float radius;
-            int numSamples;
-            float scale;
-            float contrast;
-            int debugMode;
-        };
-
-        AOPC pc;
-        pc.radius = 1.0f;
-        pc.numSamples = 15;
-        pc.scale = 1.0f;
-        pc.contrast = 1.0f;
-        pc.debugMode = 4;
-
-        vkCmdPushConstants(cmd, rr->alchemyAOPipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(AOPC), &pc);
+        vkCmdPushConstants(cmd, rr->alchemyAOPipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(RenderingResource::AOPC), &rr->aoPC);
 
         // Draw a fullscreen triangle to trigger the fragment shader
+        vkCmdDraw(cmd, 3, 1, 0, 0);
+    }
+
+    void RenderSystem::RenderAOBlurHVK(VkCommandBuffer cmd)
+    {
+        auto rr = ecs->GetResource<RenderingResource>();
+        ScopedDebugLabel label(rr->device.get(), cmd, "AO Blur Horizontal", glm::vec4(0.8f, 0.4f, 0.2f, 1.0f));
+
+        rr->aoBlurHPipeline->Bind(cmd);
+        rr->aoBlurHUniform->Bind(cmd, rr->aoBlurHPipeline->GetLayout(), rr->currentFrameIndex);
+
+        auto ext = rr->swapChain->GetSwapChainExtent();
+        SetViewportAndScissor(cmd, ext);
+
+        auto& pc = rr->aoBlurPC;
+        pc.direction = glm::vec2(1.0f / (float)ext.width, 0.0f);
+        pc.radius = 8;
+        pc.spatialSigma = 4.0f;
+        pc.rangeSigma = 0.05f;
+
+        vkCmdPushConstants(cmd, rr->aoBlurHPipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(RenderingResource::BlurPC), &pc);
+        vkCmdDraw(cmd, 3, 1, 0, 0);
+    }
+
+    void RenderSystem::RenderAOBlurVVK(VkCommandBuffer cmd)
+    {
+        auto rr = ecs->GetResource<RenderingResource>();
+        ScopedDebugLabel label(rr->device.get(), cmd, "AO Blur Vertical", glm::vec4(0.8f, 0.4f, 0.2f, 1.0f));
+
+        rr->aoBlurVPipeline->Bind(cmd);
+        rr->aoBlurVUniform->Bind(cmd, rr->aoBlurVPipeline->GetLayout(), rr->currentFrameIndex);
+
+        auto ext = rr->swapChain->GetSwapChainExtent();
+        SetViewportAndScissor(cmd, ext);
+
+        auto& pc = rr->aoBlurPC;
+        pc.direction = glm::vec2(0.0f, 1.0f / (float)ext.height);
+        pc.radius = 8;
+        pc.spatialSigma = 4.0f;
+        pc.rangeSigma = 0.05f;
+
+        vkCmdPushConstants(cmd, rr->aoBlurVPipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(RenderingResource::BlurPC), &pc);
         vkCmdDraw(cmd, 3, 1, 0, 0);
     }
 
