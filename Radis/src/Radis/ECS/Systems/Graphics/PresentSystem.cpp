@@ -24,6 +24,7 @@
 
 #include "Graphics/Common/TextureLibrary.h"
 #include "Graphics/Vulkan/Texture/VKTexture.h"
+#include "Graphics/Vulkan/Uniform/Uniform.h"
 
 #include "Engine.h"
 
@@ -51,19 +52,14 @@ namespace Radis
         tl->ResizeTexture("AOBlurTmp", extent.width, extent.height);
         tl->ResizeTexture("BlurredAO", extent.width, extent.height);
 
-        if (rr->deferredLightingUniform)
-        {
-            DeferredLightingUniformUpdate(*rr->deferredLightingUniform, *rr);
-        }
-        if (rr->tonemapUniform)
-        {
-            TonemapUniformUpdate(*rr->tonemapUniform, *rr);
-        }
+        if (rr->deferredLightingUniform) rr->deferredLightingUniform->UpdateDescriptorSets(*rr);
+        if (rr->tonemapUniform) rr->tonemapUniform->UpdateDescriptorSets(*rr);
+        
         if (rr->alchemyAOUniform)
         {
-            AlchemyAOUniformUpdate(*rr->alchemyAOUniform, *rr);
-            AOBlurUniformUpdateH(*rr->aoBlurHUniform, *rr);
-            AOBlurUniformUpdateV(*rr->aoBlurVUniform, *rr);
+            rr->alchemyAOUniform->UpdateDescriptorSets(*rr);
+            rr->aoBlurHUniform->UpdateDescriptorSets(*rr);
+            rr->aoBlurVUniform->UpdateDescriptorSets(*rr);
         }
     }
 

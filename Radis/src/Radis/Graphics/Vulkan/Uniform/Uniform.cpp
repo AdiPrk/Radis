@@ -22,6 +22,7 @@ namespace Radis
 {
     Uniform::Uniform(Device& device, RenderingResource& renderData, const UniformSettings& settings)
         : mDevice(device)
+        , mSettings(settings)
     {
         DescriptorPool::Builder poolBuilder = DescriptorPool::Builder(device).SetMaxSets(SwapChain::MAX_FRAMES_IN_FLIGHT);
         for (const auto& bindingInfo : settings.bindings)
@@ -99,7 +100,7 @@ namespace Radis
         }
         else
         {
-            UpdateDescriptorSets(renderData, settings, true);
+            UpdateDescriptorSets(renderData, true);
         }
     }
 
@@ -116,7 +117,7 @@ namespace Radis
             nullptr);
     }
 
-    void Uniform::UpdateDescriptorSets(RenderingResource& renderData, const UniformSettings& settings, bool isInit)
+    void Uniform::UpdateDescriptorSets(RenderingResource& renderData, bool isInit)
     {
         if (isInit) mUniformDescriptorSets.resize(SwapChain::MAX_FRAMES_IN_FLIGHT);
         VkSampler defaultSampler = renderData.textureLibrary->GetSampler();
@@ -125,7 +126,7 @@ namespace Radis
         {
             DescriptorWriter writer(*mUniformDescriptorLayout, *mUniformPool);
 
-            for (const auto& binding : settings.bindings)
+            for (const auto& binding : mSettings.bindings)
             {
                 uint32_t bIndex = binding.layoutBinding.binding;
 

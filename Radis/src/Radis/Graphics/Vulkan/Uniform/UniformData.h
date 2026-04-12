@@ -17,17 +17,7 @@ namespace Radis
 {
     void CameraUniformInit(Uniform& uniform, RenderingResource& renderData);
     void RTUniformInit(Uniform& uniform, RenderingResource& renderData);
-    void DeferredLightingUniformInit(Uniform& uniform, RenderingResource& renderData);
-    void DeferredLightingUniformUpdate(Uniform& uniform, RenderingResource& renderData);
-    void TonemapUniformInit(Uniform& uniform, RenderingResource& renderData);
-    void TonemapUniformUpdate(Uniform& uniform, RenderingResource& renderData);
-    void AlchemyAOUniformInit(Uniform& uniform, RenderingResource& renderData);
-    void AlchemyAOUniformUpdate(Uniform& uniform, RenderingResource& renderData);
-    void AOBlurUniformInitH(Uniform& uniform, RenderingResource& renderData);
-    void AOBlurUniformInitV(Uniform& uniform, RenderingResource& renderData);
-    void AOBlurUniformUpdateH(Uniform& uniform, RenderingResource& renderData);
-    void AOBlurUniformUpdateV(Uniform& uniform, RenderingResource& renderData);
-
+    
     // Called camera uniform but it's just everything until rhi is better set up
     inline VkShaderStageFlags rtFlags = VK_SHADER_STAGE_RAYGEN_BIT_KHR |
                                         VK_SHADER_STAGE_ANY_HIT_BIT_KHR |
@@ -54,10 +44,7 @@ namespace Radis
         .AddSSBIBinding(rtFlags | compFlags, 1).SetDebugName("RT History Write")
         .AddISBinding(rtFlags | compFlags, 1).SetDebugName("Environment Map");
 
-    // Deferred lighting pass uniform settings
-    // Binding 0: Camera UBO
-    // Binding 1-5: G-Buffer textures
-    // Binding 6: Light SSBO (vertex + fragment for instanced light volumes)
+    // Deferred lighting pass uniform
     const UniformSettings deferredLightingUniformSettings = UniformSettings({})
         .AddUBBinding(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(CameraUniforms)).SetDebugName("Deferred Camera UBO")
         .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, "gAlbedo").SetDebugName("G-Buffer Albedo")
@@ -71,20 +58,20 @@ namespace Radis
         .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, "BlurredAO").SetDebugName("SSAO Map");
 
     // Tone mapping pass - just reads the accumulated HDR texture
-    const UniformSettings tonemapUniformSettings = UniformSettings(TonemapUniformInit)
-        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("SceneHDR Texture");
+    const UniformSettings tonemapUniformSettings = UniformSettings({})
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, "SceneHDR").SetDebugName("SceneHDR Texture");
 
-    const UniformSettings alchemyAOUniformSettings = UniformSettings(AlchemyAOUniformInit)
-        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("SceneDepth")
-        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("gNormal");
+    const UniformSettings alchemyAOUniformSettings = UniformSettings({})
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, "SceneDepth", VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL).SetDebugName("SceneDepth")
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, "gNormal").SetDebugName("gNormal");
 
-    const UniformSettings aoBlurHUniformSettings = UniformSettings(AOBlurUniformInitH)
-        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("RawAO")
-        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("SceneDepth")
-        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("gNormal");
+    const UniformSettings aoBlurHUniformSettings = UniformSettings({})
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, "RawAO").SetDebugName("RawAO")
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, "SceneDepth", VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL).SetDebugName("SceneDepth")
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, "gNormal").SetDebugName("gNormal");
 
-    const UniformSettings aoBlurVUniformSettings = UniformSettings(AOBlurUniformInitV)
-        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("AOBlurTmp")
-        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("SceneDepth")
-        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1).SetDebugName("gNormal");
+    const UniformSettings aoBlurVUniformSettings = UniformSettings({})
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, "AOBlurTmp").SetDebugName("AOBlurTmp")
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, "SceneDepth", VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL).SetDebugName("SceneDepth")
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, "gNormal").SetDebugName("gNormal");
 }

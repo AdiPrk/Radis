@@ -41,7 +41,7 @@ namespace Radis
          *********************************************************************/
         void Bind(VkCommandBuffer& commandBuffer, VkPipelineLayout& pipelineLayout, int frameIndex, VkPipelineBindPoint bindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS);
 
-        void UpdateDescriptorSets(RenderingResource& renderData, const UniformSettings& settings, bool isInit = false);
+        void UpdateDescriptorSets(RenderingResource& renderData, bool isInit = false);
 
         /*********************************************************************
          * brief:  Sets the uniform's data
@@ -80,7 +80,9 @@ namespace Radis
         std::unique_ptr<DescriptorPool> mUniformPool;
         std::unique_ptr<DescriptorSetLayout> mUniformDescriptorLayout;
         unsigned int mPipelineBindingIndex = std::numeric_limits<unsigned int>::max();
+        
         Device& mDevice;
+        const UniformSettings& mSettings;
 
         std::vector<VkDescriptorSetLayoutBinding> rasterBindings;
         std::vector<VkDescriptorSetLayoutBinding> rayTracingBindings;

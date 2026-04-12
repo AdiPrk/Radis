@@ -73,9 +73,10 @@ namespace Radis
             return *this;
         }
 
-        UniformSettings& AddSSBIBinding(VkShaderStageFlags stageFlags, uint32_t descriptorCount)
+        UniformSettings& AddSSBIBinding(VkShaderStageFlags stageFlags, uint32_t descriptorCount, const std::string& texName = "")
         {
             bindings.push_back({ { nextBinding++, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, descriptorCount, stageFlags }, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, 0, descriptorCount, false });
+            bindings.back().textureName = texName;
             bindings.back().imageLayout = VK_IMAGE_LAYOUT_GENERAL;
             return *this;
         }

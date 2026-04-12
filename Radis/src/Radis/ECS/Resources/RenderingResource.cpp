@@ -277,6 +277,27 @@ namespace Radis
                 VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             );
+
+            for (int i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i)
+            {
+                textureLibrary->CreateTexture(
+                    "RTAccum_" + std::to_string(i),
+                    extent.width, extent.height,
+                    VK_FORMAT_R32G32B32A32_SFLOAT,
+                    VK_IMAGE_TILING_OPTIMAL,
+                    VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+                    VK_IMAGE_LAYOUT_GENERAL
+                );
+
+                textureLibrary->CreateTexture(
+                    "RTHeatmapImage_" + std::to_string(i),
+                    extent.width, extent.height,
+                    VK_FORMAT_R32G32B32A32_SFLOAT,
+                    VK_IMAGE_TILING_OPTIMAL,
+                    VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+                    VK_IMAGE_LAYOUT_GENERAL
+                );
+            }
         }
 
         modelLibrary->QueueTextures();
