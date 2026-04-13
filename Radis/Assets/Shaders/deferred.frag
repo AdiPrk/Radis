@@ -82,7 +82,7 @@ void main()
     vec4 baseColor = vec4(fragColor * fragTint.rgb, fragTint.a) * baseColorFactor;
     if (textureIndices.x != INVALID_TEXTURE_INDEX)
     {
-        baseColor = SampleTexture(textureIndices.x, fragTexCoord) * fragTint * baseColorFactor;
+        baseColor = SampleTexture(0, fragTexCoord) * fragTint * baseColorFactor;
     }
     
     // Alpha test - discard transparent fragments

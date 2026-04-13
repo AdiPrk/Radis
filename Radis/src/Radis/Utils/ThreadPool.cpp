@@ -13,6 +13,11 @@ namespace Radis
 {
     ThreadPool::ThreadPool(uint32_t threadCount)
     {
+        if (threadCount == 0)
+        {
+            threadCount = 2;// std::thread::hardware_concurrency();
+        }
+
         mWorkers.reserve(threadCount);
         for (uint32_t i = 0; i < threadCount; ++i)
             mWorkers.emplace_back([this] { WorkerLoop(); });

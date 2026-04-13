@@ -103,14 +103,13 @@ namespace Radis
 
         // Update textures!
         rr->modelLibrary->QueueTextures();
-        rr->textureLibrary->LoadQueuedTextures();
-        rr->textureLibrary->UpdateTextureUniform(rr->cameraUniform.get());
-
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+        if (rr->textureLibrary->LoadQueuedTextures()) 
         {
-            rr->textureLibrary->UpdateRTUniform(*rr);
+            rr->textureLibrary->UpdateTextureUniform(rr->cameraUniform.get());
         }
-
+        
+        rr->textureLibrary->UpdateRTUniform(*rr);
+        
         // Draw the editor grid
         DebugDrawResource::DrawEditorGrid(50, 1.0f);
     }
@@ -365,7 +364,7 @@ namespace Radis
         // For path tracing:
         camData.frameCount = rr->frameCount;
 
-        if (camData.projectionView != rr->previousViewProj) {
+        if (camData.projectionView != rr->previousViewProj || rr->accumulationCount <= 0) {
             rr->accumulationCount = 0;
             rr->previousViewProj = camData.projectionView;
         }
