@@ -79,7 +79,7 @@ namespace Radis
         int GetChannels() const { return mData.channels; }
         size_t GetByteSize() const { return mData.ByteSize(); }
 
-        virtual void* GetTextureID() = 0;
+        virtual void* GetTextureID() { return nullptr; }
 
         const TextureData& mData;
     };

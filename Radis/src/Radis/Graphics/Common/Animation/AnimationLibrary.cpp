@@ -12,7 +12,7 @@
 
 namespace Radis
 {
-    const uint32_t AnimationLibrary::INVALID_ANIMATION_INDEX = 10001;
+    const uint32_t AnimationLibrary::INVALID_ANIMATION_INDEX = UINT32_MAX;
 
     AnimationLibrary::AnimationLibrary()
     {
@@ -40,7 +40,7 @@ namespace Radis
 
         static Assimp::Importer importer;
         // importer.SetPropertyBool(AI_CONFIG_PP_OG_EXCLUDE_LIST, true);
-
+        importer.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
         const aiScene* scene = importer.ReadFile(animPath, aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_GlobalScale | aiProcess_OptimizeGraph);
 
         if (!scene || !scene->mAnimations[0] || !scene->mRootNode)

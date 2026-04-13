@@ -25,26 +25,26 @@ namespace Radis
 
         VkSampler defaultSampler = renderData.textureLibrary->GetSampler();
         size_t textureCount = renderData.textureLibrary->GetTextureCount();
+        if (textureCount == 0)
+        {
+            RADIS_CRITICAL("There should be a texture by now");
+            return;
+        }
 
         std::vector<VkDescriptorImageInfo> imageInfos(TextureLibrary::MAX_TEXTURE_COUNT);
+        ITexture* itex = renderData.textureLibrary->GetTextureByIndex(0);
+        VKTexture* vktex = static_cast<VKTexture*>(itex);
+        if (!vktex || !vktex->GetImageView())
+        {
+            RADIS_CRITICAL("Failed to get valid VKTexture or ImageView for error texture");
+            return;
+        }
+        
         for (size_t j = 0; j < TextureLibrary::MAX_TEXTURE_COUNT; ++j) 
         {
             imageInfos[j].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             imageInfos[j].sampler = defaultSampler;
-
-            if (textureCount == 0) 
-            {
-                imageInfos[j].imageView = VK_NULL_HANDLE;
-            }
-            else
-            {
-                ITexture* itex = renderData.textureLibrary->GetTextureByIndex(static_cast<uint32_t>(std::min(j, textureCount - 1)));
-                VKTexture* vktex = static_cast<VKTexture*>(itex);
-                if (vktex)
-                {
-                    imageInfos[j].imageView = vktex->GetImageView();
-                }
-            }
+            imageInfos[j].imageView = vktex->GetImageView();
         }
 
         // Build descriptor sets for each frame with both buffer and texture data

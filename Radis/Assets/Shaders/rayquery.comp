@@ -9,7 +9,7 @@ layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 // Constants
 // ---------------------------------------------------------------------------
 const float PI                 = 3.14159265359;
-const uint  NO_TEXTURE         = 10001u;
+const uint  NO_TEXTURE         = 0xFFFFFFFFU;
 const float RAY_TMIN           = 1e-3;
 const float RAY_TMAX           = 1e38;
 const float NORMAL_OFFSET      = 1e-3;

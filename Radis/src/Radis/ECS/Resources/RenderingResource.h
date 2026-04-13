@@ -28,14 +28,15 @@ namespace Radis
     class ModelLibrary;
     class TextureLibrary;
     class AnimationLibrary;
+    class AssetResource;
 
     struct RenderingResource : public IResource
     {
-        RenderingResource(IWindow* window);
+        RenderingResource(IWindow* window, AssetResource* assetResource);
         ~RenderingResource();
 
-        void Create(IWindow* window);
-        void Cleanup();
+        void Create(IWindow* window, AssetResource* assetResource);
+        void Shutdown() override;
 
         std::unique_ptr<Device> device;
         std::unique_ptr<SwapChain> swapChain;
@@ -109,8 +110,6 @@ namespace Radis
         int raytraceRenderMode = 1;
         
         // Env map
-        uint32_t envMapIndex;
-        uint32_t irMapIndex;
         float exposure = 1.0f;
         int useIrrDefuse = 0;
         int specTestMode = 0;

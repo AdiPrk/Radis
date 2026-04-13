@@ -222,9 +222,13 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <ClCompile Include="src\Radis\Assets\Assets.cpp" />
+    <ClCompile Include="src\Radis\ECS\Resources\TextureResource.cpp" />
+    <ClCompile Include="src\Radis\ECS\Resources\Assets\AssetResource.cpp" />
+    <ClCompile Include="src\Radis\ECS\Resources\Assets\AssetTypes.cpp" />
     <ClCompile Include="src\Radis\Assets\CaseInsensitiveHash.cpp" />
     <ClCompile Include="src\Radis\Assets\Serialization\BinaryIO.cpp" />
     <ClCompile Include="src\Radis\Assets\Serialization\ModelSerializer.cpp" />
+    <ClCompile Include="src\Radis\ECS\Resources\Assets\ThreadPool.cpp" />
     <ClCompile Include="src\Radis\Assets\UUID.cpp" />
     <ClCompile Include="src\Radis\ECS\Components\Components.cpp" />
     <ClCompile Include="src\Radis\ECS\ECS.cpp" />
@@ -327,7 +331,12 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <ClInclude Include="Dependencies\imgui\ImZoomSlider.h" />
     <ClInclude Include="Dependencies\nlohmann\json.hpp" />
     <ClInclude Include="src\PCH\pch.h" />
+    <ClInclude Include="src\Radis\ECS\Resources\TextureResource.h" />
+    <ClInclude Include="src\Radis\ECS\Resources\Assets\AssetEntry.h" />
+    <ClInclude Include="src\Radis\ECS\Resources\Assets\AssetLoader.h" />
     <ClInclude Include="src\Radis\Assets\Assets.h" />
+    <ClInclude Include="src\Radis\ECS\Resources\Assets\AssetResource.h" />
+    <ClInclude Include="src\Radis\ECS\Resources\Assets\AssetTypes.h" />
     <ClInclude Include="src\Radis\Assets\CaseInsensitiveHash.h" />
     <ClInclude Include="src\Radis\Assets\Serialization\BinaryIO.h" />
     <ClInclude Include="src\Radis\Assets\Serialization\ModelSerializer.h" />
@@ -411,6 +420,7 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Radis\Graphics\Vulkan\VKMeshBuffer.h" />
     <ClInclude Include="src\Radis\Graphics\Vulkan\VulkanWindow.h" />
     <ClInclude Include="src\Radis\Profiler\Profiler.h" />
+    <ClInclude Include="src\Radis\ECS\Resources\Assets\ThreadPool.h" />
     <ClInclude Include="src\Radis\Utils\FrameRate.h" />
     <ClInclude Include="src\Radis\Utils\InputMap.h" />
     <ClInclude Include="src\Radis\Utils\Logger.h" />

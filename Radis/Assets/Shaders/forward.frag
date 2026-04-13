@@ -20,7 +20,7 @@ layout(location = 10) in vec3 fragWorldPos;
 layout(location = 0) out vec4 outColor;
 
 const float PI = 3.14159265359;
-const uint INVALID_TEXTURE_INDEX = 10001;
+const uint INVALID_TEXTURE_INDEX = 0xFFFFFFFFU;
 
 #ifdef VULKAN
     #define UBO_LAYOUT(s, b) layout(set = s, binding = b)

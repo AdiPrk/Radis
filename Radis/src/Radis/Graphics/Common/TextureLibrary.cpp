@@ -23,7 +23,7 @@
 namespace Radis
 {
     const uint32_t TextureLibrary::MAX_TEXTURE_COUNT = 500;
-    const uint32_t TextureLibrary::INVALID_TEXTURE_INDEX = 10001;
+    const uint32_t TextureLibrary::INVALID_TEXTURE_INDEX = UINT32_MAX;
 
     TextureLibrary::TextureLibrary(Device* device)
         : device{ device }
@@ -523,9 +523,7 @@ namespace Radis
         VKTexture* sceneHDRTex = static_cast<VKTexture*>(rr.textureLibrary->GetTexture("SceneHDR"));
         VkSampler defaultSampler = rr.textureLibrary->GetSampler();
 
-        VKTexture* envMapTex = static_cast<VKTexture*>(
-            rr.textureLibrary->GetTextureByIndex(rr.envMapIndex)
-          );
+        VKTexture* envMapTex = static_cast<VKTexture*>(rr.textureLibrary->GetTexture("Alexs_Apt_2k.IRMAP.hdr"));
 
         if (!envMapTex)
         {

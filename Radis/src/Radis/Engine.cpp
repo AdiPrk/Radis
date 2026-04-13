@@ -20,8 +20,10 @@
 
 #include "ECS/Resources/InputResource.h"
 #include "ECS/Resources/WindowResource.h"
+#include "ECS/Resources/Assets/AssetResource.h"
 #include "ECS/Resources/RenderingResource.h"
 #include "ECS/Resources/RaytracingResource.h"
+#include "ECS/Resources/TextureResource.h"
 #include "ECS/Resources/EditorResource.h"
 #include "ECS/Resources/SerializationResource.h"
 #include "ECS/Resources/AnimationResource.h"
@@ -71,13 +73,19 @@ namespace Radis
         // ---------------------------------
 
         // Resources -----------------------
+        mEcs.AddResource<AssetResource>();
+        auto ar = mEcs.GetResource<AssetResource>();
+
         mEcs.AddResource<NetworkingResource>(mSpecs.serverAddress, mSpecs.serverPort);
         mEcs.AddResource<WindowResource>(mSpecs.width, mSpecs.height, mSpecs.name);
 
         auto wr = mEcs.GetResource<WindowResource>();
         mEcs.AddResource<InputResource>(wr->window->GetGLFWwindow());
-        mEcs.AddResource<RenderingResource>(wr->window.get());
+        mEcs.AddResource<RenderingResource>(wr->window.get(), ar);
         mEcs.AddResource<RaytracingResource>();
+
+        auto rr = mEcs.GetResource<RenderingResource>();
+        mEcs.AddResource<TextureResource>(*rr);
 
         bool canVulkan = Engine::GetVulkanSupported();
         bool isVulkan = (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan);
@@ -88,7 +96,6 @@ namespace Radis
 
         if (sEditorEnabled)
         {
-            auto rr = mEcs.GetResource<RenderingResource>();
             mEcs.AddResource<EditorResource>(rr->device.get(), rr->swapChain.get(), wr->window->GetGLFWwindow(), wr->window->GetDPIScale());
         }
 

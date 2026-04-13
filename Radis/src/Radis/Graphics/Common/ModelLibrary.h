@@ -18,6 +18,7 @@ namespace Radis
 	class TextureLibrary;
     class UnifiedMeshes;
 	struct ModelComponent;
+	class AssetResource;
 
 	class ModelLibrary
 	{
@@ -53,6 +54,8 @@ namespace Radis
 
         const auto& GetModelMap() const { return mModelMap; }
 
+        void SetAssetResource(AssetResource* ar) { assetResource = ar; }
+
 	private:
 		friend class Model;
 
@@ -62,7 +65,8 @@ namespace Radis
         std::unique_ptr<UnifiedMeshes> mUnifiedMesh;
 
 		Device& mDevice;
-        TextureLibrary& mTextureLibrary;
+		TextureLibrary& mTextureLibrary;
+		AssetResource* assetResource;
 
         uint32_t mLastModelLoaded = INVALID_MODEL_INDEX;
 	};

@@ -74,6 +74,9 @@
 #include <filesystem>
 #include <ranges>
 #include <stack>
+#include <mutex>
+#include <shared_mutex>
+#include <atomic>
 
 #define VMA_ASSERT_LEAK(leaked)
 #define VMA_LEAK_LOG_FORMAT(format, ...) \
