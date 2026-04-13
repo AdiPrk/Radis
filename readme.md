@@ -15,11 +15,10 @@
 
 # Radis Engine
 
-A modern, cross-platform game engine featuring **Vulkan 1.4** and **OpenGL 4.6** backends with real-time raytracing, PBR rendering, and a full-featured editor.
+A modern, cross-platform game engine
 
 ![C++](https://img.shields.io/badge/C%2B%2B-23-blue?style=flat-square&logo=cplusplus)
 ![Vulkan](https://img.shields.io/badge/Vulkan-1.4-red?style=flat-square&logo=vulkan)
-![OpenGL](https://img.shields.io/badge/OpenGL-4.6-green?style=flat-square&logo=opengl)
 ![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey?style=flat-square&logo=windows)
 ![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)
 
@@ -30,21 +29,21 @@ A modern, cross-platform game engine featuring **Vulkan 1.4** and **OpenGL 4.6**
 ## Features
 
 ### Rendering
-- Forward, Deferred, and Hardware Raytracing modes
-- Physically Based Rendering (PBR), GGX/Schlick-GGX BRDF with metallic-roughness workflow
-- Real-time raycasting and pathtracing with Vulkan RTX acceleration structures
-- Custom render graph to automate resource transitions and barrier management alongside dynamic rendering (VK_KHR_dynamic_rendering)
-- Skeletal animations are supported and work with most common model formats
+- Forward, Deferred, and Hardware Raytracing modes.
+- Physically Based Rendering (PBR), GGX/Schlick-GGX BRDF with metallic-roughness workflow.
+- Real-time raycasting and pathtracing with Vulkan RTX acceleration structures.
+- Custom render graph to automate resource transitions and barrier management alongside dynamic rendering (VK_KHR_dynamic_rendering).
+- Skeletal animations are supported and work with most common model formats.
 
 ### Asset Pipeline
 - All model types supported through Assimp can be loaded, and are converted to highly optimized formats for loading and rendering.
-- All meshes are batched into a single vertex/index buffer for efficient rendering
+- All meshes are batched into a single vertex/index buffer for efficient rendering.
 - Textures are highly compressed into the etc1s format with KTX2, and transcoded to the optimal GPU-compressed format on runtime such as BC7.
 - Texture loading is fully parallelized for the fastest loading times.
 
 ### Networking (Experimental)
-- Client-server architecture for multiplayer prototyping with ENet
-- In-editor chat window
+- Client-server architecture for multiplayer prototyping with ENet.
+- In-editor chat window.
 
 ---
 
@@ -54,7 +53,7 @@ A modern, cross-platform game engine featuring **Vulkan 1.4** and **OpenGL 4.6**
 |-----------|---------|-------------|
 | **OS** | Windows 10 | Windows 11 |
 | **CPU** | Any x64 processor | Multi-core recommended |
-| **GPU** | Vulkan 1.2 / OpenGL 4.6 | RTX 2060+ for raytracing |
+| **GPU** | Vulkan 1.2 | RTX 2060+ for raytracing |
 | **RAM** | 8 GB | 16 GB |
 
 ---
@@ -106,7 +105,7 @@ A modern, cross-platform game engine featuring **Vulkan 1.4** and **OpenGL 4.6**
 
 ## Showcase
 
-> *Screenshots and videos coming soon!*
+![alt text](ReadmeImages/image.png)
 
 ---
 

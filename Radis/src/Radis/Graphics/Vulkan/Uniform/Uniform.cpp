@@ -141,7 +141,7 @@ namespace Radis
                     {
                         writer.WriteImage(bIndex, tex, defaultSampler, binding.imageLayout);
                     }
-                    else RADIS_ERROR("Uniform Update: Texture '%s' not found!", binding.textureName.c_str());
+                    else RADIS_ERROR("Uniform Update: Texture {} not found!", binding.textureName);
                 }
             }
 
