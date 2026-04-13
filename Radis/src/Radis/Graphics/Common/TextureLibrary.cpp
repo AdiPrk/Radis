@@ -363,6 +363,10 @@ namespace Radis
         VkSampler      defaultSampler = GetSampler();
 
         std::vector<VkDescriptorImageInfo> imageInfos(MAX_TEXTURE_COUNT);
+
+        ITexture* itex0 = GetTextureByIndex(0);
+        VKTexture* vktex0 = static_cast<VKTexture*>(itex0);
+
         for (uint32_t j = 0; j < MAX_TEXTURE_COUNT; ++j)
         {
             const uint32_t clampedIdx = (textureCount > 0) ? std::min(j, textureCount - 1) : 0;
@@ -372,7 +376,7 @@ namespace Radis
             imageInfos[j].sampler = defaultSampler;
             imageInfos[j].imageView = (vktex && !vktex->mData.isStorageImage)
                 ? vktex->GetImageView()
-                : VK_NULL_HANDLE;
+                : (vktex0 ? vktex0->GetImageView() : VK_NULL_HANDLE);
         }
 
         for (int frame = 0; frame < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frame)

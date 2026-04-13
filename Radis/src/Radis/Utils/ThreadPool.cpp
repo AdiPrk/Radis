@@ -15,7 +15,7 @@ namespace Radis
     {
         if (threadCount == 0)
         {
-            threadCount = 2;// std::thread::hardware_concurrency();
+            threadCount = std::thread::hardware_concurrency();
         }
 
         mWorkers.reserve(threadCount);
