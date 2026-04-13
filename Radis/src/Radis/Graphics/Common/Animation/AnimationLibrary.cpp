@@ -40,7 +40,7 @@ namespace Radis
 
         static Assimp::Importer importer;
         // importer.SetPropertyBool(AI_CONFIG_PP_OG_EXCLUDE_LIST, true);
-
+        importer.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
         const aiScene* scene = importer.ReadFile(animPath, aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_GlobalScale | aiProcess_OptimizeGraph);
 
         if (!scene || !scene->mAnimations[0] || !scene->mRootNode)
