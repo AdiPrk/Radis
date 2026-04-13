@@ -32,7 +32,7 @@ namespace Radis
         glm::vec4 baseColorFactor;
         glm::vec4 metallicRoughnessFactor; // zw are padding
         glm::vec4 emissiveFactor; // w is boneOffset
-        uint32_t boneOffset = 10001;
+        uint32_t boneOffset = 0xFFFFFFFFu;
         uint32_t indexOffset = 0;
         uint32_t vertexOffset = 0;
         uint32_t meshID = 777;

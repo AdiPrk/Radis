@@ -23,7 +23,7 @@
 namespace Radis
 {
     const uint32_t TextureLibrary::MAX_TEXTURE_COUNT = 500;
-    const uint32_t TextureLibrary::INVALID_TEXTURE_INDEX = 10001;
+    const uint32_t TextureLibrary::INVALID_TEXTURE_INDEX = UINT32_MAX;
 
     TextureLibrary::TextureLibrary(Device* device)
         : device{ device }
@@ -40,96 +40,104 @@ namespace Radis
 
     TextureLibrary::~TextureLibrary()
     {
-        if (mTextureSampler && device)
+        if (device)
         {
-            vkDestroySampler(device->GetDevice(), mTextureSampler, nullptr);
-        }
-        if (mImageDescriptorSetLayout && device)
-        {
-            vkDestroyDescriptorSetLayout(device->GetDevice(), mImageDescriptorSetLayout, nullptr);
-            vkDestroyDescriptorPool(device->GetDevice(), mImageDescriptorPool, nullptr);
+            if (mTextureSampler != VK_NULL_HANDLE)
+                vkDestroySampler(device->GetDevice(), mTextureSampler, nullptr);
+
+            if (mImageDescriptorSetLayout != VK_NULL_HANDLE)
+                vkDestroyDescriptorSetLayout(device->GetDevice(), mImageDescriptorSetLayout, nullptr);
+
+            if (mImageDescriptorPool != VK_NULL_HANDLE)
+                vkDestroyDescriptorPool(device->GetDevice(), mImageDescriptorPool, nullptr);
         }
 
         mTextures.clear();
     }
 
+    uint32_t TextureLibrary::AllocateSlot(const std::string& name)
+    {
+        auto [it, inserted] = mTextureMap.emplace(name, mNextIndex);
+        if (!inserted)
+            return it->second;
+
+        RADIS_ASSERT(mNextIndex < MAX_TEXTURE_COUNT, "TextureLibrary: MAX_TEXTURE_COUNT ({0}) exceeded", MAX_TEXTURE_COUNT);
+
+        return mNextIndex++;
+    }
+
+    void TextureLibrary::InstantiateTexture(uint32_t index, VkImageLayout layout)
+    {
+        mTextures[index] = std::make_unique<VKTexture>(*device, mTexturesData[index]);
+        CreateDescriptorSet(static_cast<VKTexture*>(mTextures[index].get()), layout);
+    }
+
+    void TextureLibrary::RecreateAtIndex(uint32_t index, uint32_t newWidth, uint32_t newHeight)
+    {
+        TextureData& td = mTexturesData[index];
+        td.width = newWidth;
+        td.height = newHeight;
+
+        VKTexture* old = static_cast<VKTexture*>(mTextures[index].get());
+        bool       hadDescriptor = old && (old->mDescriptorSet != VK_NULL_HANDLE);
+
+        mTextures[index].reset();
+        mTextures[index] = std::make_unique<VKTexture>(*device, td);
+
+        if (hadDescriptor)
+            CreateDescriptorSet(static_cast<VKTexture*>(mTextures[index].get()), td.finalLayout);
+    }
+
     uint32_t TextureLibrary::QueueTextureLoad(const std::string& texturePath)
     {
-        if (mTextureMap.find(texturePath) != mTextureMap.end())
-        {
-            return mTextureMap[texturePath];
-        }
+        auto [it, inserted] = mTextureMap.emplace(texturePath, mNextIndex);
+        if (!inserted)
+            return it->second;
 
         uint32_t index = mNextIndex++;
-        mTextureMap[texturePath] = index;
 
-        if (mTexturesData.size() <= index)
-        {
-            mTexturesData.resize(index + 1);
-        }
-
-        TextureLoadData& loadData = mPendingTextureLoads.emplace_back();
-        loadData.path = texturePath;
-        loadData.targetIndex = index;
+        TextureLoadData& load = mPendingTextureLoads.emplace_back();
+        load.path = texturePath;
+        load.targetIndex = index;
         return index;
     }
 
-    uint32_t TextureLibrary::QueueTextureLoad(const unsigned char* textureData, uint32_t textureSize, const std::string& texturePath)
+    uint32_t TextureLibrary::QueueTextureLoad(const unsigned char* data, uint32_t size,
+        const std::string& texturePath)
     {
-        if (mTextureMap.find(texturePath) != mTextureMap.end())
-        {
-            return mTextureMap[texturePath];
-        }
+        auto [it, inserted] = mTextureMap.emplace(texturePath, mNextIndex);
+        if (!inserted)
+            return it->second;
 
         uint32_t index = mNextIndex++;
-        mTextureMap[texturePath] = index;
 
-        if (mTexturesData.size() <= index)
-        {
-            mTexturesData.resize(index + 1);
-        }
-        if (mTexturesData[index].isSpecialImage)
-        {
-            return index;
-        }
-
-        TextureLoadData& loadData = mPendingTextureLoads.emplace_back();
-        loadData.data = textureData;
-        loadData.size = textureSize;
-        loadData.path = texturePath;
-        loadData.targetIndex = index;
+        TextureLoadData& load = mPendingTextureLoads.emplace_back();
+        load.data = data;
+        load.size = size;
+        load.path = texturePath;
+        load.targetIndex = index;
         return index;
     }
 
     bool TextureLibrary::LoadQueuedTextures()
     {
         if (mPendingTextureLoads.empty())
-        {
             return false;
-        }
 
         RADIS_INFO("Loading {0} queued textures...", mPendingTextureLoads.size());
         TextureLoader::LoadMT(mPendingTextureLoads);
+        RADIS_INFO("Finished CPU decode. Uploading to GPU...");
 
-        RADIS_INFO("Finished loading textures. Creating GPU resources...");
         mNeedTextureDescriptorUpdate = true;
-        if (mTextures.size() < mNextIndex)
+
+        for (auto& load : mPendingTextureLoads)
         {
-            mTextures.resize(mNextIndex);
-        }
+            const uint32_t index = load.targetIndex;
 
-        for (auto& loadData : mPendingTextureLoads)
-        {
-            uint32_t index = loadData.targetIndex;
+            mTexturesData[index] = std::move(load.outTexture);
+            mTexturesData[index].name = load.path;
 
-            mTexturesData[index] = std::move(loadData.outTexture);
-            mTexturesData[index].name = loadData.path;
-
-            std::unique_ptr<ITexture> newTexture;
-            newTexture = std::make_unique<VKTexture>(*device, mTexturesData[index]);
-            CreateDescriptorSet(static_cast<VKTexture*>(newTexture.get()));
-
-            mTextures[index] = std::move(newTexture);
+            InstantiateTexture(index, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         }
 
         RADIS_INFO("All queued textures loaded successfully!");
@@ -137,253 +145,285 @@ namespace Radis
         return true;
     }
 
-    uint32_t TextureLibrary::CreateStorageImage(const std::string& imageName, uint32_t width, uint32_t height, VkFormat imageFormat, VkImageUsageFlags usage, VkImageLayout finalLayout)
+    uint32_t TextureLibrary::CreateStorageImage(const std::string& name,
+        uint32_t width, uint32_t height,
+        VkFormat format, VkImageUsageFlags usage,
+        VkImageLayout finalLayout)
     {
-        // check if exists
-        auto it = mTextureMap.find(imageName);
-        if (it != mTextureMap.end())
-        {
+        auto [it, inserted] = mTextureMap.emplace(name, mNextIndex);
+        if (!inserted)
             return it->second;
-        }
 
-        uint32_t index = mNextIndex++;
-        mTextureMap[imageName] = index;
-        if (mTexturesData.size() <= index)
-        {
-            mTexturesData.resize(index + 1);
-        }
+        const uint32_t index = mNextIndex++;
 
-        TextureData& textureData = mTexturesData[index];
-        textureData.isStorageImage = true;
-        textureData.width = width;
-        textureData.height = height;
-        textureData.imageFormat = imageFormat;
-        textureData.usage = usage;
-        textureData.finalLayout = finalLayout;
-        textureData.name = imageName;
+        TextureData& td = mTexturesData[index];
+        td.name = name;
+        td.isStorageImage = true;
+        td.width = width;
+        td.height = height;
+        td.imageFormat = format;
+        td.usage = usage;
+        td.finalLayout = finalLayout;
 
-        if (mTextures.size() <= index)
-            mTextures.resize(index + 1);
-
-        mTextures[index] = std::make_unique<VKTexture>(*device, textureData);
-        CreateDescriptorSet(static_cast<VKTexture*>(mTextures[index].get()), finalLayout);
-
+        InstantiateTexture(index, finalLayout);
         return index;
     }
 
-    void TextureLibrary::ResizeStorageImage(const std::string& imageName, uint32_t newWidth, uint32_t newHeight)
-    {
-        auto it = mTextureMap.find(imageName);
-        if (it == mTextureMap.end())
-        {
-            return;
-        }
-
-        mNeedTextureDescriptorUpdate = true;
-
-        uint32_t index = it->second;
-
-        TextureData& tex = mTexturesData[index];
-        tex.width = newWidth;
-        tex.height = newHeight;
-
-        // vkFreeDescriptorSets(device->GetDevice(), mImageDescriptorPool, 1, &static_cast<VKTexture*>(mTextures[index].get())->mDescriptorSet);
-        mTextures[index].reset();
-
-        mTextures[index] = std::make_unique<VKTexture>(*device, tex);
-        CreateDescriptorSet(static_cast<VKTexture*>(mTextures[index].get()), tex.finalLayout);
-    }
-
-    uint32_t TextureLibrary::CreateTexture(const std::string& imageName, uint32_t width, uint32_t height, VkFormat imageFormat, VkImageTiling tiling, VkImageUsageFlags usage, VkImageLayout finalLayout)
+    uint32_t TextureLibrary::CreateTexture(const std::string& name,
+        uint32_t width, uint32_t height,
+        VkFormat format, VkImageTiling tiling,
+        VkImageUsageFlags usage, VkImageLayout finalLayout)
     {
         if (Engine::GetGraphicsAPI() != GraphicsAPI::Vulkan)
         {
-            RADIS_ERROR("CreateTexture called for non-Vulkan API");
+            RADIS_ERROR("CreateTexture: only supported on Vulkan");
             return INVALID_TEXTURE_INDEX;
         }
 
-        auto it = mTextureMap.find(imageName);
-        if (it != mTextureMap.end())
-        {
+        auto [it, inserted] = mTextureMap.emplace(name, mNextIndex);
+        if (!inserted)
             return it->second;
-        }
 
-        uint32_t index = mNextIndex++;
-        mTextureMap[imageName] = index;
-        if (mTexturesData.size() <= index)
-        {
-            mTexturesData.resize(index + 1);
-        }
+        const uint32_t index = mNextIndex++;
 
-        TextureData& textureData = mTexturesData[index];
-        textureData.isSpecialImage = true; // Use this to flag as procedural
-        textureData.width = width;
-        textureData.height = height;
-        textureData.imageFormat = imageFormat;
-        textureData.tiling = tiling;
-        textureData.usage = usage;
-        textureData.finalLayout = finalLayout;
-        textureData.name = imageName;
+        TextureData& td = mTexturesData[index];
+        td.name = name;
+        td.isSpecialImage = true;
+        td.width = width;
+        td.height = height;
+        td.imageFormat = format;
+        td.tiling = tiling;
+        td.usage = usage;
+        td.finalLayout = finalLayout;
 
-        if (mTextures.size() <= index)
-            mTextures.resize(index + 1);
-
-        mTextures[index] = std::make_unique<VKTexture>(*device, textureData);
-        CreateDescriptorSet(static_cast<VKTexture*>(mTextures[index].get()), finalLayout);
-
+        InstantiateTexture(index, finalLayout);
         return index;
     }
 
-    void TextureLibrary::ResizeTexture(const std::string& imageName, uint32_t newWidth, uint32_t newHeight)
+    void TextureLibrary::ResizeStorageImage(const std::string& name,
+        uint32_t newWidth, uint32_t newHeight)
     {
-        auto it = mTextureMap.find(imageName);
-        if (it == mTextureMap.end())
+        auto it = mTextureMap.find(name);
+        if (it == mTextureMap.end()) return;
+
+        mNeedTextureDescriptorUpdate = true;
+        RecreateAtIndex(it->second, newWidth, newHeight);
+    }
+
+    void TextureLibrary::ResizeTexture(const std::string& name,
+        uint32_t newWidth, uint32_t newHeight)
+    {
+        auto it = mTextureMap.find(name);
+        if (it == mTextureMap.end()) return;
+
+        mNeedReuploadRTImage = true;
+        RecreateAtIndex(it->second, newWidth, newHeight);
+    }
+
+    // =========================================================================
+    //  Accessors
+    // =========================================================================
+
+    ITexture* TextureLibrary::GetTexture(uint32_t index) const
+    {
+        if (index < mTextures.size())
+            return mTextures[index].get();
+        return nullptr;
+    }
+
+    ITexture* TextureLibrary::GetTexture(const std::string& path) const
+    {
+        auto it = mTextureMap.find(path);
+        return (it != mTextureMap.end()) ? GetTexture(it->second) : nullptr;
+    }
+
+    VKTexture* TextureLibrary::GetVKTexture(const std::string& path) const
+    {
+        return static_cast<VKTexture*>(GetTexture(path));
+    }
+
+    ITexture* TextureLibrary::GetTextureByIndex(uint32_t index) const
+    {
+        if (index < mNextIndex && index < mTextures.size())
+            return mTextures[index].get();
+
+        RADIS_ERROR("GetTextureByIndex: index {0} out of range (count={1})", index, mNextIndex);
+        return nullptr;
+    }
+
+    void TextureLibrary::UpdateTextureUniform(Uniform* uniform)
+    {
+        if (!mNeedTextureDescriptorUpdate)                   return;
+        if (Engine::GetGraphicsAPI() != GraphicsAPI::Vulkan) return;
+
+        mNeedTextureDescriptorUpdate = false;
+
+        const uint32_t textureCount = GetTextureCount();
+        VkSampler      defaultSampler = GetSampler();
+
+        std::vector<VkDescriptorImageInfo> imageInfos(MAX_TEXTURE_COUNT);
+        for (uint32_t j = 0; j < MAX_TEXTURE_COUNT; ++j)
         {
+            const uint32_t clampedIdx = (textureCount > 0)
+                ? std::min(j, textureCount - 1)
+                : 0;
+
+            VKTexture* vktex = static_cast<VKTexture*>(GetTextureByIndex(clampedIdx));
+
+            imageInfos[j].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            imageInfos[j].sampler = defaultSampler;
+            imageInfos[j].imageView = (vktex && !vktex->mData.isStorageImage)
+                ? vktex->GetImageView()
+                : VK_NULL_HANDLE;
+        }
+
+        for (int frame = 0; frame < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frame)
+        {
+            DescriptorWriter writer(*uniform->GetDescriptorLayout(),
+                *uniform->GetDescriptorPool());
+            writer.WriteImage(3, imageInfos.data(), static_cast<uint32_t>(imageInfos.size()));
+            writer.Overwrite(uniform->GetDescriptorSets()[frame]);
+        }
+    }
+
+    void TextureLibrary::UpdateRTUniform(RenderingResource& rr)
+    {
+        if (!mNeedReuploadRTImage) return;
+        mNeedReuploadRTImage = false;
+
+        const int frameCount = SwapChain::MAX_FRAMES_IN_FLIGHT;
+
+        std::vector<VKTexture*> rtAccumTextures(frameCount);
+        std::vector<VKTexture*> rtHeatmapTextures(frameCount);
+        for (int i = 0; i < frameCount; ++i)
+        {
+            rtAccumTextures[i] = rr.textureLibrary->GetVKTexture("RTAccum_" + std::to_string(i));
+            rtHeatmapTextures[i] = rr.textureLibrary->GetVKTexture("RTHeatmapImage_" + std::to_string(i));
+        }
+
+        VKTexture* sceneHDRTex = rr.textureLibrary->GetVKTexture("SceneHDR");
+        VKTexture* envMapTex = static_cast<VKTexture*>(
+            rr.textureLibrary->GetTextureByIndex(rr.envMapIndex));
+        VkSampler  sampler = rr.textureLibrary->GetSampler();
+
+        if (!envMapTex)
+        {
+            RADIS_ERROR("UpdateRTUniform: environment map not found at index {0}", rr.envMapIndex);
             return;
         }
 
-        mNeedReuploadRTImage = true; // This seems related to RT, you may want to check this logic
-
-        uint32_t index = it->second;
-
-        TextureData& tex = mTexturesData[index];
-        tex.width = newWidth;
-        tex.height = newHeight;
-
-        // Check if the old texture had a descriptor set before we destroy it
-        VKTexture* oldTexture = static_cast<VKTexture*>(mTextures[index].get());
-        bool hadShaderDescriptor = (oldTexture && oldTexture->mDescriptorSet != VK_NULL_HANDLE);
-
-        // vkFreeDescriptorSets... (your commented-out line)
-        mTextures[index].reset();
-
-        mTextures[index] = std::make_unique<VKTexture>(*device, tex);
-
-        // If it had a descriptor set before, recreate one
-        if (hadShaderDescriptor)
+        for (int frame = 0; frame < frameCount; ++frame)
         {
-            CreateDescriptorSet(static_cast<VKTexture*>(mTextures[index].get()), tex.finalLayout);
+            const int histIdx = (frame + frameCount - 1) % frameCount;
+
+            auto outSceneHDR = VkDescriptorImageInfo{ VK_NULL_HANDLE, sceneHDRTex->GetImageView(), VK_IMAGE_LAYOUT_GENERAL };
+            auto heatmap = VkDescriptorImageInfo{ VK_NULL_HANDLE, rtHeatmapTextures[frame]->GetImageView(), VK_IMAGE_LAYOUT_GENERAL };
+            auto historyRead = VkDescriptorImageInfo{ sampler, rtAccumTextures[histIdx]->GetImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
+            auto historyWrite = VkDescriptorImageInfo{ VK_NULL_HANDLE, rtAccumTextures[frame]->GetImageView(), VK_IMAGE_LAYOUT_GENERAL };
+            auto envMap = VkDescriptorImageInfo{ sampler, envMapTex->GetImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
+
+            DescriptorWriter writer(*rr.rtUniform->GetDescriptorLayout(), *rr.rtUniform->GetDescriptorPool());
+            writer.WriteImage(1, &outSceneHDR);
+            writer.WriteImage(2, &heatmap);
+            writer.WriteImage(5, &historyRead);
+            writer.WriteImage(6, &historyWrite);
+            writer.WriteImage(7, &envMap);
+            writer.Overwrite(rr.rtUniform->GetDescriptorSets()[frame]);
         }
     }
 
-    ITexture* TextureLibrary::GetTexture(uint32_t index)
+    // =========================================================================
+    //  Swapchain / device recreation
+    // =========================================================================
+
+    void TextureLibrary::ClearAllBuffers(class Device* device)
     {
-        if (index < mTextures.size()) {
-            return mTextures[index].get();
+        if (!device) return;
+
+        if (mTextureSampler != VK_NULL_HANDLE)
+        {
+            vkDestroySampler(device->GetDevice(), mTextureSampler, nullptr);
+            mTextureSampler = VK_NULL_HANDLE;
         }
-        return nullptr;
-    }
-
-    ITexture* TextureLibrary::GetTexture(const std::string& filePath)
-    {
-        auto it = mTextureMap.find(filePath);
-        if (it != mTextureMap.end()) {
-            return GetTexture(it->second);
+        if (mImageDescriptorSetLayout != VK_NULL_HANDLE)
+        {
+            vkDestroyDescriptorSetLayout(device->GetDevice(), mImageDescriptorSetLayout, nullptr);
+            mImageDescriptorSetLayout = VK_NULL_HANDLE;
         }
-        return nullptr;
-    }
-
-    VKTexture* TextureLibrary::GetVKTexture(const std::string& texturePath)
-    {
-        return static_cast<VKTexture*>(GetTexture(texturePath));
-    }
-
-    ITexture* TextureLibrary::GetTextureByIndex(uint32_t index)
-    {
-        if (index < mTextures.size()) {
-            return mTextures[index].get();
+        if (mImageDescriptorPool != VK_NULL_HANDLE)
+        {
+            vkDestroyDescriptorPool(device->GetDevice(), mImageDescriptorPool, nullptr);
+            mImageDescriptorPool = VK_NULL_HANDLE;
         }
 
-        RADIS_ERROR("Texture index out of range: {0}", index);
-        return mTextures[0].get();
+        // Destroy GPU objects but keep CPU-side metadata so RecreateAllBuffers
+        // can rebuild them from mTexturesData without any re-queuing.
+        for (auto& tex : mTextures)
+            tex.reset();
     }
 
     void TextureLibrary::CreateTextureSampler()
     {
-        if (Engine::GetGraphicsAPI() != GraphicsAPI::Vulkan)
-        {
-            //RADIS_WARN("CreateTextureSampler called for non-Vulkan API");
-            return;
-        }
+        if (Engine::GetGraphicsAPI() != GraphicsAPI::Vulkan) return;
+        if (mTextureSampler != VK_NULL_HANDLE)               return;
 
-        if (mTextureSampler != VK_NULL_HANDLE)
-        {
-            return;
-        }
+        VkPhysicalDeviceProperties props{};
+        vkGetPhysicalDeviceProperties(device->GetPhysicalDevice(), &props);
 
-        VkPhysicalDeviceProperties properties{};
-        vkGetPhysicalDeviceProperties(device->GetPhysicalDevice(), &properties);
+        VkSamplerCreateInfo info{};
+        info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        info.magFilter = VK_FILTER_LINEAR;
+        info.minFilter = VK_FILTER_LINEAR;
+        info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        info.anisotropyEnable = VK_TRUE;
+        info.maxAnisotropy = props.limits.maxSamplerAnisotropy;
+        info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+        info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        info.minLod = -VK_LOD_CLAMP_NONE;
+        info.maxLod = VK_LOD_CLAMP_NONE;
 
-        VkSamplerCreateInfo samplerInfo{};
-        samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-        samplerInfo.magFilter = VK_FILTER_LINEAR;
-        samplerInfo.minFilter = VK_FILTER_LINEAR;
-        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.anisotropyEnable = VK_TRUE;
-        samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
-        samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-        samplerInfo.unnormalizedCoordinates = VK_FALSE;
-        samplerInfo.compareEnable = VK_FALSE;
-        samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-        samplerInfo.minLod = -VK_LOD_CLAMP_NONE;
-        samplerInfo.maxLod = VK_LOD_CLAMP_NONE;
-
-        if (vkCreateSampler(device->GetDevice(), &samplerInfo, nullptr, &mTextureSampler) != VK_SUCCESS)
-        {
-            RADIS_CRITICAL("Failed to create texture sampler");
-        }
+        if (vkCreateSampler(device->GetDevice(), &info, nullptr, &mTextureSampler) != VK_SUCCESS)
+            RADIS_CRITICAL("TextureLibrary: failed to create texture sampler");
     }
 
     void TextureLibrary::CreateDescriptors()
     {
-        if (Engine::GetGraphicsAPI() != GraphicsAPI::Vulkan)
-        {
-            //RADIS_WARN("CreateTextureSampler called for non-Vulkan API");
-            return;
-        }
+        if (Engine::GetGraphicsAPI() != GraphicsAPI::Vulkan) return;
+        if (mImageDescriptorPool != VK_NULL_HANDLE)          return;
 
-        if (mImageDescriptorPool != VK_NULL_HANDLE)
-        {
-            return;
-        }
+        VkDescriptorSetLayoutBinding binding{};
+        binding.binding = 0;
+        binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        binding.descriptorCount = 1;
+        binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-        // 1. Define the layout binding
-        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-        samplerLayoutBinding.binding = 0; // The binding point in the shader (e.g., layout(binding = 0) ...)
-        samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        samplerLayoutBinding.descriptorCount = 1; // You're binding one sampler
-        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT; // Accessible in the fragment shader
-        samplerLayoutBinding.pImmutableSamplers = nullptr; // Optional
-
-        // 2. Create the descriptor set layout
         VkDescriptorSetLayoutCreateInfo layoutInfo{};
         layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         layoutInfo.bindingCount = 1;
-        layoutInfo.pBindings = &samplerLayoutBinding;
+        layoutInfo.pBindings = &binding;
 
-        if (vkCreateDescriptorSetLayout(device->GetDevice(), &layoutInfo, nullptr, &mImageDescriptorSetLayout) != VK_SUCCESS)
+        if (vkCreateDescriptorSetLayout(device->GetDevice(), &layoutInfo,
+            nullptr, &mImageDescriptorSetLayout) != VK_SUCCESS)
         {
-            throw std::runtime_error("failed to create descriptor set layout!");
+            throw std::runtime_error("TextureLibrary: failed to create descriptor set layout");
         }
 
-        // 1. Define the pool size
         VkDescriptorPoolSize poolSize{};
         poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSize.descriptorCount = MAX_TEXTURE_COUNT; // Enough space for one descriptor of this type
+        poolSize.descriptorCount = MAX_TEXTURE_COUNT;
 
-        // 2. Create the descriptor pool info
         VkDescriptorPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         poolInfo.poolSizeCount = 1;
         poolInfo.pPoolSizes = &poolSize;
-        poolInfo.maxSets = MAX_TEXTURE_COUNT; // Max number of descriptor sets that can be allocated
+        poolInfo.maxSets = MAX_TEXTURE_COUNT;
 
-        if (vkCreateDescriptorPool(device->GetDevice(), &poolInfo, nullptr, &mImageDescriptorPool) != VK_SUCCESS) 
+        if (vkCreateDescriptorPool(device->GetDevice(), &poolInfo,
+            nullptr, &mImageDescriptorPool) != VK_SUCCESS)
         {
-            throw std::runtime_error("failed to create descriptor pool!");
+            throw std::runtime_error("TextureLibrary: failed to create descriptor pool");
         }
     }
 
@@ -393,189 +433,28 @@ namespace Radis
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocInfo.descriptorPool = mImageDescriptorPool;
         allocInfo.descriptorSetCount = 1;
-        allocInfo.pSetLayouts = &mImageDescriptorSetLayout; // Use the layout from step 1
+        allocInfo.pSetLayouts = &mImageDescriptorSetLayout;
 
-        if (vkAllocateDescriptorSets(device->GetDevice(), &allocInfo, &texture->mDescriptorSet) != VK_SUCCESS)
+        if (vkAllocateDescriptorSets(device->GetDevice(), &allocInfo,
+            &texture->mDescriptorSet) != VK_SUCCESS)
         {
-            throw std::runtime_error("failed to allocate descriptor set!");
+            throw std::runtime_error("TextureLibrary: failed to allocate descriptor set");
         }
 
-        // 1. Populate the image info struct
         VkDescriptorImageInfo imageInfo{};
-        imageInfo.imageLayout = layout; // Layout the image will be in when sampled
-        imageInfo.imageView = texture->GetImageView(); // Your VkImageView handle
-        imageInfo.sampler = mTextureSampler;     // Your VkSampler handle
+        imageInfo.imageLayout = layout;
+        imageInfo.imageView = texture->GetImageView();
+        imageInfo.sampler = mTextureSampler;
 
-        // 2. Populate the write descriptor struct
-        VkWriteDescriptorSet descriptorWrite{};
-        descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrite.dstSet = texture->mDescriptorSet; // The set to update (from step 3)
-        descriptorWrite.dstBinding = 0;         // The binding to update (from step 1)
-        descriptorWrite.dstArrayElement = 0;  // Start at index 0
-        descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        descriptorWrite.descriptorCount = 1;
-        descriptorWrite.pImageInfo = &imageInfo; // Point to the image info struct
+        VkWriteDescriptorSet write{};
+        write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write.dstSet = texture->mDescriptorSet;
+        write.dstBinding = 0;
+        write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        write.descriptorCount = 1;
+        write.pImageInfo = &imageInfo;
 
-        // 3. Call vkUpdateDescriptorSets to perform the update
-        vkUpdateDescriptorSets(device->GetDevice(), 1, &descriptorWrite, 0, nullptr);
+        vkUpdateDescriptorSets(device->GetDevice(), 1, &write, 0, nullptr);
     }
 
-    void TextureLibrary::UpdateTextureUniform(Uniform* uniform)
-    {
-        if (!mNeedTextureDescriptorUpdate) return;
-        if (Engine::GetGraphicsAPI() != GraphicsAPI::Vulkan) return;
-
-        size_t textureCount = GetTextureCount();
-        VkSampler defaultSampler = GetSampler();
-        bool hasTex = textureCount > 0;
-        mNeedTextureDescriptorUpdate = false;
-
-        std::vector<VkDescriptorImageInfo> imageInfos(TextureLibrary::MAX_TEXTURE_COUNT);
-        for (size_t j = 0; j < TextureLibrary::MAX_TEXTURE_COUNT; ++j) {
-            imageInfos[j].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imageInfos[j].sampler = defaultSampler;
-            imageInfos[j].imageView = 0;
-
-            if (hasTex)
-            {
-                ITexture* itex = GetTextureByIndex(static_cast<uint32_t>(std::min(j, textureCount - 1)));
-                VKTexture* vktex = static_cast<VKTexture*>(itex);
-                if (vktex)
-                {
-                    if (itex->mData.isStorageImage) continue;
-                    imageInfos[j].imageView = vktex->GetImageView();
-                }
-            }
-        }
-
-        for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex) {
-            DescriptorWriter writer(*uniform->GetDescriptorLayout(), *uniform->GetDescriptorPool());
-            writer.WriteImage(3, imageInfos.data(), static_cast<uint32_t>(imageInfos.size()));
-            writer.Overwrite(uniform->GetDescriptorSets()[frameIndex]);
-        }
-    }
-
-    void TextureLibrary::ClearAllBuffers(class Device* device)
-    {
-        if (mTextureSampler && device)
-        {
-            vkDestroySampler(device->GetDevice(), mTextureSampler, nullptr);
-            mTextureSampler = VK_NULL_HANDLE;
-        }
-
-        if (mImageDescriptorSetLayout && device)
-        {
-            vkDestroyDescriptorSetLayout(device->GetDevice(), mImageDescriptorSetLayout, nullptr);
-            mImageDescriptorSetLayout = VK_NULL_HANDLE;
-        }
-
-        if (mImageDescriptorPool && device)
-        {
-            vkDestroyDescriptorPool(device->GetDevice(), mImageDescriptorPool, nullptr);
-            mImageDescriptorPool = VK_NULL_HANDLE;
-        }
-
-        mTextures.clear();
-    }
-
-    void TextureLibrary::RecreateAllBuffers(class Device* device)
-    {
-        mTextures.resize(mTexturesData.size());
-
-        for (uint32_t index = 0; index < mTexturesData.size(); ++index)
-        {
-            TextureData& textureData = mTexturesData[index];
-            if (textureData.name.empty() && textureData.pixels.size() == 0) continue;
-
-            VkImageLayout finalLayout = (textureData.isStorageImage || textureData.isSpecialImage) ? textureData.finalLayout : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-            mTextures[index] = std::make_unique<VKTexture>(*device, textureData);
-            CreateDescriptorSet(static_cast<VKTexture*>(mTextures[index].get()), finalLayout);
-
-            // Ensure mTextureMap has the same mapping
-            mTextureMap[textureData.name] = index;
-        }
-    }
-
-    void TextureLibrary::UpdateRTUniform(RenderingResource& rr)
-    {
-        if (!mNeedReuploadRTImage) return;
-        mNeedReuploadRTImage = false;
-
-        std::vector<VKTexture*> rtAccumTextures(SwapChain::MAX_FRAMES_IN_FLIGHT);
-        std::vector<VKTexture*> rtHeatmapTextures(SwapChain::MAX_FRAMES_IN_FLIGHT);
-
-        // 1. Fetch the renamed Ping-Pong accumulation textures
-        for (int i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i)
-        {
-            std::string texName = "RTAccum_" + std::to_string(i);
-            rtAccumTextures[i] = static_cast<VKTexture*>(rr.textureLibrary->GetTexture(texName));
-        }
-
-        // 2. Fetch the Heatmap textures
-        for (int i = 0; i < SwapChain::MAX_FRAMES_IN_FLIGHT; ++i)
-        {
-            std::string texName = "RTHeatmapImage_" + std::to_string(i);
-            rtHeatmapTextures[i] = static_cast<VKTexture*>(rr.textureLibrary->GetTexture(texName));
-        }
-
-        // 3. Fetch the SceneHDR (Tonemapper bridge) and the sampler
-        VKTexture* sceneHDRTex = static_cast<VKTexture*>(rr.textureLibrary->GetTexture("SceneHDR"));
-        VkSampler defaultSampler = rr.textureLibrary->GetSampler();
-
-        VKTexture* envMapTex = static_cast<VKTexture*>(
-            rr.textureLibrary->GetTextureByIndex(rr.envMapIndex)
-          );
-
-        if (!envMapTex)
-        {
-            RADIS_ERROR("Environment map texture not found!");
-            return;
-        }
-
-        for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex)
-        {
-            int historyIndex = (frameIndex + SwapChain::MAX_FRAMES_IN_FLIGHT - 1) % SwapChain::MAX_FRAMES_IN_FLIGHT;
-
-            // Binding 1: SceneHDR (Write)
-            VkDescriptorImageInfo outSceneHDRInfo{};
-            outSceneHDRInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-            outSceneHDRInfo.sampler = VK_NULL_HANDLE;
-            outSceneHDRInfo.imageView = sceneHDRTex->GetImageView();
-
-            // Binding 2: Heatmap (Write)
-            VkDescriptorImageInfo heatmapImageInfo{};
-            heatmapImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-            heatmapImageInfo.sampler = VK_NULL_HANDLE;
-            heatmapImageInfo.imageView = rtHeatmapTextures[frameIndex]->GetImageView();
-
-            // Binding 5: History Read (Sampler)
-            VkDescriptorImageInfo historyReadInfo{};
-            historyReadInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            historyReadInfo.sampler = defaultSampler;
-            historyReadInfo.imageView = rtAccumTextures[historyIndex]->GetImageView();
-
-            // Binding 6: History Write (Storage)
-            VkDescriptorImageInfo historyWriteInfo{};
-            historyWriteInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-            historyWriteInfo.sampler = VK_NULL_HANDLE;
-            historyWriteInfo.imageView = rtAccumTextures[frameIndex]->GetImageView();
-
-            VkDescriptorImageInfo envMapInfo{};
-            envMapInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            envMapInfo.sampler = defaultSampler;
-            envMapInfo.imageView = envMapTex->GetImageView();
-
-            DescriptorWriter writer(*rr.rtUniform->GetDescriptorLayout(), *rr.rtUniform->GetDescriptorPool());
-
-            // Write the updated image descriptors to their respective bindings
-            writer.WriteImage(1, &outSceneHDRInfo);
-            writer.WriteImage(2, &heatmapImageInfo);
-            writer.WriteImage(5, &historyReadInfo);
-            writer.WriteImage(6, &historyWriteInfo);
-            writer.WriteImage(7, &envMapInfo);
-
-            writer.Overwrite(rr.rtUniform->GetDescriptorSets()[frameIndex]);
-        }
-    }
-}
+} // namespace Radis

@@ -1,7 +1,7 @@
 /*****************************************************************//**
  * \file   TextureLibrary.h
  * \brief  Definition of the TextureLibrary class for managing textures.
- * 
+ *
  * \author Aditya Prakash
  * \date   January 2026
  *********************************************************************/
@@ -14,71 +14,99 @@
 namespace Radis
 {
     class Device;
-	class ITexture;
-	class VKTexture;
-	class Uniform;
+    class ITexture;
+    class VKTexture;
+    class Uniform;
+    struct RenderingResource;
 
-	class TextureLibrary
-	{
-	public:
-		TextureLibrary(Device* device);
-		~TextureLibrary();
+    class TextureLibrary
+    {
+    public:
+        TextureLibrary(Device* device);
+        ~TextureLibrary();
+
+        TextureLibrary(const TextureLibrary&) = delete;
+        TextureLibrary& operator=(const TextureLibrary&) = delete;
 
         uint32_t QueueTextureLoad(const std::string& texturePath);
-		uint32_t QueueTextureLoad(const unsigned char* textureData, uint32_t textureSize, const std::string& texturePath);
+        uint32_t QueueTextureLoad(const unsigned char* data, uint32_t size, const std::string& texturePath);
+
+        /**
+         * Decodes all queued textures on worker threads, then uploads them to the GPU. 
+         *
+         * \return Returns false when the pending queue is empty.
+         */
         bool LoadQueuedTextures();
 
-		uint32_t CreateStorageImage(const std::string& imageName, uint32_t width, uint32_t height, VkFormat imageFormat, VkImageUsageFlags usage, VkImageLayout finalLayout = VK_IMAGE_LAYOUT_GENERAL);
-		void ResizeStorageImage(const std::string& imageName, uint32_t newWidth, uint32_t newHeight);
+        // ---------------------------------------------------------------
+        //  Immediate GPU texture creation
+        // ---------------------------------------------------------------
 
-		uint32_t CreateTexture(
-			const std::string& imageName,
-			uint32_t width,
-			uint32_t height,
-			VkFormat imageFormat,
-			VkImageTiling tiling,
-			VkImageUsageFlags usage,
-			VkImageLayout finalLayout
-		);
+        uint32_t CreateStorageImage(const std::string& name, uint32_t width, uint32_t height, VkFormat format, VkImageUsageFlags usage, VkImageLayout finalLayout = VK_IMAGE_LAYOUT_GENERAL);
+        uint32_t CreateTexture(const std::string& name, uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkImageLayout finalLayout);
 
-		void ResizeTexture(const std::string& imageName, uint32_t newWidth, uint32_t newHeight);
+        void ResizeStorageImage(const std::string& name, uint32_t newWidth, uint32_t newHeight);
+        void ResizeTexture(const std::string& name, uint32_t newWidth, uint32_t newHeight);
 
-		ITexture* GetTexture(uint32_t textureID);
-		ITexture* GetTexture(const std::string& texturePath);
-		VKTexture* GetVKTexture(const std::string& texturePath);
-		ITexture* GetTextureByIndex(uint32_t index);
+        // ---------------------------------------------------------------
+        //  Accessors
+        // ---------------------------------------------------------------
 
-		uint32_t GetTextureCount() const { return mNextIndex; }
-        VkSampler GetSampler() const { return mTextureSampler; }
+        ITexture* GetTexture(uint32_t id) const;
+        ITexture* GetTexture(const std::string& path) const;
+        VKTexture* GetVKTexture(const std::string& path) const;
+        ITexture* GetTextureByIndex(uint32_t index) const;
 
-		const static uint32_t MAX_TEXTURE_COUNT;
-		const static uint32_t INVALID_TEXTURE_INDEX;
+        uint32_t  GetTextureCount() const { return mNextIndex; }
+        VkSampler GetSampler()      const { return mTextureSampler; }
 
-		void ClearAllBuffers(class Device* device);
-		void RecreateAllBuffers(class Device* device);
-		void UpdateRTUniform(struct RenderingResource& renderData);
+        // ---------------------------------------------------------------
+        //  Descriptor / uniform updates
+        // ---------------------------------------------------------------
 
-		void CreateTextureSampler();
-		void CreateDescriptors();
-		void CreateDescriptorSet(class VKTexture* texture, VkImageLayout layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        void UpdateTextureUniform(Uniform* uniform);
+        void UpdateRTUniform(RenderingResource& renderData);
+
+        void ClearAllBuffers(class Device* device);
         void SetDevice(Device* dev) { device = dev; }
 
-		void UpdateTextureUniform(class Uniform* uniform);
+        // ---------------------------------------------------------------
+        //  Constants
+        // ---------------------------------------------------------------
 
-	private:
-		std::vector<std::unique_ptr<ITexture>> mTextures;
-		std::vector<TextureData> mTexturesData;
-		std::unordered_map<std::string, uint32_t> mTextureMap;
+        static const uint32_t MAX_TEXTURE_COUNT;
+        static const uint32_t INVALID_TEXTURE_INDEX;
 
-		Device* device;
-		VkSampler mTextureSampler = VK_NULL_HANDLE;
-		VkDescriptorSetLayout mImageDescriptorSetLayout = VK_NULL_HANDLE;
-		VkDescriptorPool mImageDescriptorPool = VK_NULL_HANDLE;
+    private:
+        // ---------------------------------------------------------------
+        //  Internal helpers
+        // ---------------------------------------------------------------
+        uint32_t AllocateSlot(const std::string& name);
+        void InstantiateTexture(uint32_t index, VkImageLayout layout);
+        void RecreateAtIndex(uint32_t index, uint32_t newWidth, uint32_t newHeight);
+
+        void CreateTextureSampler();
+        void CreateDescriptors();
+        void CreateDescriptorSet(VKTexture* texture, VkImageLayout layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+        // ---------------------------------------------------------------
+        //  Data
+        // ---------------------------------------------------------------
+
+        std::vector<std::unique_ptr<ITexture>> mTextures;
+        std::vector<TextureData>               mTexturesData;
+        std::unordered_map<std::string, uint32_t> mTextureMap;
 
         std::vector<TextureLoadData> mPendingTextureLoads;
+
+        Device* device = nullptr;
+        VkSampler             mTextureSampler = VK_NULL_HANDLE;
+        VkDescriptorSetLayout mImageDescriptorSetLayout = VK_NULL_HANDLE;
+        VkDescriptorPool      mImageDescriptorPool = VK_NULL_HANDLE;
+
         uint32_t mNextIndex = 0;
-        bool mNeedReuploadRTImage = false;
-        bool mNeedTextureDescriptorUpdate = false;
-	};
+        bool     mNeedReuploadRTImage = false;
+        bool     mNeedTextureDescriptorUpdate = false;
+    };
 
 } // namespace Radis

@@ -12,7 +12,7 @@
 
 namespace Radis
 {
-    const uint32_t AnimationLibrary::INVALID_ANIMATION_INDEX = 10001;
+    const uint32_t AnimationLibrary::INVALID_ANIMATION_INDEX = UINT32_MAX;
 
     AnimationLibrary::AnimationLibrary()
     {

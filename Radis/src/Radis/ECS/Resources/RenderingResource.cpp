@@ -175,10 +175,6 @@ namespace Radis
             animationLibrary->AddAnimation(Assets::ModelsPath + "jack_samba.glb", modelLibrary->GetModel(Assets::ModelsPath + "jack_samba.glb"));
         }
 
-        // Recreation if needed
-        textureLibrary->CreateTextureSampler();
-        textureLibrary->CreateDescriptors();
-
         if (swapChain)
         {
             VkExtent2D extent = swapChain->GetSwapChainExtent();

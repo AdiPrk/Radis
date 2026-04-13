@@ -102,11 +102,7 @@ namespace Radis
         }
 
         // Update textures!
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
-        {
-            rr->modelLibrary->QueueTextures();
-        }
-
+        rr->modelLibrary->QueueTextures();
         rr->textureLibrary->LoadQueuedTextures();
         rr->textureLibrary->UpdateTextureUniform(rr->cameraUniform.get());
 
