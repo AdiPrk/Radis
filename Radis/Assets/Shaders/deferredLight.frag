@@ -261,8 +261,8 @@ void main()
     float roughness = max(pbrSample.g, 0.05);
     //float ao        = pbrSample.b;
     float materialAO = pbrSample.b;
-    float screenSpaceAO = texture(ssaoMap, fragTexCoord).r;
-    float ao = /*materialAO * */screenSpaceAO; // Combine baked and dynamic AO!
+    // float screenSpaceAO = texture(ssaoMap, fragTexCoord).r;
+    float ao = materialAO; // * */screenSpaceAO; // Combine baked and dynamic AO!
 
     vec3 worldPos = ReconstructWorldPos(fragTexCoord, depth);
     vec3 V        = normalize(uniforms.cameraPos - worldPos);

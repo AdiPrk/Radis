@@ -30,42 +30,21 @@ A modern, cross-platform game engine featuring **Vulkan 1.4** and **OpenGL 4.6**
 ## Features
 
 ### Rendering
-- **Multiple Render Paths** — Forward, Deferred, and Hardware Raytracing modes
-- **Physically Based Rendering (PBR)** — GGX/Schlick-GGX BRDF with metallic-roughness workflow
-- **Real-time Raytracing** — Vulkan RTX acceleration structures with reflections, shadows, and a cost heatmap visualization
-- **G-Buffer Pipeline** — Albedo, normals, PBR properties, and emissive render targets
-- **HDR Pipeline** — 16-bit floating-point scene buffer with tonemapping
-- **Render Graph** — Automatic resource transitions and barrier management with dynamic rendering (VK_KHR_dynamic_rendering)
-- **Hot-swappable Backends** — Switch between Vulkan and OpenGL at runtime (Ctrl+R)
-
-### Engine Architecture  
-- **Entity Component System (ECS)** — Built on [EnTT](https://github.com/skypjack/entt) for high-performance entity management
-- **Resource System** — Type-safe resource management with automatic lifetime handling
-- **System Pipeline** — Ordered Init → FrameStart → Update → FrameEnd → Exit lifecycle
-- **Scene Serialization** — JSON-based scene format with reflection-driven component serialization
-- **Profiler** — Built-in hierarchical CPU profiler with per-frame snapshots and aggregated statistics
+- Forward, Deferred, and Hardware Raytracing modes
+- Physically Based Rendering (PBR), GGX/Schlick-GGX BRDF with metallic-roughness workflow
+- Real-time raycasting and pathtracing with Vulkan RTX acceleration structures
+- Custom render graph to automate resource transitions and barrier management alongside dynamic rendering (VK_KHR_dynamic_rendering)
+- Skeletal animations are supported and work with most common model formats
 
 ### Asset Pipeline
-- **Model Loading** — Support for glTF, FBX, OBJ, and other formats via Assimp
-- **Unified Mesh System** — All meshes batched into a single vertex/index buffer for efficient instanced rendering
-- **Texture Formats** — KTX2 (GPU-compressed), PNG, JPG, and embedded textures
-- **Multi-threaded Loading** — Parallel texture loading with queued GPU upload
-- **Skeletal Animation** — Bone hierarchies with VQS (Vector-Quaternion-Scale) transforms uploaded to GPU
-
-### Editor
-- **Dockable UI** — ImGui-based editor with scene hierarchy, inspector, asset browser, and texture viewer
-- **Gizmos** — Translation, rotation, and scale manipulation via ImGuizmo
-- **Live Tweaking** — Modify materials, lights, and transforms in real-time
-- **Multi-select** — Select and duplicate multiple entities (Ctrl+D)
-- **Debug Visualization** — Wireframe mode, editor grid, and debug draw primitives
+- All model types supported through Assimp can be loaded, and are converted to highly optimized formats for loading and rendering.
+- All meshes are batched into a single vertex/index buffer for efficient rendering
+- Textures are highly compressed into the etc1s format with KTX2, and transcoded to the optimal GPU-compressed format on runtime such as BC7.
+- Texture loading is fully parallelized for the fastest loading times.
 
 ### Networking (Experimental)
-- **ENet Integration** — Client-server architecture for multiplayer prototyping
-- **Real-time Chat** — In-editor chat window with player presence
-
-### Physics (Experimental)
-- **Soft Body Simulation** — Mass-spring system with RK4 integration
-- **Debug Visualization** — Strain-colored springs and velocity-colored particles
+- Client-server architecture for multiplayer prototyping with ENet
+- In-editor chat window
 
 ---
 
