@@ -8,8 +8,6 @@
 
 #include <PCH/pch.h>
 #include "TextureLoader.h"
-#include "ECS/Resources/TextureResource.h"
-#include "ECS/ECS.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -83,42 +81,6 @@ namespace Radis
         {
             std::remove(tempPngPath.c_str());
         }
-    }
-
-    std::shared_ptr<TextureData> TextureLoader::Load(LoadContext& ctx, std::string& errorOut)
-    {
-        TextureData parsedData;
-        bool success = false;
-
-        if (!ctx.payload.empty()) /* Embedded Texture */
-        {
-            success = FromMemory(ctx.payload.data(), static_cast<uint32_t>(ctx.payload.size()), ctx.path, parsedData);
-        }
-        else
-        {
-            success = FromFile(ctx.path, parsedData);
-        }
-
-        if (!success)
-        {
-            errorOut = "Failed to parse texture data for: " + ctx.path;
-            return nullptr;
-        }
-
-        auto data = std::make_shared<TextureData>(parsedData);
-        return data;
-    }
-
-    void TextureLoader::Finalize(ECS* ecs, AssetID id, TextureData& asset)
-    {
-        auto texResource = ecs->GetResource<TextureResource>();
-        if (!texResource)
-        {
-            RADIS_ERROR("TextureResource not found");
-            return;
-        }
-
-        texResource->UpdateTextureUniform(id, asset);
     }
 
     void TextureLoader::BuildKTX2File(const KTX2BuildInput& input, const std::string& outPath)

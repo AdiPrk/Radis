@@ -15,7 +15,6 @@
 #include "ECS/Resources/WindowResource.h"
 #include "ECS/Resources/AnimationResource.h"
 #include "ECS/Resources/RaytracingResource.h"
-#include "ECS/Resources/Assets/AssetResource.h"
 
 #include "../InputSystem.h"
 
@@ -87,23 +86,18 @@ namespace Radis
             rtr->CreateBLAS();
             rtr->CreateTLAS();
             
-            // VkWriteDescriptorSetAccelerationStructureKHR asInfo{};
-            // asInfo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
-            // asInfo.accelerationStructureCount = 1;
-            // asInfo.pAccelerationStructures = &rr->tlasAccel.accel;
-            // for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex)
-            // {
-            //     DescriptorWriter writer(*rr->rtUniform->GetDescriptorLayout(), *rr->rtUniform->GetDescriptorPool());
-            //     writer.WriteAccelerationStructure(0, &asInfo);
-            //     writer.Overwrite(rr->rtUniform->GetDescriptorSets()[frameIndex]);
-            //     
-            //     rr->rtUniform->SetUniformData(mRTMeshData, 3, frameIndex);
-            //     rr->rtUniform->SetUniformData(mRTMeshIndices, 4, frameIndex);
-            // }
-
-            auto assetResource = ecs->GetResource<AssetResource>();
-            if (assetResource) {
-                assetResource->dispatchCallbacks();
+            VkWriteDescriptorSetAccelerationStructureKHR asInfo{};
+            asInfo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
+            asInfo.accelerationStructureCount = 1;
+            asInfo.pAccelerationStructures = &rr->tlasAccel.accel;
+            for (int frameIndex = 0; frameIndex < SwapChain::MAX_FRAMES_IN_FLIGHT; ++frameIndex)
+            {
+                DescriptorWriter writer(*rr->rtUniform->GetDescriptorLayout(), *rr->rtUniform->GetDescriptorPool());
+                writer.WriteAccelerationStructure(0, &asInfo);
+                writer.Overwrite(rr->rtUniform->GetDescriptorSets()[frameIndex]);
+                
+                rr->rtUniform->SetUniformData(mRTMeshData, 3, frameIndex);
+                rr->rtUniform->SetUniformData(mRTMeshIndices, 4, frameIndex);
             }
         }
 

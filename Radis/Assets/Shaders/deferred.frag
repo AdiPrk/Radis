@@ -25,7 +25,7 @@ layout(location = 1) out vec2 gNormal;    // R16G16_SFLOAT  - Octahedral encoded
 layout(location = 2) out vec4 gPBR;       // R8G8B8A8_UNORM - R = metallic, G = roughness, B = AO, A = unused
 layout(location = 3) out vec3 gEmissive;  // B10G11R11_UFLOAT_PACK32 - HDR emissive
 
-const uint INVALID_TEXTURE_INDEX = 0xFFFFFFFFU;
+const uint INVALID_TEXTURE_INDEX = 10001;
 
 #ifdef VULKAN
     #define UBO_LAYOUT(s, b) layout(set = s, binding = b)

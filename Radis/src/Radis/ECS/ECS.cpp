@@ -21,7 +21,6 @@ namespace Radis
         , mRegistry()
     {
         mResources.reserve(100);
-        mSystems.reserve(100);
     }
 
     ECS::~ECS()

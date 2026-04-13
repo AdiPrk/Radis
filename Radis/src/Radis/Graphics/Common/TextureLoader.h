@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Graphics/RHI/ITexture.h"
-#include "ECS/Resources/Assets/AssetLoader.h"
 
 namespace Radis
 {
@@ -22,15 +21,9 @@ namespace Radis
         uint32_t targetIndex{ 0 }; // For texture library
     };
 
-    class TextureLoader : public AssetLoader<TextureData>
+    class TextureLoader
     {
     public:
-        TextureLoader() {};
-        ~TextureLoader() override {};
-
-        std::shared_ptr<TextureData> Load(LoadContext& ctx, std::string& errorOut) override;
-        void Finalize(class ECS* ecs, AssetID id, TextureData& asset) override;
-
         struct KTX2BuildInput
         {
             std::string sourcePath;                     // if original file exists

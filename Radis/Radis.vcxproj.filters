@@ -88,10 +88,6 @@
     <ClCompile Include="src\Radis\Graphics\Vulkan\Pipeline\ComputePipeline.cpp" />
     <ClCompile Include="src\Radis\Graphics\Common\IBL\rgbe.cpp" />
     <ClCompile Include="src\Radis\Graphics\Common\IBL\IrradianceMap.cpp" />
-    <ClCompile Include="src\Radis\ECS\Resources\Assets\AssetResource.cpp" />
-    <ClCompile Include="src\Radis\ECS\Resources\Assets\AssetTypes.cpp" />
-    <ClCompile Include="src\Radis\ECS\Resources\Assets\ThreadPool.cpp" />
-    <ClCompile Include="src\Radis\ECS\Resources\TextureResource.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\nlohmann\json.hpp" />
@@ -203,40 +199,90 @@
     <ClInclude Include="src\Radis\Graphics\Vulkan\Pipeline\ComputePipeline.h" />
     <ClInclude Include="src\Radis\Graphics\Common\IBL\rgbe.h" />
     <ClInclude Include="src\Radis\Graphics\Common\IBL\IrradianceMap.h" />
-    <ClInclude Include="src\Radis\ECS\Resources\Assets\AssetResource.h" />
-    <ClInclude Include="src\Radis\ECS\Resources\Assets\AssetTypes.h" />
-    <ClInclude Include="src\Radis\ECS\Resources\Assets\AssetLoader.h" />
-    <ClInclude Include="src\Radis\ECS\Resources\Assets\ThreadPool.h" />
-    <ClInclude Include="src\Radis\ECS\Resources\Assets\AssetEntry.h" />
-    <ClInclude Include="src\Radis\ECS\Resources\TextureResource.h" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\bilateralBlur.frag" />
+    
+    
+    <CustomBuild Include="Assets\Shaders\deferredLight.frag" />
+    
+    
+    
+    
+    <CustomBuild Include="Assets\Shaders\lightVolume.frag" />
+    
+    
+ 
+    
+    
+    
     <CustomBuild Include="Assets\Shaders\tonemap.frag" />
+    
+    
+    <CustomBuild Include="Assets\Shaders\deferred.vert" />
+    
+    
+    
+    
+    <CustomBuild Include="Assets\Shaders\fullscreen.vert" />
+    
+    
+    
+ 
+    
+    
+    
     <CustomBuild Include="Assets\Shaders\tonemap.frag" />
+    
+    
+    
+    
+    
+    
+    <CustomBuild Include="Assets\Shaders\forward.vert" />
+    
+    
+    
+    
+ 
+    <CustomBuild Include="Assets\Shaders\rayquery.comp" />
+    
+    
     <CustomBuild Include="Assets\Shaders\tonemap.frag" />
-    <CustomBuild Include="Assets\Shaders\*.*" />
-    <CustomBuild Include="Assets\Shaders\*.*" />
-    <CustomBuild Include="Assets\Shaders\*.*" />
-    <CustomBuild Include="Assets\Shaders\*.*" />
-    <CustomBuild Include="Assets\Shaders\*.*" />
-    <CustomBuild Include="Assets\Shaders\*.*" />
-    <CustomBuild Include="Assets\Shaders\*.*" />
-    <CustomBuild Include="Assets\Shaders\*.*" />
-    <CustomBuild Include="Assets\Shaders\*.*" />
-    <CustomBuild Include="Assets\Shaders\*.*" />
-    <CustomBuild Include="Assets\Shaders\*.*" />
-    <CustomBuild Include="Assets\Shaders\*.*" />
-    <CustomBuild Include="Assets\Shaders\*.*" />
-    <CustomBuild Include="Assets\Shaders\*.*" />
-    <CustomBuild Include="Assets\Shaders\*.*" />
-    <CustomBuild Include="Assets\Shaders\*.*" />
-    <CustomBuild Include="Assets\Shaders\*.*" />
-    <CustomBuild Include="Assets\Shaders\*.*" />
-    <CustomBuild Include="Assets\Shaders\*.*" />
-    <CustomBuild Include="Assets\Shaders\*.*" />
-    <CustomBuild Include="Assets\Shaders\*.*" />
-    <CustomBuild Include="Assets\Shaders\*.*" />
+    
+    
+    
+    
+    
+    
+    <CustomBuild Include="Assets\Shaders\forward.frag" />
+    
+    
+    
+    
+    
+ 
+    
+    
+    
+    <CustomBuild Include="Assets\Shaders\tonemap.frag" />
+    
+    <CustomBuild Include="Assets\Shaders\deferred.frag" />
+    
+    
+    
+    
+    
+    
+    
+    <CustomBuild Include="Assets\Shaders\lightVolume.vert" />
+    
+ 
+    
+    
+    
+    <CustomBuild Include="Assets\Shaders\tonemap.frag" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Scenes\sponza.json" />

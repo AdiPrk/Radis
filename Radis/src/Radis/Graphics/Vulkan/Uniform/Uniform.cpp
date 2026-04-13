@@ -137,18 +137,11 @@ namespace Radis
                 else /* Texture */
                 {
                     VKTexture* tex = renderData.textureLibrary->GetVKTexture(binding.textureName);
-                    if (!tex)
+                    if (tex)
                     {
-                        tex = (VKTexture*)renderData.textureLibrary->GetTextureByIndex(0);
-                        RADIS_WARN("Uniform Update: Texture {} not found!", binding.textureName.c_str());
+                        writer.WriteImage(bIndex, tex, defaultSampler, binding.imageLayout);
                     }
-                    if (!tex)
-                    {
-                        RADIS_CRITICAL("No valid textures found");
-                        continue;
-                    }
-
-                    writer.WriteImage(bIndex, tex, defaultSampler, binding.imageLayout);
+                    else RADIS_ERROR("Uniform Update: Texture '%s' not found!", binding.textureName.c_str());
                 }
             }
 

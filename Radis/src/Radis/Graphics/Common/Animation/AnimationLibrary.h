@@ -12,7 +12,7 @@ namespace Radis
 {
 	class Animator;
 	class Animation;
-	class Model; // <- temporary, animation should not need model ideally.
+	class Model;
 
 	class AnimationLibrary
 	{

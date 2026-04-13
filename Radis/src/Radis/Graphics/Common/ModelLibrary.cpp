@@ -11,7 +11,6 @@
 #include "Model.h"
 #include "UnifiedMesh.h"
 #include "ECS/Components/Components.h"
-#include "ECS/Resources/Assets/AssetResource.h"
 
 #include "TextureLibrary.h"
 #include "../Vulkan/Core/Device.h"
@@ -19,7 +18,7 @@
 
 namespace Radis
 {
-    const uint32_t ModelLibrary::INVALID_MODEL_INDEX = UINT32_MAX;
+    const uint32_t ModelLibrary::INVALID_MODEL_INDEX = 10001;
 
     ModelLibrary::ModelLibrary(Device& device, TextureLibrary& textureLibrary)
         : mDevice{ device }
@@ -194,14 +193,9 @@ namespace Radis
             {
                 if (currentIndex != TextureLibrary::INVALID_TEXTURE_INDEX) return;
 
-                if (!path.empty()) 
-                {
-                    // currentIndex = assetResource->load<TextureData>(path);
-                    currentIndex = mTextureLibrary.QueueTextureLoad(path);
-                }
+                if (!path.empty()) currentIndex = mTextureLibrary.QueueTextureLoad(path);
                 else if (!data.empty())
                 {
-                    // currentIndex = assetResource->loadFromMemory<TextureData>(embeddedName, std::move(data));
                     currentIndex = mTextureLibrary.QueueTextureLoad(data.data(), static_cast<uint32_t>(data.size()), embeddedName);
                     data.clear();
                 }

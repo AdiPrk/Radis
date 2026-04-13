@@ -9,8 +9,6 @@
 #include <PCH/pch.h>
 
 #include "RenderingResource.h"
-#include "TextureResource.h"
-#include "Assets/AssetResource.h"
 
 #include "Graphics/Vulkan/Core/Device.h"
 #include "Graphics/Vulkan/Core/SwapChain.h"
@@ -39,16 +37,19 @@
 
 namespace Radis
 {
-    RenderingResource::RenderingResource(IWindow* window, AssetResource* assetResource)
+    RenderingResource::RenderingResource(IWindow* window)
+        : envMapIndex{ TextureLibrary::INVALID_TEXTURE_INDEX }
+        , irMapIndex{ TextureLibrary::INVALID_TEXTURE_INDEX }
     {
-        Create(window, assetResource);
+        Create(window);
     }
 
     RenderingResource::~RenderingResource()
     {
+        Cleanup();
     }
 
-    void RenderingResource::Create(IWindow* window, AssetResource* assetResource)
+    void RenderingResource::Create(IWindow* window)
     {
         device = std::make_unique<Device>(*dynamic_cast<VulkanWindow*>(window));
 
@@ -76,8 +77,7 @@ namespace Radis
             // IBL::generateIrradianceMap(Assets::ImagesPath + "autumn_field_puresky_4k.hdr", Assets::ImagesPath + "autumn_field_puresky_4k.IRMAP.hdr", &sh);
 
             textureLibrary = std::make_unique<TextureLibrary>(device.get());
-            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Placeholder.png");
-            // textureLibrary->QueueTextureLoad(Assets::ImagesPath + "ErrorTexture.png"); trying thru asset resource instead
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "ErrorTexture.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "circle.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "dog.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "circleOutline2.png");
@@ -91,7 +91,7 @@ namespace Radis
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "folderIcon.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "unknownFileIcon.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "shikaout.ktx2");
-            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "autumn_field_puresky_4k.hdr");
+            envMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "autumn_field_puresky_4k.hdr");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Alexs_Apt_2k.hdr");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Newport_Loft_Ref.hdr");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "autumn_field_puresky_4k.IRMAP.hdr");
@@ -99,7 +99,6 @@ namespace Radis
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Newport_Loft_Ref.IRMAP.hdr");
 
             textureLibrary->LoadQueuedTextures();
-
             // TODO: dds
             //textureLibrary->QueueTextureLoad(Assets::ImagesPath + "M_Soul_Rocks2_Inst_8_BaseColor.dds");
         }
@@ -111,7 +110,7 @@ namespace Radis
         if (!modelLibrary)
         {
             modelLibrary = std::make_unique<ModelLibrary>(*device, *textureLibrary);
-            modelLibrary->SetAssetResource(assetResource);
+
             modelLibrary->AddModel(Assets::ModelsPath + "cube.obj", true);
             modelLibrary->AddModel(Assets::ModelsPath + "quad.obj", true);
             modelLibrary->AddModel(Assets::ModelsPath + "sphere.obj", true);
@@ -395,7 +394,7 @@ namespace Radis
         aoBlurVPipeline = std::make_unique<Pipeline>(*device, VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_UNDEFINED, blurVUnis, false, "fullscreen.vert", "bilateralBlur.frag", blurOpts, false);
     }
 
-    void RenderingResource::Shutdown()
+    void RenderingResource::Cleanup()
     {
         if (!device || !device->GetDevice())
             return;

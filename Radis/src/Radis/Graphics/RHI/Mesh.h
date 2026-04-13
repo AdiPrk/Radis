@@ -84,12 +84,12 @@ namespace Radis
         std::string emissiveTexturePath{};
 
         // Texture indices (set after textures loaded into TextureLibrary)
-        uint32_t albedoTextureIndex = UINT32_MAX;
-        uint32_t normalTextureIndex = UINT32_MAX;
-        uint32_t metalnessTextureIndex = UINT32_MAX;
-        uint32_t roughnessTextureIndex = UINT32_MAX;
-        uint32_t occlusionTextureIndex = UINT32_MAX;
-        uint32_t emissiveTextureIndex = UINT32_MAX;
+        uint32_t albedoTextureIndex = 10001;
+        uint32_t normalTextureIndex = 10001;
+        uint32_t metalnessTextureIndex = 10001;
+        uint32_t roughnessTextureIndex = 10001;
+        uint32_t occlusionTextureIndex = 10001;
+        uint32_t emissiveTextureIndex = 10001;
 
         bool mMetallicRoughnessCombined = false;
 
