@@ -296,7 +296,7 @@ namespace Radis
         const char* rModeItems[] = { "Raytrace", "Path Accum", "Path Final" };
         if (ImGui::Combo("##DebugRMode", &rr->raytraceRenderMode, rModeItems, IM_ARRAYSIZE(rModeItems)))
         {
-            rr->accumulationCount = 0;
+            rr->accumulationCount = -1;
         }
 
         ImGui::Checkbox("Raytracing Heatmap Estimation", &er->renderRaytracingHeatmap);

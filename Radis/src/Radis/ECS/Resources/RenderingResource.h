@@ -12,6 +12,7 @@
 #include "Graphics/Vulkan/Core/AccelerationStructures.h"
 #include "Graphics/Common/RenderMode.h"
 #include "Graphics/Vulkan/Uniform/ShaderTypes.h"
+#include "Utils/ThreadPool.h"
 
 namespace Radis
 {
@@ -36,6 +37,8 @@ namespace Radis
 
         void Create(IWindow* window);
         void Cleanup();
+
+        ThreadPool mThreadPool;
 
         std::unique_ptr<Device> device;
         std::unique_ptr<SwapChain> swapChain;
@@ -109,8 +112,6 @@ namespace Radis
         int raytraceRenderMode = 1;
         
         // Env map
-        uint32_t envMapIndex;
-        uint32_t irMapIndex;
         float exposure = 1.0f;
         int useIrrDefuse = 0;
         int specTestMode = 0;

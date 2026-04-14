@@ -38,8 +38,7 @@
 namespace Radis
 {
     RenderingResource::RenderingResource(IWindow* window)
-        : envMapIndex{ TextureLibrary::INVALID_TEXTURE_INDEX }
-        , irMapIndex{ TextureLibrary::INVALID_TEXTURE_INDEX }
+        : mThreadPool(0)
     {
         Create(window);
     }
@@ -76,7 +75,8 @@ namespace Radis
             // IBL::generateIrradianceMap(Assets::ImagesPath + "Newport_Loft_Ref.hdr", Assets::ImagesPath + "Newport_Loft_Ref.IRMAP.hdr", &sh);
             // IBL::generateIrradianceMap(Assets::ImagesPath + "autumn_field_puresky_4k.hdr", Assets::ImagesPath + "autumn_field_puresky_4k.IRMAP.hdr", &sh);
 
-            textureLibrary = std::make_unique<TextureLibrary>(device.get());
+            textureLibrary = std::make_unique<TextureLibrary>(device.get(), mThreadPool);
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Placeholder.png", LoadPriority::Immediate);
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "ErrorTexture.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "circle.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "dog.png");
@@ -91,14 +91,15 @@ namespace Radis
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "folderIcon.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "unknownFileIcon.png");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "shikaout.ktx2");
-            envMapIndex = textureLibrary->QueueTextureLoad(Assets::ImagesPath + "autumn_field_puresky_4k.hdr");
-            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Alexs_Apt_2k.hdr");
-            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Newport_Loft_Ref.hdr");
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "autumn_field_puresky_4k.hdr");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "autumn_field_puresky_4k.IRMAP.hdr");
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Alexs_Apt_2k.hdr");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Alexs_Apt_2k.IRMAP.hdr");
-            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Newport_Loft_Ref.IRMAP.hdr");
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Newport_Loft_Ref.hdr", LoadPriority::Immediate);
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Newport_Loft_Ref.IRMAP.hdr", LoadPriority::Immediate);
 
-            textureLibrary->LoadQueuedTextures();
+            // textureLibrary->FlushAll();
+            
             // TODO: dds
             //textureLibrary->QueueTextureLoad(Assets::ImagesPath + "M_Soul_Rocks2_Inst_8_BaseColor.dds");
         }
@@ -122,9 +123,9 @@ namespace Radis
             modelLibrary->AddModel(Assets::ModelsPath + "DragonAttenuation.glb", true);
             modelLibrary->AddModel(Assets::ModelsPath + "Sponza.gltf", true);
             modelLibrary->AddModel(Assets::ModelsPath + "okayu/okayu.fbx", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "sanmiguellow.glb", true);
-            // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Curtains.dm", true, false);
-            // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Main.dm", true);
+            // modelLibrary->AddModel(Assets::ModelsPath + "sanmiguellow.glb", true);
+            // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Curtains.gltf", true);
+            // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Main.gltf", true);
 
             modelLibrary->InitializeUnifiedMesh();
         }
@@ -174,10 +175,6 @@ namespace Radis
 
             animationLibrary->AddAnimation(Assets::ModelsPath + "jack_samba.glb", modelLibrary->GetModel(Assets::ModelsPath + "jack_samba.glb"));
         }
-
-        // Recreation if needed
-        textureLibrary->CreateTextureSampler();
-        textureLibrary->CreateDescriptors();
 
         if (swapChain)
         {

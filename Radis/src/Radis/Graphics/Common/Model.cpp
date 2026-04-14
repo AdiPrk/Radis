@@ -52,6 +52,7 @@ namespace Radis
     void Model::LoadMeshes(const std::string& filepath)
     {
         // importer.SetPropertyBool(AI_CONFIG_PP_OG_EXCLUDE_LIST, true);
+        importer.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
         mScene = importer.ReadFile(filepath, aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_GlobalScale | aiProcess_OptimizeGraph);
 
         // Check if the scene was loaded successfully

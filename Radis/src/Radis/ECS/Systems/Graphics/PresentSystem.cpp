@@ -37,6 +37,7 @@ namespace Radis
         if (!tl) return;
 
         const auto& extent = rr->swapChain->GetSwapChainExtent();
+
         tl->ResizeStorageImage("RTAccum_0", extent.width, extent.height);
         tl->ResizeStorageImage("RTAccum_1", extent.width, extent.height);
         tl->ResizeStorageImage("RTHeatmapImage_0", extent.width, extent.height);

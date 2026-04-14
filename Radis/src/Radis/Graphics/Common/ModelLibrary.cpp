@@ -18,7 +18,7 @@
 
 namespace Radis
 {
-    const uint32_t ModelLibrary::INVALID_MODEL_INDEX = 10001;
+    const uint32_t ModelLibrary::INVALID_MODEL_INDEX = UINT32_MAX;
 
     ModelLibrary::ModelLibrary(Device& device, TextureLibrary& textureLibrary)
         : mDevice{ device }

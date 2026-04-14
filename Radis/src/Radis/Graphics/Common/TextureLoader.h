@@ -39,6 +39,7 @@ namespace Radis
         static bool FromMemory(const unsigned char* textureData, uint32_t textureSize, const std::string& name, TextureData& outTexture);
 
         // Multi-threaded
+        static void Load(TextureLoadData& loadData);
         static void LoadMT(std::vector<TextureLoadData>& loadData);
         
         // Helpers

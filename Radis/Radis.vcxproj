@@ -304,6 +304,7 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Radis\Utils\FrameRate.cpp" />
     <ClCompile Include="src\Radis\Utils\Logger.cpp" />
     <ClCompile Include="src\Radis\Utils\SerializationOperators.cpp" />
+    <ClCompile Include="src\Radis\Utils\ThreadPool.cpp" />
     <ClCompile Include="src\Radis\Utils\Utils.cpp" />
     <ClCompile Include="src\Radis\Graphics\Vulkan\Utils\VKMath.cpp" />
   </ItemGroup>
@@ -415,6 +416,7 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Radis\Utils\InputMap.h" />
     <ClInclude Include="src\Radis\Utils\Logger.h" />
     <ClInclude Include="src\Radis\Utils\SerializationOperators.h" />
+    <ClInclude Include="src\Radis\Utils\ThreadPool.h" />
     <ClInclude Include="src\Radis\Utils\Utils.h" />
     <ClInclude Include="src\Radis\Graphics\Vulkan\Utils\VKMath.h" />
   </ItemGroup>

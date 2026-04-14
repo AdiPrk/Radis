@@ -330,6 +330,18 @@ namespace Radis
         return true;
     }
 
+    void TextureLoader::Load(TextureLoadData& loadData)
+    {
+        if (loadData.data != nullptr && loadData.size > 0)
+        {
+            FromMemory(loadData.data, loadData.size, loadData.path, loadData.outTexture);
+        }
+        else if (!loadData.path.empty())
+        {
+            FromFile(loadData.path, loadData.outTexture);
+        }
+    }
+
     void TextureLoader::LoadMT(std::vector<TextureLoadData>& loadData)
     {
         if (loadData.empty()) return;

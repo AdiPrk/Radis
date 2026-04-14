@@ -102,19 +102,14 @@ namespace Radis
         }
 
         // Update textures!
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+        rr->modelLibrary->QueueTextures();
+        if (rr->textureLibrary->LoadQueuedTextures()) 
         {
-            rr->modelLibrary->QueueTextures();
+            rr->textureLibrary->UpdateTextureUniform(rr->cameraUniform.get());
         }
-
-        rr->textureLibrary->LoadQueuedTextures();
-        rr->textureLibrary->UpdateTextureUniform(rr->cameraUniform.get());
-
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
-        {
-            rr->textureLibrary->UpdateRTUniform(*rr);
-        }
-
+        
+        rr->textureLibrary->UpdateRTUniform(*rr);
+        
         // Draw the editor grid
         DebugDrawResource::DrawEditorGrid(50, 1.0f);
     }
@@ -177,34 +172,34 @@ namespace Radis
                 std::bind(&RenderSystem::RenderSceneDeferredGeometryVK, this, std::placeholders::_1)
             );
 
-            rg->AddPass("AlchemyAOPass",
-                [&](RGPassBuilder& b) {
-                    b.reads("SceneDepth");
-                    b.reads("gNormal");
-                    b.writes("RawAO");
-                },
-                std::bind(&RenderSystem::RenderAlchemyAOVK, this, std::placeholders::_1)
-            );
-
-            rg->AddPass("AOBlurHPass",
-                [&](RGPassBuilder& b) {
-                    b.reads("RawAO");
-                    b.reads("SceneDepth");
-                    b.reads("gNormal");
-                    b.writes("AOBlurTmp");
-                },
-                std::bind(&RenderSystem::RenderAOBlurHVK, this, std::placeholders::_1)
-            );
-
-            rg->AddPass("AOBlurVPass",
-                [&](RGPassBuilder& b) {
-                    b.reads("AOBlurTmp");
-                    b.reads("SceneDepth");
-                    b.reads("gNormal");
-                    b.writes("BlurredAO");
-                },
-                std::bind(&RenderSystem::RenderAOBlurVVK, this, std::placeholders::_1)
-            );
+            // rg->AddPass("AlchemyAOPass",
+            //     [&](RGPassBuilder& b) {
+            //         b.reads("SceneDepth");
+            //         b.reads("gNormal");
+            //         b.writes("RawAO");
+            //     },
+            //     std::bind(&RenderSystem::RenderAlchemyAOVK, this, std::placeholders::_1)
+            // );
+            // 
+            // rg->AddPass("AOBlurHPass",
+            //     [&](RGPassBuilder& b) {
+            //         b.reads("RawAO");
+            //         b.reads("SceneDepth");
+            //         b.reads("gNormal");
+            //         b.writes("AOBlurTmp");
+            //     },
+            //     std::bind(&RenderSystem::RenderAOBlurHVK, this, std::placeholders::_1)
+            // );
+            // 
+            // rg->AddPass("AOBlurVPass",
+            //     [&](RGPassBuilder& b) {
+            //         b.reads("AOBlurTmp");
+            //         b.reads("SceneDepth");
+            //         b.reads("gNormal");
+            //         b.writes("BlurredAO");
+            //     },
+            //     std::bind(&RenderSystem::RenderAOBlurVVK, this, std::placeholders::_1)
+            // );
 
             // directional/ambient -> into SceneHDR
             rg->AddPass("LightingPass",
@@ -369,7 +364,7 @@ namespace Radis
         // For path tracing:
         camData.frameCount = rr->frameCount;
 
-        if (camData.projectionView != rr->previousViewProj) {
+        if (camData.projectionView != rr->previousViewProj || rr->accumulationCount <= 0) {
             rr->accumulationCount = 0;
             rr->previousViewProj = camData.projectionView;
         }

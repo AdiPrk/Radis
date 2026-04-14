@@ -14,6 +14,7 @@
 #include "BinaryIO.h"
 #include "Engine.h"
 
+#include <meshoptimizer.h>
 #include <mio/mio.hpp>
 
 using namespace Radis;
@@ -34,44 +35,6 @@ bool ModelSerializer::validateHeader(BinaryReaderLE& reader)
     }
 
     return true;
-}
-
-void CompressInPlaceLZ4(const std::string& filename)
-{
-    std::string lz4Path = Assets::BinariesPath + "lz4.exe";
-    std::string tempCompressed = filename + ".lz4tmp";
-
-    // Build compression command
-    std::string inner =
-        "\"" + lz4Path + "\" "
-        "--favor-decSpeed -f "    // compress + force overwrite of temp file
-        "\"" + filename + "\" "   // INPUT
-        "\"" + tempCompressed + "\""; // OUTPUT
-
-    std::string command = "\"" + inner + "\"";
-    std::system(command.c_str());
-
-    // Force replace original with compressed version
-    std::filesystem::remove(filename);
-    std::filesystem::rename(tempCompressed, filename);
-}
-
-bool DecompressForReadLZ4(const std::string& filename, std::string& outTemp)
-{
-    std::string lz4Path = Assets::BinariesPath + "lz4.exe";
-    outTemp = filename + ".rawtmp";
-
-    std::string inner =
-        "\"" + lz4Path + "\" "
-        "-d -f "                  // decompress + force overwrite
-        "\"" + filename + "\" "   // INPUT (compressed)
-        "\"" + outTemp + "\"";    // OUTPUT (raw)
-
-    std::string command = "\"" + inner + "\"";
-    command += " > NUL 2>&1";
-
-    int result = std::system(command.c_str());
-    return result == 0;
 }
 
 void ModelSerializer::save(const Model& model, const std::string& filename, uint32_t hash)
@@ -101,10 +64,10 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
 
     struct TextureRecord
     {
-        std::string key;                // dedup key
-        std::string sourcePath;        // original (non-ktx2) path if any
-        const std::vector<unsigned char>* embeddedData = nullptr; // if no path
-        std::string outKTX2Path;       // final KTX2 path we will write to disk
+        std::string key;
+        std::string sourcePath;
+        const std::vector<unsigned char>* embeddedData = nullptr;
+        std::string outKTX2Path;
     };
 
     struct MeshTextureRefs
@@ -114,28 +77,28 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
     };
 
     auto HashBytes = [](const std::vector<unsigned char>& data) -> std::size_t
-        {
-            if (data.empty()) return 0;
-            return std::hash<std::string_view>{}(std::string_view(reinterpret_cast<const char*>(data.data()), data.size()));
-        };
+    {
+        if (data.empty()) return 0;
+        return std::hash<std::string_view>{}(std::string_view(reinterpret_cast<const char*>(data.data()), data.size()));
+    };
 
     // KTX2 root: <ModelsPath>/ktx2/<ModelName>/
     std::filesystem::path ktxRoot = std::filesystem::path(Assets::ModelsPath) / "ktx2";
     std::filesystem::path modelDir = ktxRoot / model.mModelName;
 
     auto MakeKTX2PathForSource = [&](const std::string& srcPath) -> std::string
-        {
-            std::filesystem::path src(srcPath);
-            std::string baseName = src.stem().string();
-            std::string fileName = baseName + ".ktx2";
-            return (modelDir / fileName).string();
-        };
+    {
+        std::filesystem::path src(srcPath);
+        std::string baseName = src.stem().string();
+        std::string fileName = baseName + ".ktx2";
+        return (modelDir / fileName).string();
+    };
 
     auto MakeKTX2PathForEmbedded = [&](TextureSlot slot, std::size_t hashValue) -> std::string
-        {
-            std::string fileName = TextureSlotNames[static_cast<size_t>(slot)] + "_" + std::to_string(hashValue) + ".ktx2";
-            return (modelDir / fileName).string();
-        };
+    {
+        std::string fileName = TextureSlotNames[static_cast<size_t>(slot)] + "_" + std::to_string(hashValue) + ".ktx2";
+        return (modelDir / fileName).string();
+    };
 
     std::unordered_map<std::string, uint32_t> texIdByKey;
     std::vector<TextureRecord> textures;
@@ -143,43 +106,42 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
     meshTexRefs.reserve(model.mMeshes.size());
 
     auto RegisterTexture = [&](const std::string& path, const std::vector<unsigned char>& data, TextureSlot slot) -> int32_t
+    {
+        if (path.empty() && data.empty())
+            return -1;
+
+        std::string key;
+        std::string outPath;
+
+        if (!path.empty())
         {
-            if (path.empty() && data.empty())
-                return -1;
+            key = "PATH|" + path;
+            outPath = MakeKTX2PathForSource(path);
+        }
+        else
+        {
+            size_t h = HashBytes(data);
+            key = "EMBEDDED|" + std::to_string(h);
+            outPath = MakeKTX2PathForEmbedded(slot, h);
+        }
 
-            std::string key;
-            std::string outPath;
+        auto it = texIdByKey.find(key);
+        if (it != texIdByKey.end())
+            return static_cast<int32_t>(it->second);
 
-            if (!path.empty())
-            {
-                key = "PATH|" + path;
-                outPath = MakeKTX2PathForSource(path);
-            }
-            else
-            {
-                size_t h = HashBytes(data);
-                key = "EMBEDDED|" + std::to_string(h);
-                outPath = MakeKTX2PathForEmbedded(slot, h);
-            }
+        uint32_t newId = static_cast<uint32_t>(textures.size());
+        texIdByKey.emplace(key, newId);
 
-            auto it = texIdByKey.find(key);
-            if (it != texIdByKey.end())
-                return static_cast<int32_t>(it->second);
+        TextureRecord rec;
+        rec.key = std::move(key);
+        rec.sourcePath = path;
+        rec.embeddedData = path.empty() ? &data : nullptr;
+        rec.outKTX2Path = std::move(outPath);
 
-            uint32_t newId = static_cast<uint32_t>(textures.size());
-            texIdByKey.emplace(key, newId);
+        textures.push_back(std::move(rec));
+        return static_cast<int32_t>(newId);
+    };
 
-            TextureRecord rec;
-            rec.key = std::move(key);
-            rec.sourcePath = path;
-            rec.embeddedData = path.empty() ? &data : nullptr;
-            rec.outKTX2Path = std::move(outPath);
-
-            textures.push_back(std::move(rec));
-            return static_cast<int32_t>(newId);
-        };
-
-    // First pass: build registry + per-mesh refs
     for (const auto& meshPtr : model.mMeshes)
     {
         const auto& mesh = *meshPtr;
@@ -196,14 +158,13 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
         meshTexRefs.push_back(refs);
     }
 
-    // ---------------- PARALLEL KTX2 BUILD ---------------------------
     std::for_each(std::execution::par, textures.begin(), textures.end(), [](TextureRecord& rec)
-        {
-            TextureLoader::KTX2BuildInput input{};
-            input.sourcePath = rec.sourcePath;
-            input.data = rec.embeddedData;
-            TextureLoader::BuildKTX2File(input, rec.outKTX2Path);
-        });
+    {
+        TextureLoader::KTX2BuildInput input{};
+        input.sourcePath = rec.sourcePath;
+        input.data = rec.embeddedData;
+        TextureLoader::BuildKTX2File(input, rec.outKTX2Path);
+    });
 
     // ---------------- FILE WRITE ---------------
 
@@ -216,13 +177,11 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
 
     BinaryWriterLE w(file);
 
-    // Header: [hash][magic][version][hasAnim]
     w.U32(hash);
     w.U32(MAGIC_NUMBER);
     w.U32(VERSION);
     w.U32(model.mBoneInfoMap.empty() ? 0u : 1u);
 
-    // AABB
     w.Vec3(model.mAABBmin);
     w.Vec3(model.mAABBmax);
 
@@ -230,18 +189,18 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
     w.U32(meshCount);
 
     auto WriteTexturePathEntry = [&](int32_t texId)
+    {
+        w.U32(0u); // embedded = false
+
+        if (texId < 0)
         {
-            w.U32(0u); // embedded = false
+            w.U32(0u);
+            return;
+        }
 
-            if (texId < 0)
-            {
-                w.U32(0u); // nameSize = 0
-                return;
-            }
-
-            const std::string& path = textures[static_cast<size_t>(texId)].outKTX2Path;
-            w.String(path);
-        };
+        const std::string& path = textures[static_cast<size_t>(texId)].outKTX2Path;
+        w.String(path);
+    };
 
     for (uint32_t index = 0; index < meshCount; ++index)
     {
@@ -250,15 +209,35 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
 
         uint32_t vertexCount = static_cast<uint32_t>(mesh.mVertices.size());
         uint32_t indexCount = static_cast<uint32_t>(mesh.mIndices.size());
+        size_t vertexStride = sizeof(decltype(mesh.mVertices)::value_type);
+        size_t indexStride = sizeof(decltype(mesh.mIndices)::value_type);
 
         w.U32(vertexCount);
         w.U32(indexCount);
 
-        // Bulk-write all vertices and indices in two calls
-        w.PODArray(mesh.mVertices.data(), vertexCount);
-        w.PODArray(mesh.mIndices.data(), indexCount);
+        // GPU Optimizations!
+        std::vector<uint32_t> optIndicies(indexCount);
+        meshopt_optimizeVertexCache(optIndicies.data(), mesh.mIndices.data(), indexCount, vertexCount);
 
-        // Texture KTX2 paths
+        std::vector<decltype(mesh.mVertices)::value_type> optVerts(vertexCount);
+        meshopt_optimizeVertexFetch(optVerts.data(), optIndicies.data(), indexCount, mesh.mVertices.data(), vertexCount, vertexStride);
+
+        // Meshoptimizer Compression
+        size_t maxIndexBound = meshopt_encodeIndexBufferBound(indexCount, vertexCount);
+        std::vector<unsigned char> compIndicies(maxIndexBound);
+        size_t compIndexSize = meshopt_encodeIndexBuffer(compIndicies.data(), compIndicies.size(), optIndicies.data(), indexCount);
+
+        size_t maxVertexBound = meshopt_encodeVertexBufferBound(vertexCount, vertexStride);
+        std::vector<unsigned char> compVerts(maxVertexBound);
+        size_t compVertexSize = meshopt_encodeVertexBuffer(compVerts.data(), compVerts.size(), optVerts.data(), vertexCount, vertexStride);
+
+        w.U32(static_cast<uint32_t>(compVertexSize));
+        w.U32(static_cast<uint32_t>(compIndexSize));
+
+        // Write Compressed Data
+        w.PODArray(compVerts.data(), compVertexSize);
+        w.PODArray(compIndicies.data(), compIndexSize);
+
         WriteTexturePathEntry(refs.tex[0]);
         WriteTexturePathEntry(refs.tex[1]);
         WriteTexturePathEntry(refs.tex[2]);
@@ -267,14 +246,12 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
         WriteTexturePathEntry(refs.tex[5]);
 
         w.U32(refs.metallicRoughnessCombined);
-
         w.Vec4(mesh.baseColorFactor);
         w.F32(mesh.metallicFactor);
         w.F32(mesh.roughnessFactor);
         w.Vec4(mesh.emissiveFactor);
     }
 
-    // Bones / animation
     if (!model.mBoneInfoMap.empty())
     {
         w.U32(static_cast<uint32_t>(model.mBoneInfoMap.size()));
@@ -293,27 +270,18 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
     }
 
     file.close();
-    CompressInPlaceLZ4(filename);
+    // CompressInPlaceLZ4(filename); -> Completely Removed!
 }
 
 
 bool ModelSerializer::load(Model& model, const std::string& filename)
 {
-    std::string tempRaw;
-    if (!DecompressForReadLZ4(filename, tempRaw))
-    {
-        RADIS_CRITICAL("Failed to decompress model file.");
-        return false;
-    }
-
-    // Memory-map the decompressed temp file.
-    // The OS pages data in on demand with no per-read syscall overhead.
+    // Memory-map the actual .dm file directly. No temp `.rawtmp` files anymore.
     std::error_code mmapError;
-    mio::mmap_source mmap = mio::make_mmap_source(tempRaw, mmapError);
+    mio::mmap_source mmap = mio::make_mmap_source(filename, mmapError);
     if (mmapError)
     {
-        RADIS_CRITICAL("Failed to memory-map decompressed file: {}", mmapError.message());
-        std::filesystem::remove(tempRaw);
+        RADIS_CRITICAL("Failed to memory-map model file {}: {}", filename, mmapError.message());
         return false;
     }
 
@@ -321,7 +289,6 @@ bool ModelSerializer::load(Model& model, const std::string& filename)
 
     if (!validateHeader(r))
     {
-        std::filesystem::remove(tempRaw);
         return false;
     }
 
@@ -329,7 +296,6 @@ bool ModelSerializer::load(Model& model, const std::string& filename)
 
     model.mMeshes.clear();
 
-    // AABB
     model.mAABBmin = r.Vec3();
     model.mAABBmax = r.Vec3();
 
@@ -343,36 +309,51 @@ bool ModelSerializer::load(Model& model, const std::string& filename)
 
         uint32_t vertexCount = r.U32();
         uint32_t indexCount = r.U32();
+        uint32_t compVertexSize = r.U32();
+        uint32_t compIndexSize = r.U32();
 
-        // Bulk-read all vertices and indices in two calls
+        size_t vertexStride = sizeof(decltype(mesh.mVertices)::value_type);
+        size_t indexStride = sizeof(decltype(mesh.mIndices)::value_type);
+
+        // 1. Read and Decode Vertices
+        std::vector<unsigned char> compVerts;
+        ResizeUninitialized(compVerts, compVertexSize);
+        r.PODArray(compVerts.data(), compVertexSize);
+
         ResizeUninitialized(mesh.mVertices, vertexCount);
-        r.PODArray(mesh.mVertices.data(), vertexCount);
+        int vertRes = meshopt_decodeVertexBuffer(mesh.mVertices.data(), vertexCount, vertexStride, compVerts.data(), compVertexSize);
+        if (vertRes != 0) RADIS_ERROR("Failed to decode vertex buffer for mesh.");
+
+        // 2. Read and Decode Indices
+        std::vector<unsigned char> compIndices;
+        ResizeUninitialized(compIndices, compIndexSize);
+        r.PODArray(compIndices.data(), compIndexSize);
 
         ResizeUninitialized(mesh.mIndices, indexCount);
-        r.PODArray(mesh.mIndices.data(), indexCount);
+        int idxRes = meshopt_decodeIndexBuffer(mesh.mIndices.data(), indexCount, indexStride, compIndices.data(), compIndexSize);
+        if (idxRes != 0) RADIS_ERROR("Failed to decode index buffer for mesh.");
 
         // Textures
         auto ReadTextureData = [&](std::string& texturePath, std::vector<unsigned char>& textureData)
+        {
+            uint32_t embedded = r.U32();
+            if (embedded)
             {
-                uint32_t embedded = r.U32();
-                if (embedded)
-                {
-                    // Legacy embedded path
-                    std::string texName = r.String();
-                    uint32_t dataSize = r.U32();
+                std::string texName = r.String();
+                uint32_t dataSize = r.U32();
 
-                    textureData.resize(dataSize);
-                    if (dataSize > 0)
-                        r.PODArray(textureData.data(), dataSize);
+                textureData.resize(dataSize);
+                if (dataSize > 0)
+                    r.PODArray(textureData.data(), dataSize);
 
-                    texturePath.clear();
-                }
-                else
-                {
-                    texturePath = r.String();
-                    textureData.clear();
-                }
-            };
+                texturePath.clear();
+            }
+            else
+            {
+                texturePath = r.String();
+                textureData.clear();
+            }
+        };
 
         ReadTextureData(mesh.albedoTexturePath, mesh.mAlbedoTextureData);
         ReadTextureData(mesh.normalTexturePath, mesh.mNormalTextureData);
@@ -426,6 +407,6 @@ bool ModelSerializer::load(Model& model, const std::string& filename)
     }
 
     mmap.unmap();
-    std::filesystem::remove(tempRaw);
+    // Temp file deletion removed; we map the source .dm directly now!
     return true;
 }

@@ -25,7 +25,7 @@ layout(location = 11) out vec3 localPos;
 // -------------------------------------------------
 
 const float PI = 3.14159265359;
-const uint INVALID_TEXTURE_INDEX = 10001;
+const uint INVALID_TEXTURE_INDEX = 0xFFFFFFFFu;
 const int INVALID_BONE_ID = -1;
 
 struct VQS {

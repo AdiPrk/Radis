@@ -26,24 +26,24 @@ namespace Radis
         VkSampler defaultSampler = renderData.textureLibrary->GetSampler();
         size_t textureCount = renderData.textureLibrary->GetTextureCount();
 
+        ITexture* itex0 = renderData.textureLibrary->GetTextureByIndex(0);
+        VKTexture* vktex0 = static_cast<VKTexture*>(itex0);
+
         std::vector<VkDescriptorImageInfo> imageInfos(TextureLibrary::MAX_TEXTURE_COUNT);
         for (size_t j = 0; j < TextureLibrary::MAX_TEXTURE_COUNT; ++j) 
         {
             imageInfos[j].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             imageInfos[j].sampler = defaultSampler;
 
-            if (textureCount == 0) 
+            ITexture* itex = renderData.textureLibrary->GetTextureByIndex(static_cast<uint32_t>(std::min(j, textureCount - 1)));
+            VKTexture* vktex = static_cast<VKTexture*>(itex);
+            if (vktex)
             {
-                imageInfos[j].imageView = VK_NULL_HANDLE;
+                imageInfos[j].imageView = vktex->GetImageView();
             }
             else
             {
-                ITexture* itex = renderData.textureLibrary->GetTextureByIndex(static_cast<uint32_t>(std::min(j, textureCount - 1)));
-                VKTexture* vktex = static_cast<VKTexture*>(itex);
-                if (vktex)
-                {
-                    imageInfos[j].imageView = vktex->GetImageView();
-                }
+                imageInfos[j].imageView = vktex0 ? vktex0->GetImageView() : VK_NULL_HANDLE;
             }
         }
 

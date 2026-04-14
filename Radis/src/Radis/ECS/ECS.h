@@ -10,6 +10,7 @@
 
 #include "Systems/ISystem.h"
 #include "Entities/Entity.h"
+#include "Utils/ThreadPool.h"
 
 namespace Radis
 {
@@ -86,6 +87,9 @@ namespace Radis
         
         entt::registry& GetRegistry() { return mRegistry; }
 
+        // --- Thread Pool ---
+        ThreadPool& GetThreadPool() { return mThreadPool; }
+
     private:
         // Systems/Resources
         std::vector<std::unique_ptr<ISystem>> mSystems;
@@ -94,5 +98,8 @@ namespace Radis
         // Entities
         entt::registry mRegistry;
         std::unordered_map<std::string, Entity> mEntityMap;
+
+        // Thread Pool
+        ThreadPool mThreadPool;
     };
 }
