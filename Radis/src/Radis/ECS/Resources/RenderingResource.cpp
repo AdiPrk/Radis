@@ -99,6 +99,7 @@ namespace Radis
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Newport_Loft_Ref.IRMAP.hdr", LoadPriority::Immediate);
 
             // textureLibrary->FlushAll();
+            
             // TODO: dds
             //textureLibrary->QueueTextureLoad(Assets::ImagesPath + "M_Soul_Rocks2_Inst_8_BaseColor.dds");
         }
@@ -122,9 +123,9 @@ namespace Radis
             modelLibrary->AddModel(Assets::ModelsPath + "DragonAttenuation.glb", true);
             modelLibrary->AddModel(Assets::ModelsPath + "Sponza.gltf", true);
             modelLibrary->AddModel(Assets::ModelsPath + "okayu/okayu.fbx", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "sanmiguellow.glb", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Curtains.gltf", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Main.gltf", true);
+            // modelLibrary->AddModel(Assets::ModelsPath + "sanmiguellow.glb", true);
+            // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Curtains.gltf", true);
+            // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Main.gltf", true);
 
             modelLibrary->InitializeUnifiedMesh();
         }
