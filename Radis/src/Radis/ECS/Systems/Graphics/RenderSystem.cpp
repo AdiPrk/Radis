@@ -546,10 +546,10 @@ namespace Radis
 
                 data.tint = mc.TintColor;
                 data.textureIndices = glm::uvec4(mesh->albedoTextureIndex, mesh->normalTextureIndex, metallicIndex, roughnessIndex);
-                data.textureIndices2 = glm::uvec4(mesh->occlusionTextureIndex, mesh->emissiveTextureIndex, TextureLibrary::INVALID_TEXTURE_INDEX, TextureLibrary::INVALID_TEXTURE_INDEX);
+                data.textureIndices2 = glm::uvec4(mesh->occlusionTextureIndex, mesh->emissiveTextureIndex, mesh->transmissionTextureIndex, TextureLibrary::INVALID_TEXTURE_INDEX);
                 data.boneOffset = boneOffset;
                 data.baseColorFactor = mesh->baseColorFactor;
-                data.metallicRoughnessFactor = glm::vec4(meshMetallic, meshRoughness, 0.f, 0.f);
+                data.metallicRoughnessFactor = glm::vec4(meshMetallic, meshRoughness, mesh->transmissionFactor, mesh->ior);
                 data.emissiveFactor = meshEmissive;
                 data.indexOffset = meshInfo.firstIndex;
                 data.vertexOffset = meshInfo.vertexOffset;
