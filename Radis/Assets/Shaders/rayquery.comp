@@ -17,29 +17,29 @@ const float NORMAL_OFFSET      = 1e-3;
 const float ALPHA_CUTOUT       = 0.1;
 const float MIN_ROUGHNESS      = 0.04;
 const float FRESNEL_DIELECTRIC = 0.04;
-const float DEFAULT_IOR        = 1.5;   // Glass default; water = 1.33, diamond = 2.42
+const float DEFAULT_IOR        = 1.5;  // water = 1.33, diamond = 2.42
 
-// Rendering modes (must match push constant values on the CPU side)
-const int MODE_RAY_TRACING        = 0; // Single bounce, direct lighting only, no accumulation
+const int MODE_RAY_TRACING        = 0; // Single bounce, direct lighting, no accumulation
 const int MODE_PATH_TRACING_ACCUM = 1; // Multi-bounce, temporal accumulation across frames
-const int MODE_PATH_TRACING_FINAL = 2; // Multi-bounce, multiple samples per frame, no accumulation
+const int MODE_PATH_TRACING_FINAL = 2; // Multi-bounce, multiple samples per frame
 
-// Per-mode path tracing parameters
-const int RT_MAX_BOUNCES    = 1;  // Direct lighting only
+const int RT_MAX_BOUNCES    = 1;
 const int ACCUM_MAX_BOUNCES = 6;
 const int FINAL_MAX_BOUNCES = 6;
-const int FINAL_SPP         = 20;  // Samples per pixel for final mode
+const int FINAL_SPP         = 20;
 
 // ---------------------------------------------------------------------------
 // Data Structures
 // ---------------------------------------------------------------------------
-struct Vertex {
-    uint  packedColor;  // RGBA8 unorm
-    uint  packedNormal; // oct-encoded snorm16x2
-    vec2  uv;
+struct Vertex 
+{
+    uint packedColor;  // RGBA8 unorm
+    uint packedNormal; // oct-encoded snorm16x2
+    vec2 uv;
 };
 
-struct Instance {
+struct Instance
+{
     mat4  model;
     vec4  tint;
     uvec4 textureIndices;
@@ -52,7 +52,8 @@ struct Instance {
     uint  vertexOffset;
 };
 
-struct Light {
+struct Light 
+{
     vec4 positionRadius;
     vec4 colorIntensity;
     vec4 directionInner;
@@ -60,9 +61,10 @@ struct Light {
 };
 
 // ---------------------------------------------------------------------------
-// Bindings Set 0 (Frame-level)
+// Bindings Set 0
 // ---------------------------------------------------------------------------
-layout(set = 0, binding = 0) uniform Uniforms {
+layout(set = 0, binding = 0) uniform Uniforms 
+{
     mat4 projectionView;
     mat4 projection;
     mat4 view;
@@ -75,13 +77,14 @@ layout(set = 0, binding = 0) uniform Uniforms {
 
 layout(set = 0, binding = 1) readonly buffer InstanceData { Instance instances[]; };
 layout(set = 0, binding = 3) uniform sampler2D uTextures[];
-layout(set = 0, binding = 4) readonly buffer LightData {
+layout(set = 0, binding = 4) readonly buffer LightData 
+{
     uint  lightCount;
     Light lights[];
 } lightData;
 
 // ---------------------------------------------------------------------------
-// Bindings Set 1 (Pass-level)
+// Bindings Set 1
 // ---------------------------------------------------------------------------
 layout(set = 1, binding = 0)          uniform accelerationStructureEXT topLevelAS;
 layout(set = 1, binding = 1, rgba32f) uniform image2D colorImage;
@@ -93,35 +96,40 @@ layout(set = 1, binding = 4, std430) readonly buffer MeshIndexBuffer { uint    i
 layout(set = 1, binding = 5)          uniform sampler2D historyRead;
 layout(set = 1, binding = 6, rgba32f) uniform image2D   historyWrite;
 layout(set = 1, binding = 7)          uniform sampler2D environmentMap;
+
 // ---------------------------------------------------------------------------
 // Push Constants
 // ---------------------------------------------------------------------------
-layout(push_constant) uniform PushConstants {
+layout(push_constant) uniform PushConstants 
+{
     int mode; // MODE_RAY_TRACING | MODE_PATH_TRACING_ACCUM | MODE_PATH_TRACING_FINAL
 } pc;
 
 // ---------------------------------------------------------------------------
 // Math & RNG
 // ---------------------------------------------------------------------------
-uint pcgHash(inout uint seed) {
+uint pcgHash(inout uint seed) 
+{
     seed      = seed * 747796405u + 2891336453u;
     uint word = ((seed >> ((seed >> 28u) + 4u)) ^ seed) * 277803737u;
     return (word >> 22u) ^ word;
 }
 
-float rnd(inout uint seed) {
+float rnd(inout uint seed) 
+{
     return float(pcgHash(seed)) / 4294967296.0;
 }
 
-mat3 buildTBN(vec3 n) {
+mat3 buildTBN(vec3 n)
+{
     vec3 up      = (abs(n.z) < 0.999) ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
     vec3 tangent = normalize(cross(up, n));
     vec3 bitan   = cross(n, tangent);
     return mat3(tangent, bitan, n);
 }
 
-// Cosine-weighted hemisphere sample in the oriented frame of `normal`.
-vec3 cosineSampleHemisphere(vec3 normal, inout uint seed) {
+vec3 cosineSampleHemisphere(vec3 normal, inout uint seed) 
+{
     float r1       = rnd(seed);
     float r2       = rnd(seed);
     float phi      = 2.0 * PI * r1;
@@ -131,10 +139,10 @@ vec3 cosineSampleHemisphere(vec3 normal, inout uint seed) {
     return normalize(buildTBN(normal) * h);
 }
 
-// Converts a 3D direction vector into a 2D UV coordinate for an equirectangular HDR map
-vec2 getSphericalUV(vec3 v) {
+vec2 getSphericalUV(vec3 v) 
+{
     vec2 uv = vec2(atan(v.z, v.x), asin(v.y));
-    uv *= vec2(0.1591549, 0.3183098); // Inverse of 2*PI and PI
+    uv *= vec2(INV_PI * 0.5, INV_PI);
     uv += 0.5;
     return uv;
 }
@@ -142,54 +150,54 @@ vec2 getSphericalUV(vec3 v) {
 // ---------------------------------------------------------------------------
 // PBR GGX Microfacet Model
 // ---------------------------------------------------------------------------
-float distributionGGX(float NdotH, float roughness) {
+float distributionGGX(float NdotH, float roughness) 
+{
     float a     = roughness * roughness;
     float a2    = a * a;
     float denom = NdotH * NdotH * (a2 - 1.0) + 1.0;
     return a2 / max(PI * denom * denom, 1e-4);
 }
 
-float geometrySchlickGGX(float NdotX, float roughness) {
+float geometrySchlickGGX(float NdotX, float roughness) 
+{
     float r = roughness + 1.0;
     float k = (r * r) * 0.125;
     return NdotX / (NdotX * (1.0 - k) + k);
 }
 
-float geometrySmith(float NdotV, float NdotL, float roughness) {
+float geometrySmith(float NdotV, float NdotL, float roughness) 
+{
     return geometrySchlickGGX(NdotV, roughness) * geometrySchlickGGX(NdotL, roughness);
 }
 
-vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness) {
-    // Fast x^5 calculation
-    float fc = clamp(1.0 - cosTheta, 0.0, 1.0);
+vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness) 
+{
+    float fc  = clamp(1.0 - cosTheta, 0.0, 1.0);
     float fc2 = fc * fc;
-    float fc5 = fc2 * fc2 * fc; 
-    
+    float fc5 = fc2 * fc2 * fc;
     return F0 + (max(vec3(1.0 - roughness), F0) - F0) * fc5;
 }
 
-float fresnelDielectric(float cosTheta, float ior) {
-    float r0 = (1.0 - ior) / (1.0 + ior);
-    r0 *= r0;
-    
-    // Fast x^5 calculation
-    float fc = clamp(1.0 - cosTheta, 0.0, 1.0);
+float fresnelDielectric(float cosTheta, float ior)
+{
+    float r0  = (1.0 - ior) / (1.0 + ior);
+    r0       *= r0;
+    float fc  = clamp(1.0 - cosTheta, 0.0, 1.0);
     float fc2 = fc * fc;
     float fc5 = fc2 * fc2 * fc;
-    
     return r0 + (1.0 - r0) * fc5;
 }
 
 // ---------------------------------------------------------------------------
 // Geometry Helpers
 // ---------------------------------------------------------------------------
-
-// Expand 2-component barycentric coords to the full 3-component form.
-vec3 baryWeights(vec2 b) {
+vec3 baryWeights(vec2 b)
+{
     return vec3(1.0 - b.x - b.y, b.x, b.y);
 }
 
-vec3 unpackColor(uint packed) {
+vec3 unpackColor(uint packed)
+{
     return vec3(
         float((packed >>  0) & 0xFFu) / 255.0,
         float((packed >>  8) & 0xFFu) / 255.0,
@@ -197,7 +205,9 @@ vec3 unpackColor(uint packed) {
     );
 }
 
-vec3 unpackNormal(uint packed) {
+// Oct-encoding decode: reconstructs z, then folds the negative hemisphere.
+vec3 unpackNormal(uint packed) 
+{
     vec2 e = vec2(
         float(int(packed & 0xFFFFu) << 16 >> 16) / 32767.0,
         float(int(packed) >> 16)                 / 32767.0
@@ -208,9 +218,8 @@ vec3 unpackNormal(uint packed) {
     return normalize(n);
 }
 
-// Fetch the three vertex indices for a given primitive, accounting for the
-// instance's index offset.  Returns actual vertex indices (not primitive-local).
-uvec3 fetchTriangleIndices(Instance inst, int primitiveId) {
+uvec3 fetchTriangleIndices(Instance inst, int primitiveId) 
+{
     uint base = uint(primitiveId) * 3u + inst.indexOffset;
     return uvec3(
         indexBuffer.indices[base],
@@ -219,8 +228,8 @@ uvec3 fetchTriangleIndices(Instance inst, int primitiveId) {
     );
 }
 
-// Barycentric interpolation of texture coordinates across a triangle.
-vec2 interpolateUV(uvec3 tri, Instance inst, vec3 bary) {
+vec2 interpolateUV(uvec3 tri, Instance inst, vec3 bary) 
+{
     uint v0 = tri.x + inst.vertexOffset;
     uint v1 = tri.y + inst.vertexOffset;
     uint v2 = tri.z + inst.vertexOffset;
@@ -229,19 +238,14 @@ vec2 interpolateUV(uvec3 tri, Instance inst, vec3 bary) {
          + meshBuffer.vertices[v2].uv * bary.z;
 }
 
-vec3 importanceSampleGGX(vec2 xi, vec3 n, float roughness) {
-    float a  = roughness * roughness;
-    float a2 = a * a;
-
-    // Map random variables to spherical coordinates (phi, theta)
-    float phi = 2.0 * PI * xi.x;
+vec3 importanceSampleGGX(vec2 xi, vec3 n, float roughness)
+{
+    float a        = roughness * roughness;
+    float a2       = a * a;
+    float phi      = 2.0 * PI * xi.x;
     float cosTheta = sqrt((1.0 - xi.y) / (1.0 + (a2 - 1.0) * xi.y));
     float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
-
-    // Spherical to Cartesian (tangent space)
-    vec3 h = vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
-
-    // Transform to world space using your existing TBN builder
+    vec3  h        = vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
     return normalize(buildTBN(n) * h);
 }
 
@@ -253,31 +257,25 @@ void main() {
     ivec2 resolution  = imageSize(colorImage);
     if (pixelCoords.x >= resolution.x || pixelCoords.y >= resolution.y) return;
 
-    // Unique RNG seed per pixel per frame.
     uint seed = uint(pixelCoords.y * resolution.x + pixelCoords.x)
               + uint(uniforms.frameCount) * 719393u;
 
-    // Per-mode parameters resolved once up front.
     int spp        = (pc.mode == MODE_PATH_TRACING_FINAL) ? FINAL_SPP         : 1;
     int maxBounces = (pc.mode == MODE_RAY_TRACING)        ? RT_MAX_BOUNCES    :
-                    (pc.mode == MODE_PATH_TRACING_ACCUM)  ? ACCUM_MAX_BOUNCES :
+                     (pc.mode == MODE_PATH_TRACING_ACCUM) ? ACCUM_MAX_BOUNCES :
                                                             FINAL_MAX_BOUNCES;
 
-    // --- Sample Loop ---
-    // Ray tracing and accumulation run a single sample; final runs FINAL_SPP
-    // samples within the same frame and averages them for a complete image.
     vec3 totalColor = vec3(0.0);
 
-    for (int s = 0; s < spp; ++s) {
-
-        // --- Ray Generation ---
-        // Ray tracing:  no jitter, shoot through pixel center.
-        // Accum:        Halton jitter drives TAA; same offset for all samples this frame.
-        // Final:        random sub-pixel jitter per sample for in-frame anti-aliasing.
+    for (int s = 0; s < spp; ++s) 
+    {
+        // Ray tracing: no jitter, shoot through pixel center.
+        // Accum:       Halton-jittered for TAA; same offset for all samples this frame.
+        // Final:       per-sample random sub-pixel jitter for in-frame anti-aliasing.
         vec2 jitter;
-        if      (pc.mode == MODE_PATH_TRACING_ACCUM)  jitter = uniforms.pixelJitter;
-        else if (pc.mode == MODE_PATH_TRACING_FINAL)  jitter = vec2(rnd(seed), rnd(seed));
-        else                                           jitter = vec2(0.5);
+        if      (pc.mode == MODE_PATH_TRACING_ACCUM) jitter = uniforms.pixelJitter;
+        else if (pc.mode == MODE_PATH_TRACING_FINAL) jitter = vec2(rnd(seed), rnd(seed));
+        else                                         jitter = vec2(0.5);
 
         vec2 uv         = (vec2(pixelCoords) + jitter) / vec2(resolution);
         vec2 clipCoords = uv * 2.0 - 1.0;
@@ -292,25 +290,28 @@ void main() {
         vec3 throughput  = vec3(1.0);
 
         // --- Path Tracing Loop ---
-        for (int bounce = 0; bounce < maxBounces; ++bounce) {
-            // Primary / GI ray
+        for (int bounce = 0; bounce < maxBounces; ++bounce) 
+        {
             rayQueryEXT q;
             rayQueryInitializeEXT(q, topLevelAS, gl_RayFlagsNoneEXT, 0xFF,
                                   origin, RAY_TMIN, direction, RAY_TMAX);
 
-            // Candidate traversal
-            while (rayQueryProceedEXT(q)) {
+            while (rayQueryProceedEXT(q)) 
+            {
                 if (rayQueryGetIntersectionTypeEXT(q, false) != gl_RayQueryCandidateIntersectionTriangleEXT)
                     continue;
 
-                int      instId  = rayQueryGetIntersectionInstanceCustomIndexEXT(q, false);
-                int      primId  = rayQueryGetIntersectionPrimitiveIndexEXT(q, false);
-                Instance inst    = instances[instId];
-                uint     texIdx  = inst.textureIndices.x;
+                int      instId = rayQueryGetIntersectionInstanceCustomIndexEXT(q, false);
+                int      primId = rayQueryGetIntersectionPrimitiveIndexEXT(q, false);
+                Instance inst   = instances[instId];
+                uint     texIdx = inst.textureIndices.x;
 
-                if (texIdx == NO_TEXTURE) {
+                if (texIdx == NO_TEXTURE) 
+                {
                     rayQueryConfirmIntersectionEXT(q);
-                } else {
+                }
+                else 
+                {
                     vec2  barys2 = rayQueryGetIntersectionBarycentricsEXT(q, false);
                     vec3  bary   = baryWeights(barys2);
                     uvec3 tri    = fetchTriangleIndices(inst, primId);
@@ -321,12 +322,10 @@ void main() {
                 }
             }
 
-            // Miss; accumulate sky radiance and end the path.
-            if (rayQueryGetIntersectionTypeEXT(q, true) != gl_RayQueryCommittedIntersectionTriangleEXT) {
-                
-                vec2 skyUV = getSphericalUV(direction);
-                vec3 skyRadiance = texture(environmentMap, skyUV).rgb;                
-                sampleColor += throughput * skyRadiance; 
+            // Miss; sample sky and terminate path.
+            if (rayQueryGetIntersectionTypeEXT(q, true) != gl_RayQueryCommittedIntersectionTriangleEXT) 
+            {
+                sampleColor += throughput * texture(environmentMap, getSphericalUV(direction)).rgb;
                 break;
             }
 
@@ -350,7 +349,6 @@ void main() {
 
             vec3 hitPos = origin + direction * hitT;
 
-            // Interpolate geometry attributes.
             vec3 normalLocal =
                 unpackNormal(vert0.packedNormal) * bary.x +
                 unpackNormal(vert1.packedNormal) * bary.y +
@@ -366,7 +364,7 @@ void main() {
                 unpackColor(vert1.packedColor) * bary.y +
                 unpackColor(vert2.packedColor) * bary.z;
 
-            // Transform interpolated normal to world space.
+            // Normal matrix remaps object-space normals to world space under non-uniform scale.
             mat3 normalMatrix = transpose(inverse(mat3(objToWorld)));
             vec3 N = normalize(normalMatrix * normalLocal);
             vec3 V = normalize(-direction);
@@ -393,6 +391,7 @@ void main() {
             float transmission = inst.metallicRoughnessFactor.z;
             if (inst.textureIndices2.z != NO_TEXTURE)
                 transmission *= texture(uTextures[inst.textureIndices2.z], hitUV).r;
+
             float ior = inst.metallicRoughnessFactor.w;
             if (ior < 0.001) ior = DEFAULT_IOR;
 
@@ -400,7 +399,8 @@ void main() {
 
             // --- Direct Lighting (Next Event Estimation) ---
             vec3 Lo = vec3(0.0);
-            for (uint i = 0; i < lightData.lightCount; ++i) {
+            for (uint i = 0; i < lightData.lightCount; ++i) 
+            {
                 Light light     = lightData.lights[i];
                 vec3  toLight   = light.positionRadius.xyz - hitPos;
                 float lightDist = length(toLight);
@@ -414,7 +414,8 @@ void main() {
                 rayQueryInitializeEXT(shadowQ, topLevelAS, gl_RayFlagsTerminateOnFirstHitEXT, 0xFF,
                                       hitPos + N * NORMAL_OFFSET, RAY_TMIN, lightDir, lightDist);
 
-                while (rayQueryProceedEXT(shadowQ)) {
+                while (rayQueryProceedEXT(shadowQ)) 
+                {
                     if (rayQueryGetIntersectionTypeEXT(shadowQ, false) != gl_RayQueryCandidateIntersectionTriangleEXT)
                         continue;
 
@@ -423,18 +424,21 @@ void main() {
                     Instance sInst   = instances[sInstId];
                     uint     sTexIdx = sInst.textureIndices.x;
 
-                    if (sTexIdx == NO_TEXTURE) {
+                    if (sTexIdx == NO_TEXTURE) 
+                    {
                         rayQueryConfirmIntersectionEXT(shadowQ);
-                    } else {
+                    } 
+                    else 
+                    {
                         vec2  sBarys2 = rayQueryGetIntersectionBarycentricsEXT(shadowQ, false);
                         vec3  sBary   = baryWeights(sBarys2);
                         uvec3 sTri    = fetchTriangleIndices(sInst, sPrimId);
                         vec2  sUV     = interpolateUV(sTri, sInst, sBary);
                         float sAlpha  = (sInst.baseColorFactor * sInst.tint
                                          * texture(uTextures[nonuniformEXT(sTexIdx)], sUV)).a;
-                        // Transmissive surfaces let light through — don't block the shadow ray.
-                        // (Binary approximation: attenuation / colored shadows not yet modelled.)
                         float sTrans  = sInst.metallicRoughnessFactor.z;
+
+                        // Transmissive surfaces pass light through (binary; no colored shadows yet).
                         if (sAlpha >= ALPHA_CUTOUT && sTrans < 0.5)
                             rayQueryConfirmIntersectionEXT(shadowQ);
                     }
@@ -443,7 +447,6 @@ void main() {
                 if (rayQueryGetIntersectionTypeEXT(shadowQ, true) != gl_RayQueryCommittedIntersectionNoneEXT)
                     continue;
 
-                // PBR evaluation for this light.
                 float NdotV = max(dot(N, V), 0.0);
                 vec3  H     = normalize(V + lightDir);
                 float NdotH = max(dot(N, H), 0.0);
@@ -464,28 +467,21 @@ void main() {
 
             sampleColor += throughput * (Lo + emissive);
 
-            // Ray tracing mode: direct lighting only, no indirect bounce.
             if (pc.mode == MODE_RAY_TRACING) break;
 
             // --- Next Bounce ---
-            // Determine which side of the surface the ray is coming from.
-            // Nf always points toward the incoming ray; eta is the ratio of
-            // refractive indices in the direction the ray is travelling.
-            bool frontFace = dot(direction, N) < 0.0;
-            vec3 Nf        = frontFace ? N : -N;       // normal aligned with incoming ray
-            float eta      = frontFace ? (1.0 / ior) : ior; // air→glass or glass→air
+            // Nf always faces the incoming ray; eta is the IOR ratio in the travel direction.
+            bool  frontFace = dot(direction, N) < 0.0;
+            vec3  Nf        = frontFace ? N : -N;
+            float eta       = frontFace ? (1.0 / ior) : ior;
 
-            // IOR-based Fresnel reflectance at this interface (dielectric component).
-            float cosI   = abs(dot(direction, Nf));  // angle of incidence
-            float fDiel  = fresnelDielectric(cosI, ior);
+            float cosI  = abs(dot(direction, Nf));
+            float fDiel = fresnelDielectric(cosI, ior);
 
-            // --- Lobe probabilities ---
-            // Metals: only specular.
-            // Dielectrics: Fresnel splits reflection vs. (diffuse + transmission).
+            // Metals are purely specular; dielectrics split reflection/diffuse/transmission via Fresnel.
             float pSpecular = mix(fDiel, 1.0, metallic);
             float pTransmit = (1.0 - metallic) * (1.0 - fDiel) * transmission;
             float pDiffuse  = (1.0 - metallic) * (1.0 - fDiel) * (1.0 - transmission);
-            // Normalise (sum should be 1 by construction, but guard against fp drift).
             float pTotal    = pSpecular + pTransmit + pDiffuse;
             pSpecular /= pTotal;
             pTransmit /= pTotal;
@@ -493,74 +489,71 @@ void main() {
 
             float r = rnd(seed);
 
-            if (r < pSpecular) {
-                // --- Specular Reflection (GGX Importance Sampling) ---
-                vec2 xi = vec2(rnd(seed), rnd(seed));
-                
-                // 1. Sample a microfacet normal (H)
-                vec3 H = importanceSampleGGX(xi, Nf, roughness);
-                
-                // 2. Reflect the view vector around the microfacet normal to get the light vector (L)
-                vec3 L = reflect(-V, H);
+            if (r < pSpecular)
+            {
+                // --- Specular (GGX Importance Sampling) ---
+                vec2  xi    = vec2(rnd(seed), rnd(seed));
+                vec3  H     = importanceSampleGGX(xi, Nf, roughness);
+                vec3  L     = reflect(-V, H);
                 float NdotL = dot(Nf, L);
 
-                // 3. Ensure the bounced ray isn't pointing into the surface
-                if (NdotL > 0.0) {
+                if (NdotL > 0.0)
+                {
                     float NdotV = max(dot(Nf, V), 1e-5);
                     float NdotH = max(dot(Nf, H), 0.0);
-                    float VdotH = max(dot(V, H), 0.0); // Note: VdotH is identical to LdotH
-                    
-                    direction = normalize(L);
-                    origin    = hitPos + Nf * NORMAL_OFFSET;
+                    float VdotH = max(dot(V, H), 0.0); // VdotH == LdotH by symmetry
 
-                    // 4. Calculate Fresnel and Geometry terms for the new path
-                    vec3 F  = fresnelSchlickRoughness(VdotH, F0, roughness);
-                    float G = geometrySmith(NdotV, NdotL, roughness);
+                    direction  = normalize(L);
+                    origin     = hitPos + Nf * NORMAL_OFFSET;
 
-                    // 5. Calculate the Monte Carlo estimator weight
-                    vec3 weight = (F * G * VdotH) / max(NdotV * NdotH, 1e-5);
-
-                    throughput *= weight / pSpecular;
-                } else {
-                    // Microfacet reflection is directed below the macro-surface; path terminates.
+                    vec3  F      = fresnelSchlickRoughness(VdotH, F0, roughness);
+                    float G      = geometrySmith(NdotV, NdotL, roughness);
+                    vec3  weight = (F * G * VdotH) / max(NdotV * NdotH, 1e-5);
+                    throughput  *= weight / pSpecular;
+                } 
+                else 
+                {
+                    // Microfacet normal directs reflection below the macro-surface.
                     throughput = vec3(0.0);
-                    break; 
+                    break;
                 }
 
-            } else if (r < pSpecular + pTransmit) {
+            } 
+            else if (r < pSpecular + pTransmit) 
+            {
                 // --- Transmission (Refraction) ---
                 vec3 refractDir = refract(direction, Nf, eta);
 
-                if (dot(refractDir, refractDir) < 0.001) {
-                    // Total internal reflection — treat as a mirror bounce.
+                if (dot(refractDir, refractDir) < 0.001) 
+                {
+                    // Total internal reflection; mirror bounce.
                     refractDir = reflect(direction, Nf);
                     origin     = hitPos + Nf * NORMAL_OFFSET;
-                } else {
-                    // Offset origin *through* the surface so we don't self-intersect.
+                }
+                else 
+                {
+                    // Offset through the surface to avoid self-intersection.
                     origin = hitPos - Nf * NORMAL_OFFSET;
                 }
 
-                direction   = normalize(refractDir);
-                // albedo tints the transmitted light (coloured glass).
-                throughput *= albedo / pTransmit;
+                direction  = normalize(refractDir);
+                throughput *= albedo / pTransmit; // albedo tints transmitted light
 
-            } else {
+            } 
+            else 
+            {
                 // --- Diffuse (Lambertian) ---
-                direction   = cosineSampleHemisphere(Nf, seed);
-                origin      = hitPos + Nf * NORMAL_OFFSET;
-                // Cosine sampling cancels the cos(theta)/PI factors; residual is albedo * kD.
-                vec3 F      = fresnelSchlickRoughness(max(dot(Nf, V), 0.0), F0, roughness);
+                direction  = cosineSampleHemisphere(Nf, seed);
+                origin     = hitPos + Nf * NORMAL_OFFSET;
+                vec3 F     = fresnelSchlickRoughness(max(dot(Nf, V), 0.0), F0, roughness);
                 throughput *= albedo * (1.0 - metallic) * (1.0 - F) / pDiffuse;
             }
 
-            // Russian Roulette (skipping on the first bounce to reduce variance)
-            if (bounce > 0) {
-                // float q = min(max(throughput.r, max(throughput.g, throughput.b)), 0.95);
-                // if (rnd(seed) > q) break;
-                // throughput /= max(q, 1e-3);
-
-                float luminance = dot(throughput, vec3(0.2126, 0.7152, 0.0722));                
-                float q = min(luminance, 0.95);
+            // Russian Roulette
+            if (bounce > 0) 
+            {
+                float luminance = dot(throughput, vec3(0.2126, 0.7152, 0.0722));
+                float q         = min(luminance, 0.95);
                 if (rnd(seed) > q) break;
                 throughput /= max(q, 1e-3);
             }
@@ -573,17 +566,20 @@ void main() {
 
     // --- Output ---
     // Accumulation mode blends into the persistent history buffer for a running
-    // average across frames.  All other modes write the result directly.
-    if (pc.mode == MODE_PATH_TRACING_ACCUM) {
-        vec3 prevColor = (uniforms.accumulationCount > 0)
-                       ? texelFetch(historyRead, pixelCoords, 0).rgb
-                       : vec3(0.0);
+    // average across frames. All other modes write the result directly.
+    if (pc.mode == MODE_PATH_TRACING_ACCUM) 
+    {
+        vec3  prevColor   = (uniforms.accumulationCount > 0)
+                          ? texelFetch(historyRead, pixelCoords, 0).rgb
+                          : vec3(0.0);
         float blendFactor = 1.0 / float(uniforms.accumulationCount + 1);
         vec3  accumulated = mix(prevColor, finalColor, blendFactor);
 
         imageStore(historyWrite, pixelCoords, vec4(accumulated, 1.0));
         imageStore(colorImage,   pixelCoords, vec4(accumulated, 1.0));
-    } else {
+    } 
+    else 
+    {
         imageStore(colorImage, pixelCoords, vec4(finalColor, 1.0));
     }
 }
