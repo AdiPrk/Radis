@@ -272,6 +272,7 @@ namespace Radis
         ProcessNormalMap(material, newMesh);
         ProcessPBRMaps(material, newMesh);
         ProcessEmissive(material, newMesh);
+        ProcessTransmission(material, newMesh);
     }
 
     void Model::ProcessVertexColor(aiMaterial* material, Mesh& newMesh)
@@ -367,5 +368,21 @@ namespace Radis
             { aiTextureType_EMISSION_COLOR, aiTextureType_EMISSIVE },
             newMesh.mEmissiveTextureData
         );
+    }
+
+    void Model::ProcessTransmission(aiMaterial* material, Mesh& newMesh)
+    {
+        material->Get(AI_MATKEY_TRANSMISSION_FACTOR, newMesh.transmissionFactor);
+
+        if (material->Get(AI_MATKEY_REFRACTI, newMesh.ior) != AI_SUCCESS)
+            newMesh.ior = 1.5f;
+
+        newMesh.transmissionTexturePath = ResolveTexturePath(
+            material,
+            { aiTextureType_TRANSMISSION },
+            newMesh.mTransmissionTextureData
+        );
+
+        RADIS_INFO("Transmission factor: {}, IOR: {}", newMesh.transmissionFactor, newMesh.ior);
     }
 }

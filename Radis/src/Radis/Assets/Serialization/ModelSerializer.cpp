@@ -49,6 +49,7 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
         Roughness,
         Occlusion,
         Emissive,
+        Transmission,
         Count
     };
 
@@ -59,7 +60,8 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
         "Metalness",
         "Roughness",
         "Occlusion",
-        "Emissive"
+        "Emissive",
+        "Transmission"
     };
 
     struct TextureRecord
@@ -72,7 +74,7 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
 
     struct MeshTextureRefs
     {
-        int32_t tex[static_cast<size_t>(TextureSlot::Count)] = { -1, -1, -1, -1, -1, -1 };
+        int32_t tex[static_cast<size_t>(TextureSlot::Count)] = { -1, -1, -1, -1, -1, -1, -1 };
         uint32_t metallicRoughnessCombined = 0;
     };
 
@@ -153,6 +155,7 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
         refs.tex[static_cast<size_t>(TextureSlot::Roughness)] = RegisterTexture(mesh.roughnessTexturePath, mesh.mRoughnessTextureData, TextureSlot::Roughness);
         refs.tex[static_cast<size_t>(TextureSlot::Occlusion)] = RegisterTexture(mesh.occlusionTexturePath, mesh.mOcclusionTextureData, TextureSlot::Occlusion);
         refs.tex[static_cast<size_t>(TextureSlot::Emissive)] = RegisterTexture(mesh.emissiveTexturePath, mesh.mEmissiveTextureData, TextureSlot::Emissive);
+        refs.tex[static_cast<size_t>(TextureSlot::Transmission)] = RegisterTexture(mesh.transmissionTexturePath, mesh.mTransmissionTextureData, TextureSlot::Transmission);
 
         refs.metallicRoughnessCombined = mesh.mMetallicRoughnessCombined ? 1u : 0u;
         meshTexRefs.push_back(refs);
@@ -244,12 +247,15 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
         WriteTexturePathEntry(refs.tex[3]);
         WriteTexturePathEntry(refs.tex[4]);
         WriteTexturePathEntry(refs.tex[5]);
+        WriteTexturePathEntry(refs.tex[6]);
 
         w.U32(refs.metallicRoughnessCombined);
         w.Vec4(mesh.baseColorFactor);
         w.F32(mesh.metallicFactor);
         w.F32(mesh.roughnessFactor);
         w.Vec4(mesh.emissiveFactor);
+        w.F32(mesh.transmissionFactor);
+        w.F32(mesh.ior);
     }
 
     if (!model.mBoneInfoMap.empty())
@@ -361,6 +367,7 @@ bool ModelSerializer::load(Model& model, const std::string& filename)
         ReadTextureData(mesh.roughnessTexturePath, mesh.mRoughnessTextureData);
         ReadTextureData(mesh.occlusionTexturePath, mesh.mOcclusionTextureData);
         ReadTextureData(mesh.emissiveTexturePath, mesh.mEmissiveTextureData);
+        ReadTextureData(mesh.transmissionTexturePath, mesh.mTransmissionTextureData);
 
         uint32_t combined = r.U32();
         mesh.mMetallicRoughnessCombined = (combined != 0);
@@ -369,6 +376,8 @@ bool ModelSerializer::load(Model& model, const std::string& filename)
         mesh.metallicFactor = r.F32();
         mesh.roughnessFactor = r.F32();
         mesh.emissiveFactor = r.Vec4();
+        mesh.transmissionFactor = r.F32();
+        mesh.ior = r.F32();
     }
 
     // Bones / animation
@@ -407,6 +416,5 @@ bool ModelSerializer::load(Model& model, const std::string& filename)
     }
 
     mmap.unmap();
-    // Temp file deletion removed; we map the source .dm directly now!
     return true;
 }

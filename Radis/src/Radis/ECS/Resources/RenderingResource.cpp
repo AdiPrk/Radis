@@ -101,7 +101,7 @@ namespace Radis
             // textureLibrary->FlushAll();
             
             // TODO: dds
-            //textureLibrary->QueueTextureLoad(Assets::ImagesPath + "M_Soul_Rocks2_Inst_8_BaseColor.dds");
+            // textureLibrary->QueueTextureLoad(Assets::ImagesPath + "M_Soul_Rocks2_Inst_8_BaseColor.dds");
         }
         else
         {
@@ -123,6 +123,7 @@ namespace Radis
             modelLibrary->AddModel(Assets::ModelsPath + "DragonAttenuation.glb", true);
             modelLibrary->AddModel(Assets::ModelsPath + "Sponza.gltf", true);
             modelLibrary->AddModel(Assets::ModelsPath + "okayu/okayu.fbx", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "sportsCar.obj", true);
             // modelLibrary->AddModel(Assets::ModelsPath + "sanmiguellow.glb", true);
             // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Curtains.gltf", true);
             // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Main.gltf", true);

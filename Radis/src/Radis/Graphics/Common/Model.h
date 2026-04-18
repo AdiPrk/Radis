@@ -62,6 +62,7 @@ namespace Radis
         void ProcessNormalMap(aiMaterial* material, Mesh& newMesh);
         void ProcessPBRMaps(aiMaterial* material, Mesh& newMesh);
         void ProcessEmissive(aiMaterial* material, Mesh& newMesh);
+        void ProcessTransmission(aiMaterial* material, Mesh& newMesh);
 
         void NormalizeModel();
         void ExtractBoneWeights(std::vector<Vertex>& vertices, aiMesh* mesh);

@@ -67,12 +67,14 @@ namespace Radis
         std::vector<unsigned char> mRoughnessTextureData{};
         std::vector<unsigned char> mOcclusionTextureData{};
         std::vector<unsigned char> mEmissiveTextureData{};
+        std::vector<unsigned char> mTransmissionTextureData{};
         uint32_t mAlbedoTextureSize = 0;
         uint32_t mNormalTextureSize = 0;
         uint32_t mMetalnessTextureSize = 0;
         uint32_t mRoughnessTextureSize = 0;
         uint32_t mOcclusionTextureSize = 0;
         uint32_t mEmissiveTextureSize = 0;
+        uint32_t mTransmissionTextureSize = 0;
 
         // Texture paths (alternative to embedded data)
         bool loadedTextures = false;
@@ -82,6 +84,7 @@ namespace Radis
         std::string roughnessTexturePath{};
         std::string occlusionTexturePath{};
         std::string emissiveTexturePath{};
+        std::string transmissionTexturePath{};
 
         // Texture indices (set after textures loaded into TextureLibrary)
         uint32_t albedoTextureIndex = UINT32_MAX;
@@ -90,6 +93,7 @@ namespace Radis
         uint32_t roughnessTextureIndex = UINT32_MAX;
         uint32_t occlusionTextureIndex = UINT32_MAX;
         uint32_t emissiveTextureIndex = UINT32_MAX;
+        uint32_t transmissionTextureIndex = UINT32_MAX;
 
         bool mMetallicRoughnessCombined = false;
 
@@ -98,6 +102,8 @@ namespace Radis
         float metallicFactor{ 0.f };
         float roughnessFactor{ 0.f };
         glm::vec4 emissiveFactor{ 0.f };
+        float transmissionFactor{ 0.f };
+        float ior{ 1.5f }; // glass default
 
     private:
         // GPU Mesh Buffer
