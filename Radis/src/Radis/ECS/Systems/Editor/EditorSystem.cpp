@@ -240,6 +240,7 @@ namespace Radis
                 b.reads("AOBlurTmp");
                 b.reads("BlurredAO");
                 b.writes("BackBuffer"); 
+                for (int i = 0; i < 6; ++i) b.reads("BloomMip_" + std::to_string(i));
             },
             std::bind(&EditorSystem::RenderImGui, this, std::placeholders::_1)
         );
@@ -321,6 +322,7 @@ namespace Radis
 
         // ImGui::DragInt("MSM Blur Radius", &rr->msmPC.radius, 0.1f, 0, 64);
         ImGui::DragFloat("Exposure", &rr->exposure, 0.1f, 0.1f, 10000.0f);
+        ImGui::DragFloat("Bloom Intensity", &rr->bloomIntensity, 0.1f, 0.1f, 10.f);
 
         ImGui::Text("Irradiance Debug:");
         const char* dModeItems[] = { "Ambient Irradiant Diffuse", "Raw Irradiance", "Normals", "Split" };

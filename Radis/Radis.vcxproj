@@ -424,6 +424,8 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <None Include="Assets\Scenes\cube.json" />
     <None Include="Assets\Scenes\lighttest.json" />
     <None Include="Assets\Scenes\sponza.json" />
+    <None Include="Assets\Shaders\bloomDownsample.comp" />
+    <None Include="Assets\Shaders\bloomUpsample.comp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="Assets\Shaders\*.*" Exclude="Assets\Shaders\*.spv;Assets\Shaders\spv\*.*">

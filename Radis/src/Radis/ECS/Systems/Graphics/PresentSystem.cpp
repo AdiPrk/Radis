@@ -52,6 +52,12 @@ namespace Radis
         tl->ResizeTexture("RawAO", extent.width, extent.height);
         tl->ResizeTexture("AOBlurTmp", extent.width, extent.height);
         tl->ResizeTexture("BlurredAO", extent.width, extent.height);
+        
+        for (int i = 0; i < 6; ++i) {
+            tl->ResizeStorageImage("BloomMip_" + std::to_string(i), std::max(1u, extent.width >> (i + 1)), std::max(1u, extent.height >> (i + 1)));
+        }
+        if (rr->bloomUniform) rr->bloomUniform->UpdateDescriptorSets(*rr);
+
 
         if (rr->deferredLightingUniform) rr->deferredLightingUniform->UpdateDescriptorSets(*rr);
         if (rr->tonemapUniform) rr->tonemapUniform->UpdateDescriptorSets(*rr);
@@ -149,7 +155,11 @@ namespace Radis
         rg->ImportTexture("RawAO", (VKTexture*)tl->GetTexture("RawAO"));
         rg->ImportTexture("AOBlurTmp", (VKTexture*)tl->GetTexture("AOBlurTmp"));
         rg->ImportTexture("BlurredAO", (VKTexture*)tl->GetTexture("BlurredAO"));
-        
+        for (int i = 0; i < 6; ++i) {
+            std::string name = "BloomMip_" + std::to_string(i);
+            rg->ImportTexture(name.c_str(), (VKTexture*)tl->GetTexture(name));
+        }
+
         rg->ImportBackbuffer(
             "BackBuffer",
             rr->swapChain->GetImage(),

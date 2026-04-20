@@ -124,7 +124,7 @@ namespace Radis
             modelLibrary->AddModel(Assets::ModelsPath + "Sponza.gltf", true);
             modelLibrary->AddModel(Assets::ModelsPath + "okayu/okayu.fbx", true);
             modelLibrary->AddModel(Assets::ModelsPath + "sportsCar.obj", true);
-            // modelLibrary->AddModel(Assets::ModelsPath + "sanmiguellow.glb", true);
+            modelLibrary->AddModel(Assets::ModelsPath + "sanmiguellow.glb", true);
             // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Curtains.gltf", true);
             // modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Main.gltf", true);
 
@@ -296,79 +296,90 @@ namespace Radis
                     VK_IMAGE_LAYOUT_GENERAL
                 );
             }
+
+            for (int i = 0; i < 6; ++i)
+            {
+                uint32_t mipWidth = std::max(1u, extent.width >> (i + 1));
+                uint32_t mipHeight = std::max(1u, extent.height >> (i + 1));
+                textureLibrary->CreateTexture(
+                    "BloomMip_" + std::to_string(i),
+                    mipWidth, mipHeight,
+                    VK_FORMAT_R16G16B16A16_SFLOAT,
+                    VK_IMAGE_TILING_OPTIMAL,
+                    VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
+                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+                );
+            }
         }
 
         modelLibrary->QueueTextures();
         
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
+        CreateCommandBuffers();
+        renderGraph = std::make_unique<RenderGraph>();
+
+        cameraUniform = std::make_unique<Uniform>(*device, *this, cameraUniformSettings);
+        rtUniform = std::make_unique<Uniform>(*device, *this, rayTracingUniformSettings);
+        deferredLightingUniform = std::make_unique<Uniform>(*device, *this, deferredLightingUniformSettings);
+        tonemapUniform = std::make_unique<Uniform>(*device, *this, tonemapUniformSettings);
+            
+        std::vector<Uniform*> unis{ cameraUniform.get() };
+        std::vector<Uniform*> rtunis{ cameraUniform.get(), rtUniform.get() };
+        std::vector<Uniform*> deferredLightingUnis{ deferredLightingUniform.get() };
+        std::vector<Uniform*> tonemapUnis{ tonemapUniform.get() };
+            
+        VkFormat swapImageFormat = swapChain->GetImageFormat();
+        VkFormat swapDepthFormat = swapChain->FindDepthFormat();
+        VkFormat momentsFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
+        VkFormat hdrFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
+        VkFormat ldrFormat = VK_FORMAT_R8G8B8A8_UNORM;
+        VkFormat albedoFormat = VK_FORMAT_R8G8B8A8_SRGB;
+        VkFormat normalFormat = VK_FORMAT_R16G16_SFLOAT;
+        VkFormat pbrFormat = VK_FORMAT_R8G8B8A8_UNORM;
+        VkFormat emissiveFormat = VK_FORMAT_B10G11R11_UFLOAT_PACK32;
+        std::vector<VkFormat> gBufferFormats = { albedoFormat, normalFormat, pbrFormat, emissiveFormat };
+
+        pipeline = std::make_unique<Pipeline>(*device, ldrFormat, swapDepthFormat, unis, false, "forward.vert", "forward.frag");
+        wireframePipeline = std::make_unique<Pipeline>(*device, ldrFormat, swapDepthFormat, unis, true, "forward.vert", "forward.frag");
+            
+        gBufferPipeline = std::make_unique<Pipeline>(*device, gBufferFormats, swapDepthFormat, unis, false, "deferred.vert", "deferred.frag");
+        gBufferWireframePipeline = std::make_unique<Pipeline>(*device, gBufferFormats, swapDepthFormat, unis, true, "deferred.vert", "deferred.frag");
+            
         {
-            CreateCommandBuffers();
-            renderGraph = std::make_unique<RenderGraph>();
+            PipelineOptions defLightOpts;
+            defLightOpts.pushConstantSize = sizeof(int) * 2;
+            defLightOpts.pushConstantStages = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-            cameraUniform = std::make_unique<Uniform>(*device, *this, cameraUniformSettings);
-            rtUniform = std::make_unique<Uniform>(*device, *this, rayTracingUniformSettings);
-            deferredLightingUniform = std::make_unique<Uniform>(*device, *this, deferredLightingUniformSettings);
-            tonemapUniform = std::make_unique<Uniform>(*device, *this, tonemapUniformSettings);
-            
-            std::vector<Uniform*> unis{ cameraUniform.get() };
-            std::vector<Uniform*> rtunis{ cameraUniform.get(), rtUniform.get() };
-            std::vector<Uniform*> deferredLightingUnis{ deferredLightingUniform.get() };
-            std::vector<Uniform*> tonemapUnis{ tonemapUniform.get() };
-            
-            VkFormat swapImageFormat = swapChain->GetImageFormat();
-            VkFormat swapDepthFormat = swapChain->FindDepthFormat();
-            VkFormat momentsFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
-            VkFormat hdrFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
-            VkFormat ldrFormat = VK_FORMAT_R8G8B8A8_UNORM;
-            VkFormat albedoFormat = VK_FORMAT_R8G8B8A8_SRGB;
-            VkFormat normalFormat = VK_FORMAT_R16G16_SFLOAT;
-            VkFormat pbrFormat = VK_FORMAT_R8G8B8A8_UNORM;
-            VkFormat emissiveFormat = VK_FORMAT_B10G11R11_UFLOAT_PACK32;
-            std::vector<VkFormat> gBufferFormats = { albedoFormat, normalFormat, pbrFormat, emissiveFormat };
-
-            pipeline = std::make_unique<Pipeline>(*device, ldrFormat, swapDepthFormat, unis, false, "forward.vert", "forward.frag");
-            wireframePipeline = std::make_unique<Pipeline>(*device, ldrFormat, swapDepthFormat, unis, true, "forward.vert", "forward.frag");
-            
-            gBufferPipeline = std::make_unique<Pipeline>(*device, gBufferFormats, swapDepthFormat, unis, false, "deferred.vert", "deferred.frag");
-            gBufferWireframePipeline = std::make_unique<Pipeline>(*device, gBufferFormats, swapDepthFormat, unis, true, "deferred.vert", "deferred.frag");
-            
-            {
-                PipelineOptions defLightOpts;
-                defLightOpts.pushConstantSize = sizeof(int) * 2;
-                defLightOpts.pushConstantStages = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-                deferredLightingPipeline = std::make_unique<Pipeline>(*device, hdrFormat, VK_FORMAT_UNDEFINED, deferredLightingUnis, false, "fullscreen.vert", "deferredLight.frag", defLightOpts, false);
-            }
-
-            // Light volume pipeline: additive blend, no depth test, front-face culling, push constants
-            {
-                PipelineOptions lightVolOpts;
-                lightVolOpts.additiveBlend = true;
-                lightVolOpts.depthTestDisable = true;
-                lightVolOpts.depthWriteDisable = true;
-                lightVolOpts.cullFrontFace = true;
-                lightVolOpts.pushConstantSize = sizeof(LightVolumePushConstants);
-                lightVolOpts.pushConstantStages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-                lightVolumePipeline = std::make_unique<Pipeline>(*device, hdrFormat, VK_FORMAT_UNDEFINED, deferredLightingUnis, false, "lightVolume.vert", "lightVolume.frag", lightVolOpts);
-            }
-
-            // Tone mapping: reads SceneHDR, outputs final color
-            {
-                PipelineOptions tonemapOpts;
-                tonemapOpts.pushConstantSize = sizeof(float);
-                tonemapOpts.pushConstantStages = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-                tonemapPipeline = std::make_unique<Pipeline>(*device, ldrFormat, VK_FORMAT_UNDEFINED, tonemapUnis, false, "fullscreen.vert", "tonemap.frag", tonemapOpts, false);
-            }
-
-            // raytracingPipeline = std::make_unique<RaytracingPipeline>(*device, rtunis);
-
-            PushConstantInfo rtPC{};
-            rtPC.size = sizeof(int);
-            rtPC.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-            raytracingPipeline = std::make_unique<ComputePipeline>(*device, rtunis, "rayquery.comp", rtPC);
+            deferredLightingPipeline = std::make_unique<Pipeline>(*device, hdrFormat, VK_FORMAT_UNDEFINED, deferredLightingUnis, false, "fullscreen.vert", "deferredLight.frag", defLightOpts, false);
         }
 
+        // Light volume pipeline: additive blend, no depth test, front-face culling, push constants
+        {
+            PipelineOptions lightVolOpts;
+            lightVolOpts.additiveBlend = true;
+            lightVolOpts.depthTestDisable = true;
+            lightVolOpts.depthWriteDisable = true;
+            lightVolOpts.cullFrontFace = true;
+            lightVolOpts.pushConstantSize = sizeof(LightVolumePushConstants);
+            lightVolOpts.pushConstantStages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+            lightVolumePipeline = std::make_unique<Pipeline>(*device, hdrFormat, VK_FORMAT_UNDEFINED, deferredLightingUnis, false, "lightVolume.vert", "lightVolume.frag", lightVolOpts);
+        }
+
+        // Tone mapping: reads SceneHDR, outputs final color
+        {
+            PipelineOptions tonemapOpts;
+            tonemapOpts.pushConstantSize = sizeof(float) * 2;
+            tonemapOpts.pushConstantStages = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+            tonemapPipeline = std::make_unique<Pipeline>(*device, ldrFormat, VK_FORMAT_UNDEFINED, tonemapUnis, false, "fullscreen.vert", "tonemap.frag", tonemapOpts, false);
+        }
+
+        // raytracingPipeline = std::make_unique<RaytracingPipeline>(*device, rtunis);
+
+        PushConstantInfo rtPC{};
+        rtPC.size = sizeof(int);
+        rtPC.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+        raytracingPipeline = std::make_unique<ComputePipeline>(*device, rtunis, "rayquery.comp", rtPC);
+        
         alchemyAOUniform = std::make_unique<Uniform>(*device, *this, alchemyAOUniformSettings);
         std::vector<Uniform*> aoUnis{ cameraUniform.get(), alchemyAOUniform.get() };
 
@@ -390,6 +401,15 @@ namespace Radis
 
         aoBlurHPipeline = std::make_unique<Pipeline>(*device, VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_UNDEFINED, blurHUnis, false, "fullscreen.vert", "bilateralBlur.frag", blurOpts, false);
         aoBlurVPipeline = std::make_unique<Pipeline>(*device, VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_UNDEFINED, blurVUnis, false, "fullscreen.vert", "bilateralBlur.frag", blurOpts, false);
+
+        bloomUniform = std::make_unique<Uniform>(*device, *this, bloomUniformSettings);
+        std::vector<Uniform*> bloomUnis{ bloomUniform.get() };
+
+        PushConstantInfo bloomPC{};
+        bloomPC.size = sizeof(glm::vec2) + (sizeof(uint32_t) * 2);
+        bloomPC.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+        bloomDownPipeline = std::make_unique<ComputePipeline>(*device, bloomUnis, "bloomDownsample.comp", bloomPC);
+        bloomUpPipeline = std::make_unique<ComputePipeline>(*device, bloomUnis, "bloomUpsample.comp", bloomPC);
     }
 
     void RenderingResource::Cleanup()

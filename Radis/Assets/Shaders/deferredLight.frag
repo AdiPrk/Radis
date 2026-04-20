@@ -246,6 +246,7 @@ void main()
         vec2 envUV  = DirToEquirect(dir);
         vec3 skyCol = texture(envMap, envUV).rgb;
         outColor = vec4(skyCol, 1.0);
+        outColor = vec4(vec3(0.0), 1.0);
         return;
     }
 

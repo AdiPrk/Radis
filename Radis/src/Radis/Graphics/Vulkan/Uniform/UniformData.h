@@ -59,7 +59,20 @@ namespace Radis
 
     // Tone mapping pass - just reads the accumulated HDR texture
     const UniformSettings tonemapUniformSettings = UniformSettings({})
-        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, "SceneHDR").SetDebugName("SceneHDR Texture");
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, "SceneHDR").SetDebugName("SceneHDR Texture")
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, "BloomMip_0").SetDebugName("Bloom Texture");
+
+    // Notice there is no Init function passed! UpdateDescriptorSets handles it natively.
+    const UniformSettings bloomUniformSettings = UniformSettings({})
+        .AddISArrayBinding(VK_SHADER_STAGE_COMPUTE_BIT, {
+            "SceneHDR", "BloomMip_0", "BloomMip_1", "BloomMip_2",
+            "BloomMip_3", "BloomMip_4", "BloomMip_5"
+            }, VK_IMAGE_LAYOUT_GENERAL).SetDebugName("Bloom Input Samplers")
+
+        .AddSSBIArrayBinding(VK_SHADER_STAGE_COMPUTE_BIT, {
+            "BloomMip_0", "BloomMip_1", "BloomMip_2",
+            "BloomMip_3", "BloomMip_4", "BloomMip_5"
+            }).SetDebugName("Bloom Output Images");
 
     const UniformSettings alchemyAOUniformSettings = UniformSettings({})
         .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, "SceneDepth", VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL).SetDebugName("SceneDepth")

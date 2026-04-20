@@ -4,9 +4,11 @@ layout(location = 0) in vec2 fragTexCoord;
 layout(location = 0) out vec4 outColor;
 
 layout(set = 0, binding = 0) uniform sampler2D sceneHDR;
+layout(set = 0, binding = 1) uniform sampler2D bloomTex;
 
 layout(push_constant) uniform PushConstants {
     float exposure;
+    float bloomIntensity;
 };
 
 // ACES Filmic Tonemapping curve
@@ -24,7 +26,13 @@ void main()
 {
     vec3 color = texture(sceneHDR, fragTexCoord).rgb;
 
-    // Apply exposure
+    // Bloom
+    if (bloomIntensity > 0.0001) {
+        vec3 bloom = texture(bloomTex, fragTexCoord).rgb;
+        color += bloom * bloomIntensity;
+    }
+
+    // Exposure
     color *= exposure;
 
     // ACES Tonemapping
@@ -33,5 +41,6 @@ void main()
     // Gamma correction
     color = pow(color, vec3(1.0 / 2.2));
 
+    // GG
     outColor = vec4(color, 1.0);
 }

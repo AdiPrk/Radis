@@ -57,6 +57,7 @@ namespace Radis
         std::unique_ptr<Uniform> alchemyAOUniform;
         std::unique_ptr<Uniform> aoBlurHUniform;
         std::unique_ptr<Uniform> aoBlurVUniform;
+        std::unique_ptr<Uniform> bloomUniform;
         // -------------------------
 
         // Pipelines
@@ -71,6 +72,8 @@ namespace Radis
         std::unique_ptr<Pipeline> alchemyAOPipeline;
         std::unique_ptr<Pipeline> aoBlurHPipeline;
         std::unique_ptr<Pipeline> aoBlurVPipeline;
+        std::unique_ptr<ComputePipeline> bloomDownPipeline;
+        std::unique_ptr<ComputePipeline> bloomUpPipeline;
         // -----------
 
         // Command Buffers and Sync
@@ -113,6 +116,7 @@ namespace Radis
         
         // Env map
         float exposure = 1.0f;
+        float bloomIntensity = 1.0f;
         int useIrrDefuse = 0;
         int specTestMode = 0;
 

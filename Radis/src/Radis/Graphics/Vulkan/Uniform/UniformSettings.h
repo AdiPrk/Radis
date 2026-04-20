@@ -22,7 +22,7 @@ namespace Radis
         bool buffered = true;                        // True if this binding is stored in a buffer
         bool doubleBuffered = true;
         std::string debugName = "Uniform Buffer";
-        std::string textureName = "";
+        std::vector<std::string> textureNames;
         VkImageLayout imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; // For image bindings, specify the layout
     };
 
@@ -67,7 +67,7 @@ namespace Radis
         UniformSettings& AddISBinding(VkShaderStageFlags stageFlags, uint32_t descriptorCount, const std::string& texName = "", VkImageLayout imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
         {
             bindings.push_back({ { nextBinding++, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, descriptorCount, stageFlags }, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 0, descriptorCount, false });
-            bindings.back().textureName = texName;
+            if (!texName.empty()) bindings.back().textureNames.push_back(texName);
             bindings.back().imageLayout = imageLayout;
 
             return *this;
@@ -76,7 +76,23 @@ namespace Radis
         UniformSettings& AddSSBIBinding(VkShaderStageFlags stageFlags, uint32_t descriptorCount, const std::string& texName = "")
         {
             bindings.push_back({ { nextBinding++, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, descriptorCount, stageFlags }, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, 0, descriptorCount, false });
-            bindings.back().textureName = texName;
+            if (!texName.empty()) bindings.back().textureNames.push_back(texName);
+            bindings.back().imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+            return *this;
+        }
+
+        UniformSettings& AddISArrayBinding(VkShaderStageFlags stageFlags, const std::vector<std::string>& texNames, VkImageLayout imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+        {
+            bindings.push_back({ { nextBinding++, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, static_cast<uint32_t>(texNames.size()), stageFlags }, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 0, static_cast<uint32_t>(texNames.size()), false });
+            bindings.back().textureNames = texNames;
+            bindings.back().imageLayout = imageLayout;
+            return *this;
+        }
+
+        UniformSettings& AddSSBIArrayBinding(VkShaderStageFlags stageFlags, const std::vector<std::string>& texNames)
+        {
+            bindings.push_back({ { nextBinding++, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, static_cast<uint32_t>(texNames.size()), stageFlags }, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, 0, static_cast<uint32_t>(texNames.size()), false });
+            bindings.back().textureNames = texNames;
             bindings.back().imageLayout = VK_IMAGE_LAYOUT_GENERAL;
             return *this;
         }
