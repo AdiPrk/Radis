@@ -39,7 +39,7 @@ namespace Radis
         .AddSSBIBinding(rtFlags | compFlags, 1).SetDebugName("RT Color Image")
         .AddSSBIBinding(rtFlags | compFlags, 1).SetDebugName("RT Heatmap Image")
         .AddSSBOBinding(rtFlags | compFlags, sizeof(MeshDataUniform), 20'000'000).SetDebugName("RT Vertices SSBO")
-        .AddSSBOBinding(rtFlags | compFlags, sizeof(uint32_t), 40'000'000).SetDebugName("RT Indices SSBO")
+        .AddSSBOBinding(rtFlags | compFlags, sizeof(uint32_t), 80'000'000).SetDebugName("RT Indices SSBO")
         .AddISBinding(rtFlags | compFlags, 1).SetDebugName("RT History Read")
         .AddSSBIBinding(rtFlags | compFlags, 1).SetDebugName("RT History Write")
         .AddISBinding(rtFlags | compFlags, 1).SetDebugName("Environment Map");

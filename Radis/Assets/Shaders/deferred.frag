@@ -123,6 +123,7 @@ void main()
     {
         emissive *= SampleTexture(textureIndices2.y, fragTexCoord).rgb;
     }
+    emissive *= 1000.0f;
 
     // --- Write to G-Buffer ---
     gAlbedo = vec4(baseColor.rgb, baseColor.a);
