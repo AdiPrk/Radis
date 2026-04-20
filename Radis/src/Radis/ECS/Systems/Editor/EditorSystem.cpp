@@ -248,6 +248,13 @@ namespace Radis
 
     void EditorSystem::FrameEnd()
     {
+        auto er = ecs->GetResource<EditorResource>();
+
+        for (const auto& entity : er->entitiesToDelete)
+        {
+            ecs->RemoveEntity(entity);
+        }
+        er->entitiesToDelete.clear();
     }
 
     void EditorSystem::Exit()
