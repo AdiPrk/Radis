@@ -82,6 +82,7 @@ namespace Radis {
         void EndDebugLabel(VkCommandBuffer commandBuffer);
 
         bool SupportsVulkan() const { return mSupportsVulkan; }
+        bool SupportsTimestamps() const { return mSupportsTimestampQueries; }
 
     private:
         void createInstance();
@@ -138,6 +139,7 @@ namespace Radis {
         bool mSupportsVulkan = true;
         bool mRTFuncsAvailable = true;
         bool mDebugFuncsAvailable = true;
+        bool mSupportsTimestampQueries = true;
     };
 
 } // namespace Radis

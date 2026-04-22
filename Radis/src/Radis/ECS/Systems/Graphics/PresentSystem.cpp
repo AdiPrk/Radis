@@ -21,6 +21,7 @@
 #include "Graphics/Vulkan/Core/Synchronization.h"
 #include "Graphics/Vulkan/VulkanWindow.h"
 #include "Graphics/Vulkan/Uniform/UniformData.h"
+#include "Profiler/GPUProfiler.h"
 
 #include "Graphics/Common/TextureLibrary.h"
 #include "Graphics/Vulkan/Texture/VKTexture.h"
@@ -72,11 +73,6 @@ namespace Radis
 
 	void PresentSystem::Init()
 	{
-        //if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan)
-        //{
-        //    auto rr = ecs->GetResource<RenderingResource>();
-        //    ResizeRenderTargets(rr);
-        //}
 	}
 
 	void PresentSystem::FrameStart()
@@ -128,6 +124,10 @@ namespace Radis
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
             throw std::runtime_error("failed to begin recording command buffer!");
+        }
+
+        if (rr->gpuProfiler) {
+            rr->gpuProfiler->BeginFrame(commandBuffer, rr->currentFrameIndex);
         }
 
         // Start a new render graph!

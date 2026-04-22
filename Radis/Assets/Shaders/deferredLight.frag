@@ -293,14 +293,14 @@ void main()
     // IBL Modes
     if (useIrrDiffuse == 0) // Regular lighting
     {
-        vec3 color = Lo + emissive;
-        outColor = vec4(color, 1.0);
+        // vec3 color = Lo + emissive;
+        // outColor = vec4(color, 1.0);
 
-        // vec3 iblDiffuse = computeIBLDiffuse(albedo, metallic, ao, N, F0);
-        // vec3 iblSpecular = computeIBLSpecular(N, V, a, a2, F0, NdotV);
-        // 
-        // vec3 finalColor = Lo + iblDiffuse + (iblSpecular * ao) + emissive;
-        // outColor = vec4(finalColor, 1.0);
+        vec3 iblDiffuse = computeIBLDiffuse(albedo, metallic, ao, N, F0);
+        vec3 iblSpecular = computeIBLSpecular(N, V, a, a2, F0, NdotV);
+        
+        vec3 finalColor = Lo + iblDiffuse + (iblSpecular * ao) + emissive;
+        outColor = vec4(finalColor, 1.0);
     }
     else if (useIrrDiffuse == 1) // Raw irradiance map
     {

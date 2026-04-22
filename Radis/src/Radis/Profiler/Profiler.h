@@ -70,9 +70,9 @@ namespace Radis
     // RAII helper that begins a scope on construction and ends it on destruction
     struct ProfilerScope
     {
-        explicit ProfilerScope(const char* name) : m_name(name) { Profiler::BeginScope(m_name); }
+        explicit ProfilerScope(const char* name) : mName(name) { Profiler::BeginScope(mName); }
         ~ProfilerScope() { Profiler::EndScope(); }
-        const char* m_name;
+        const char* mName;
     };
 
     // Convenience macros

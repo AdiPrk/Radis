@@ -29,6 +29,7 @@
 #include "Graphics/Common/Animation/Animator.h"
 #include "Graphics/Common/Model.h"
 #include "Graphics/Common/IBL/IrradianceMap.h"
+#include "Profiler/GPUProfiler.h"
 
 #include "Assets/Assets.h"
 #include "Engine.h"
@@ -61,6 +62,7 @@ namespace Radis
         }
 
         RecreateSwapChain(window);
+        gpuProfiler = std::make_unique<GPUProfiler>(*device, SwapChain::MAX_FRAMES_IN_FLIGHT);
 
         VkFormat srgbFormat = swapChain->GetImageFormat();
         VkFormat linearFormat = ToLinearFormat(srgbFormat);
@@ -125,9 +127,9 @@ namespace Radis
             modelLibrary->AddModel(Assets::ModelsPath + "okayu/okayu.fbx", true);
             modelLibrary->AddModel(Assets::ModelsPath + "sportsCar.obj", true);
             //modelLibrary->AddModel(Assets::ModelsPath + "sanmiguellow.glb", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Curtains.gltf", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Main.gltf", true);
-            modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_4_Combined_glTF.gltf", true);
+            //modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Curtains.gltf", true);
+            //modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Main.gltf", true);
+            //modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_4_Combined_glTF.gltf", true);
 
             modelLibrary->InitializeUnifiedMesh();
         }

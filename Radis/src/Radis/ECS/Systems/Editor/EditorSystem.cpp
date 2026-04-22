@@ -28,6 +28,8 @@
 
 #include "Graphics/Vulkan/VulkanWindow.h"
 
+#include "PRofiler/GPUProfiler.h"
+
 #include "Windows/AssetsWindow.h"
 #include "Windows/SceneWindow.h"
 #include "Windows/EntitiesWindow.h"
@@ -173,6 +175,7 @@ namespace Radis
                 ChatWindow::Get().Render();
                 EditorWindows::RenderInspectorWindow(ecs);
                 RenderDebugWindow();
+                RenderGPUProfilerWindow();
             }
         }
 
@@ -338,6 +341,31 @@ namespace Radis
         ImGui::Text("specTestMode Debug:");
         const char* sModeItems[] = { "Final", "Mirror", "Ghosting", "Monte Carlo" };
         ImGui::Combo("##DebugSMode", &rr->specTestMode, sModeItems, IM_ARRAYSIZE(sModeItems));
+        ImGui::End();
+    }
+
+    void EditorSystem::RenderGPUProfilerWindow()
+    {
+        ImGui::Begin("GPU Performance Stats");
+
+        auto rr = ecs->GetResource<RenderingResource>();
+        if (!rr || !rr->gpuProfiler)
+        {
+            ImGui::Text("GPU Profiler not available");
+            ImGui::End();
+            return;
+        }
+
+        float totalTime = 0.0f;
+        for (const auto& [passName, timeMS] : rr->gpuProfiler->GetResults())
+        {
+            ImGui::Text("%s: %.3f ms", passName.c_str(), timeMS);
+            totalTime += timeMS;
+        }
+
+        ImGui::Separator();
+        ImGui::Text("Total GPU Time: %.3f ms", totalTime);
+
         ImGui::End();
     }
 

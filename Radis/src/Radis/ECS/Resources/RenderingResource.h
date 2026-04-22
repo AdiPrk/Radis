@@ -29,6 +29,7 @@ namespace Radis
     class ModelLibrary;
     class TextureLibrary;
     class AnimationLibrary;
+    class GPUProfiler;
 
     struct RenderingResource : public IResource
     {
@@ -142,6 +143,9 @@ namespace Radis
         int frameCount = 0;
         int accumulationCount = 0; // for path tracing accumulation
         glm::mat4 previousViewProj; // for accumulation
+
+        // Profiler
+        std::unique_ptr<GPUProfiler> gpuProfiler;
 
         bool SupportsVulkan();
 

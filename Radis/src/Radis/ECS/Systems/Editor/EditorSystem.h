@@ -27,6 +27,7 @@ namespace Radis
     private:
         void RenderImGui(VkCommandBuffer cmd = VK_NULL_HANDLE);
         void RenderDebugWindow();
+        void RenderGPUProfilerWindow();
 
         void RenderMainMenuBar();
 

@@ -34,6 +34,7 @@
 #include "Graphics/Vulkan/Uniform/Descriptors.h"
 #include "Graphics/Vulkan/Utils/ScopedDebugLabel.h"
 #include "Graphics/Common/UnifiedMesh.h"
+#include "Profiler/ScopedGPUProfiler.h"
 
 #include "ECS/ECS.h"
 #include "ECS/Entities/Entity.h"
@@ -637,6 +638,7 @@ namespace Radis
         auto rr = ecs->GetResource<RenderingResource>();
         UnifiedMeshes* uMeshes = rr->modelLibrary->GetUnifiedMesh();
         ScopedDebugLabel sceneDebugLabel(rr->device.get(), cmd, "Deferred G-Buffer Pass", glm::vec4(0.2f, 0.8f, 0.2f, 1.0f));
+        ScopedGPUProfiler profile(rr->gpuProfiler.get(), cmd, "Deferred G-Buffer Pass");
 
         // Bind Pipeline, Uniforms, and Mesh
         auto& pipeline = rr->renderWireframe ? rr->gBufferWireframePipeline : rr->gBufferPipeline;
@@ -653,6 +655,7 @@ namespace Radis
     {
         auto rr = ecs->GetResource<RenderingResource>();
         ScopedDebugLabel label(rr->device.get(), cmd, "Alchemy AO Pass", glm::vec4(0.2f, 0.2f, 0.2f, 1.0f));
+        ScopedGPUProfiler profile(rr->gpuProfiler.get(), cmd, "Alchemy AO Pass");
 
         rr->alchemyAOPipeline->Bind(cmd);
 
@@ -672,6 +675,7 @@ namespace Radis
     {
         auto rr = ecs->GetResource<RenderingResource>();
         ScopedDebugLabel label(rr->device.get(), cmd, "AO Blur Horizontal", glm::vec4(0.8f, 0.4f, 0.2f, 1.0f));
+        ScopedGPUProfiler profile(rr->gpuProfiler.get(), cmd, "AO Blur Horizontal");
 
         rr->aoBlurHPipeline->Bind(cmd);
         rr->aoBlurHUniform->Bind(cmd, rr->aoBlurHPipeline->GetLayout(), rr->currentFrameIndex);
@@ -693,6 +697,7 @@ namespace Radis
     {
         auto rr = ecs->GetResource<RenderingResource>();
         ScopedDebugLabel label(rr->device.get(), cmd, "AO Blur Vertical", glm::vec4(0.8f, 0.4f, 0.2f, 1.0f));
+        ScopedGPUProfiler profile(rr->gpuProfiler.get(), cmd, "AO Blur Vertical");
 
         rr->aoBlurVPipeline->Bind(cmd);
         rr->aoBlurVUniform->Bind(cmd, rr->aoBlurVPipeline->GetLayout(), rr->currentFrameIndex);
@@ -714,6 +719,7 @@ namespace Radis
     {
         auto rr = ecs->GetResource<RenderingResource>();
         ScopedDebugLabel sceneDebugLabel(rr->device.get(), cmd, "Deferred Lighting Pass", glm::vec4(0.8f, 0.8f, 0.2f, 1.0f));
+        ScopedGPUProfiler profile(rr->gpuProfiler.get(), cmd, "Deferred Lighting Pass");
 
         // Bind Pipeline and Uniforms
         auto& pipeline = rr->deferredLightingPipeline;
@@ -744,9 +750,10 @@ namespace Radis
         ModelLibrary* ml = rr->modelLibrary.get();
         UnifiedMeshes* uMeshes = ml->GetUnifiedMesh();
         ScopedDebugLabel label(rr->device.get(), cmd, "Light Volumes Pass", glm::vec4(1.0f, 0.5f, 0.0f, 1.0f));
+        ScopedGPUProfiler profile(rr->gpuProfiler.get(), cmd, "Light Volumes Pass");
 
         // Load sphere mesh on first use
-        Model* sphereModel = ml->GetModel("Assets/Models/sphere.glb");
+        Model* sphereModel = ml->GetModel("Assets/Models/sphere.obj");
         if (!sphereModel) return;
 
         uint32_t sphereID = sphereModel->mMeshes[0]->GetID();
@@ -776,6 +783,7 @@ namespace Radis
     {
         auto rr = ecs->GetResource<RenderingResource>();
         ScopedDebugLabel label(rr->device.get(), cmd, "Physically Based Bloom", glm::vec4(1.0f, 0.5f, 0.8f, 1.0f));
+        ScopedGPUProfiler profile(rr->gpuProfiler.get(), cmd, "Physically Based Bloom");
 
         struct BloomPC {
             glm::vec2 invInputSize;
@@ -846,6 +854,7 @@ namespace Radis
     {
         auto rr = ecs->GetResource<RenderingResource>();
         ScopedDebugLabel label(rr->device.get(), cmd, "Tone Map Pass", glm::vec4(0.5f, 0.2f, 0.8f, 1.0f));
+        ScopedGPUProfiler profile(rr->gpuProfiler.get(), cmd, "Tone Map Pass");
 
         rr->tonemapPipeline->Bind(cmd);
         rr->tonemapUniform->Bind(cmd, rr->tonemapPipeline->GetLayout(), rr->currentFrameIndex);

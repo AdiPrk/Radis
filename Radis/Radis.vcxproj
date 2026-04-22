@@ -300,7 +300,9 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Radis\Graphics\Vulkan\Utils\ScopedDebugLabel.cpp" />
     <ClCompile Include="src\Radis\Graphics\Vulkan\VKMeshBuffer.cpp" />
     <ClCompile Include="src\Radis\Graphics\Vulkan\VulkanWindow.cpp" />
+    <ClCompile Include="src\Radis\Profiler\GPUProfiler.cpp" />
     <ClCompile Include="src\Radis\Profiler\Profiler.cpp" />
+    <ClCompile Include="src\Radis\Profiler\ScopedGPUProfiler.cpp" />
     <ClCompile Include="src\Radis\Utils\FrameRate.cpp" />
     <ClCompile Include="src\Radis\Utils\Logger.cpp" />
     <ClCompile Include="src\Radis\Utils\SerializationOperators.cpp" />
@@ -411,7 +413,9 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Radis\Graphics\Vulkan\Utils\ScopedDebugLabel.h" />
     <ClInclude Include="src\Radis\Graphics\Vulkan\VKMeshBuffer.h" />
     <ClInclude Include="src\Radis\Graphics\Vulkan\VulkanWindow.h" />
+    <ClInclude Include="src\Radis\Profiler\GPUProfiler.h" />
     <ClInclude Include="src\Radis\Profiler\Profiler.h" />
+    <ClInclude Include="src\Radis\Profiler\ScopedGPUProfiler.h" />
     <ClInclude Include="src\Radis\Utils\FrameRate.h" />
     <ClInclude Include="src\Radis\Utils\InputMap.h" />
     <ClInclude Include="src\Radis\Utils\Logger.h" />
@@ -424,8 +428,6 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <None Include="Assets\Scenes\cube.json" />
     <None Include="Assets\Scenes\lighttest.json" />
     <None Include="Assets\Scenes\sponza.json" />
-    <None Include="Assets\Shaders\bloomDownsample.comp" />
-    <None Include="Assets\Shaders\bloomUpsample.comp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="Assets\Shaders\*.*" Exclude="Assets\Shaders\*.spv;Assets\Shaders\spv\*.*">

@@ -89,6 +89,8 @@
     <ClCompile Include="src\Radis\Graphics\Common\IBL\rgbe.cpp" />
     <ClCompile Include="src\Radis\Graphics\Common\IBL\IrradianceMap.cpp" />
     <ClCompile Include="src\Radis\Utils\ThreadPool.cpp" />
+    <ClCompile Include="src\Radis\Profiler\GPUProfiler.cpp" />
+    <ClCompile Include="src\Radis\Profiler\ScopedGPUProfiler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\nlohmann\json.hpp" />
@@ -201,6 +203,8 @@
     <ClInclude Include="src\Radis\Graphics\Common\IBL\rgbe.h" />
     <ClInclude Include="src\Radis\Graphics\Common\IBL\IrradianceMap.h" />
     <ClInclude Include="src\Radis\Utils\ThreadPool.h" />
+    <ClInclude Include="src\Radis\Profiler\GPUProfiler.h" />
+    <ClInclude Include="src\Radis\Profiler\ScopedGPUProfiler.h" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="Assets\Shaders\*.*" />
