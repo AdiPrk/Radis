@@ -72,10 +72,11 @@ namespace Radis
 
         if (!textureLibrary)
         {
-            // IBL::SHCoefficients sh;
+            IBL::SHCoefficients sh;
             // IBL::generateIrradianceMap(Assets::ImagesPath + "Alexs_Apt_2k.hdr", Assets::ImagesPath + "Alexs_Apt_2k.IRMAP.hdr", &sh);
             // IBL::generateIrradianceMap(Assets::ImagesPath + "Newport_Loft_Ref.hdr", Assets::ImagesPath + "Newport_Loft_Ref.IRMAP.hdr", &sh);
             // IBL::generateIrradianceMap(Assets::ImagesPath + "autumn_field_puresky_4k.hdr", Assets::ImagesPath + "autumn_field_puresky_4k.IRMAP.hdr", &sh);
+            IBL::generateIrradianceMap(Assets::ImagesPath + "kloppenheim_02_4k.hdr", Assets::ImagesPath + "kloppenheim_02_4k.IRMAP.hdr", &sh);
 
             textureLibrary = std::make_unique<TextureLibrary>(device.get(), mThreadPool);
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Placeholder.png", LoadPriority::Immediate);
@@ -95,10 +96,13 @@ namespace Radis
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "shikaout.ktx2");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "autumn_field_puresky_4k.hdr");
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "autumn_field_puresky_4k.IRMAP.hdr");
-            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Alexs_Apt_2k.hdr");
-            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Alexs_Apt_2k.IRMAP.hdr");
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Alexs_Apt_2k.hdr", LoadPriority::Immediate);
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Alexs_Apt_2k.IRMAP.hdr", LoadPriority::Immediate);
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Newport_Loft_Ref.hdr", LoadPriority::Immediate);
             textureLibrary->QueueTextureLoad(Assets::ImagesPath + "Newport_Loft_Ref.IRMAP.hdr", LoadPriority::Immediate);
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "kloppenheim_02_4k.hdr", LoadPriority::Immediate);
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "kloppenheim_02_4k.IRMAP.hdr", LoadPriority::Immediate);
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "DirtMaskTexture.jpg", LoadPriority::Immediate);
 
             // textureLibrary->FlushAll();
             
@@ -126,7 +130,7 @@ namespace Radis
             modelLibrary->AddModel(Assets::ModelsPath + "Sponza.gltf", true);
             modelLibrary->AddModel(Assets::ModelsPath + "okayu/okayu.fbx", true);
             modelLibrary->AddModel(Assets::ModelsPath + "sportsCar.obj", true);
-            //modelLibrary->AddModel(Assets::ModelsPath + "sanmiguellow.glb", true);
+            //xmodelLibrary->AddModel(Assets::ModelsPath + "sanmiguellow.glb", true);
             //modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Curtains.gltf", true);
             //modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_Main.gltf", true);
             //modelLibrary->AddModel(Assets::ModelsPath + "NewSponza_4_Combined_glTF.gltf", true);
@@ -370,7 +374,7 @@ namespace Radis
         // Tone mapping: reads SceneHDR, outputs final color
         {
             PipelineOptions tonemapOpts;
-            tonemapOpts.pushConstantSize = sizeof(float) * 2;
+            tonemapOpts.pushConstantSize = sizeof(float) * 3;
             tonemapOpts.pushConstantStages = VK_SHADER_STAGE_FRAGMENT_BIT;
 
             tonemapPipeline = std::make_unique<Pipeline>(*device, ldrFormat, VK_FORMAT_UNDEFINED, tonemapUnis, false, "fullscreen.vert", "tonemap.frag", tonemapOpts, false);

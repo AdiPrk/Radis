@@ -112,7 +112,7 @@ namespace Radis
         rr->textureLibrary->UpdateRTUniform(*rr);
         
         // Draw the editor grid
-        DebugDrawResource::DrawEditorGrid(50, 1.0f);
+        // DebugDrawResource::DrawEditorGrid(50, 1.0f);
     }
 
     void RenderSystem::Update(float dt)
@@ -238,7 +238,6 @@ namespace Radis
                 std::bind(&RenderSystem::RenderBloomVK, this, std::placeholders::_1)
             );
 
-            // Reads accumulated HDR, writes final output
             rg->AddPass("ToneMapPass",
                 [&](RGPassBuilder& b) {
                     b.reads("SceneHDR");
@@ -828,6 +827,14 @@ namespace Radis
         }
 
         // --- UPSAMPLE ---
+        static bool doUpsample = true;
+        if (InputSystem::isKeyTriggered(Key::U))
+        {
+            doUpsample = !doUpsample;
+        }
+
+        if (!doUpsample) return;
+
         rr->bloomUpPipeline->Bind(cmd);
         rr->bloomUniform->Bind(cmd, rr->bloomUpPipeline->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_COMPUTE);
 
@@ -864,14 +871,17 @@ namespace Radis
         {
             float exposure;
             float bloomIntensity;
+            float dirtMaskIntensity;
         } pc;
 
         pc.exposure = rr->exposure;
         pc.bloomIntensity = rr->bloomIntensity;
+        pc.dirtMaskIntensity = rr->dirtMaskIntensity;
 
         if (rr->renderMode == RenderMode::Raytracing)
         {
             pc.bloomIntensity = 0.0f;
+            pc.dirtMaskIntensity = 0.0f;
         }
 
         vkCmdPushConstants(cmd, rr->tonemapPipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(TonemapPC), &pc);

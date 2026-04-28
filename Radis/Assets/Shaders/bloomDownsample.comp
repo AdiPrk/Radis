@@ -3,7 +3,10 @@
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
+// "SceneHDR", "BloomMip_0", "BloomMip_1", "BloomMip_2", "BloomMip_3", "BloomMip_4", "BloomMip_5"
 layout(set = 0, binding = 0) uniform sampler2D inMips[];
+
+// "BloomMip_0", "BloomMip_1", "BloomMip_2", "BloomMip_3", "BloomMip_4", "BloomMip_5"
 layout(set = 0, binding = 1, rgba16f) uniform image2D outMips[];
 
 layout(push_constant) uniform PushConstants {
@@ -28,23 +31,23 @@ void main()
     vec3 b = texture(inMips[pc.inputIdx], vec2(uv.x,         uv.y + 2.0*y)).rgb;
     vec3 c = texture(inMips[pc.inputIdx], vec2(uv.x + 2.0*x, uv.y + 2.0*y)).rgb;
 
-    vec3 d = texture(inMips[pc.inputIdx], vec2(uv.x - 1.0*x, uv.y + 1.0*y)).rgb;
-    vec3 e = texture(inMips[pc.inputIdx], vec2(uv.x + 1.0*x, uv.y + 1.0*y)).rgb;
+    vec3 d = texture(inMips[pc.inputIdx], vec2(uv.x - 2.0*x, uv.y)).rgb;
+    vec3 e = texture(inMips[pc.inputIdx], vec2(uv.x,         uv.y)).rgb;
+    vec3 f = texture(inMips[pc.inputIdx], vec2(uv.x + 2.0*x, uv.y)).rgb;
 
-    vec3 f = texture(inMips[pc.inputIdx], vec2(uv.x - 2.0*x, uv.y)).rgb;
-    vec3 g = texture(inMips[pc.inputIdx], vec2(uv.x,         uv.y)).rgb;
-    vec3 h = texture(inMips[pc.inputIdx], vec2(uv.x + 2.0*x, uv.y)).rgb;
+    vec3 g = texture(inMips[pc.inputIdx], vec2(uv.x - 2.0*x, uv.y - 2.0*y)).rgb;
+    vec3 h = texture(inMips[pc.inputIdx], vec2(uv.x,         uv.y - 2.0*y)).rgb;
+    vec3 i = texture(inMips[pc.inputIdx], vec2(uv.x + 2.0*x, uv.y - 2.0*y)).rgb;
 
-    vec3 i = texture(inMips[pc.inputIdx], vec2(uv.x - 1.0*x, uv.y - 1.0*y)).rgb;
-    vec3 j = texture(inMips[pc.inputIdx], vec2(uv.x + 1.0*x, uv.y - 1.0*y)).rgb;
-
-    vec3 k = texture(inMips[pc.inputIdx], vec2(uv.x - 2.0*x, uv.y - 2.0*y)).rgb;
-    vec3 l = texture(inMips[pc.inputIdx], vec2(uv.x,         uv.y - 2.0*y)).rgb;
-    vec3 m = texture(inMips[pc.inputIdx], vec2(uv.x + 2.0*x, uv.y - 2.0*y)).rgb;
+    vec3 j = texture(inMips[pc.inputIdx], vec2(uv.x - x, uv.y + y)).rgb;
+    vec3 k = texture(inMips[pc.inputIdx], vec2(uv.x + x, uv.y + y)).rgb;
+    vec3 l = texture(inMips[pc.inputIdx], vec2(uv.x - x, uv.y - y)).rgb;
+    vec3 m = texture(inMips[pc.inputIdx], vec2(uv.x + x, uv.y - y)).rgb;
 
     vec3 color = e * 0.125;
-    color += (a+c+g+k+m) * 0.03125;
-    color += (b+d+f+h+i+j+l) * 0.0625;
+    color += (a+c+g+i)*0.03125;
+    color += (b+d+f+h)*0.0625;
+    color += (j+k+l+m)*0.125;
 
     // Apply Karis average on the very first downsample to prevent fireflies
     if (pc.inputIdx == 0) {

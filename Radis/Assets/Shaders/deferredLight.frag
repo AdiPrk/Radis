@@ -245,7 +245,12 @@ void main()
         vec3 dir    = GetSkyDirection(fragTexCoord);
         vec2 envUV  = DirToEquirect(dir);
         vec3 skyCol = texture(envMap, envUV).rgb;
+
+        // temp exposure
+        //skyCol *= 0.1;
+
         outColor = vec4(skyCol, 1.0);
+
         outColor = vec4(vec3(0.0), 1.0);
         return;
     }
@@ -293,9 +298,6 @@ void main()
     // IBL Modes
     if (useIrrDiffuse == 0) // Regular lighting
     {
-        // vec3 color = Lo + emissive;
-        // outColor = vec4(color, 1.0);
-
         vec3 iblDiffuse = computeIBLDiffuse(albedo, metallic, ao, N, F0);
         vec3 iblSpecular = computeIBLSpecular(N, V, a, a2, F0, NdotV);
         

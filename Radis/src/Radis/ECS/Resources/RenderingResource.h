@@ -117,7 +117,8 @@ namespace Radis
         
         // Env map
         float exposure = 1.0f;
-        float bloomIntensity = 1.0f;
+        float bloomIntensity = 0.f;
+        float dirtMaskIntensity = 0.f;
         int useIrrDefuse = 0;
         int specTestMode = 0;
 

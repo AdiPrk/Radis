@@ -54,7 +54,8 @@ namespace Radis
     void GPUProfiler::BeginFrame(VkCommandBuffer cmd, uint32_t frameIndex)
     {
         if (!mDevice.SupportsTimestamps()) return;
-
+        mResultsMS.clear();
+        
         mCurrentFrameIndex = frameIndex;
 
         // Retrieve the results from the LAST time this frame index was processed.

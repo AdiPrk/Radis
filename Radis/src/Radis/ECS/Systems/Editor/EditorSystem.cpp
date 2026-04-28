@@ -332,7 +332,8 @@ namespace Radis
 
         // ImGui::DragInt("MSM Blur Radius", &rr->msmPC.radius, 0.1f, 0, 64);
         ImGui::DragFloat("Exposure", &rr->exposure, 0.1f, 0.1f, 10000.0f);
-        ImGui::DragFloat("Bloom Intensity", &rr->bloomIntensity, 0.1f, 0.1f, 10.f);
+        ImGui::DragFloat("Bloom Intensity", &rr->bloomIntensity, 0.05f, 0.0f, 10.f);
+        ImGui::DragFloat("Dirt Mask Intensity", &rr->dirtMaskIntensity, 0.05f, 0.0f, 50.f);
 
         ImGui::Text("Irradiance Debug:");
         const char* dModeItems[] = { "Ambient Irradiant Diffuse", "Raw Irradiance", "Normals", "Split" };
