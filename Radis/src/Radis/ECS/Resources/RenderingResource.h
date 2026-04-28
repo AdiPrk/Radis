@@ -29,6 +29,7 @@ namespace Radis
     class ModelLibrary;
     class TextureLibrary;
     class AnimationLibrary;
+    class GPUProfiler;
 
     struct RenderingResource : public IResource
     {
@@ -57,6 +58,7 @@ namespace Radis
         std::unique_ptr<Uniform> alchemyAOUniform;
         std::unique_ptr<Uniform> aoBlurHUniform;
         std::unique_ptr<Uniform> aoBlurVUniform;
+        std::unique_ptr<Uniform> bloomUniform;
         // -------------------------
 
         // Pipelines
@@ -71,6 +73,8 @@ namespace Radis
         std::unique_ptr<Pipeline> alchemyAOPipeline;
         std::unique_ptr<Pipeline> aoBlurHPipeline;
         std::unique_ptr<Pipeline> aoBlurVPipeline;
+        std::unique_ptr<ComputePipeline> bloomDownPipeline;
+        std::unique_ptr<ComputePipeline> bloomUpPipeline;
         // -----------
 
         // Command Buffers and Sync
@@ -113,6 +117,8 @@ namespace Radis
         
         // Env map
         float exposure = 1.0f;
+        float bloomIntensity = 0.f;
+        float dirtMaskIntensity = 0.f;
         int useIrrDefuse = 0;
         int specTestMode = 0;
 
@@ -138,6 +144,9 @@ namespace Radis
         int frameCount = 0;
         int accumulationCount = 0; // for path tracing accumulation
         glm::mat4 previousViewProj; // for accumulation
+
+        // Profiler
+        std::unique_ptr<GPUProfiler> gpuProfiler;
 
         bool SupportsVulkan();
 

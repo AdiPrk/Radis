@@ -39,7 +39,7 @@ namespace Radis
         .AddSSBIBinding(rtFlags | compFlags, 1).SetDebugName("RT Color Image")
         .AddSSBIBinding(rtFlags | compFlags, 1).SetDebugName("RT Heatmap Image")
         .AddSSBOBinding(rtFlags | compFlags, sizeof(MeshDataUniform), 20'000'000).SetDebugName("RT Vertices SSBO")
-        .AddSSBOBinding(rtFlags | compFlags, sizeof(uint32_t), 40'000'000).SetDebugName("RT Indices SSBO")
+        .AddSSBOBinding(rtFlags | compFlags, sizeof(uint32_t), 80'000'000).SetDebugName("RT Indices SSBO")
         .AddISBinding(rtFlags | compFlags, 1).SetDebugName("RT History Read")
         .AddSSBIBinding(rtFlags | compFlags, 1).SetDebugName("RT History Write")
         .AddISBinding(rtFlags | compFlags, 1).SetDebugName("Environment Map");
@@ -53,13 +53,27 @@ namespace Radis
         .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, "gEmissive").SetDebugName("G-Buffer Emissive")
         .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, "SceneDepth", VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL).SetDebugName("G-Buffer Depth")
         .AddSSBOBinding(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(LightUniform) * LightUniform::MAX_LIGHTS + sizeof(uint32_t)).SetDebugName("Deferred Light SSBO")
-        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, Assets::ImagesPath + "Newport_Loft_Ref.hdr").SetDebugName("Environment Map")
-        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, Assets::ImagesPath + "Newport_Loft_Ref.IRMAP.hdr").SetDebugName("Irradiance Map")
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, Assets::ImagesPath + "kloppenheim_02_4k.hdr").SetDebugName("Environment Map")
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, Assets::ImagesPath + "kloppenheim_02_4k.IRMAP.hdr").SetDebugName("Irradiance Map")
         .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, "BlurredAO").SetDebugName("SSAO Map");
 
     // Tone mapping pass - just reads the accumulated HDR texture
     const UniformSettings tonemapUniformSettings = UniformSettings({})
-        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, "SceneHDR").SetDebugName("SceneHDR Texture");
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, "SceneHDR").SetDebugName("SceneHDR Texture")
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, "BloomMip_0").SetDebugName("Bloom Texture")
+        .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, Assets::ImagesPath + "DirtMaskTexture.jpg").SetDebugName("Dirt Texture");
+
+    // Notice there is no Init function passed! UpdateDescriptorSets handles it natively.
+    const UniformSettings bloomUniformSettings = UniformSettings({})
+        .AddISArrayBinding(VK_SHADER_STAGE_COMPUTE_BIT, {
+            "SceneHDR", "BloomMip_0", "BloomMip_1", "BloomMip_2",
+            "BloomMip_3", "BloomMip_4", "BloomMip_5"
+            }, VK_IMAGE_LAYOUT_GENERAL).SetDebugName("Bloom Input Samplers")
+
+        .AddSSBIArrayBinding(VK_SHADER_STAGE_COMPUTE_BIT, {
+            "BloomMip_0", "BloomMip_1", "BloomMip_2",
+            "BloomMip_3", "BloomMip_4", "BloomMip_5"
+            }).SetDebugName("Bloom Output Images");
 
     const UniformSettings alchemyAOUniformSettings = UniformSettings({})
         .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT, 1, "SceneDepth", VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL).SetDebugName("SceneDepth")

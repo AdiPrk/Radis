@@ -136,12 +136,25 @@ namespace Radis
                 }
                 else /* Texture */
                 {
-                    VKTexture* tex = renderData.textureLibrary->GetVKTexture(binding.textureName);
-                    if (tex)
+                    if (binding.textureNames.size() > 1)
                     {
-                        writer.WriteImage(bIndex, tex, defaultSampler, binding.imageLayout);
+                        std::vector<VKTexture*> textures;
+                        textures.reserve(binding.textureNames.size());
+
+                        for (const auto& name : binding.textureNames)
+                        {
+                            VKTexture* tex = renderData.textureLibrary->GetVKTexture(name);
+                            if (!tex) RADIS_ERROR("Uniform Update: Texture {} not found!", name);
+                            textures.push_back(tex);
+                        }
+                        writer.WriteImageArray(bIndex, textures, defaultSampler, binding.imageLayout);
                     }
-                    else RADIS_ERROR("Uniform Update: Texture {} not found!", binding.textureName);
+                    else if (binding.textureNames.size() == 1)
+                    {
+                        VKTexture* tex = renderData.textureLibrary->GetVKTexture(binding.textureNames[0]);
+                        if (tex) writer.WriteImage(bIndex, tex, defaultSampler, binding.imageLayout);
+                        else RADIS_ERROR("Uniform Update: Texture {} not found!", binding.textureNames[0]);
+                    }
                 }
             }
 

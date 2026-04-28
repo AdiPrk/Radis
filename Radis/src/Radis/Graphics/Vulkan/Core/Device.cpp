@@ -656,20 +656,30 @@ namespace Radis
         vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
 
         int i = 0;
-        for (const auto& queueFamily : queueFamilies) {
-            if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+        for (const auto& queueFamily : queueFamilies) 
+        {
+            if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+            {
                 indices.graphicsFamily = i;
                 indices.graphicsFamilyHasValue = true;
+
+                if (queueFamily.timestampValidBits == 0) 
+                {
+                    mSupportsTimestampQueries = false;
+                    RADIS_WARN("Graphics queue does not support timestamp queries!");
+                }
             }
+
             VkBool32 presentSupport = false;
             vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface_, &presentSupport);
-            if (queueFamily.queueCount > 0 && presentSupport) {
+            if (queueFamily.queueCount > 0 && presentSupport)
+            {
                 indices.presentFamily = i;
                 indices.presentFamilyHasValue = true;
             }
-            if (indices.isComplete()) {
+            
+            if (indices.isComplete())
                 break;
-            }
 
             i++;
         }

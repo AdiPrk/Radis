@@ -120,6 +120,7 @@ namespace Radis
 
         DescriptorWriter& WriteBuffer(uint32_t binding, const struct Buffer& buffer, VkDeviceSize offset = 0);
         DescriptorWriter& WriteImage(uint32_t binding, class VKTexture* texture, VkSampler sampler, VkImageLayout layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        DescriptorWriter& WriteImageArray(uint32_t binding, const std::vector<class VKTexture*>& textures, VkSampler sampler, VkImageLayout layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
         bool Build(VkDescriptorSet& set);
         void Overwrite(VkDescriptorSet& set);
@@ -131,5 +132,6 @@ namespace Radis
 
         std::vector<std::unique_ptr<VkDescriptorBufferInfo>> m_BufferInfos;
         std::vector<std::unique_ptr<VkDescriptorImageInfo>> m_ImageInfos;
+        std::vector<std::unique_ptr<std::vector<VkDescriptorImageInfo>>> m_ImageArrayInfos;
     };
 }

@@ -1,0 +1,49 @@
+#version 460
+#extension GL_EXT_nonuniform_qualifier : require
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+// "SceneHDR", "BloomMip_0", "BloomMip_1", "BloomMip_2", "BloomMip_3", "BloomMip_4", "BloomMip_5"
+layout(set = 0, binding = 0) uniform sampler2D inMips[];
+
+// "BloomMip_0", "BloomMip_1", "BloomMip_2", "BloomMip_3", "BloomMip_4", "BloomMip_5"
+layout(set = 0, binding = 1, rgba16f) uniform image2D outMips[];
+
+layout(push_constant) uniform PushConstants {
+    vec2 invInputSize;
+    uint inputIdx;
+    uint outputIdx;
+} pc;
+
+void main()
+{
+    ivec2 writeCoord = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 outputSize = imageSize(outMips[pc.outputIdx]);
+    
+    if (writeCoord.x >= outputSize.x || writeCoord.y >= outputSize.y) return;
+
+    vec2 uv = (vec2(writeCoord) + vec2(0.5)) * (1.0 / vec2(outputSize));
+    float x = pc.invInputSize.x;
+    float y = pc.invInputSize.y;
+
+    // 9-tap tent filter
+    vec3 a = texture(inMips[pc.inputIdx], vec2(uv.x - x, uv.y + y)).rgb;
+    vec3 b = texture(inMips[pc.inputIdx], vec2(uv.x,     uv.y + y)).rgb;
+    vec3 c = texture(inMips[pc.inputIdx], vec2(uv.x + x, uv.y + y)).rgb;
+
+    vec3 d = texture(inMips[pc.inputIdx], vec2(uv.x - x, uv.y)).rgb;
+    vec3 e = texture(inMips[pc.inputIdx], vec2(uv.x,     uv.y)).rgb;
+    vec3 f = texture(inMips[pc.inputIdx], vec2(uv.x + x, uv.y)).rgb;
+
+    vec3 g = texture(inMips[pc.inputIdx], vec2(uv.x - x, uv.y - y)).rgb;
+    vec3 h = texture(inMips[pc.inputIdx], vec2(uv.x,     uv.y - y)).rgb;
+    vec3 i = texture(inMips[pc.inputIdx], vec2(uv.x + x, uv.y - y)).rgb;
+
+    vec3 upsampled = e * 0.25;
+    upsampled += (b+d+f+h) * 0.125;
+    upsampled += (a+c+g+i) * 0.0625;
+
+    // Additive blend with current mip
+    vec3 current = imageLoad(outMips[pc.outputIdx], writeCoord).rgb;
+    imageStore(outMips[pc.outputIdx], writeCoord, vec4(current + upsampled, 1.0));
+}

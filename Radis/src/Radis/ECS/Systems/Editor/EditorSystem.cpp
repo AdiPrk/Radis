@@ -28,6 +28,8 @@
 
 #include "Graphics/Vulkan/VulkanWindow.h"
 
+#include "PRofiler/GPUProfiler.h"
+
 #include "Windows/AssetsWindow.h"
 #include "Windows/SceneWindow.h"
 #include "Windows/EntitiesWindow.h"
@@ -173,6 +175,7 @@ namespace Radis
                 ChatWindow::Get().Render();
                 EditorWindows::RenderInspectorWindow(ecs);
                 RenderDebugWindow();
+                RenderGPUProfilerWindow();
             }
         }
 
@@ -240,6 +243,7 @@ namespace Radis
                 b.reads("AOBlurTmp");
                 b.reads("BlurredAO");
                 b.writes("BackBuffer"); 
+                for (int i = 0; i < 6; ++i) b.reads("BloomMip_" + std::to_string(i));
             },
             std::bind(&EditorSystem::RenderImGui, this, std::placeholders::_1)
         );
@@ -247,6 +251,13 @@ namespace Radis
 
     void EditorSystem::FrameEnd()
     {
+        auto er = ecs->GetResource<EditorResource>();
+
+        for (const auto& entity : er->entitiesToDelete)
+        {
+            ecs->RemoveEntity(entity);
+        }
+        er->entitiesToDelete.clear();
     }
 
     void EditorSystem::Exit()
@@ -321,6 +332,8 @@ namespace Radis
 
         // ImGui::DragInt("MSM Blur Radius", &rr->msmPC.radius, 0.1f, 0, 64);
         ImGui::DragFloat("Exposure", &rr->exposure, 0.1f, 0.1f, 10000.0f);
+        ImGui::DragFloat("Bloom Intensity", &rr->bloomIntensity, 0.05f, 0.0f, 10.f);
+        ImGui::DragFloat("Dirt Mask Intensity", &rr->dirtMaskIntensity, 0.05f, 0.0f, 50.f);
 
         ImGui::Text("Irradiance Debug:");
         const char* dModeItems[] = { "Ambient Irradiant Diffuse", "Raw Irradiance", "Normals", "Split" };
@@ -329,6 +342,31 @@ namespace Radis
         ImGui::Text("specTestMode Debug:");
         const char* sModeItems[] = { "Final", "Mirror", "Ghosting", "Monte Carlo" };
         ImGui::Combo("##DebugSMode", &rr->specTestMode, sModeItems, IM_ARRAYSIZE(sModeItems));
+        ImGui::End();
+    }
+
+    void EditorSystem::RenderGPUProfilerWindow()
+    {
+        ImGui::Begin("GPU Performance Stats");
+
+        auto rr = ecs->GetResource<RenderingResource>();
+        if (!rr || !rr->gpuProfiler)
+        {
+            ImGui::Text("GPU Profiler not available");
+            ImGui::End();
+            return;
+        }
+
+        float totalTime = 0.0f;
+        for (const auto& [passName, timeMS] : rr->gpuProfiler->GetResults())
+        {
+            ImGui::Text("%s: %.3f ms", passName.c_str(), timeMS);
+            totalTime += timeMS;
+        }
+
+        ImGui::Separator();
+        ImGui::Text("Total GPU Time: %.3f ms", totalTime);
+
         ImGui::End();
     }
 

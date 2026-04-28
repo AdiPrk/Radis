@@ -94,5 +94,4 @@ namespace Radis
             writer.Build(uniform.GetDescriptorSets()[frameIndex]);
         }
     }
-
 }

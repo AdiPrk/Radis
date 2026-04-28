@@ -34,6 +34,7 @@
 #include "Graphics/Vulkan/Uniform/Descriptors.h"
 #include "Graphics/Vulkan/Utils/ScopedDebugLabel.h"
 #include "Graphics/Common/UnifiedMesh.h"
+#include "Profiler/ScopedGPUProfiler.h"
 
 #include "ECS/ECS.h"
 #include "ECS/Entities/Entity.h"
@@ -111,7 +112,7 @@ namespace Radis
         rr->textureLibrary->UpdateRTUniform(*rr);
         
         // Draw the editor grid
-        DebugDrawResource::DrawEditorGrid(50, 1.0f);
+        // DebugDrawResource::DrawEditorGrid(50, 1.0f);
     }
 
     void RenderSystem::Update(float dt)
@@ -228,10 +229,19 @@ namespace Radis
                 std::bind(&RenderSystem::RenderLightVolumesVK, this, std::placeholders::_1)
             );
 
-            // Reads accumulated HDR, writes final output
+            rg->AddPass("BloomPass",
+                [&](RGPassBuilder& b) {
+                    b.setCompute();
+                    b.reads("SceneHDR");
+                    for (int i = 0; i < 6; ++i) b.writes("BloomMip_" + std::to_string(i));
+                },
+                std::bind(&RenderSystem::RenderBloomVK, this, std::placeholders::_1)
+            );
+
             rg->AddPass("ToneMapPass",
                 [&](RGPassBuilder& b) {
                     b.reads("SceneHDR");
+                    b.reads("BloomMip_0");
                     b.writes(colorWriteTarget);
                 },
                 std::bind(&RenderSystem::RenderToneMapVK, this, std::placeholders::_1)
@@ -627,6 +637,7 @@ namespace Radis
         auto rr = ecs->GetResource<RenderingResource>();
         UnifiedMeshes* uMeshes = rr->modelLibrary->GetUnifiedMesh();
         ScopedDebugLabel sceneDebugLabel(rr->device.get(), cmd, "Deferred G-Buffer Pass", glm::vec4(0.2f, 0.8f, 0.2f, 1.0f));
+        ScopedGPUProfiler profile(rr->gpuProfiler.get(), cmd, "Deferred G-Buffer Pass");
 
         // Bind Pipeline, Uniforms, and Mesh
         auto& pipeline = rr->renderWireframe ? rr->gBufferWireframePipeline : rr->gBufferPipeline;
@@ -643,6 +654,7 @@ namespace Radis
     {
         auto rr = ecs->GetResource<RenderingResource>();
         ScopedDebugLabel label(rr->device.get(), cmd, "Alchemy AO Pass", glm::vec4(0.2f, 0.2f, 0.2f, 1.0f));
+        ScopedGPUProfiler profile(rr->gpuProfiler.get(), cmd, "Alchemy AO Pass");
 
         rr->alchemyAOPipeline->Bind(cmd);
 
@@ -662,6 +674,7 @@ namespace Radis
     {
         auto rr = ecs->GetResource<RenderingResource>();
         ScopedDebugLabel label(rr->device.get(), cmd, "AO Blur Horizontal", glm::vec4(0.8f, 0.4f, 0.2f, 1.0f));
+        ScopedGPUProfiler profile(rr->gpuProfiler.get(), cmd, "AO Blur Horizontal");
 
         rr->aoBlurHPipeline->Bind(cmd);
         rr->aoBlurHUniform->Bind(cmd, rr->aoBlurHPipeline->GetLayout(), rr->currentFrameIndex);
@@ -683,6 +696,7 @@ namespace Radis
     {
         auto rr = ecs->GetResource<RenderingResource>();
         ScopedDebugLabel label(rr->device.get(), cmd, "AO Blur Vertical", glm::vec4(0.8f, 0.4f, 0.2f, 1.0f));
+        ScopedGPUProfiler profile(rr->gpuProfiler.get(), cmd, "AO Blur Vertical");
 
         rr->aoBlurVPipeline->Bind(cmd);
         rr->aoBlurVUniform->Bind(cmd, rr->aoBlurVPipeline->GetLayout(), rr->currentFrameIndex);
@@ -704,6 +718,7 @@ namespace Radis
     {
         auto rr = ecs->GetResource<RenderingResource>();
         ScopedDebugLabel sceneDebugLabel(rr->device.get(), cmd, "Deferred Lighting Pass", glm::vec4(0.8f, 0.8f, 0.2f, 1.0f));
+        ScopedGPUProfiler profile(rr->gpuProfiler.get(), cmd, "Deferred Lighting Pass");
 
         // Bind Pipeline and Uniforms
         auto& pipeline = rr->deferredLightingPipeline;
@@ -734,9 +749,10 @@ namespace Radis
         ModelLibrary* ml = rr->modelLibrary.get();
         UnifiedMeshes* uMeshes = ml->GetUnifiedMesh();
         ScopedDebugLabel label(rr->device.get(), cmd, "Light Volumes Pass", glm::vec4(1.0f, 0.5f, 0.0f, 1.0f));
+        ScopedGPUProfiler profile(rr->gpuProfiler.get(), cmd, "Light Volumes Pass");
 
         // Load sphere mesh on first use
-        Model* sphereModel = ml->GetModel("Assets/Models/sphere.glb");
+        Model* sphereModel = ml->GetModel("Assets/Models/sphere.obj");
         if (!sphereModel) return;
 
         uint32_t sphereID = sphereModel->mMeshes[0]->GetID();
@@ -762,16 +778,113 @@ namespace Radis
         vkCmdDrawIndexed(cmd, sphereInfo.indexCount, mLocalLightCount, sphereInfo.firstIndex, sphereInfo.vertexOffset, 0);
     }
 
+    void RenderSystem::RenderBloomVK(VkCommandBuffer cmd)
+    {
+        auto rr = ecs->GetResource<RenderingResource>();
+        ScopedDebugLabel label(rr->device.get(), cmd, "Physically Based Bloom", glm::vec4(1.0f, 0.5f, 0.8f, 1.0f));
+        ScopedGPUProfiler profile(rr->gpuProfiler.get(), cmd, "Physically Based Bloom");
+
+        struct BloomPC {
+            glm::vec2 invInputSize;
+            uint32_t inputIdx;
+            uint32_t outputIdx;
+        } pc;
+
+        // Helper to issue barriers between dispatches so the next pass can safely read the written texture
+        auto EmitComputeBarrier = [&](const std::string& texName) {
+            auto tex = rr->textureLibrary->GetVKTexture(texName);
+            VkImageMemoryBarrier barrier{};
+            barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            barrier.oldLayout = VK_IMAGE_LAYOUT_GENERAL;
+            barrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
+            barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            barrier.image = tex->GetImage();
+            barrier.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+            vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+        };
+
+        // --- DOWNSAMPLE ---
+        rr->bloomDownPipeline->Bind(cmd);
+        rr->bloomUniform->Bind(cmd, rr->bloomDownPipeline->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_COMPUTE);
+
+        for (int i = 0; i < 6; ++i)
+        {
+            auto inputTex = (i == 0) ? rr->textureLibrary->GetVKTexture("SceneHDR") : rr->textureLibrary->GetVKTexture("BloomMip_" + std::to_string(i - 1));
+            auto outputTex = rr->textureLibrary->GetVKTexture("BloomMip_" + std::to_string(i));
+
+            pc.invInputSize = glm::vec2(1.0f / inputTex->GetWidth(), 1.0f / inputTex->GetHeight());
+            pc.inputIdx = i; // 0 is SceneHDR, 1 is Mip0, 2 is Mip1...
+            pc.outputIdx = i; // 0 is Mip0, 1 is Mip1...
+
+            vkCmdPushConstants(cmd, rr->bloomDownPipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(BloomPC), &pc);
+
+            uint32_t groupX = (outputTex->GetWidth() + 7) / 8;
+            uint32_t groupY = (outputTex->GetHeight() + 7) / 8;
+            vkCmdDispatch(cmd, groupX, groupY, 1);
+
+            EmitComputeBarrier("BloomMip_" + std::to_string(i));
+        }
+
+        // --- UPSAMPLE ---
+        static bool doUpsample = true;
+        if (InputSystem::isKeyTriggered(Key::U))
+        {
+            doUpsample = !doUpsample;
+        }
+
+        if (!doUpsample) return;
+
+        rr->bloomUpPipeline->Bind(cmd);
+        rr->bloomUniform->Bind(cmd, rr->bloomUpPipeline->GetLayout(), rr->currentFrameIndex, VK_PIPELINE_BIND_POINT_COMPUTE);
+
+        for (int i = 4; i >= 0; --i) // Start at Mip 4, upsample to Mip 3, etc.
+        {
+            auto inputTex = rr->textureLibrary->GetVKTexture("BloomMip_" + std::to_string(i + 1));
+            auto outputTex = rr->textureLibrary->GetVKTexture("BloomMip_" + std::to_string(i));
+
+            pc.invInputSize = glm::vec2(1.0f / inputTex->GetWidth(), 1.0f / inputTex->GetHeight());
+            pc.inputIdx = i + 2; // +1 to offset for SceneHDR, +1 because we read the smaller mip
+            pc.outputIdx = i;
+
+            vkCmdPushConstants(cmd, rr->bloomUpPipeline->GetLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(BloomPC), &pc);
+
+            uint32_t groupX = (outputTex->GetWidth() + 7) / 8;
+            uint32_t groupY = (outputTex->GetHeight() + 7) / 8;
+            vkCmdDispatch(cmd, groupX, groupY, 1);
+
+            EmitComputeBarrier("BloomMip_" + std::to_string(i));
+        }
+    }
+
     void RenderSystem::RenderToneMapVK(VkCommandBuffer cmd)
     {
         auto rr = ecs->GetResource<RenderingResource>();
         ScopedDebugLabel label(rr->device.get(), cmd, "Tone Map Pass", glm::vec4(0.5f, 0.2f, 0.8f, 1.0f));
+        ScopedGPUProfiler profile(rr->gpuProfiler.get(), cmd, "Tone Map Pass");
 
         rr->tonemapPipeline->Bind(cmd);
         rr->tonemapUniform->Bind(cmd, rr->tonemapPipeline->GetLayout(), rr->currentFrameIndex);
         SetViewportAndScissor(cmd, rr->swapChain->GetSwapChainExtent());
 
-        vkCmdPushConstants(cmd, rr->tonemapPipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(float), &rr->exposure);
+        struct TonemapPC
+        {
+            float exposure;
+            float bloomIntensity;
+            float dirtMaskIntensity;
+        } pc;
+
+        pc.exposure = rr->exposure;
+        pc.bloomIntensity = rr->bloomIntensity;
+        pc.dirtMaskIntensity = rr->dirtMaskIntensity;
+
+        if (rr->renderMode == RenderMode::Raytracing)
+        {
+            pc.bloomIntensity = 0.0f;
+            pc.dirtMaskIntensity = 0.0f;
+        }
+
+        vkCmdPushConstants(cmd, rr->tonemapPipeline->GetLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(TonemapPC), &pc);
 
         // Fullscreen triangle
         vkCmdDraw(cmd, 3, 1, 0, 0);

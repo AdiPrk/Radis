@@ -313,6 +313,29 @@ namespace Radis
         return *this;
     }
 
+    DescriptorWriter& DescriptorWriter::WriteImageArray(uint32_t binding, const std::vector<class VKTexture*>& textures, VkSampler sampler, VkImageLayout layout)
+    {
+        auto infos = std::make_unique<std::vector<VkDescriptorImageInfo>>();
+        infos->reserve(textures.size());
+
+        for (auto tex : textures)
+        {
+            VkDescriptorImageInfo info{};
+            info.sampler = sampler;
+            info.imageView = tex ? tex->GetImageView() : VK_NULL_HANDLE;
+            info.imageLayout = layout;
+            infos->push_back(info);
+        }
+
+        // Pass the pointer to the underlying data array to the base WriteImage
+        WriteImage(binding, infos->data(), static_cast<uint32_t>(infos->size()));
+
+        // Store to keep it alive
+        m_ImageArrayInfos.push_back(std::move(infos));
+
+        return *this;
+    }
+
     bool DescriptorWriter::Build(VkDescriptorSet& set)
     {
         //Allocate a descritor set
