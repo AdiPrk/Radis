@@ -32,6 +32,8 @@ x86/
 [Aa][Rr][Mm]64/
 bld/
 [Bb]in/
+!Dependencies/**/[Bb]in/
+!Dependencies/**/[Bb]in/**
 !Dog/Assets/Bin/
 
 [Oo]bj/

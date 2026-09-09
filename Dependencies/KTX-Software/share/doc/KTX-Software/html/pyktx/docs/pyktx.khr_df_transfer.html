@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyktx.khr_df_transfer module &mdash; pyktx  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pyktx.ktx_astc_params module" href="pyktx.ktx_astc_params.html" />
+    <link rel="prev" title="pyktx.khr_df_primaries module" href="pyktx.khr_df_primaries.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            pyktx
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="modules.html">pyktx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.html">pyktx package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.gl_internalformat.html">pyktx.gl_internalformat module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.khr_df_model.html">pyktx.khr_df_model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.khr_df_primaries.html">pyktx.khr_df_primaries module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">pyktx.khr_df_transfer module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.UNSPECIFIED"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.UNSPECIFIED</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.LINEAR"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.LINEAR</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.SRGB"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.SRGB</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.SRGB_EOTF"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.SRGB_EOTF</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.SCRGB"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.SCRGB</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.SCRGB_EOTF"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.SCRGB_EOTF</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.ITU"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.ITU</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.ITU_OETF"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.ITU_OETF</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.BT601"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.BT601</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.BT601_OETF"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.BT601_OETF</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.BT709"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.BT709</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.BT709_OETF"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.BT709_OETF</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.BT2020"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.BT2020</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.BT2020_OETF"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.BT2020_OETF</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.SMTPE170M"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.SMTPE170M</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.SMTPE170M_OETF"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.SMTPE170M_OETF</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.SMTPE170M_EOTF"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.SMTPE170M_EOTF</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.NTSC"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.NTSC</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.NTSC_EOTF"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.NTSC_EOTF</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.SLOG"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.SLOG</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.SLOG_OETF"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.SLOG_OETF</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.SLOG2"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.SLOG2</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.SLOG2_OETF"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.SLOG2_OETF</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.BT1886"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.BT1886</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.BT1886_EOTF"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.BT1886_EOTF</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.HLG_OETF"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.HLG_OETF</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.HLG_EOTF"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.HLG_EOTF</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.PQ_EOTF"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.PQ_EOTF</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.PQ_OETF"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.PQ_OETF</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.DCIP3"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.DCIP3</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.DCIP3_EOTF"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.DCIP3_EOTF</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.PAL_OETF"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.PAL_OETF</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.PAL625_EOTF"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.PAL625_EOTF</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.ST240"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.ST240</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.ST240_OETF"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.ST240_OETF</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.ST240_EOTF"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.ST240_EOTF</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.ACESCC"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.ACESCC</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.ACESCC_OETF"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.ACESCC_OETF</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.ACESCCT"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.ACESCCT</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.ACESCCT_OETF"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.ACESCCT_OETF</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.ADOBERGB"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.ADOBERGB</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.ADOBERGB_EOTF"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.ADOBERGB_EOTF</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.HLG_UNNORMALIZED_OETF"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.HLG_UNNORMALIZED_OETF</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_transfer.KhrDfTransfer.MAX"><code class="docutils literal notranslate"><span class="pre">KhrDfTransfer.MAX</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_astc_params.html">pyktx.ktx_astc_params module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_basis_codec.html">pyktx.ktx_basis_codec module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_basis_params.html">pyktx.ktx_basis_params module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_error_code.html">pyktx.ktx_error_code module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_hash_list.html">pyktx.ktx_hash_list module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_pack_astc_block_dimension.html">pyktx.ktx_pack_astc_block_dimension module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_pack_astc_encoder_mode.html">pyktx.ktx_pack_astc_encoder_mode module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_pack_astc_quality_levels.html">pyktx.ktx_pack_astc_quality_levels module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_pack_uastc_flag_bits.html">pyktx.ktx_pack_uastc_flag_bits module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_supercmp_scheme.html">pyktx.ktx_supercmp_scheme module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_texture.html">pyktx.ktx_texture module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_texture1.html">pyktx.ktx_texture1 module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_texture2.html">pyktx.ktx_texture2 module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_texture_create_flag_bits.html">pyktx.ktx_texture_create_flag_bits module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_texture_create_info.html">pyktx.ktx_texture_create_info module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_texture_create_storage.html">pyktx.ktx_texture_create_storage module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_transcode_flag_bits.html">pyktx.ktx_transcode_flag_bits module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_transcode_fmt.html">pyktx.ktx_transcode_fmt module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.native.html">pyktx.native module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.vk_format.html">pyktx.vk_format module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pyktx</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">pyktx</a></li>
+          <li class="breadcrumb-item"><a href="pyktx.html">pyktx package</a></li>
+      <li class="breadcrumb-item active">pyktx.khr_df_transfer module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/docs/pyktx.khr_df_transfer.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-pyktx.khr_df_transfer">
+<span id="pyktx-khr-df-transfer-module"></span><h1>pyktx.khr_df_transfer module<a class="headerlink" href="#module-pyktx.khr_df_transfer" title="Permalink to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyktx.khr_df_transfer.</span></span><span class="sig-name descname"><span class="pre">KhrDfTransfer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names=&lt;not</span> <span class="pre">given&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyktx/khr_df_transfer.html#KhrDfTransfer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">IntEnum</span></code></p>
+<p>The transfer function of an image.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.UNSPECIFIED">
+<span class="sig-name descname"><span class="pre">UNSPECIFIED</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.UNSPECIFIED" title="Permalink to this definition"></a></dt>
+<dd><p>No transfer function defined.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.LINEAR">
+<span class="sig-name descname"><span class="pre">LINEAR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.LINEAR" title="Permalink to this definition"></a></dt>
+<dd><p>Linear transfer function (value proportional to intensity.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.SRGB">
+<span class="sig-name descname"><span class="pre">SRGB</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.SRGB" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.SRGB_EOTF">
+<span class="sig-name descname"><span class="pre">SRGB_EOTF</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.SRGB_EOTF" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.SCRGB">
+<span class="sig-name descname"><span class="pre">SCRGB</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.SCRGB" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.SCRGB_EOTF">
+<span class="sig-name descname"><span class="pre">SCRGB_EOTF</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.SCRGB_EOTF" title="Permalink to this definition"></a></dt>
+<dd><p>Perceptually-linear transfer function of sRGB (~2.2); also used for scRGB.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.ITU">
+<span class="sig-name descname"><span class="pre">ITU</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.ITU" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.ITU_OETF">
+<span class="sig-name descname"><span class="pre">ITU_OETF</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.ITU_OETF" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.BT601">
+<span class="sig-name descname"><span class="pre">BT601</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.BT601" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.BT601_OETF">
+<span class="sig-name descname"><span class="pre">BT601_OETF</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.BT601_OETF" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.BT709">
+<span class="sig-name descname"><span class="pre">BT709</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.BT709" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.BT709_OETF">
+<span class="sig-name descname"><span class="pre">BT709_OETF</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.BT709_OETF" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.BT2020">
+<span class="sig-name descname"><span class="pre">BT2020</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.BT2020" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.BT2020_OETF">
+<span class="sig-name descname"><span class="pre">BT2020_OETF</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.BT2020_OETF" title="Permalink to this definition"></a></dt>
+<dd><p>Perceptually-linear transfer function of ITU BT.601, BT.709 and BT.2020 (~1/.45).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.SMTPE170M">
+<span class="sig-name descname"><span class="pre">SMTPE170M</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.SMTPE170M" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.SMTPE170M_OETF">
+<span class="sig-name descname"><span class="pre">SMTPE170M_OETF</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.SMTPE170M_OETF" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.SMTPE170M_EOTF">
+<span class="sig-name descname"><span class="pre">SMTPE170M_EOTF</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.SMTPE170M_EOTF" title="Permalink to this definition"></a></dt>
+<dd><p>SMTPE170M (digital NTSC) defines an alias for the ITU transfer function (~1/.45) and a linear OOTF.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.NTSC">
+<span class="sig-name descname"><span class="pre">NTSC</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.NTSC" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.NTSC_EOTF">
+<span class="sig-name descname"><span class="pre">NTSC_EOTF</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.NTSC_EOTF" title="Permalink to this definition"></a></dt>
+<dd><p>Perceptually-linear gamma function of original NTSC (simple 2.2 gamma).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.SLOG">
+<span class="sig-name descname"><span class="pre">SLOG</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.SLOG" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.SLOG_OETF">
+<span class="sig-name descname"><span class="pre">SLOG_OETF</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.SLOG_OETF" title="Permalink to this definition"></a></dt>
+<dd><p>Sony S-log used by Sony video cameras.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.SLOG2">
+<span class="sig-name descname"><span class="pre">SLOG2</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.SLOG2" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.SLOG2_OETF">
+<span class="sig-name descname"><span class="pre">SLOG2_OETF</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.SLOG2_OETF" title="Permalink to this definition"></a></dt>
+<dd><p>Sony S-log 2 used by Sony video cameras.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.BT1886">
+<span class="sig-name descname"><span class="pre">BT1886</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">7</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.BT1886" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.BT1886_EOTF">
+<span class="sig-name descname"><span class="pre">BT1886_EOTF</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">7</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.BT1886_EOTF" title="Permalink to this definition"></a></dt>
+<dd><p>ITU BT.1886 EOTF.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.HLG_OETF">
+<span class="sig-name descname"><span class="pre">HLG_OETF</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">8</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.HLG_OETF" title="Permalink to this definition"></a></dt>
+<dd><p>ITU BT.2100 HLG OETF (typical scene-referred content), linear light normalized 0..1.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.HLG_EOTF">
+<span class="sig-name descname"><span class="pre">HLG_EOTF</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">9</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.HLG_EOTF" title="Permalink to this definition"></a></dt>
+<dd><p>ITU BT.2100 HLG EOTF (nominal HDR display of HLG content), linear light normalized 0..1.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.PQ_EOTF">
+<span class="sig-name descname"><span class="pre">PQ_EOTF</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">10</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.PQ_EOTF" title="Permalink to this definition"></a></dt>
+<dd><p>ITU BT.2100 PQ EOTF (typical HDR display-referred PQ content).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.PQ_OETF">
+<span class="sig-name descname"><span class="pre">PQ_OETF</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">11</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.PQ_OETF" title="Permalink to this definition"></a></dt>
+<dd><p>ITU BT.2100 PQ OETF (nominal scene described by PQ HDR content).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.DCIP3">
+<span class="sig-name descname"><span class="pre">DCIP3</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">12</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.DCIP3" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.DCIP3_EOTF">
+<span class="sig-name descname"><span class="pre">DCIP3_EOTF</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">12</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.DCIP3_EOTF" title="Permalink to this definition"></a></dt>
+<dd><p>DCI P3 transfer function.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.PAL_OETF">
+<span class="sig-name descname"><span class="pre">PAL_OETF</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">13</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.PAL_OETF" title="Permalink to this definition"></a></dt>
+<dd><p>Legacy PAL OETF.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.PAL625_EOTF">
+<span class="sig-name descname"><span class="pre">PAL625_EOTF</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">14</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.PAL625_EOTF" title="Permalink to this definition"></a></dt>
+<dd><p>Legacy PAL 625-line EOTF.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.ST240">
+<span class="sig-name descname"><span class="pre">ST240</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">15</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.ST240" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.ST240_OETF">
+<span class="sig-name descname"><span class="pre">ST240_OETF</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">15</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.ST240_OETF" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.ST240_EOTF">
+<span class="sig-name descname"><span class="pre">ST240_EOTF</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">15</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.ST240_EOTF" title="Permalink to this definition"></a></dt>
+<dd><p>Legacy ST240 transfer function.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.ACESCC">
+<span class="sig-name descname"><span class="pre">ACESCC</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">16</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.ACESCC" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.ACESCC_OETF">
+<span class="sig-name descname"><span class="pre">ACESCC_OETF</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">16</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.ACESCC_OETF" title="Permalink to this definition"></a></dt>
+<dd><p>ACEScc transfer function.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.ACESCCT">
+<span class="sig-name descname"><span class="pre">ACESCCT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">17</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.ACESCCT" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.ACESCCT_OETF">
+<span class="sig-name descname"><span class="pre">ACESCCT_OETF</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">17</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.ACESCCT_OETF" title="Permalink to this definition"></a></dt>
+<dd><p>ACEScct transfer function.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.ADOBERGB">
+<span class="sig-name descname"><span class="pre">ADOBERGB</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">18</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.ADOBERGB" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.ADOBERGB_EOTF">
+<span class="sig-name descname"><span class="pre">ADOBERGB_EOTF</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">18</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.ADOBERGB_EOTF" title="Permalink to this definition"></a></dt>
+<dd><p>Adobe RGB (1998) transfer function.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.HLG_UNNORMALIZED_OETF">
+<span class="sig-name descname"><span class="pre">HLG_UNNORMALIZED_OETF</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">19</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.HLG_UNNORMALIZED_OETF" title="Permalink to this definition"></a></dt>
+<dd><p>Legacy ITU BT.2100 HLG OETF (typical scene-referred content), linear light normalized 0..12.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_transfer.KhrDfTransfer.MAX">
+<span class="sig-name descname"><span class="pre">MAX</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">255</span></em><a class="headerlink" href="#pyktx.khr_df_transfer.KhrDfTransfer.MAX" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pyktx.khr_df_primaries.html" class="btn btn-neutral float-left" title="pyktx.khr_df_primaries module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pyktx.ktx_astc_params.html" class="btn btn-neutral float-right" title="pyktx.ktx_astc_params module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Khronos Group, Inc. 2023, Shukant Pal.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

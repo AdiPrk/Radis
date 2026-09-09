@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyktx.khr_df_model module &mdash; pyktx  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pyktx.khr_df_primaries module" href="pyktx.khr_df_primaries.html" />
+    <link rel="prev" title="pyktx.gl_internalformat module" href="pyktx.gl_internalformat.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            pyktx
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="modules.html">pyktx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.html">pyktx package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.gl_internalformat.html">pyktx.gl_internalformat module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">pyktx.khr_df_model module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel"><code class="docutils literal notranslate"><span class="pre">KhrDfModel</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.UNSPECIFIED"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.UNSPECIFIED</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.RGBSDA"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.RGBSDA</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.YUVSDA"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.YUVSDA</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.YIQSDA"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.YIQSDA</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.LABSDA"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.LABSDA</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.CMYKA"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.CMYKA</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.XYZW"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.XYZW</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.HSVA_ANG"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.HSVA_ANG</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.HSLA_ANG"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.HSLA_ANG</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.HSVA_HEX"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.HSVA_HEX</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.HSLA_HEX"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.HSLA_HEX</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.YCGCOA"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.YCGCOA</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.YCCBCCRC"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.YCCBCCRC</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.ICTCP"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.ICTCP</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.CIEXYZ"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.CIEXYZ</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.CIEXYY"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.CIEXYY</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.DXT1A"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.DXT1A</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.BC1A"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.BC1A</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.DXT2"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.DXT2</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.DXT3"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.DXT3</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.BC2"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.BC2</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.DXT4"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.DXT4</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.DXT5"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.DXT5</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.BC3"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.BC3</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.ATI1N"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.ATI1N</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.DXT5A"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.DXT5A</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.BC4"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.BC4</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.ATI2N_XY"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.ATI2N_XY</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.DXN"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.DXN</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.BC5"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.BC5</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.BC6H"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.BC6H</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.BC7"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.BC7</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.ETC1"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.ETC1</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.ETC2"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.ETC2</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.ASTC"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.ASTC</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.ETC1S"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.ETC1S</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.PVRTC"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.PVRTC</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.PVRTC2"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.PVRTC2</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.UASTC"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.UASTC</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.UASTC_LDR_4x4"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.UASTC_LDR_4x4</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.UASTC_HDR_4x4"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.UASTC_HDR_4x4</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.UASTC_HDR_6x6"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.UASTC_HDR_6x6</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.khr_df_model.KhrDfModel.MAX"><code class="docutils literal notranslate"><span class="pre">KhrDfModel.MAX</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.khr_df_primaries.html">pyktx.khr_df_primaries module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.khr_df_transfer.html">pyktx.khr_df_transfer module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_astc_params.html">pyktx.ktx_astc_params module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_basis_codec.html">pyktx.ktx_basis_codec module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_basis_params.html">pyktx.ktx_basis_params module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_error_code.html">pyktx.ktx_error_code module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_hash_list.html">pyktx.ktx_hash_list module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_pack_astc_block_dimension.html">pyktx.ktx_pack_astc_block_dimension module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_pack_astc_encoder_mode.html">pyktx.ktx_pack_astc_encoder_mode module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_pack_astc_quality_levels.html">pyktx.ktx_pack_astc_quality_levels module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_pack_uastc_flag_bits.html">pyktx.ktx_pack_uastc_flag_bits module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_supercmp_scheme.html">pyktx.ktx_supercmp_scheme module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_texture.html">pyktx.ktx_texture module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_texture1.html">pyktx.ktx_texture1 module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_texture2.html">pyktx.ktx_texture2 module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_texture_create_flag_bits.html">pyktx.ktx_texture_create_flag_bits module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_texture_create_info.html">pyktx.ktx_texture_create_info module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_texture_create_storage.html">pyktx.ktx_texture_create_storage module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_transcode_flag_bits.html">pyktx.ktx_transcode_flag_bits module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_transcode_fmt.html">pyktx.ktx_transcode_fmt module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.native.html">pyktx.native module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.vk_format.html">pyktx.vk_format module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pyktx</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">pyktx</a></li>
+          <li class="breadcrumb-item"><a href="pyktx.html">pyktx package</a></li>
+      <li class="breadcrumb-item active">pyktx.khr_df_model module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/docs/pyktx.khr_df_model.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-pyktx.khr_df_model">
+<span id="pyktx-khr-df-model-module"></span><h1>pyktx.khr_df_model module<a class="headerlink" href="#module-pyktx.khr_df_model" title="Permalink to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyktx.khr_df_model.</span></span><span class="sig-name descname"><span class="pre">KhrDfModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names=&lt;not</span> <span class="pre">given&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyktx/khr_df_model.html#KhrDfModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">IntEnum</span></code></p>
+<p>Model in which the color coordinate space is defined.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.UNSPECIFIED">
+<span class="sig-name descname"><span class="pre">UNSPECIFIED</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.UNSPECIFIED" title="Permalink to this definition"></a></dt>
+<dd><p>No interpretation of color channels defined.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.RGBSDA">
+<span class="sig-name descname"><span class="pre">RGBSDA</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.RGBSDA" title="Permalink to this definition"></a></dt>
+<dd><p>Color primaries (red, green, blue) + alpha, depth and stencil.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.YUVSDA">
+<span class="sig-name descname"><span class="pre">YUVSDA</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.YUVSDA" title="Permalink to this definition"></a></dt>
+<dd><p>Color differences (Y’, Cb, Cr) + alpha, depth and stencil.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.YIQSDA">
+<span class="sig-name descname"><span class="pre">YIQSDA</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.YIQSDA" title="Permalink to this definition"></a></dt>
+<dd><p>Color differences (Y’, I, Q) + alpha, depth and stencil.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.LABSDA">
+<span class="sig-name descname"><span class="pre">LABSDA</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.LABSDA" title="Permalink to this definition"></a></dt>
+<dd><p>Perceptual color (CIE L*a*b*) + alpha, depth and stencil.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.CMYKA">
+<span class="sig-name descname"><span class="pre">CMYKA</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.CMYKA" title="Permalink to this definition"></a></dt>
+<dd><p>Subtractive colors (cyan, magenta, yellow, black) + alpha.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.XYZW">
+<span class="sig-name descname"><span class="pre">XYZW</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.XYZW" title="Permalink to this definition"></a></dt>
+<dd><p>Non-color coordinate data (X, Y, Z, W).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.HSVA_ANG">
+<span class="sig-name descname"><span class="pre">HSVA_ANG</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">7</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.HSVA_ANG" title="Permalink to this definition"></a></dt>
+<dd><p>Hue, saturation, value, hue angle on color circle, plus alpha.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.HSLA_ANG">
+<span class="sig-name descname"><span class="pre">HSLA_ANG</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">8</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.HSLA_ANG" title="Permalink to this definition"></a></dt>
+<dd><p>Hue, saturation, lightness, hue angle on color circle, plus alpha.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.HSVA_HEX">
+<span class="sig-name descname"><span class="pre">HSVA_HEX</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">9</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.HSVA_HEX" title="Permalink to this definition"></a></dt>
+<dd><p>Hue, saturation, value, hue on color hexagon, plus alpha.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.HSLA_HEX">
+<span class="sig-name descname"><span class="pre">HSLA_HEX</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">10</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.HSLA_HEX" title="Permalink to this definition"></a></dt>
+<dd><p>Hue, saturation, lightness, hue on color hexagon, plus alpha.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.YCGCOA">
+<span class="sig-name descname"><span class="pre">YCGCOA</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">11</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.YCGCOA" title="Permalink to this definition"></a></dt>
+<dd><p>Lightweight approximate color difference (luma, orange, green).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.YCCBCCRC">
+<span class="sig-name descname"><span class="pre">YCCBCCRC</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">12</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.YCCBCCRC" title="Permalink to this definition"></a></dt>
+<dd><p>ITU BT.2020 constant luminance YcCbcCrc.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.ICTCP">
+<span class="sig-name descname"><span class="pre">ICTCP</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">13</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.ICTCP" title="Permalink to this definition"></a></dt>
+<dd><p>ITU BT.2100 constant intensity ICtCp.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.CIEXYZ">
+<span class="sig-name descname"><span class="pre">CIEXYZ</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">14</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.CIEXYZ" title="Permalink to this definition"></a></dt>
+<dd><p>CIE 1931 XYZ color coordinates (X, Y, Z).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.CIEXYY">
+<span class="sig-name descname"><span class="pre">CIEXYY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">15</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.CIEXYY" title="Permalink to this definition"></a></dt>
+<dd><p>CIE 1931 xyY color coordinates (X, Y, Y).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.DXT1A">
+<span class="sig-name descname"><span class="pre">DXT1A</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">128</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.DXT1A" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.BC1A">
+<span class="sig-name descname"><span class="pre">BC1A</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">128</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.BC1A" title="Permalink to this definition"></a></dt>
+<dd><p>Compressed formats start at 128.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.DXT2">
+<span class="sig-name descname"><span class="pre">DXT2</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">129</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.DXT2" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.DXT3">
+<span class="sig-name descname"><span class="pre">DXT3</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">129</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.DXT3" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.BC2">
+<span class="sig-name descname"><span class="pre">BC2</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">129</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.BC2" title="Permalink to this definition"></a></dt>
+<dd><p>DXT2/DXT3/BC2, with explicit 4-bit alpha.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.DXT4">
+<span class="sig-name descname"><span class="pre">DXT4</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">130</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.DXT4" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.DXT5">
+<span class="sig-name descname"><span class="pre">DXT5</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">130</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.DXT5" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.BC3">
+<span class="sig-name descname"><span class="pre">BC3</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">130</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.BC3" title="Permalink to this definition"></a></dt>
+<dd><p>DXT4/DXT5/BC3, with interpolated alpha.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.ATI1N">
+<span class="sig-name descname"><span class="pre">ATI1N</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">131</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.ATI1N" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.DXT5A">
+<span class="sig-name descname"><span class="pre">DXT5A</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">131</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.DXT5A" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.BC4">
+<span class="sig-name descname"><span class="pre">BC4</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">131</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.BC4" title="Permalink to this definition"></a></dt>
+<dd><p>ATI1n/DXT5A/BC4 - single channel interpolated 8-bit data.
+(The UNORM/SNORM variation is recorded in the channel data).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.ATI2N_XY">
+<span class="sig-name descname"><span class="pre">ATI2N_XY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">132</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.ATI2N_XY" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.DXN">
+<span class="sig-name descname"><span class="pre">DXN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">132</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.DXN" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.BC5">
+<span class="sig-name descname"><span class="pre">BC5</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">132</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.BC5" title="Permalink to this definition"></a></dt>
+<dd><p>ATI2n_XY/DXN/BC5 - two channel interpolated 8-bit data.
+(The UNORM/SNORM variation is recorded in the channel data).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.BC6H">
+<span class="sig-name descname"><span class="pre">BC6H</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">133</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.BC6H" title="Permalink to this definition"></a></dt>
+<dd><p>BC6H - DX11 format for 16-bit float channels.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.BC7">
+<span class="sig-name descname"><span class="pre">BC7</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">134</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.BC7" title="Permalink to this definition"></a></dt>
+<dd><p>BC7 - DX11 format.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.ETC1">
+<span class="sig-name descname"><span class="pre">ETC1</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">160</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.ETC1" title="Permalink to this definition"></a></dt>
+<dd><p>A format of ETC1 indicates that the format shall be decodable
+by an ETC1-compliant decoder and not rely on ETC2 features.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.ETC2">
+<span class="sig-name descname"><span class="pre">ETC2</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">161</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.ETC2" title="Permalink to this definition"></a></dt>
+<dd><p>A format of ETC2 is permitted to use ETC2 encodings on top of
+the baseline ETC1 specification.
+The ETC2 format has channels “red”, “green”, “RGB” and “alpha”,
+which should be cosited samples.
+Punch-through alpha can be distinguished from full alpha by
+the plane size in bytes required for the texel block.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.ASTC">
+<span class="sig-name descname"><span class="pre">ASTC</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">162</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.ASTC" title="Permalink to this definition"></a></dt>
+<dd><p>Adaptive Scalable Texture Compression.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.ETC1S">
+<span class="sig-name descname"><span class="pre">ETC1S</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">163</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.ETC1S" title="Permalink to this definition"></a></dt>
+<dd><p>ETC1S is a simplified subset of ETC1.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.PVRTC">
+<span class="sig-name descname"><span class="pre">PVRTC</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">164</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.PVRTC" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.PVRTC2">
+<span class="sig-name descname"><span class="pre">PVRTC2</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">165</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.PVRTC2" title="Permalink to this definition"></a></dt>
+<dd><p>PowerVR Texture Compression.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.UASTC">
+<span class="sig-name descname"><span class="pre">UASTC</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">166</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.UASTC" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.UASTC_LDR_4x4">
+<span class="sig-name descname"><span class="pre">UASTC_LDR_4x4</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">166</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.UASTC_LDR_4x4" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.UASTC_HDR_4x4">
+<span class="sig-name descname"><span class="pre">UASTC_HDR_4x4</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">167</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.UASTC_HDR_4x4" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.UASTC_HDR_6x6">
+<span class="sig-name descname"><span class="pre">UASTC_HDR_6x6</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">168</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.UASTC_HDR_6x6" title="Permalink to this definition"></a></dt>
+<dd><p>UASTC for BASIS supercompression.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.khr_df_model.KhrDfModel.MAX">
+<span class="sig-name descname"><span class="pre">MAX</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">255</span></em><a class="headerlink" href="#pyktx.khr_df_model.KhrDfModel.MAX" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pyktx.gl_internalformat.html" class="btn btn-neutral float-left" title="pyktx.gl_internalformat module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pyktx.khr_df_primaries.html" class="btn btn-neutral float-right" title="pyktx.khr_df_primaries module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Khronos Group, Inc. 2023, Shukant Pal.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

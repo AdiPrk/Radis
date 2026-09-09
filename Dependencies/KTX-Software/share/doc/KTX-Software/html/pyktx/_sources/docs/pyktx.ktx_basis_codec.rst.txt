@@ -1,0 +1,7 @@
+pyktx.ktx\_basis\_codec module
+==============================
+
+.. automodule:: pyktx.ktx_basis_codec
+   :members:
+   :undoc-members:
+   :show-inheritance:

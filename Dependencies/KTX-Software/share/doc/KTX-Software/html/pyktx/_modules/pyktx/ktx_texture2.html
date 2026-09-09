@@ -44,7 +44,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../docs/modules.html">pyktx</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.html">pyktx package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.gl_internalformat.html">pyktx.gl_internalformat module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.khr_df_model.html">pyktx.khr_df_model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.khr_df_primaries.html">pyktx.khr_df_primaries module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.khr_df_transfer.html">pyktx.khr_df_transfer module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_astc_params.html">pyktx.ktx_astc_params module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_basis_codec.html">pyktx.ktx_basis_codec module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_basis_params.html">pyktx.ktx_basis_params module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_error_code.html">pyktx.ktx_error_code module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_hash_list.html">pyktx.ktx_hash_list module</a></li>
@@ -93,6 +97,9 @@
 <span></span><span class="c1"># Copyright (c) 2023, Shukant Pal and Contributors</span>
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">.khr_df_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">KhrDfModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.khr_df_primaries</span><span class="w"> </span><span class="kn">import</span> <span class="n">KhrDfPrimaries</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.khr_df_transfer</span><span class="w"> </span><span class="kn">import</span> <span class="n">KhrDfTransfer</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.ktx_astc_params</span><span class="w"> </span><span class="kn">import</span> <span class="n">KtxAstcParams</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.ktx_basis_params</span><span class="w"> </span><span class="kn">import</span> <span class="n">KtxBasisParams</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.ktx_error_code</span><span class="w"> </span><span class="kn">import</span> <span class="n">KtxErrorCode</span><span class="p">,</span> <span class="n">KtxError</span>
@@ -163,22 +170,28 @@
         <span class="k">return</span> <span class="n">KtxSupercmpScheme</span><span class="p">(</span><span class="n">lib</span><span class="o">.</span><span class="n">PY_ktxTexture2_get_supercompressionScheme</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ptr</span><span class="p">))</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">oetf</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The opto-electrical transfer function of the images.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">color_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">KhrDfModel</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The color model of the images.&quot;&quot;&quot;</span>
 
-        <span class="k">return</span> <span class="n">lib</span><span class="o">.</span><span class="n">ktxTexture2_GetOETF</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ptr</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">KhrDfModel</span><span class="p">(</span><span class="n">lib</span><span class="o">.</span><span class="n">ktxTexture2_GetColorModel_e</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ptr</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">primaries</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">KhrDfPrimaries</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The color primaries of the images.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">KhrDfPrimaries</span><span class="p">(</span><span class="n">lib</span><span class="o">.</span><span class="n">ktxTexture2_GetPrimaries_e</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ptr</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">transfer_function</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">KhrDfTransfer</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The transfer function of the images.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">KhrDfTransfer</span><span class="p">(</span><span class="n">lib</span><span class="o">.</span><span class="n">ktxTexture2_GetTransferFunction_e</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ptr</span><span class="p">))</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">premultipled_alpha</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether the RGB components have been premultiplied by the alpha component.&quot;&quot;&quot;</span>
 
         <span class="k">return</span> <span class="n">lib</span><span class="o">.</span><span class="n">ktxTexture2_GetPremultipliedAlpha</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ptr</span><span class="p">)</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">needs_transcoding</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;If the images are in a transcodable format.&quot;&quot;&quot;</span>
-
-        <span class="k">return</span> <span class="n">lib</span><span class="o">.</span><span class="n">ktxTexture2_NeedsTranscoding</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ptr</span><span class="p">)</span>
 
 <div class="viewcode-block" id="KtxTexture2.compress_astc"><a class="viewcode-back" href="../../docs/pyktx.ktx_texture2.html#pyktx.ktx_texture2.KtxTexture2.compress_astc">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">compress_astc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">KtxAstcParams</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -227,11 +240,11 @@
             <span class="n">params</span><span class="o">.</span><span class="n">quality_level</span> <span class="o">=</span> <span class="n">quality</span>
 
         <span class="n">error</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">PY_ktxTexture2_CompressBasisEx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ptr</span><span class="p">,</span>
-                                                   <span class="n">params</span><span class="o">.</span><span class="n">uastc</span><span class="p">,</span>
+                                                   <span class="n">params</span><span class="o">.</span><span class="n">codec</span><span class="p">,</span>
                                                    <span class="n">params</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span>
                                                    <span class="n">params</span><span class="o">.</span><span class="n">no_sse</span><span class="p">,</span>
                                                    <span class="n">params</span><span class="o">.</span><span class="n">thread_count</span><span class="p">,</span>
-                                                   <span class="n">params</span><span class="o">.</span><span class="n">compression_level</span><span class="p">,</span>
+                                                   <span class="n">params</span><span class="o">.</span><span class="n">etc1s_compression_level</span><span class="p">,</span>
                                                    <span class="n">params</span><span class="o">.</span><span class="n">quality_level</span><span class="p">,</span>
                                                    <span class="n">params</span><span class="o">.</span><span class="n">max_endpoints</span><span class="p">,</span>
                                                    <span class="n">params</span><span class="o">.</span><span class="n">endpoint_rdo_threshold</span><span class="p">,</span>
@@ -250,10 +263,33 @@
                                                    <span class="n">params</span><span class="o">.</span><span class="n">uastc_rdo_max_smooth_block_error_scale</span><span class="p">,</span>
                                                    <span class="n">params</span><span class="o">.</span><span class="n">uastc_rdo_max_smooth_block_std_dev</span><span class="p">,</span>
                                                    <span class="n">params</span><span class="o">.</span><span class="n">uastc_rdo_dont_favor_simpler_modes</span><span class="p">,</span>
-                                                   <span class="n">params</span><span class="o">.</span><span class="n">uastc_rdo_no_multithreading</span><span class="p">)</span>
+                                                   <span class="n">params</span><span class="o">.</span><span class="n">uastc_rdo_no_multithreading</span><span class="p">,</span>
+                                                   <span class="n">params</span><span class="o">.</span><span class="n">uastc_hdr_quality</span><span class="p">,</span>
+                                                   <span class="n">params</span><span class="o">.</span><span class="n">uastc_hdr_uber_mode</span><span class="p">,</span>
+                                                   <span class="n">params</span><span class="o">.</span><span class="n">uastc_hdr_ultra_quant</span><span class="p">,</span>
+                                                   <span class="n">params</span><span class="o">.</span><span class="n">uastc_hdr_favor_astc</span><span class="p">,</span>
+                                                   <span class="n">params</span><span class="o">.</span><span class="n">rec_2020</span><span class="p">,</span>
+                                                   <span class="n">params</span><span class="o">.</span><span class="n">uastc_hdr_lambda</span><span class="p">,</span>
+                                                   <span class="n">params</span><span class="o">.</span><span class="n">uastc_hdr_level</span>
+                                                   <span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="o">!=</span> <span class="n">KtxErrorCode</span><span class="o">.</span><span class="n">SUCCESS</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">KtxError</span><span class="p">(</span><span class="s1">&#39;ktxTexture2_CompressBasisEx&#39;</span><span class="p">,</span> <span class="n">KtxErrorCode</span><span class="p">(</span><span class="n">error</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="KtxTexture2.decode_astc"><a class="viewcode-back" href="../../docs/pyktx.ktx_texture2.html#pyktx.ktx_texture2.KtxTexture2.decode_astc">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">decode_astc</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Decode a ktx2 texture object, if it is ASTC encoded.</span>
+
+<span class="sd">        The decompressed format is calculated from corresponding ASTC format.</span>
+<span class="sd">        There are only 3 possible options currently supported. RGBA8, SRGBA8</span>
+<span class="sd">        and RGBA32.</span>
+
+<span class="sd">        Note that 3d textures are decoded to a multi-slice 3d texture.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">error</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">ktxTexture2_DecodeAstc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ptr</span><span class="p">);</span>
+        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="o">!=</span> <span class="n">KtxErrorCode</span><span class="o">.</span><span class="n">SUCCESS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">KtxError</span><span class="p">(</span><span class="s1">&#39;ktx2_DecodeAstc&#39;</span><span class="p">,</span> <span class="n">KtxErrorCode</span><span class="p">(</span><span class="n">error</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="KtxTexture2.deflate_zstd"><a class="viewcode-back" href="../../docs/pyktx.ktx_texture2.html#pyktx.ktx_texture2.KtxTexture2.deflate_zstd">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">deflate_zstd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">compression_level</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>

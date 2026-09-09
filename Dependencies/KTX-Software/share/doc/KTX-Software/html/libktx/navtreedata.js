@@ -81,7 +81,8 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "../index.html",
-"ktx_8h.html#a7780d97ec4de6aa30c4726fb71e3116ca37dce54f5aefa409567d7c08e36d1d83"
+"ktx_8h.html#a56402340391b57f18d8c18e477e97280",
+"structktxVulkanTexture.html#af43b771026fceb9a0b28256afc08f69b"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronization';

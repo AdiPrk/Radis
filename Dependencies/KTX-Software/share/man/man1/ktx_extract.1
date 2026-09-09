@@ -1,4 +1,4 @@
-.TH "ktx_extract" 1 "Sat Oct 4 2025 08:43:36" "Version 4.4.2" "KTX Tools Reference" \" -*- nroff -*-
+.TH "ktx_extract" 1 "Mon Aug 17 2026 08:07:09" "Version 5.0.0" "KTX Tools Reference" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -55,7 +55,7 @@ The following options are available:
 .PP
 .IP "\fB--transcode <target> 
 .IP "" 1c
-Transcode the texture to the target format before executing the extract\&. Requires the input file to be transcodable (it must be either BasisLZ supercompressed or has UASTC color model in the DFD)\&. This option matches the functionality of the \fBktx transcode\fP command\&. If the target option is not set the r8, rg8, rgb8 or rgba8 target will be selected based on the number of channels in the input texture\&. Block compressed transcode targets can only be saved in raw format\&. Case-insensitive\&. Possible options are: etc-rgb | etc-rgba | eac-r11 | eac-rg11 | bc1 | bc3 | bc4 | bc5 | bc7 | astc | r8 | rg8 | rgb8 | rgba8\&. etc-rgb is ETC1; etc-rgba, eac-r11 and eac-rg11 are ETC2\&.  
+Transcode the texture to the target format before executing the extract\&. Requires the input file to be transcodable (it must be either BasisLZ supercompressed or has UASTC color model in the DFD)\&. This option matches the functionality of the \fBktx transcode\fP command\&. If the target option is not set the r8, rg8, rgb8, rgba8 or rgba16f target will be selected based on the number of channels in the input texture\&. Block compressed transcode targets can only be saved in raw format\&. Case-insensitive\&. Possible options are: etc-rgb | etc-rgba | eac-r11 | eac-rg11 | bc1 | bc3 | bc4 | bc5 | bc7 | astc | r8 | rg8 | rgb8 | rgba8\&. etc-rgb is ETC1; etc-rgba, eac-r11 and eac-rg11 are ETC2\&.  
 
 .PP
 

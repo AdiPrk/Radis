@@ -47,7 +47,11 @@
 <li class="toctree-l1"><a class="reference internal" href="modules.html">pyktx</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.html">pyktx package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.gl_internalformat.html">pyktx.gl_internalformat module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.khr_df_model.html">pyktx.khr_df_model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.khr_df_primaries.html">pyktx.khr_df_primaries module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.khr_df_transfer.html">pyktx.khr_df_transfer module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_astc_params.html">pyktx.ktx_astc_params module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_basis_codec.html">pyktx.ktx_basis_codec module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_basis_params.html">pyktx.ktx_basis_params module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_error_code.html">pyktx.ktx_error_code module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_hash_list.html">pyktx.ktx_hash_list module</a></li>
@@ -55,12 +59,12 @@
 <li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_pack_astc_encoder_mode.html">pyktx.ktx_pack_astc_encoder_mode module</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">pyktx.ktx_pack_astc_quality_levels module</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#pyktx.ktx_pack_astc_quality_levels.KtxPackAstcQualityLevels"><code class="docutils literal notranslate"><span class="pre">KtxPackAstcQualityLevels</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_pack_astc_quality_levels.KtxPackAstcQualityLevels.EXHAUSTIVE"><code class="docutils literal notranslate"><span class="pre">KtxPackAstcQualityLevels.EXHAUSTIVE</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_pack_astc_quality_levels.KtxPackAstcQualityLevels.FAST"><code class="docutils literal notranslate"><span class="pre">KtxPackAstcQualityLevels.FAST</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_pack_astc_quality_levels.KtxPackAstcQualityLevels.FASTEST"><code class="docutils literal notranslate"><span class="pre">KtxPackAstcQualityLevels.FASTEST</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_pack_astc_quality_levels.KtxPackAstcQualityLevels.MAX"><code class="docutils literal notranslate"><span class="pre">KtxPackAstcQualityLevels.MAX</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_pack_astc_quality_levels.KtxPackAstcQualityLevels.FAST"><code class="docutils literal notranslate"><span class="pre">KtxPackAstcQualityLevels.FAST</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_pack_astc_quality_levels.KtxPackAstcQualityLevels.MEDIUM"><code class="docutils literal notranslate"><span class="pre">KtxPackAstcQualityLevels.MEDIUM</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_pack_astc_quality_levels.KtxPackAstcQualityLevels.THOROUGH"><code class="docutils literal notranslate"><span class="pre">KtxPackAstcQualityLevels.THOROUGH</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_pack_astc_quality_levels.KtxPackAstcQualityLevels.EXHAUSTIVE"><code class="docutils literal notranslate"><span class="pre">KtxPackAstcQualityLevels.EXHAUSTIVE</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_pack_astc_quality_levels.KtxPackAstcQualityLevels.MAX"><code class="docutils literal notranslate"><span class="pre">KtxPackAstcQualityLevels.MAX</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -113,27 +117,15 @@
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">IntEnum</span></code></p>
 <p>Options specifiying ASTC encoding quality levels.</p>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="pyktx.ktx_pack_astc_quality_levels.KtxPackAstcQualityLevels.EXHAUSTIVE">
-<span class="sig-name descname"><span class="pre">EXHAUSTIVE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">100</span></em><a class="headerlink" href="#pyktx.ktx_pack_astc_quality_levels.KtxPackAstcQualityLevels.EXHAUSTIVE" title="Permalink to this definition"></a></dt>
-<dd><p>Very slow compression.</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="pyktx.ktx_pack_astc_quality_levels.KtxPackAstcQualityLevels.FAST">
-<span class="sig-name descname"><span class="pre">FAST</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">10</span></em><a class="headerlink" href="#pyktx.ktx_pack_astc_quality_levels.KtxPackAstcQualityLevels.FAST" title="Permalink to this definition"></a></dt>
-<dd><p>Fast compression.</p>
-</dd></dl>
-
-<dl class="py attribute">
 <dt class="sig sig-object py" id="pyktx.ktx_pack_astc_quality_levels.KtxPackAstcQualityLevels.FASTEST">
 <span class="sig-name descname"><span class="pre">FASTEST</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#pyktx.ktx_pack_astc_quality_levels.KtxPackAstcQualityLevels.FASTEST" title="Permalink to this definition"></a></dt>
 <dd><p>Fastest compression.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="pyktx.ktx_pack_astc_quality_levels.KtxPackAstcQualityLevels.MAX">
-<span class="sig-name descname"><span class="pre">MAX</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">100</span></em><a class="headerlink" href="#pyktx.ktx_pack_astc_quality_levels.KtxPackAstcQualityLevels.MAX" title="Permalink to this definition"></a></dt>
-<dd><p>Maximum supported quality level.</p>
+<dt class="sig sig-object py" id="pyktx.ktx_pack_astc_quality_levels.KtxPackAstcQualityLevels.FAST">
+<span class="sig-name descname"><span class="pre">FAST</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">10</span></em><a class="headerlink" href="#pyktx.ktx_pack_astc_quality_levels.KtxPackAstcQualityLevels.FAST" title="Permalink to this definition"></a></dt>
+<dd><p>Fast compression.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -146,6 +138,18 @@
 <dt class="sig sig-object py" id="pyktx.ktx_pack_astc_quality_levels.KtxPackAstcQualityLevels.THOROUGH">
 <span class="sig-name descname"><span class="pre">THOROUGH</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">98</span></em><a class="headerlink" href="#pyktx.ktx_pack_astc_quality_levels.KtxPackAstcQualityLevels.THOROUGH" title="Permalink to this definition"></a></dt>
 <dd><p>Slower compression.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.ktx_pack_astc_quality_levels.KtxPackAstcQualityLevels.EXHAUSTIVE">
+<span class="sig-name descname"><span class="pre">EXHAUSTIVE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">100</span></em><a class="headerlink" href="#pyktx.ktx_pack_astc_quality_levels.KtxPackAstcQualityLevels.EXHAUSTIVE" title="Permalink to this definition"></a></dt>
+<dd><p>Very slow compression.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.ktx_pack_astc_quality_levels.KtxPackAstcQualityLevels.MAX">
+<span class="sig-name descname"><span class="pre">MAX</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">100</span></em><a class="headerlink" href="#pyktx.ktx_pack_astc_quality_levels.KtxPackAstcQualityLevels.MAX" title="Permalink to this definition"></a></dt>
+<dd><p>Maximum supported quality level.</p>
 </dd></dl>
 
 </dd></dl>

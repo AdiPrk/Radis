@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyktx.khr_df_model &mdash; pyktx  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            pyktx
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/modules.html">pyktx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.html">pyktx package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.gl_internalformat.html">pyktx.gl_internalformat module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.khr_df_model.html">pyktx.khr_df_model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.khr_df_primaries.html">pyktx.khr_df_primaries module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.khr_df_transfer.html">pyktx.khr_df_transfer module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_astc_params.html">pyktx.ktx_astc_params module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_basis_codec.html">pyktx.ktx_basis_codec module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_basis_params.html">pyktx.ktx_basis_params module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_error_code.html">pyktx.ktx_error_code module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_hash_list.html">pyktx.ktx_hash_list module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_pack_astc_block_dimension.html">pyktx.ktx_pack_astc_block_dimension module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_pack_astc_encoder_mode.html">pyktx.ktx_pack_astc_encoder_mode module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_pack_astc_quality_levels.html">pyktx.ktx_pack_astc_quality_levels module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_pack_uastc_flag_bits.html">pyktx.ktx_pack_uastc_flag_bits module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_supercmp_scheme.html">pyktx.ktx_supercmp_scheme module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_texture.html">pyktx.ktx_texture module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_texture1.html">pyktx.ktx_texture1 module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_texture2.html">pyktx.ktx_texture2 module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_texture_create_flag_bits.html">pyktx.ktx_texture_create_flag_bits module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_texture_create_info.html">pyktx.ktx_texture_create_info module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_texture_create_storage.html">pyktx.ktx_texture_create_storage module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_transcode_flag_bits.html">pyktx.ktx_transcode_flag_bits module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_transcode_fmt.html">pyktx.ktx_transcode_fmt module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.native.html">pyktx.native module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.vk_format.html">pyktx.vk_format module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pyktx</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pyktx.khr_df_model</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pyktx.khr_df_model</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2026, Mark Callow</span>
+<span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">IntEnum</span>
+
+<div class="viewcode-block" id="KhrDfModel"><a class="viewcode-back" href="../../docs/pyktx.khr_df_model.html#pyktx.khr_df_model.KhrDfModel">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">KhrDfModel</span><span class="p">(</span><span class="n">IntEnum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Model in which the color coordinate space is defined.&quot;&quot;&quot;</span>
+
+    <span class="n">UNSPECIFIED</span>  <span class="o">=</span> <span class="mi">0</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;No interpretation of color channels defined.&quot;&quot;&quot;</span>
+
+    <span class="n">RGBSDA</span>       <span class="o">=</span> <span class="mi">1</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Color primaries (red, green, blue) + alpha, depth and stencil.&quot;&quot;&quot;</span>
+
+    <span class="n">YUVSDA</span>       <span class="o">=</span> <span class="mi">2</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Color differences (Y&#39;, Cb, Cr) + alpha, depth and stencil.&quot;&quot;&quot;</span>
+
+    <span class="n">YIQSDA</span>       <span class="o">=</span> <span class="mi">3</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Color differences (Y&#39;, I, Q) + alpha, depth and stencil.&quot;&quot;&quot;</span>
+
+    <span class="n">LABSDA</span>       <span class="o">=</span> <span class="mi">4</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Perceptual color (CIE L*a*b*) + alpha, depth and stencil.&quot;&quot;&quot;</span>
+
+    <span class="n">CMYKA</span>        <span class="o">=</span> <span class="mi">5</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Subtractive colors (cyan, magenta, yellow, black) + alpha.&quot;&quot;&quot;</span>
+
+    <span class="n">XYZW</span>         <span class="o">=</span> <span class="mi">6</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Non-color coordinate data (X, Y, Z, W).&quot;&quot;&quot;</span>
+
+    <span class="n">HSVA_ANG</span>     <span class="o">=</span> <span class="mi">7</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Hue, saturation, value, hue angle on color circle, plus alpha.&quot;&quot;&quot;</span>
+
+    <span class="n">HSLA_ANG</span>     <span class="o">=</span> <span class="mi">8</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Hue, saturation, lightness, hue angle on color circle, plus alpha.&quot;&quot;&quot;</span>
+
+    <span class="n">HSVA_HEX</span>     <span class="o">=</span> <span class="mi">9</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Hue, saturation, value, hue on color hexagon, plus alpha.&quot;&quot;&quot;</span>
+
+    <span class="n">HSLA_HEX</span>     <span class="o">=</span> <span class="mi">10</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Hue, saturation, lightness, hue on color hexagon, plus alpha.&quot;&quot;&quot;</span>
+
+    <span class="n">YCGCOA</span>       <span class="o">=</span> <span class="mi">11</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Lightweight approximate color difference (luma, orange, green).&quot;&quot;&quot;</span>
+
+    <span class="n">YCCBCCRC</span>     <span class="o">=</span> <span class="mi">12</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;ITU BT.2020 constant luminance YcCbcCrc.&quot;&quot;&quot;</span>
+
+    <span class="n">ICTCP</span>        <span class="o">=</span> <span class="mi">13</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;ITU BT.2100 constant intensity ICtCp.&quot;&quot;&quot;</span>
+
+    <span class="n">CIEXYZ</span>       <span class="o">=</span> <span class="mi">14</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;CIE 1931 XYZ color coordinates (X, Y, Z).&quot;&quot;&quot;</span>
+
+    <span class="n">CIEXYY</span>       <span class="o">=</span> <span class="mi">15</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;CIE 1931 xyY color coordinates (X, Y, Y).&quot;&quot;&quot;</span>
+
+
+    <span class="n">DXT1A</span>         <span class="o">=</span> <span class="mi">128</span>
+    <span class="n">BC1A</span>          <span class="o">=</span> <span class="mi">128</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compressed formats start at 128.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Direct3D (and S3) compressed formats.</span>
+<span class="sd">        DXT1 &quot;channels&quot; are RGB (0), Alpha (1).</span>
+<span class="sd">        DXT1/BC1 with one channel is opaque.</span>
+<span class="sd">        DXT1/BC1 with a cosited alpha sample is transparent.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">DXT2</span>          <span class="o">=</span> <span class="mi">129</span>
+    <span class="n">DXT3</span>          <span class="o">=</span> <span class="mi">129</span>
+    <span class="n">BC2</span>           <span class="o">=</span> <span class="mi">129</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;DXT2/DXT3/BC2, with explicit 4-bit alpha.&quot;&quot;&quot;</span>
+
+    <span class="n">DXT4</span>          <span class="o">=</span> <span class="mi">130</span>
+    <span class="n">DXT5</span>          <span class="o">=</span> <span class="mi">130</span>
+    <span class="n">BC3</span>           <span class="o">=</span> <span class="mi">130</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;DXT4/DXT5/BC3, with interpolated alpha.&quot;&quot;&quot;</span>
+
+    <span class="n">ATI1N</span>         <span class="o">=</span> <span class="mi">131</span>
+    <span class="n">DXT5A</span>         <span class="o">=</span> <span class="mi">131</span>
+    <span class="n">BC4</span>           <span class="o">=</span> <span class="mi">131</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;ATI1n/DXT5A/BC4 - single channel interpolated 8-bit data.</span>
+<span class="sd">       (The UNORM/SNORM variation is recorded in the channel data).&quot;&quot;&quot;</span>
+
+    <span class="n">ATI2N_XY</span>      <span class="o">=</span> <span class="mi">132</span>
+    <span class="n">DXN</span>           <span class="o">=</span> <span class="mi">132</span>
+    <span class="n">BC5</span>           <span class="o">=</span> <span class="mi">132</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;ATI2n_XY/DXN/BC5 - two channel interpolated 8-bit data.</span>
+<span class="sd">       (The UNORM/SNORM variation is recorded in the channel data).&quot;&quot;&quot;</span>
+
+    <span class="n">BC6H</span>          <span class="o">=</span> <span class="mi">133</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;BC6H - DX11 format for 16-bit float channels.&quot;&quot;&quot;</span>
+
+    <span class="n">BC7</span>           <span class="o">=</span> <span class="mi">134</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;BC7 - DX11 format.&quot;&quot;&quot;</span>
+
+    <span class="n">ETC1</span>          <span class="o">=</span> <span class="mi">160</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A format of ETC1 indicates that the format shall be decodable</span>
+<span class="sd">       by an ETC1-compliant decoder and not rely on ETC2 features.&quot;&quot;&quot;</span>
+
+    <span class="n">ETC2</span>          <span class="o">=</span> <span class="mi">161</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A format of ETC2 is permitted to use ETC2 encodings on top of</span>
+<span class="sd">       the baseline ETC1 specification.</span>
+<span class="sd">       The ETC2 format has channels &quot;red&quot;, &quot;green&quot;, &quot;RGB&quot; and &quot;alpha&quot;,</span>
+<span class="sd">       which should be cosited samples.</span>
+<span class="sd">       Punch-through alpha can be distinguished from full alpha by</span>
+<span class="sd">       the plane size in bytes required for the texel block.&quot;&quot;&quot;</span>
+
+    <span class="n">ASTC</span>          <span class="o">=</span> <span class="mi">162</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adaptive Scalable Texture Compression.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;ASTC HDR vs LDR is determined by the float flag in the channel.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;ASTC block size can be distinguished by texel block size.&quot;&quot;&quot;</span>
+
+    <span class="n">ETC1S</span>         <span class="o">=</span> <span class="mi">163</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;ETC1S is a simplified subset of ETC1.&quot;&quot;&quot;</span>
+
+    <span class="n">PVRTC</span>         <span class="o">=</span> <span class="mi">164</span>
+    <span class="n">PVRTC2</span>        <span class="o">=</span> <span class="mi">165</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;PowerVR Texture Compression.&quot;&quot;&quot;</span>
+
+    <span class="n">UASTC</span>         <span class="o">=</span> <span class="mi">166</span>
+    <span class="n">UASTC_LDR_4x4</span> <span class="o">=</span> <span class="mi">166</span>
+    <span class="n">UASTC_HDR_4x4</span> <span class="o">=</span> <span class="mi">167</span>
+    <span class="n">UASTC_HDR_6x6</span> <span class="o">=</span> <span class="mi">168</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;UASTC for BASIS supercompression.&quot;&quot;&quot;</span>
+
+    <span class="n">MAX</span> <span class="o">=</span> <span class="mh">0xFF</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Khronos Group, Inc. 2023, Shukant Pal.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -44,6 +44,14 @@ var NAVTREE =
       [ "HISTORY", "ktx_compare.html#ktx_compare_history", null ],
       [ "AUTHOR", "ktx_compare.html#ktx_compare_author", null ]
     ] ],
+    [ "ktx convert", "ktx_convert.html", [
+      [ "SYNOPSIS", "ktx_convert.html#ktx_convert_synopsis", null ],
+      [ "DESCRIPTION", "ktx_convert.html#ktx_convert_description", null ],
+      [ "OPTIONS", "ktx_convert.html#ktx_convert_options", null ],
+      [ "EXIT STATUS", "ktx_convert.html#ktx_convert_exitstatus", null ],
+      [ "HISTORY", "ktx_convert.html#ktx_convert_history", null ],
+      [ "AUTHOR", "ktx_convert.html#ktx_convert_author", null ]
+    ] ],
     [ "ktx create", "ktx_create.html", [
       [ "SYNOPSIS", "ktx_create.html#ktx_create_synopsis", null ],
       [ "DESCRIPTION", "ktx_create.html#ktx_create_description", null ],
@@ -52,8 +60,7 @@ var NAVTREE =
         [ "Specific and Common Encoding Options", "ktx_create.html#ktx_create_options_encoding", null ]
       ] ],
       [ "TRANSFER FUNCTION HANDLING", "ktx_create.html#ktx_create_tf_handling", [
-        [ "Details", "ktx_create.html#ktx_create_tf_handling_details", null ],
-        [ "Changes since last Release", "ktx_create.html#ktx_create_tf_handling_changes", null ]
+        [ "Details", "ktx_create.html#ktx_create_tf_handling_details", null ]
       ] ],
       [ "EXIT STATUS", "ktx_create.html#ktx_create_exitstatus", null ],
       [ "HISTORY", "ktx_create.html#ktx_create_history", null ],
@@ -117,41 +124,6 @@ var NAVTREE =
       [ "EXIT STATUS", "ktx_validate.html#ktx_validate_exitstatus", null ],
       [ "HISTORY", "ktx_validate.html#ktx_validate_history", null ],
       [ "AUTHOR", "ktx_validate.html#ktx_validate_author", null ]
-    ] ],
-    [ "ktx2check", "ktx2check.html", [
-      [ "SYNOPSIS", "ktx2check.html#ktx2check_synopsis", null ],
-      [ "DESCRIPTION", "ktx2check.html#ktx2check_description", null ],
-      [ "EXIT STATUS", "ktx2check.html#ktx2check_exitstatus", null ],
-      [ "HISTORY", "ktx2check.html#ktx2check_history", null ],
-      [ "AUTHOR", "ktx2check.html#ktx2check_author", null ]
-    ] ],
-    [ "ktx2ktx2", "ktx2ktx2.html", [
-      [ "SYNOPSIS", "ktx2ktx2.html#ktx2ktx2_synopsis", null ],
-      [ "DESCRIPTION", "ktx2ktx2.html#ktx2ktx2_description", null ],
-      [ "EXIT STATUS", "ktx2ktx2.html#ktx2ktx2_exitstatus", null ],
-      [ "HISTORY", "ktx2ktx2.html#ktx2ktx2_history", null ],
-      [ "AUTHOR", "ktx2ktx2.html#ktx2ktx2_author", null ]
-    ] ],
-    [ "ktxinfo", "ktxinfo.html", [
-      [ "SYNOPSIS", "ktxinfo.html#ktxinfo_synopsis", null ],
-      [ "DESCRIPTION", "ktxinfo.html#ktxinfo_description", null ],
-      [ "EXIT STATUS", "ktxinfo.html#ktxinfo_exitstatus", null ],
-      [ "HISTORY", "ktxinfo.html#ktxinfo_history", null ],
-      [ "AUTHOR", "ktxinfo.html#ktxinfo_author", null ]
-    ] ],
-    [ "ktxsc", "ktxsc.html", [
-      [ "SYNOPSIS", "ktxsc.html#ktxsc_synopsis", null ],
-      [ "DESCRIPTION", "ktxsc.html#ktxsc_description", null ],
-      [ "EXIT STATUS", "ktxsc.html#ktxsc_exitstatus", null ],
-      [ "HISTORY", "ktxsc.html#ktxsc_history", null ],
-      [ "AUTHOR", "ktxsc.html#ktxsc_author", null ]
-    ] ],
-    [ "toktx", "toktx.html", [
-      [ "SYNOPSIS", "toktx.html#toktx_synopsis", null ],
-      [ "DESCRIPTION", "toktx.html#toktx_description", null ],
-      [ "EXIT STATUS", "toktx.html#toktx_exitstatus", null ],
-      [ "HISTORY", "toktx.html#toktx_history", null ],
-      [ "AUTHOR", "toktx.html#toktx_author", null ]
     ] ],
     [ "Package", "../index.html", null ],
     [ "libktx Reference", "../libktx/index.html", null ],

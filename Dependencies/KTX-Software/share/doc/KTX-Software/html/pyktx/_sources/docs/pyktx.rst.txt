@@ -8,7 +8,11 @@ Submodules
    :maxdepth: 4
 
    pyktx.gl_internalformat
+   pyktx.khr_df_model
+   pyktx.khr_df_primaries
+   pyktx.khr_df_transfer
    pyktx.ktx_astc_params
+   pyktx.ktx_basis_codec
    pyktx.ktx_basis_params
    pyktx.ktx_error_code
    pyktx.ktx_hash_list

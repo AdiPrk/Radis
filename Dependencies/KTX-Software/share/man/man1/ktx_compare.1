@@ -1,4 +1,4 @@
-.TH "ktx_compare" 1 "Sat Oct 4 2025 08:43:36" "Version 4.4.2" "KTX Tools Reference" \" -*- nroff -*-
+.TH "ktx_compare" 1 "Mon Aug 17 2026 08:07:09" "Version 5.0.0" "KTX Tools Reference" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -13,7 +13,7 @@ ktx compare [option\&.\&.\&.] \fIinput-file1\fP \fIinput-file2\fP
 \fBktx\fP \fBcompare\fP compares the two KTX2 files specified as the \fIinput-file1\fP and \fIinput-file2\fP arguments and outputs any mismatch in texture information and/or image data\&. The command implicitly calls \fBvalidate\fP and prints any found errors and warnings to stdout\&. If any of the specified input files are invalid then comparison is done based on best effort and may be incomplete\&.
 
 .PP
-The JSON output formats conform to the https://schema.khronos.org/ktx/compare_v0.json schema even if the input file is invalid and certain information cannot be parsed or displayed\&. Additionally, for JSON outputs the KTX file identifier is printed using "\\u001A" instead of "\\x1A" as an unescaped "\\x1A" sequence inside a JSON string breaks nearly every JSON tool\&. Note that this does not change the value of the string only its representation\&.
+The JSON output formats conform to the https://schema.khronos.org/ktx/compare_v1.json schema even if the input file is invalid and certain information cannot be parsed or displayed\&. Additionally, for JSON outputs the KTX file identifier is printed using "\\u001A" instead of "\\x1A" as an unescaped "\\x1A" sequence inside a JSON string breaks nearly every JSON tool\&. Note that this does not change the value of the string only its representation\&.
 
 .PP
 \fBNote\fP

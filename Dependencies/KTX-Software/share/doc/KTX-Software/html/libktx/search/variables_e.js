@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['orientation_0',['orientation',['../structktxTexture.html#a866e74b57ee9830a8153fb010101efdf',1,'ktxTexture']]]
+  ['orientation_0',['orientation',['../structktxTexture.html#a16dcbb6317267289583d98b2fe2e3a45',1,'ktxTexture']]]
 ];

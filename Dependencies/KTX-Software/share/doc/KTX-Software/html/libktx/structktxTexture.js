@@ -33,8 +33,9 @@ var structktxTexture =
     [ "kvDataLen", "structktxTexture.html#a3d83b122c5c492f77abe25fc59541986", null ],
     [ "numDimensions", "structktxTexture.html#a3c48573960eb90b1e38cc70457d2cda1", null ],
     [ "numFaces", "structktxTexture.html#a3a4bc2fa2e41bcec0bdb265505af0068", null ],
+    [ "numLayers", "structktxTexture.html#ae1412e2bd82ef1baa7cb1479735d9c86", null ],
     [ "numLevels", "structktxTexture.html#a782126a62c27ee8660a14565b906694c", null ],
-    [ "orientation", "structktxTexture.html#a866e74b57ee9830a8153fb010101efdf", null ],
+    [ "orientation", "structktxTexture.html#a16dcbb6317267289583d98b2fe2e3a45", null ],
     [ "pData", "structktxTexture.html#a75c773bbc36a6adb2a884eb9fb7a709f", null ],
     [ "vtbl", "structktxTexture.html#ac5d732dd508289d1dda415f4c037c61f", null ],
     [ "vvtbl", "structktxTexture.html#a277853ea894444859451b1f0966be15f", null ]

@@ -44,7 +44,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../docs/modules.html">pyktx</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.html">pyktx package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.gl_internalformat.html">pyktx.gl_internalformat module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.khr_df_model.html">pyktx.khr_df_model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.khr_df_primaries.html">pyktx.khr_df_primaries module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.khr_df_transfer.html">pyktx.khr_df_transfer module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_astc_params.html">pyktx.ktx_astc_params module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_basis_codec.html">pyktx.ktx_basis_codec module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_basis_params.html">pyktx.ktx_basis_params module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_error_code.html">pyktx.ktx_error_code module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_hash_list.html">pyktx.ktx_hash_list module</a></li>
@@ -111,6 +115,13 @@
 <span class="sd">    When decoding to an opaque texture format, if the Basis data has</span>
 <span class="sd">    alpha, decode the alpha slice instead of the color slice to the</span>
 <span class="sd">    output texture format. Has no effect if there is no alpha data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">NO_ETC1S_CHROMA_FILTERING</span> <span class="o">=</span> <span class="mi">64</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Disable ETC1S to BC7 adaptive chroma filtering, for much faster</span>
+<span class="sd">    transcoding to BC7.  This flag is unused by other ETC1S</span>
+<span class="sd">    transcoders.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">HIGH_QUALITY</span> <span class="o">=</span> <span class="mi">32</span>

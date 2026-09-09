@@ -47,15 +47,19 @@
 <li class="toctree-l1"><a class="reference internal" href="modules.html">pyktx</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.html">pyktx package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.gl_internalformat.html">pyktx.gl_internalformat module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.khr_df_model.html">pyktx.khr_df_model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.khr_df_primaries.html">pyktx.khr_df_primaries module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.khr_df_transfer.html">pyktx.khr_df_transfer module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_astc_params.html">pyktx.ktx_astc_params module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_basis_codec.html">pyktx.ktx_basis_codec module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_basis_params.html">pyktx.ktx_basis_params module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_error_code.html">pyktx.ktx_error_code module</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">pyktx.ktx_hash_list module</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#pyktx.ktx_hash_list.KtxHashList"><code class="docutils literal notranslate"><span class="pre">KtxHashList</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_hash_list.KtxHashList.add_kv_pair"><code class="docutils literal notranslate"><span class="pre">KtxHashList.add_kv_pair()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_hash_list.KtxHashList.copy"><code class="docutils literal notranslate"><span class="pre">KtxHashList.copy()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_hash_list.KtxHashList.delete_kv_pair"><code class="docutils literal notranslate"><span class="pre">KtxHashList.delete_kv_pair()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_hash_list.KtxHashList.find_value"><code class="docutils literal notranslate"><span class="pre">KtxHashList.find_value()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_hash_list.KtxHashList.copy"><code class="docutils literal notranslate"><span class="pre">KtxHashList.copy()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -117,12 +121,6 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="pyktx.ktx_hash_list.KtxHashList.copy">
-<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bytes</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/pyktx/ktx_hash_list.html#KtxHashList.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyktx.ktx_hash_list.KtxHashList.copy" title="Permalink to this definition"></a></dt>
-<dd><p>Copy the hash list into a dict. This is recommended if you reading the hash list.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="pyktx.ktx_hash_list.KtxHashList.delete_kv_pair">
 <span class="sig-name descname"><span class="pre">delete_kv_pair</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/pyktx/ktx_hash_list.html#KtxHashList.delete_kv_pair"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyktx.ktx_hash_list.KtxHashList.delete_kv_pair" title="Permalink to this definition"></a></dt>
 <dd><p>Delete a key value pair in a hash list.</p>
@@ -132,6 +130,12 @@
 <dt class="sig sig-object py" id="pyktx.ktx_hash_list.KtxHashList.find_value">
 <span class="sig-name descname"><span class="pre">find_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">create_string_buffer</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/pyktx/ktx_hash_list.html#KtxHashList.find_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyktx.ktx_hash_list.KtxHashList.find_value" title="Permalink to this definition"></a></dt>
 <dd><p>Looks up a key in a hash list and returns the value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyktx.ktx_hash_list.KtxHashList.copy">
+<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bytes</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/pyktx/ktx_hash_list.html#KtxHashList.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyktx.ktx_hash_list.KtxHashList.copy" title="Permalink to this definition"></a></dt>
+<dd><p>Copy the hash list into a dict. This is recommended if you reading the hash list.</p>
 </dd></dl>
 
 </dd></dl>

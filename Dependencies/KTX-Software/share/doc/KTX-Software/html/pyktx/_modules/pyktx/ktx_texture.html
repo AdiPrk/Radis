@@ -44,7 +44,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../docs/modules.html">pyktx</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.html">pyktx package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.gl_internalformat.html">pyktx.gl_internalformat module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.khr_df_model.html">pyktx.khr_df_model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.khr_df_primaries.html">pyktx.khr_df_primaries module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.khr_df_transfer.html">pyktx.khr_df_transfer module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_astc_params.html">pyktx.ktx_astc_params module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_basis_codec.html">pyktx.ktx_basis_codec module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_basis_params.html">pyktx.ktx_basis_params module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_error_code.html">pyktx.ktx_error_code module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_hash_list.html">pyktx.ktx_hash_list module</a></li>
@@ -171,11 +175,22 @@
 
         <span class="k">return</span> <span class="n">lib</span><span class="o">.</span><span class="n">PY_ktxTexture_get_baseDepth</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ptr</span><span class="p">)</span>
 
+    <span class="c1"># A colon in a docstring indicates the preceding text is the type. There is</span>
+    <span class="c1"># no way to escape it. See https://github.com/sphinx-doc/sphinx/issues/9273.</span>
+    <span class="c1"># Therefore we use a MODIFIER LETTER COLON &#39;꞉&#39;, Unicode: U+A789,</span>
+    <span class="c1"># UTF-8: EA 9E 89 here and in any other place we want to a colon in the</span>
+    <span class="c1"># description.</span>
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">num_dimensions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Number of dimensions in the texture: 1, 2 or 3.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Number of dimensions in the texture꞉ 1, 2 or 3.&quot;&quot;&quot;</span>
 
         <span class="k">return</span> <span class="n">lib</span><span class="o">.</span><span class="n">PY_ktxTexture_get_numDimensions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ptr</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">num_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Number of layers in the texture.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">lib</span><span class="o">.</span><span class="n">PY_ktxTexture_get_numLayers</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ptr</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">num_levels</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
@@ -185,7 +200,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">num_faces</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Number of faces: 6 for cube maps, 1 otherwise.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Number of faces꞉ 6 for cube maps, 1 otherwise.&quot;&quot;&quot;</span>
 
         <span class="k">return</span> <span class="n">lib</span><span class="o">.</span><span class="n">PY_ktxTexture_get_numFaces</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ptr</span><span class="p">)</span>
 
@@ -231,6 +246,24 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Byte length of the texture&#39;s uncompressed image data.&quot;&quot;&quot;</span>
 
         <span class="k">return</span> <span class="n">lib</span><span class="o">.</span><span class="n">ktxTexture_GetDataSizeUncompressed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ptr</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_hdr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether the images are in an HDR format.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">lib</span><span class="o">.</span><span class="n">ktxTexture_IsHDR</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ptr</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_transcodable</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;If the images are in a format that can be transcoded.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">lib</span><span class="o">.</span><span class="n">ktxTexture_IsTranscodable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ptr</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">needs_transcoding</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;If the images are in a format that must be transcoded.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">lib</span><span class="o">.</span><span class="n">ktxTexture_NeedsTranscoding</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ptr</span><span class="p">)</span>
 
 <div class="viewcode-block" id="KtxTexture.row_pitch"><a class="viewcode-back" href="../../docs/pyktx.ktx_texture.html#pyktx.ktx_texture.KtxTexture.row_pitch">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">row_pitch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
