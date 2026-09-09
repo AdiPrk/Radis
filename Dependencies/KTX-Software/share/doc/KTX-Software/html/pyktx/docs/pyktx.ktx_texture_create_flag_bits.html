@@ -47,7 +47,11 @@
 <li class="toctree-l1"><a class="reference internal" href="modules.html">pyktx</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.html">pyktx package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.gl_internalformat.html">pyktx.gl_internalformat module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.khr_df_model.html">pyktx.khr_df_model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.khr_df_primaries.html">pyktx.khr_df_primaries module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.khr_df_transfer.html">pyktx.khr_df_transfer module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_astc_params.html">pyktx.ktx_astc_params module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_basis_codec.html">pyktx.ktx_basis_codec module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_basis_params.html">pyktx.ktx_basis_params module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_error_code.html">pyktx.ktx_error_code module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_hash_list.html">pyktx.ktx_hash_list module</a></li>
@@ -61,8 +65,8 @@
 <li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_texture2.html">pyktx.ktx_texture2 module</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">pyktx.ktx_texture_create_flag_bits module</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#pyktx.ktx_texture_create_flag_bits.KtxTextureCreateFlagBits"><code class="docutils literal notranslate"><span class="pre">KtxTextureCreateFlagBits</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_texture_create_flag_bits.KtxTextureCreateFlagBits.LOAD_IMAGE_DATA_BIT"><code class="docutils literal notranslate"><span class="pre">KtxTextureCreateFlagBits.LOAD_IMAGE_DATA_BIT</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_texture_create_flag_bits.KtxTextureCreateFlagBits.NO_FLAGS"><code class="docutils literal notranslate"><span class="pre">KtxTextureCreateFlagBits.NO_FLAGS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_texture_create_flag_bits.KtxTextureCreateFlagBits.LOAD_IMAGE_DATA_BIT"><code class="docutils literal notranslate"><span class="pre">KtxTextureCreateFlagBits.LOAD_IMAGE_DATA_BIT</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_texture_create_flag_bits.KtxTextureCreateFlagBits.RAW_KVDATA_BIT"><code class="docutils literal notranslate"><span class="pre">KtxTextureCreateFlagBits.RAW_KVDATA_BIT</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_texture_create_flag_bits.KtxTextureCreateFlagBits.SKIP_KVDATA_BIT"><code class="docutils literal notranslate"><span class="pre">KtxTextureCreateFlagBits.SKIP_KVDATA_BIT</span></code></a></li>
 </ul>
@@ -111,15 +115,15 @@
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">IntEnum</span></code></p>
 <p>Flags for requesting services during creation.</p>
 <dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.ktx_texture_create_flag_bits.KtxTextureCreateFlagBits.NO_FLAGS">
+<span class="sig-name descname"><span class="pre">NO_FLAGS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#pyktx.ktx_texture_create_flag_bits.KtxTextureCreateFlagBits.NO_FLAGS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="pyktx.ktx_texture_create_flag_bits.KtxTextureCreateFlagBits.LOAD_IMAGE_DATA_BIT">
 <span class="sig-name descname"><span class="pre">LOAD_IMAGE_DATA_BIT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#pyktx.ktx_texture_create_flag_bits.KtxTextureCreateFlagBits.LOAD_IMAGE_DATA_BIT" title="Permalink to this definition"></a></dt>
 <dd><p>Load the images from the KTX source.</p>
 </dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="pyktx.ktx_texture_create_flag_bits.KtxTextureCreateFlagBits.NO_FLAGS">
-<span class="sig-name descname"><span class="pre">NO_FLAGS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#pyktx.ktx_texture_create_flag_bits.KtxTextureCreateFlagBits.NO_FLAGS" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyktx.ktx_texture_create_flag_bits.KtxTextureCreateFlagBits.RAW_KVDATA_BIT">

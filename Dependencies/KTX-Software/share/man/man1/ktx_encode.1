@@ -1,4 +1,4 @@
-.TH "ktx_encode" 1 "Sat Oct 4 2025 08:43:36" "Version 4.4.2" "KTX Tools Reference" \" -*- nroff -*-
+.TH "ktx_encode" 1 "Mon Aug 17 2026 08:07:09" "Version 5.0.0" "KTX Tools Reference" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -16,6 +16,9 @@ ktx encode [option\&.\&.\&.] \fIinput-file\fP \fIoutput-file\fP
 For universal and ASTC LDR formats, the input file must be R8, R8G8, R8G8B8 or R8G8B8A8 (or their sRGB variants)\&.
 
 .PP
+For universal HDR formats, the input file must be R16G16B16_SFLOAT or R16G16B16A16_SFLOAT\&.
+
+.PP
 If the input file is invalid the first encountered validation error is displayed to the stderr and the command exits with the relevant non-zero status code\&.
 .SH "OPTIONS"
 .PP
@@ -23,7 +26,7 @@ If the input file is invalid the first encountered validation error is displayed
 The following options are available: 
 
 .PP
-.IP "\fB--codec basis-lz | uastc 
+.IP "\fB--codec basis-lz | uastc | uastc-ldr-4x4 | uastc-hdr-4x4 | uastc-hdr-6x6i 
 .IP "" 1c
 Target codec followed by the codec specific options\&. With each choice the specific and common encoder options listed \fBbelow\fP become valid, otherwise they are ignored\&. Case-insensitive\&.
 
@@ -37,14 +40,29 @@ Supercompress the image data with transcodable ETC1S / BasisLZ\&. RED images wil
 .PP
 .IP "\fBuastc:  
 .IP "" 1c
-Create a texture in high-quality transcodable UASTC format\&. When set the \fIuastc\fP options become valid\&.  
+Alias of uastc-ldr-4x4\&. \fBDEPRECATED:\fP Use uastc-ldr-4x4 instead  
+
+.PP
+.IP "\fBuastc-ldr-4x4:  
+.IP "" 1c
+Create a texture in high-quality transcodable UASTC LDR 4X4 format\&. When set the \fIuastc\fP options become valid\&.  
+
+.PP
+.IP "\fBuastc-hdr-4x4:  
+.IP "" 1c
+Create a texture in high-quality transcodable UASTC HDR 4x4 format\&. When set the \fIuastc\fP hdr-4x4 options become valid\&.  
+
+.PP
+.IP "\fBuastc-hdr-6x6i:  
+.IP "" 1c
+Create a texture in high-quality transcodable UASTC HDR 6x6i format\&. When set the \fIuastc\fP hdr-6x6i options become valid\&.  
 
 .PP
 
 .PP
 
 .PP
-.IP "\fB--format 
+.IP "\fB--format <enum> 
 .IP "" 1c
 KTX format enum that specifies the target ASTC format\&. Non-ASTC formats are invalid\&. When specified the ASTC-specific and common encoder options listed \fBbelow\fP become valid, otherwise they are ignored\&. 
 
@@ -210,6 +228,31 @@ Do not favor simpler UASTC modes in RDO mode\&.
 Disable RDO multithreading (slightly higher compression, deterministic)\&. 
 
 .PP
+.IP "\fB--uastc-hdr-uber-mode 
+.IP "" 1c
+Allow the UASTC HDR 4x4 encoder to try varying the CEM 11 selectors more for slightly higher quality (slower)\&. This may negatively impact BC6H quality, however\&. 
+
+.PP
+.IP "\fB--uastc-hdr-ultra-quant 
+.IP "" 1c
+Allow the UASTC HDR 4x4 encoder to try and find better quantized CEM 7/11 endpoint values (slower)\&. 
+
+.PP
+.IP "\fB--uastc-hdr-favor-astc 
+.IP "" 1c
+By default the UASTC HDR 4x4 encoder tries to strike a balance or even slightly favor BC6H quality\&. If this option is specified, ASTC HDR 4x4 quality is favored instead\&. 
+
+.PP
+.IP "\fB--uastc-hdr-lambda <level> 
+.IP "" 1c
+Enables rate distortion optimization (RDO)\&. The higher this value, the lower the quality, but the smaller the file size\&. Try 100-20000, or higher values on some images\&. 
+
+.PP
+.IP "\fB--uastc-hdr-6x6i-level <level> 
+.IP "" 1c
+Controls the 6x6 HDR intermediate mode encoder performance vs\&. max quality tradeoff\&. Range is [0,12]\&. Default level is 2\&. 
+
+.PP
 
 .PP
 
@@ -260,12 +303,12 @@ Forbid use of the SSE instruction set\&. Ignored if CPU does not support SSE\&. 
 .PP
 .IP "\fB--compare-ssim 
 .IP "" 1c
-Calculate encoding structural similarity index measure (SSIM) and print it to stdout\&. Requires Basis-LZ, UASTC or ASTC encoding\&. 
+Calculate encoding structural similarity index measure (SSIM) and print it to stdout or stderr if stdout is used to write a KTX file\&. Requires Basis-LZ, UASTC or ASTC encoding\&. 
 
 .PP
 .IP "\fB--compare-psnr 
 .IP "" 1c
-Calculate encoding peak signal-to-noise ratio (PSNR) and print it to stdout\&. Requires Basis-LZ, UASTC or ASTC encoding\&. 
+Calculate encoding peak signal-to-noise ratio (PSNR) and print it to stdout or stderr if stdout is used to write a KTX file\&. Requires Basis-LZ, UASTC or ASTC encoding\&. 
 
 .PP
 

@@ -47,18 +47,15 @@
 <li class="toctree-l1"><a class="reference internal" href="modules.html">pyktx</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.html">pyktx package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.gl_internalformat.html">pyktx.gl_internalformat module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.khr_df_model.html">pyktx.khr_df_model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.khr_df_primaries.html">pyktx.khr_df_primaries module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.khr_df_transfer.html">pyktx.khr_df_transfer module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_astc_params.html">pyktx.ktx_astc_params module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_basis_codec.html">pyktx.ktx_basis_codec module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_basis_params.html">pyktx.ktx_basis_params module</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">pyktx.ktx_error_code module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#pyktx.ktx_error_code.KtxError"><code class="docutils literal notranslate"><span class="pre">KtxError</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_error_code.KtxError.code"><code class="docutils literal notranslate"><span class="pre">KtxError.code</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_error_code.KtxError.invocation"><code class="docutils literal notranslate"><span class="pre">KtxError.invocation</span></code></a></li>
-</ul>
-</li>
 <li class="toctree-l2"><a class="reference internal" href="#pyktx.ktx_error_code.KtxErrorCode"><code class="docutils literal notranslate"><span class="pre">KtxErrorCode</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_error_code.KtxErrorCode.DECOMPRESS_CHECKSUM_ERROR"><code class="docutils literal notranslate"><span class="pre">KtxErrorCode.DECOMPRESS_CHECKSUM_ERROR</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_error_code.KtxErrorCode.DECOMPRESS_LENGTH_ERROR"><code class="docutils literal notranslate"><span class="pre">KtxErrorCode.DECOMPRESS_LENGTH_ERROR</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_error_code.KtxErrorCode.ERROR_MAX_ENUM"><code class="docutils literal notranslate"><span class="pre">KtxErrorCode.ERROR_MAX_ENUM</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_error_code.KtxErrorCode.SUCCESS"><code class="docutils literal notranslate"><span class="pre">KtxErrorCode.SUCCESS</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_error_code.KtxErrorCode.FILE_DATA_ERROR"><code class="docutils literal notranslate"><span class="pre">KtxErrorCode.FILE_DATA_ERROR</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_error_code.KtxErrorCode.FILE_ISPIPE"><code class="docutils literal notranslate"><span class="pre">KtxErrorCode.FILE_ISPIPE</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_error_code.KtxErrorCode.FILE_OPEN_FAILED"><code class="docutils literal notranslate"><span class="pre">KtxErrorCode.FILE_OPEN_FAILED</span></code></a></li>
@@ -70,14 +67,21 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_error_code.KtxErrorCode.GL_ERROR"><code class="docutils literal notranslate"><span class="pre">KtxErrorCode.GL_ERROR</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_error_code.KtxErrorCode.INVALID_OPERATION"><code class="docutils literal notranslate"><span class="pre">KtxErrorCode.INVALID_OPERATION</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_error_code.KtxErrorCode.INVALID_VALUE"><code class="docutils literal notranslate"><span class="pre">KtxErrorCode.INVALID_VALUE</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_error_code.KtxErrorCode.LIBRARY_NOT_LINKED"><code class="docutils literal notranslate"><span class="pre">KtxErrorCode.LIBRARY_NOT_LINKED</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_error_code.KtxErrorCode.NOT_FOUND"><code class="docutils literal notranslate"><span class="pre">KtxErrorCode.NOT_FOUND</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_error_code.KtxErrorCode.OUT_OF_MEMORY"><code class="docutils literal notranslate"><span class="pre">KtxErrorCode.OUT_OF_MEMORY</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_error_code.KtxErrorCode.SUCCESS"><code class="docutils literal notranslate"><span class="pre">KtxErrorCode.SUCCESS</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_error_code.KtxErrorCode.TRANSCODE_FAILED"><code class="docutils literal notranslate"><span class="pre">KtxErrorCode.TRANSCODE_FAILED</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_error_code.KtxErrorCode.UNKNOWN_FILE_FORMAT"><code class="docutils literal notranslate"><span class="pre">KtxErrorCode.UNKNOWN_FILE_FORMAT</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_error_code.KtxErrorCode.UNSUPPORTED_FEATURE"><code class="docutils literal notranslate"><span class="pre">KtxErrorCode.UNSUPPORTED_FEATURE</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_error_code.KtxErrorCode.UNSUPPORTED_TEXTURE_TYPE"><code class="docutils literal notranslate"><span class="pre">KtxErrorCode.UNSUPPORTED_TEXTURE_TYPE</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_error_code.KtxErrorCode.UNSUPPORTED_FEATURE"><code class="docutils literal notranslate"><span class="pre">KtxErrorCode.UNSUPPORTED_FEATURE</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_error_code.KtxErrorCode.LIBRARY_NOT_LINKED"><code class="docutils literal notranslate"><span class="pre">KtxErrorCode.LIBRARY_NOT_LINKED</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_error_code.KtxErrorCode.DECOMPRESS_LENGTH_ERROR"><code class="docutils literal notranslate"><span class="pre">KtxErrorCode.DECOMPRESS_LENGTH_ERROR</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_error_code.KtxErrorCode.DECOMPRESS_CHECKSUM_ERROR"><code class="docutils literal notranslate"><span class="pre">KtxErrorCode.DECOMPRESS_CHECKSUM_ERROR</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_error_code.KtxErrorCode.ERROR_MAX_ENUM"><code class="docutils literal notranslate"><span class="pre">KtxErrorCode.ERROR_MAX_ENUM</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#pyktx.ktx_error_code.KtxError"><code class="docutils literal notranslate"><span class="pre">KtxError</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_error_code.KtxError.invocation"><code class="docutils literal notranslate"><span class="pre">KtxError.invocation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_error_code.KtxError.code"><code class="docutils literal notranslate"><span class="pre">KtxError.code</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -128,46 +132,15 @@
              
   <section id="module-pyktx.ktx_error_code">
 <span id="pyktx-ktx-error-code-module"></span><h1>pyktx.ktx_error_code module<a class="headerlink" href="#module-pyktx.ktx_error_code" title="Permalink to this heading"></a></h1>
-<dl class="py exception">
-<dt class="sig sig-object py" id="pyktx.ktx_error_code.KtxError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyktx.ktx_error_code.</span></span><span class="sig-name descname"><span class="pre">KtxError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">invocation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">code</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyktx.ktx_error_code.KtxErrorCode" title="pyktx.ktx_error_code.KtxErrorCode"><span class="pre">KtxErrorCode</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyktx/ktx_error_code.html#KtxError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyktx.ktx_error_code.KtxError" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
-<p>Error thrown when native operation does not succeed.</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="pyktx.ktx_error_code.KtxError.code">
-<span class="sig-name descname"><span class="pre">code</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#pyktx.ktx_error_code.KtxErrorCode" title="pyktx.ktx_error_code.KtxErrorCode"><span class="pre">KtxErrorCode</span></a></em><a class="headerlink" href="#pyktx.ktx_error_code.KtxError.code" title="Permalink to this definition"></a></dt>
-<dd><p>The error code returned by libktx.</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="pyktx.ktx_error_code.KtxError.invocation">
-<span class="sig-name descname"><span class="pre">invocation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#pyktx.ktx_error_code.KtxError.invocation" title="Permalink to this definition"></a></dt>
-<dd><p>The C library function called.</p>
-</dd></dl>
-
-</dd></dl>
-
 <dl class="py class">
 <dt class="sig sig-object py" id="pyktx.ktx_error_code.KtxErrorCode">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyktx.ktx_error_code.</span></span><span class="sig-name descname"><span class="pre">KtxErrorCode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names=&lt;not</span> <span class="pre">given&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyktx/ktx_error_code.html#KtxErrorCode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyktx.ktx_error_code.KtxErrorCode" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">IntEnum</span></code></p>
 <p>Error codes thrown by library functions.</p>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="pyktx.ktx_error_code.KtxErrorCode.DECOMPRESS_CHECKSUM_ERROR">
-<span class="sig-name descname"><span class="pre">DECOMPRESS_CHECKSUM_ERROR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">20</span></em><a class="headerlink" href="#pyktx.ktx_error_code.KtxErrorCode.DECOMPRESS_CHECKSUM_ERROR" title="Permalink to this definition"></a></dt>
-<dd><p>Checksum mismatch when decompressing.</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="pyktx.ktx_error_code.KtxErrorCode.DECOMPRESS_LENGTH_ERROR">
-<span class="sig-name descname"><span class="pre">DECOMPRESS_LENGTH_ERROR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">19</span></em><a class="headerlink" href="#pyktx.ktx_error_code.KtxErrorCode.DECOMPRESS_LENGTH_ERROR" title="Permalink to this definition"></a></dt>
-<dd><p>Decompressed byte count does not match expected byte size.</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="pyktx.ktx_error_code.KtxErrorCode.ERROR_MAX_ENUM">
-<span class="sig-name descname"><span class="pre">ERROR_MAX_ENUM</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">18</span></em><a class="headerlink" href="#pyktx.ktx_error_code.KtxErrorCode.ERROR_MAX_ENUM" title="Permalink to this definition"></a></dt>
-<dd><p>For safety checks.</p>
+<dt class="sig sig-object py" id="pyktx.ktx_error_code.KtxErrorCode.SUCCESS">
+<span class="sig-name descname"><span class="pre">SUCCESS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#pyktx.ktx_error_code.KtxErrorCode.SUCCESS" title="Permalink to this definition"></a></dt>
+<dd><p>Operation was successful.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -237,12 +210,6 @@
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="pyktx.ktx_error_code.KtxErrorCode.LIBRARY_NOT_LINKED">
-<span class="sig-name descname"><span class="pre">LIBRARY_NOT_LINKED</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">18</span></em><a class="headerlink" href="#pyktx.ktx_error_code.KtxErrorCode.LIBRARY_NOT_LINKED" title="Permalink to this definition"></a></dt>
-<dd><p>Library dependency (OpenGL or Vulkan) not linked into application.</p>
-</dd></dl>
-
-<dl class="py attribute">
 <dt class="sig sig-object py" id="pyktx.ktx_error_code.KtxErrorCode.NOT_FOUND">
 <span class="sig-name descname"><span class="pre">NOT_FOUND</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">12</span></em><a class="headerlink" href="#pyktx.ktx_error_code.KtxErrorCode.NOT_FOUND" title="Permalink to this definition"></a></dt>
 <dd><p>Requested key was not found</p>
@@ -252,12 +219,6 @@
 <dt class="sig sig-object py" id="pyktx.ktx_error_code.KtxErrorCode.OUT_OF_MEMORY">
 <span class="sig-name descname"><span class="pre">OUT_OF_MEMORY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">13</span></em><a class="headerlink" href="#pyktx.ktx_error_code.KtxErrorCode.OUT_OF_MEMORY" title="Permalink to this definition"></a></dt>
 <dd><p>Not enough memory to complete the operation.</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="pyktx.ktx_error_code.KtxErrorCode.SUCCESS">
-<span class="sig-name descname"><span class="pre">SUCCESS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#pyktx.ktx_error_code.KtxErrorCode.SUCCESS" title="Permalink to this definition"></a></dt>
-<dd><p>Operation was successful.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -273,15 +234,58 @@
 </dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.ktx_error_code.KtxErrorCode.UNSUPPORTED_TEXTURE_TYPE">
+<span class="sig-name descname"><span class="pre">UNSUPPORTED_TEXTURE_TYPE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">16</span></em><a class="headerlink" href="#pyktx.ktx_error_code.KtxErrorCode.UNSUPPORTED_TEXTURE_TYPE" title="Permalink to this definition"></a></dt>
+<dd><p>The KTX file specifies an unsupported texture type.</p>
+</dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="pyktx.ktx_error_code.KtxErrorCode.UNSUPPORTED_FEATURE">
 <span class="sig-name descname"><span class="pre">UNSUPPORTED_FEATURE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">17</span></em><a class="headerlink" href="#pyktx.ktx_error_code.KtxErrorCode.UNSUPPORTED_FEATURE" title="Permalink to this definition"></a></dt>
 <dd><p>Feature not included in in-use library or not yet implemented.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="pyktx.ktx_error_code.KtxErrorCode.UNSUPPORTED_TEXTURE_TYPE">
-<span class="sig-name descname"><span class="pre">UNSUPPORTED_TEXTURE_TYPE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">16</span></em><a class="headerlink" href="#pyktx.ktx_error_code.KtxErrorCode.UNSUPPORTED_TEXTURE_TYPE" title="Permalink to this definition"></a></dt>
-<dd><p>The KTX file specifies an unsupported texture type.</p>
+<dt class="sig sig-object py" id="pyktx.ktx_error_code.KtxErrorCode.LIBRARY_NOT_LINKED">
+<span class="sig-name descname"><span class="pre">LIBRARY_NOT_LINKED</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">18</span></em><a class="headerlink" href="#pyktx.ktx_error_code.KtxErrorCode.LIBRARY_NOT_LINKED" title="Permalink to this definition"></a></dt>
+<dd><p>Library dependency (OpenGL or Vulkan) not linked into application.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.ktx_error_code.KtxErrorCode.DECOMPRESS_LENGTH_ERROR">
+<span class="sig-name descname"><span class="pre">DECOMPRESS_LENGTH_ERROR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">19</span></em><a class="headerlink" href="#pyktx.ktx_error_code.KtxErrorCode.DECOMPRESS_LENGTH_ERROR" title="Permalink to this definition"></a></dt>
+<dd><p>Decompressed byte count does not match expected byte size.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.ktx_error_code.KtxErrorCode.DECOMPRESS_CHECKSUM_ERROR">
+<span class="sig-name descname"><span class="pre">DECOMPRESS_CHECKSUM_ERROR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">20</span></em><a class="headerlink" href="#pyktx.ktx_error_code.KtxErrorCode.DECOMPRESS_CHECKSUM_ERROR" title="Permalink to this definition"></a></dt>
+<dd><p>Checksum mismatch when decompressing.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.ktx_error_code.KtxErrorCode.ERROR_MAX_ENUM">
+<span class="sig-name descname"><span class="pre">ERROR_MAX_ENUM</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">18</span></em><a class="headerlink" href="#pyktx.ktx_error_code.KtxErrorCode.ERROR_MAX_ENUM" title="Permalink to this definition"></a></dt>
+<dd><p>For safety checks.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="pyktx.ktx_error_code.KtxError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyktx.ktx_error_code.</span></span><span class="sig-name descname"><span class="pre">KtxError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">invocation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">code</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pyktx.ktx_error_code.KtxErrorCode" title="pyktx.ktx_error_code.KtxErrorCode"><span class="pre">KtxErrorCode</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyktx/ktx_error_code.html#KtxError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyktx.ktx_error_code.KtxError" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Error thrown when native operation does not succeed.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.ktx_error_code.KtxError.invocation">
+<span class="sig-name descname"><span class="pre">invocation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#pyktx.ktx_error_code.KtxError.invocation" title="Permalink to this definition"></a></dt>
+<dd><p>The C library function called.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.ktx_error_code.KtxError.code">
+<span class="sig-name descname"><span class="pre">code</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#pyktx.ktx_error_code.KtxErrorCode" title="pyktx.ktx_error_code.KtxErrorCode"><span class="pre">KtxErrorCode</span></a></em><a class="headerlink" href="#pyktx.ktx_error_code.KtxError.code" title="Permalink to this definition"></a></dt>
+<dd><p>The error code returned by libktx.</p>
 </dd></dl>
 
 </dd></dl>

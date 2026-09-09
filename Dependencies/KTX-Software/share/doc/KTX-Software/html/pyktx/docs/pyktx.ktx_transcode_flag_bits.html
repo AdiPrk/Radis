@@ -47,7 +47,11 @@
 <li class="toctree-l1"><a class="reference internal" href="modules.html">pyktx</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.html">pyktx package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.gl_internalformat.html">pyktx.gl_internalformat module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.khr_df_model.html">pyktx.khr_df_model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.khr_df_primaries.html">pyktx.khr_df_primaries module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.khr_df_transfer.html">pyktx.khr_df_transfer module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_astc_params.html">pyktx.ktx_astc_params module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_basis_codec.html">pyktx.ktx_basis_codec module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_basis_params.html">pyktx.ktx_basis_params module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_error_code.html">pyktx.ktx_error_code module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_hash_list.html">pyktx.ktx_hash_list module</a></li>
@@ -64,9 +68,10 @@
 <li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_texture_create_storage.html">pyktx.ktx_texture_create_storage module</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">pyktx.ktx_transcode_flag_bits module</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#pyktx.ktx_transcode_flag_bits.KtxTranscodeFlagBits"><code class="docutils literal notranslate"><span class="pre">KtxTranscodeFlagBits</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_transcode_flag_bits.KtxTranscodeFlagBits.HIGH_QUALITY"><code class="docutils literal notranslate"><span class="pre">KtxTranscodeFlagBits.HIGH_QUALITY</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_transcode_flag_bits.KtxTranscodeFlagBits.PVRTC_DECODE_TO_NEXT_POW2"><code class="docutils literal notranslate"><span class="pre">KtxTranscodeFlagBits.PVRTC_DECODE_TO_NEXT_POW2</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_transcode_flag_bits.KtxTranscodeFlagBits.TRANSCODE_ALPHA_DATA_TO_OPAQUE_FORMATS"><code class="docutils literal notranslate"><span class="pre">KtxTranscodeFlagBits.TRANSCODE_ALPHA_DATA_TO_OPAQUE_FORMATS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_transcode_flag_bits.KtxTranscodeFlagBits.NO_ETC1S_CHROMA_FILTERING"><code class="docutils literal notranslate"><span class="pre">KtxTranscodeFlagBits.NO_ETC1S_CHROMA_FILTERING</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_transcode_flag_bits.KtxTranscodeFlagBits.HIGH_QUALITY"><code class="docutils literal notranslate"><span class="pre">KtxTranscodeFlagBits.HIGH_QUALITY</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -110,13 +115,6 @@
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">IntEnum</span></code></p>
 <p>Flags guiding transcoding of Basis Universal compressed textures.</p>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="pyktx.ktx_transcode_flag_bits.KtxTranscodeFlagBits.HIGH_QUALITY">
-<span class="sig-name descname"><span class="pre">HIGH_QUALITY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">32</span></em><a class="headerlink" href="#pyktx.ktx_transcode_flag_bits.KtxTranscodeFlagBits.HIGH_QUALITY" title="Permalink to this definition"></a></dt>
-<dd><p>Request higher quality transcode of UASTC to BC1, BC3, ETC2_EAC_R11 and
-ETC2_EAC_RG11. The flag is unused by other UASTC transcoders.</p>
-</dd></dl>
-
-<dl class="py attribute">
 <dt class="sig sig-object py" id="pyktx.ktx_transcode_flag_bits.KtxTranscodeFlagBits.PVRTC_DECODE_TO_NEXT_POW2">
 <span class="sig-name descname"><span class="pre">PVRTC_DECODE_TO_NEXT_POW2</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#pyktx.ktx_transcode_flag_bits.KtxTranscodeFlagBits.PVRTC_DECODE_TO_NEXT_POW2" title="Permalink to this definition"></a></dt>
 <dd><p>decode non-pow2 ETC1S texture level to the next larger
@@ -135,6 +133,21 @@ Ignored if the slice’s dimensions are already a power of 2.</p>
 <dd><p>When decoding to an opaque texture format, if the Basis data has
 alpha, decode the alpha slice instead of the color slice to the
 output texture format. Has no effect if there is no alpha data.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.ktx_transcode_flag_bits.KtxTranscodeFlagBits.NO_ETC1S_CHROMA_FILTERING">
+<span class="sig-name descname"><span class="pre">NO_ETC1S_CHROMA_FILTERING</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">64</span></em><a class="headerlink" href="#pyktx.ktx_transcode_flag_bits.KtxTranscodeFlagBits.NO_ETC1S_CHROMA_FILTERING" title="Permalink to this definition"></a></dt>
+<dd><p>Disable ETC1S to BC7 adaptive chroma filtering, for much faster
+transcoding to BC7.  This flag is unused by other ETC1S
+transcoders.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.ktx_transcode_flag_bits.KtxTranscodeFlagBits.HIGH_QUALITY">
+<span class="sig-name descname"><span class="pre">HIGH_QUALITY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">32</span></em><a class="headerlink" href="#pyktx.ktx_transcode_flag_bits.KtxTranscodeFlagBits.HIGH_QUALITY" title="Permalink to this definition"></a></dt>
+<dd><p>Request higher quality transcode of UASTC to BC1, BC3, ETC2_EAC_R11 and
+ETC2_EAC_RG11. The flag is unused by other UASTC transcoders.</p>
 </dd></dl>
 
 </dd></dl>

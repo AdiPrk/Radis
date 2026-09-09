@@ -1,0 +1,89 @@
+.TH "ktx_convert" 1 "Mon Aug 17 2026 08:07:09" "Version 5.0.0" "KTX Tools Reference" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+ktx_convert \- ktx convert 
+.PP
+Convert another texture file type to a KTX2 file
+.SH "SYNOPSIS"
+.PP
+ktx convert [option\&.\&.\&.] \fIinput-file\fP [\fIoutput-path\fP]
+.SH "DESCRIPTION"
+.PP
+\fBktx\fP \fBconvert\fP converts the file specified as the \fIinput-file\fP argument to KTX v2 and saves it in the \fIoutput-path\fP\&. If the \fIinput-file\fP is '-' the file will be read from the stdin\&. If the \fIoutput-path\fP is '-' the output file will be written to the stdout\&. If \fIoutput-path\fP is a directory, the output is saved to a file in that directory whose name is the stem of the value given in \fIinput-file\fP with the extension \fRktx2\fP\&. If no \fIoutput-path\fP is provided, the output is saved to a file whose name is the parent path and stem of the value given in \fIinput-file\fP with the extension \fRktx2\fP\&.
+
+.PP
+The input file must be of a supported file type\&. Currently the only supported type is KTX v1\&. Generates an error if the input file type is unrecognized\&.
+
+.PP
+To encode or supercompress the converted file, pipe it to \fBktx\fP \fBencode\fP or \fBktx\fP \fBdeflate\fP via stdout\&.
+
+.PP
+Unrecognized metadata with keys beginning "KTX" or "ktx" found in an input KTX v1 file, is dropped and a warning is generated\&.
+
+.PP
+\fBNote\fP
+.RS 4
+When converting a KTX v1 file, payloads with format \fRGL_COMPRESSED_RGBA_ASTC_*_KHR\fP are mapped to the equivalent \fRVK_FORMAT_ASTC_*_SFLOAT_BLOCK\fP\&. In order to display images from the converted file, applications using Vulkan must therefore enable the \fRVK_EXT_texture_compression_astc_hdr\fP extension and its \fRtextureCompressionASTC_HDR\fP feature\&. Using these formats, Vulkan implementations will render both HDR and LDR blocks within the images\&. With the alternative mapping to \fRVK_FORMAT_ASTC_*_UNORM_BLOCK\fP they will render HDR blocks in the error color\&.
+.RE
+.PP
+.SH "OPTIONS"
+.PP
+The following options are available: 
+
+.PP
+.IP "\fB-t, --input-type <type> 
+.IP "" 1c
+Type of input file\&. Currently \fBtype\fP must be \fRktx\fP\&. Case insensitive\&. 
+
+.PP
+.IP "\fB-d, --drop-bad-orientation 
+.IP "" 1c
+Some in-the-wild KTX v1 files have orientation metadata with the key "KTXOrientation" instead of KTXorientaion\&. By default such metadata is rewritten with the correct name\&. This option causes such bad metadata to be dropped\&. Ignored unless \fBtype\fP is \fRktx\fP\&.  
+
+.PP
+
+.PP
+.IP "\fB-h, --help 
+.IP "" 1c
+Print this usage message and exit\&. 
+
+.PP
+.IP "\fB-v, --version 
+.IP "" 1c
+Print the version number of this program and exit\&. 
+
+.PP
+.SH "EXIT STATUS"
+.PP
+.IP "\(bu" 2
+0 - Success
+.IP "\(bu" 2
+1 - Command line error
+.IP "\(bu" 2
+2 - IO failure
+.IP "\(bu" 2
+3 - Invalid input file
+.IP "\(bu" 2
+4 - Runtime or library error
+.IP "\(bu" 2
+5 - Not supported state or operation
+.IP "\(bu" 2
+6 - Requested feature is not yet implemented  
+.PP
+.SH "HISTORY"
+.PP
+\fBVersion 4\&.0\fP
+.RS 4
+
+.IP "\(bu" 2
+Initial version
+.PP
+.RE
+.PP
+.SH "AUTHOR"
+.PP
+.IP "\(bu" 2
+Mark Callow 
+.PP
+

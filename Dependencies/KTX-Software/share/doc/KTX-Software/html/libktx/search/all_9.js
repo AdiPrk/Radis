@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['data_0',['data',['../structktxStream.html#a01015dd5ef6b90112358effdee79a6bc',1,'ktxStream']]],
+  ['data_0',['data',['../structktxStream.html#aa842cd89be474c0ff0f5eaaeed29a7ed',1,'ktxStream']]],
   ['datasize_1',['dataSize',['../structktxTexture.html#af90defa509395c58549940d3b634b3e9',1,'ktxTexture']]],
   ['deprecated_20list_2',['Deprecated List',['../deprecated.html',1,'']]],
   ['depth_3',['depth',['../structktxVulkanTexture.html#af43b771026fceb9a0b28256afc08f69b',1,'ktxVulkanTexture']]],

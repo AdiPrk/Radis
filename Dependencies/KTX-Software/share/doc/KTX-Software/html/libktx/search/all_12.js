@@ -8,6 +8,6 @@ var searchData=
   ['nosse_5',['noSSE',['../structktxBasisParams.html#a0024310d24bafd33ab41de3bd7dd6887',1,'ktxBasisParams']]],
   ['numdimensions_6',['numDimensions',['../structktxTexture.html#a3c48573960eb90b1e38cc70457d2cda1',1,'ktxTexture::numDimensions'],['../structktxTextureCreateInfo.html#a3c48573960eb90b1e38cc70457d2cda1',1,'ktxTextureCreateInfo::numDimensions']]],
   ['numfaces_7',['numFaces',['../structktxTexture.html#a3a4bc2fa2e41bcec0bdb265505af0068',1,'ktxTexture::numFaces'],['../structktxTextureCreateInfo.html#a3a4bc2fa2e41bcec0bdb265505af0068',1,'ktxTextureCreateInfo::numFaces']]],
-  ['numlayers_8',['numLayers',['../structktxTextureCreateInfo.html#ae1412e2bd82ef1baa7cb1479735d9c86',1,'ktxTextureCreateInfo']]],
+  ['numlayers_8',['numLayers',['../structktxTexture.html#ae1412e2bd82ef1baa7cb1479735d9c86',1,'ktxTexture::numLayers'],['../structktxTextureCreateInfo.html#ae1412e2bd82ef1baa7cb1479735d9c86',1,'ktxTextureCreateInfo::numLayers']]],
   ['numlevels_9',['numLevels',['../structktxTexture.html#a782126a62c27ee8660a14565b906694c',1,'ktxTexture::numLevels'],['../structktxTextureCreateInfo.html#a782126a62c27ee8660a14565b906694c',1,'ktxTextureCreateInfo::numLevels']]]
 ];

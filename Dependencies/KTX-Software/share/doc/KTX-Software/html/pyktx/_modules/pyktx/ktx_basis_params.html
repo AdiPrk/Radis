@@ -44,7 +44,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../docs/modules.html">pyktx</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.html">pyktx package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.gl_internalformat.html">pyktx.gl_internalformat module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.khr_df_model.html">pyktx.khr_df_model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.khr_df_primaries.html">pyktx.khr_df_primaries module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.khr_df_transfer.html">pyktx.khr_df_transfer module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_astc_params.html">pyktx.ktx_astc_params module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_basis_codec.html">pyktx.ktx_basis_codec module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_basis_params.html">pyktx.ktx_basis_params module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_error_code.html">pyktx.ktx_error_code module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../docs/pyktx.ktx_hash_list.html">pyktx.ktx_hash_list module</a></li>
@@ -94,15 +98,15 @@
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.ktx_basis_codec</span><span class="w"> </span><span class="kn">import</span> <span class="n">KtxBasisCodec</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.ktx_pack_uastc_flag_bits</span><span class="w"> </span><span class="kn">import</span> <span class="n">KtxPackUastcFlagBits</span>
-
 
 <div class="viewcode-block" id="KtxBasisParams"><a class="viewcode-back" href="../../docs/pyktx.ktx_basis_params.html#pyktx.ktx_basis_params.KtxBasisParams">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">KtxBasisParams</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Data for passing extended params to KtxTexture2.compressBasis().&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Struct for passing extended params to KtxTexture2.compressBasis().&quot;&quot;&quot;</span>
 
-    <span class="n">uastc</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;True to use UASTC base, false to use ETC1S base.&quot;&quot;&quot;</span>
+    <span class="n">codec</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">KtxBasisCodec</span><span class="o">.</span><span class="n">ETC1S</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Basis Universal codec to use. Default is KtxBasisCodec.ETC1S/BasisLZ.&quot;&quot;&quot;</span>
 
     <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;If true, prints Basis Universal encoder operation details to stdout. Not recommended for GUI apps.&quot;&quot;&quot;</span>
@@ -113,9 +117,12 @@
     <span class="n">thread_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Number of threads used for compression. Default is 1.&quot;&quot;&quot;</span>
 
-    <span class="n">compression_level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># Here and in the descriptions of all other codec specific options we abuse the</span>
+    <span class="c1"># fact that &#39;:&#39;in a docstring is used to indicate the preceding text is a</span>
+    <span class="c1"># type so that the target codec is clearly flagged on a separate &quot;Type: &quot; line.</span>
+    <span class="n">etc1s_compression_level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Encoding speed vs. quality tradeoff. Range is [0,5].</span>
+<span class="sd">    ETC1S/BasisLZ: Encoding speed vs. quality tradeoff for etc1s. Range is [0,5].</span>
 
 <span class="sd">    Higher values are slower, but give higher quality. There is no default.</span>
 <span class="sd">    Callers must explicitly set this value. Callers can use</span>
@@ -124,7 +131,7 @@
 
     <span class="n">quality_level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Compression quality. Range is [1,255].</span>
+<span class="sd">    ETC1S/BasisLZ and UASTC LDR 4x4: Compression quality. Range is [1,255].</span>
 
 <span class="sd">    Lower gives better compression/lower quality/faster.</span>
 <span class="sd">    Higher gives less compression/higher quality/slower.</span>
@@ -141,7 +148,7 @@
 
     <span class="n">max_endpoints</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Manually set the max number of color endpoint clusters.</span>
+<span class="sd">    ETC1S/BasisLZ: Manually set the max number of color endpoint clusters.</span>
 
 <span class="sd">    Range is [1,16128]. Default is 0, unset. If this is set, max_selectors</span>
 <span class="sd">    must also be set, otherwise the value will be ignored.</span>
@@ -149,7 +156,7 @@
 
     <span class="n">endpoint_rdo_threshold</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Set endpoint RDO quality threshold. The default is 1.25.</span>
+<span class="sd">    ETC1S/BasisLZ: Set endpoint RDO quality threshold. The default is 1.25.</span>
 
 <span class="sd">    Lower is higher quality but less quality per output bit (try [1.0,3.0].</span>
 <span class="sd">    This will override the value chosen by quality_level.</span>
@@ -157,7 +164,7 @@
 
     <span class="n">max_selectors</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Manually set the max number of color selector clusters. Range is [1,16128].</span>
+<span class="sd">    ETC1S/BasisLZ: Manually set the max number of color selector clusters. Range is [1,16128].</span>
 
 <span class="sd">    Default is 0, unset. If this is set, max_endpoints must also be set, otherwise</span>
 <span class="sd">    the value will be ignored.</span>
@@ -165,7 +172,7 @@
 
     <span class="n">selector_rdo_threshold</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Set selector RDO quality threshold. The default is 1.5.</span>
+<span class="sd">    ETC1S/BasisLZ:  Set selector RDO quality threshold. The default is 1.5.</span>
 
 <span class="sd">    Lower is higher quality but less quality per output bit (try [1.0,3.0]).</span>
 <span class="sd">    This will override the value chosen by @c qualityLevel.</span>
@@ -205,32 +212,32 @@
 
     <span class="n">no_endpoint_rdo</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Disable endpoint rate distortion optimizations.</span>
+<span class="sd">    ETC1S/BasisLZ: Disable endpoint rate distortion optimizations.</span>
 
 <span class="sd">    Slightly faster, less noisy output, but lower quality per output bit.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">no_selector_rdo</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Disable selector rate distortion optimizations.</span>
+<span class="sd">    ETC1S/BasisLZ: Disable selector rate distortion optimizations.</span>
 
 <span class="sd">    Slightly faster, less noisy output, but lower quality per output bit.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">uastc_flags</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">KtxPackUastcFlagBits</span><span class="o">.</span><span class="n">FASTEST</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A set of KtxPackUastcFlagBits controlling UASTC encoding.</span>
+<span class="sd">    UASTC LDR 4x4: A set of KtxPackUastcFlagBits controlling UASTC encoding.</span>
 
 <span class="sd">    The most important value is the level given in the</span>
 <span class="sd">    least-significant 4 bits which selects a speed vs quality tradeoff.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">uastc_rdo</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Enable Rate Distortion Optimization (RDO) post-processing.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;UASTC LDR 4x4: Enable Rate Distortion Optimization (RDO) post-processing.&quot;&quot;&quot;</span>
 
     <span class="n">uastc_rdo_quality_scalar</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    UASTC RDO quality scalar (lambda).</span>
+<span class="sd">    UASTC LDR 4x4: RDO quality scalar (lambda).</span>
 
 <span class="sd">    Lower values yield higher quality/larger LZ compressed files, higher</span>
 <span class="sd">    values yield lower quality/smaller LZ compressed files. A good range to</span>
@@ -239,29 +246,71 @@
 
     <span class="n">uastc_rdo_dict_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    UASTC RDO dictionary size in bytes. Default is 4096. Lower</span>
+<span class="sd">    UASTC LDR 4x4: RDO dictionary size in bytes. Default is 4096. Lower</span>
 <span class="sd">    values=faster, but give less compression. Range is [64,65536].</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">uastc_rdo_max_smooth_block_error_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">10.</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    UASTC RDO max smooth block error scale. Range is [1,300].</span>
+<span class="sd">    UASTC LDR 4x4: RDO max smooth block error scale. Range is [1,300].</span>
 <span class="sd">    Default is 10.0, 1.0 is disabled. Larger values suppress more</span>
 <span class="sd">    artifacts (and allocate more bits) on smooth blocks.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">uastc_rdo_max_smooth_block_std_dev</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">18.</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    UASTC RDO max smooth block standard deviation. Range is</span>
+<span class="sd">    UASTC LDR 4x4: RDO max smooth block standard deviation. Range is</span>
 <span class="sd">    [.01,65536.0]. Default is 18.0. Larger values expand the range of</span>
 <span class="sd">    blocks considered smooth.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">uastc_rdo_dont_favor_simpler_modes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Do not favor simpler UASTC modes in RDO mode.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;UASTC LDR 4x4: Do not favor simpler UASTC modes in RDO mode.&quot;&quot;&quot;</span>
 
     <span class="n">uastc_rdo_no_multithreading</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Disable RDO multithreading (slightly higher compression, deterministic).&quot;&quot;&quot;</span></div>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;UASTC LDR 4x4: Disable RDO multithreading (slightly higher compression, deterministic).&quot;&quot;&quot;</span>
+
+    <span class="c1"># UASTC HDR params</span>
+
+    <span class="n">uastc_hdr_quality</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Valid range is [0,4] - higher=slower but higher quality. Default=1.</span>
+<span class="sd">    Level 0=fastest/lowest quality, 3=highest practical setting, 4=exhaustive</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">uastc_hdr_uber_mode</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    UASTC HDR 4x4: Allow the UASTC HDR 4x4 encoder to try varying the CEM 11</span>
+<span class="sd">    selectors more for slightly higher quality (slower). This may negatively impact BC6H quality, however.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">uastc_hdr_ultra_quant</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;UASTC HDR 4x4: Try to find better quantized CEM 7/11 endpoint values (slower).&quot;&quot;&quot;</span>
+
+    <span class="n">uastc_hdr_favor_astc</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    UASTC HDR 4x4: By default the UASTC HDR 4x4 encoder tries to strike a balance</span>
+<span class="sd">    or even slightly favor BC6H quality. If this option is specified, ASTC HDR 4x4 quality is favored instead.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">rec_2020</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    UASTC HDR 6x6i specific option: The input image&#39;s gamut is Rec. 2020 vs. the</span>
+<span class="sd">    default Rec. 709 - for accurate colorspace error calculations.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">uastc_hdr_lambda</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    UASTC HDR 6x6i specific option: Enables rate distortion optimization (RDO).</span>
+<span class="sd">    The higher this value, the lower the quality, but the smaller the file size.</span>
+<span class="sd">    Try 100-20000, or higher values on some images.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">uastc_hdr_level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    UASTC HDR 6x6i specific option: Controls the 6x6 HDR intermediate mode encoder</span>
+<span class="sd">    performance vs. max quality tradeoff. X may range from [0,12]. Default level is 2.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
 </pre></div>
 
            </div>

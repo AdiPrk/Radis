@@ -47,7 +47,11 @@
 <li class="toctree-l1"><a class="reference internal" href="modules.html">pyktx</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.html">pyktx package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.gl_internalformat.html">pyktx.gl_internalformat module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.khr_df_model.html">pyktx.khr_df_model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.khr_df_primaries.html">pyktx.khr_df_primaries module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.khr_df_transfer.html">pyktx.khr_df_transfer module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_astc_params.html">pyktx.ktx_astc_params module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_basis_codec.html">pyktx.ktx_basis_codec module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_basis_params.html">pyktx.ktx_basis_params module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_error_code.html">pyktx.ktx_error_code module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_hash_list.html">pyktx.ktx_hash_list module</a></li>
@@ -57,10 +61,11 @@
 <li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_pack_uastc_flag_bits.html">pyktx.ktx_pack_uastc_flag_bits module</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">pyktx.ktx_supercmp_scheme module</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#pyktx.ktx_supercmp_scheme.KtxSupercmpScheme"><code class="docutils literal notranslate"><span class="pre">KtxSupercmpScheme</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_supercmp_scheme.KtxSupercmpScheme.BASIS_LZ"><code class="docutils literal notranslate"><span class="pre">KtxSupercmpScheme.BASIS_LZ</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_supercmp_scheme.KtxSupercmpScheme.NONE"><code class="docutils literal notranslate"><span class="pre">KtxSupercmpScheme.NONE</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_supercmp_scheme.KtxSupercmpScheme.ZLIB"><code class="docutils literal notranslate"><span class="pre">KtxSupercmpScheme.ZLIB</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_supercmp_scheme.KtxSupercmpScheme.BASIS_LZ"><code class="docutils literal notranslate"><span class="pre">KtxSupercmpScheme.BASIS_LZ</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_supercmp_scheme.KtxSupercmpScheme.ZSTD"><code class="docutils literal notranslate"><span class="pre">KtxSupercmpScheme.ZSTD</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_supercmp_scheme.KtxSupercmpScheme.ZLIB"><code class="docutils literal notranslate"><span class="pre">KtxSupercmpScheme.ZLIB</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_supercmp_scheme.KtxSupercmpScheme.UASTC_HDR_6x6_INTERMEDIATE"><code class="docutils literal notranslate"><span class="pre">KtxSupercmpScheme.UASTC_HDR_6x6_INTERMEDIATE</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -111,15 +116,21 @@
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">IntEnum</span></code></p>
 <p>Enumerators identifying the supercompression scheme.</p>
 <dl class="py attribute">
+<dt class="sig sig-object py" id="pyktx.ktx_supercmp_scheme.KtxSupercmpScheme.NONE">
+<span class="sig-name descname"><span class="pre">NONE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#pyktx.ktx_supercmp_scheme.KtxSupercmpScheme.NONE" title="Permalink to this definition"></a></dt>
+<dd><p>No supercompression.</p>
+</dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="pyktx.ktx_supercmp_scheme.KtxSupercmpScheme.BASIS_LZ">
 <span class="sig-name descname"><span class="pre">BASIS_LZ</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#pyktx.ktx_supercmp_scheme.KtxSupercmpScheme.BASIS_LZ" title="Permalink to this definition"></a></dt>
 <dd><p>Basis LZ supercompression.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="pyktx.ktx_supercmp_scheme.KtxSupercmpScheme.NONE">
-<span class="sig-name descname"><span class="pre">NONE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#pyktx.ktx_supercmp_scheme.KtxSupercmpScheme.NONE" title="Permalink to this definition"></a></dt>
-<dd><p>No supercompression.</p>
+<dt class="sig sig-object py" id="pyktx.ktx_supercmp_scheme.KtxSupercmpScheme.ZSTD">
+<span class="sig-name descname"><span class="pre">ZSTD</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#pyktx.ktx_supercmp_scheme.KtxSupercmpScheme.ZSTD" title="Permalink to this definition"></a></dt>
+<dd><p>ZStd supercompression.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -129,9 +140,9 @@
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="pyktx.ktx_supercmp_scheme.KtxSupercmpScheme.ZSTD">
-<span class="sig-name descname"><span class="pre">ZSTD</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#pyktx.ktx_supercmp_scheme.KtxSupercmpScheme.ZSTD" title="Permalink to this definition"></a></dt>
-<dd><p>ZStd supercompression.</p>
+<dt class="sig sig-object py" id="pyktx.ktx_supercmp_scheme.KtxSupercmpScheme.UASTC_HDR_6x6_INTERMEDIATE">
+<span class="sig-name descname"><span class="pre">UASTC_HDR_6x6_INTERMEDIATE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#pyktx.ktx_supercmp_scheme.KtxSupercmpScheme.UASTC_HDR_6x6_INTERMEDIATE" title="Permalink to this definition"></a></dt>
+<dd><p>UASTC HDR 6x6 Intermediate supercompression.</p>
 </dd></dl>
 
 </dd></dl>

@@ -47,7 +47,11 @@
 <li class="toctree-l1"><a class="reference internal" href="modules.html">pyktx</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.html">pyktx package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.gl_internalformat.html">pyktx.gl_internalformat module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.khr_df_model.html">pyktx.khr_df_model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.khr_df_primaries.html">pyktx.khr_df_primaries module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.khr_df_transfer.html">pyktx.khr_df_transfer module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_astc_params.html">pyktx.ktx_astc_params module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_basis_codec.html">pyktx.ktx_basis_codec module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_basis_params.html">pyktx.ktx_basis_params module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_error_code.html">pyktx.ktx_error_code module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pyktx.ktx_hash_list.html">pyktx.ktx_hash_list module</a></li>
@@ -61,9 +65,9 @@
 <li class="toctree-l2"><a class="reference internal" href="#pyktx.ktx_texture1.KtxTexture1"><code class="docutils literal notranslate"><span class="pre">KtxTexture1</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_texture1.KtxTexture1.create"><code class="docutils literal notranslate"><span class="pre">KtxTexture1.create()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_texture1.KtxTexture1.create_from_named_file"><code class="docutils literal notranslate"><span class="pre">KtxTexture1.create_from_named_file()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_texture1.KtxTexture1.gl_baseinternalformat"><code class="docutils literal notranslate"><span class="pre">KtxTexture1.gl_baseinternalformat</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_texture1.KtxTexture1.gl_format"><code class="docutils literal notranslate"><span class="pre">KtxTexture1.gl_format</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_texture1.KtxTexture1.gl_internalformat"><code class="docutils literal notranslate"><span class="pre">KtxTexture1.gl_internalformat</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_texture1.KtxTexture1.gl_baseinternalformat"><code class="docutils literal notranslate"><span class="pre">KtxTexture1.gl_baseinternalformat</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyktx.ktx_texture1.KtxTexture1.gl_type"><code class="docutils literal notranslate"><span class="pre">KtxTexture1.gl_type</span></code></a></li>
 </ul>
 </li>
@@ -125,13 +129,6 @@
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="pyktx.ktx_texture1.KtxTexture1.gl_baseinternalformat">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gl_baseinternalformat</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#pyktx.ktx_texture1.KtxTexture1.gl_baseinternalformat" title="Permalink to this definition"></a></dt>
-<dd><p>Base format of the texture data, e.g., GL_RGB.</p>
-<p>You can find all OpenGL formats here: &lt;<a class="reference external" href="https://registry.khronos.org/OpenGL/api/GL/glcorearb.h">https://registry.khronos.org/OpenGL/api/GL/glcorearb.h</a>&gt;</p>
-</dd></dl>
-
-<dl class="py property">
 <dt class="sig sig-object py" id="pyktx.ktx_texture1.KtxTexture1.gl_format">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gl_format</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#pyktx.ktx_texture1.KtxTexture1.gl_format" title="Permalink to this definition"></a></dt>
 <dd><p>Format of the texture data, e.g. GL_RGB.</p>
@@ -143,6 +140,13 @@
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gl_internalformat</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#pyktx.ktx_texture1.KtxTexture1.gl_internalformat" title="Permalink to this definition"></a></dt>
 <dd><p>Internal format of the texture data. See GlInternalformat.</p>
 <p>You can find all OpenGL internal formats here: &lt;<a class="reference external" href="https://registry.khronos.org/OpenGL/api/GL/glext.h">https://registry.khronos.org/OpenGL/api/GL/glext.h</a>&gt;</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyktx.ktx_texture1.KtxTexture1.gl_baseinternalformat">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gl_baseinternalformat</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#pyktx.ktx_texture1.KtxTexture1.gl_baseinternalformat" title="Permalink to this definition"></a></dt>
+<dd><p>Base format of the texture data, e.g., GL_RGB.</p>
+<p>You can find all OpenGL formats here: &lt;<a class="reference external" href="https://registry.khronos.org/OpenGL/api/GL/glcorearb.h">https://registry.khronos.org/OpenGL/api/GL/glcorearb.h</a>&gt;</p>
 </dd></dl>
 
 <dl class="py property">

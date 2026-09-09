@@ -1,4 +1,4 @@
-.TH "ktx_create" 1 "Sat Oct 4 2025 08:43:36" "Version 4.4.2" "KTX Tools Reference" \" -*- nroff -*-
+.TH "ktx_create" 1 "Mon Aug 17 2026 08:07:09" "Version 5.0.0" "KTX Tools Reference" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -11,6 +11,9 @@ ktx create [option\&.\&.\&.] \fIinput-file\fP\&.\&.\&. \fIoutput-file\fP
 .SH "DESCRIPTION"
 .PP
 \fBktx\fP \fBcreate\fP can create, encode and supercompress a KTX2 file from the input images specified as the \fIinput-file\fP\&.\&.\&. arguments and save it as the \fIoutput-file\fP\&. The last positional argument is treated as the \fIoutput-file\fP\&. If the \fIinput-file\fP is '-' the file will be read from the stdin\&. If the \fIoutput-path\fP is '-' the output file will be written to the stdout\&.
+
+.PP
+An \fIinput-file\fP prefixed with \fB@\fP will be read as a file name listing file\&. Listing text files specify which actual files to process, one file name per line\&. Names can be absolute paths or relative to the current directory when the application is run\&. If the file is prefixed with \fB@@\fP the names must be relative to the listing file\&.
 
 .PP
 Each \fIinput-file\fP must be a valid EXR (\&.exr), PNG (\&.png) or Raw (\&.raw) file\&. PNG files with luminance (L) or luminance + alpha (LA) data will be converted to RGB as LLL and RGBA as LLLA before processing further\&. The input file formats must be compatible with the requested KTX format enum and must have at least the same level of precision and number of channels\&. Any unused channel will be discarded silently\&.
@@ -51,13 +54,17 @@ R8G8B8_SRGB
 R8G8B8A8_UNORM 
 .IP "    \(bu" 6
 R8G8B8A8_SRGB 
+.IP "    \(bu" 6
+R16G16B16_SFLOAT 
+.IP "    \(bu" 6
+R16G16B16A16_SFLOAT 
 .PP
 The format will be used to verify and load all input files into a texture before performing any specified encoding\&.
 .br
   
 
 .PP
-.IP "\fB--encode basis-lz | uastc 
+.IP "\fB--encode basis-lz | uastc | uastc-ldr-4x4 | uastc-hdr-4x4 | uastc-hdr-6x6i 
 .IP "" 1c
 Encode the texture with the specified codec before saving it\&. This option matches the functionality of the \fBktx encode\fP command\&. With each choice, the specific and common encoder options listed \fBbelow\fP become valid, otherwise they are ignored\&. Case-insensitive\&.
 
@@ -71,7 +78,22 @@ Supercompress the image data with transcodable ETC1S / BasisLZ\&. RED images wil
 .PP
 .IP "\fBuastc:  
 .IP "" 1c
-Create a texture in high-quality transcodable UASTC format\&. When set the \fIuastc\fP options become valid\&.  
+Alias of uastc-ldr-4x4\&. \fBDEPRECATED:\fP Use uastc-ldr-4x4 instead  
+
+.PP
+.IP "\fBuastc-ldr-4x4:  
+.IP "" 1c
+Create a texture in high-quality transcodable UASTC LDR 4X4 format\&. When set the \fIuastc\fP options become valid\&.  
+
+.PP
+.IP "\fBuastc-hdr-4x4:  
+.IP "" 1c
+Create a texture in high-quality transcodable UASTC HDR 4x4 format\&. When set the \fIuastc\fP hdr-4x4 options become valid\&.  
+
+.PP
+.IP "\fBuastc-hdr-6x6i:  
+.IP "" 1c
+Create a texture in high-quality transcodable UASTC HDR 6x6i format\&. When set the \fIuastc\fP hdr-6x6i options become valid\&.  
 
 .PP
 
@@ -85,7 +107,7 @@ Create a 1D texture\&. If not set the texture will be a 2D or 3D texture\&.
 .PP
 .IP "\fB--cubemap 
 .IP "" 1c
-Create a cubemap texture\&. If not set the texture will be a 2D or 3D texture\&. 
+Create a cubemap texture\&. If not set the texture will be a 2D or 3D texture\&. The input files must be given in the order +X, -X, +Y, -Y, +Z, -Z in a left-handed coordinate system with +Y up and, with the +Z face forward, +X on the on the right\&. See Appendix A of the KTX Specification, Cubemap Orientation, for more details\&. 
 
 .PP
 .IP "\fB--raw 
@@ -160,6 +182,11 @@ Scale images as they are loaded\&. Cannot be used with --raw\&. It enables use o
 Normalize input normals to have a unit length\&. Only valid for linear normal textures with 2 or more components\&. For 2-component inputs 2D unit normals are calculated\&. Do not use these 2D unit normals to generate X+Y normals with \fB--normal-mode\fP\&. For 4-component inputs a 3D unit normal is calculated\&. 1\&.0 is used for the value of the 4th component\&. Cannot be used with \fB--raw\fP\&. 
 
 .PP
+.IP "\fB--premultiply-alpha 
+.IP "" 1c
+Pre-multiplies the color components of the input pixels by the alpha component before encoding and sets the flag in the metadata\&. Cannot be used with --normalize or --raw\&. 
+
+.PP
 .IP "\fB--swizzle [rgba01]{4} 
 .IP "" 1c
 KTX swizzle metadata\&. 
@@ -173,9 +200,6 @@ Pre-swizzle input channels\&.
 .IP "\fB--assign-tf <transfer function> 
 .IP "" 1c
 Force the created texture to have the specified transfer function, ignoring the transfer function of the input file(s)\&. Possible options match the khr_df_transfer_e enumerators without the KHR_DF_TRANSFER_ prefix\&. The KHR_DF_TRANSFER_ prefix is ignored if present\&. Case nsensitive\&. The options are: linear | srgb | srgb_eotf | scrgb | scrgb_eotf | itu | itu_oetf | bt601 | bt601_oetf | bt709 | bt709_oetf | bt2020 | bt2020_oetf | smpte170m | smpte170m_oetf | smpte170m_eotf | ntsc | ntsc_eotf | slog | slog_oetf | slog2 | slog2_oetf | bt1886 | bt1886_eotf | hlg_oetf | hlg_eotf | pq_oetf | pg_eotf | dcip3 | dcip3_eotf | pal_oetf | pal625_eotf | st240 | st240_oetf | st240_eotf | acescc | acescc_oetf | acescct | acescct_oetf | abobergb | adobergb_eotf See \fBTRANSFER FUNCTION HANDLING\fP below for important information\&.  
-
-.PP
-.IP "\fB--assign-oetf <transfer function> 
 .IP "" 1c
 Deprecated and will be removed\&. Use \fB--assign-tf\fP instead\&. 
 
@@ -199,11 +223,6 @@ Force the created texture to indicate that the texture coordinate origin s=0, t=
 .IP "\fB--convert-tf <transfer function> 
 .IP "" 1c
 Convert the input image(s) to the specified transfer function, if different from the transfer function of the input file(s)\&. If both this and \fB--assign-tf\fP are specified, conversion will be performed from the assigned transfer function to the transfer function specified by this option, if different\&. Cannot be used with \fB--raw\fP\&. Case insensitive\&. The options are: linear | srgb\&. The following srgb aliases are also supported: srgb_eotf | scrgb | scrgb_eotf\&. See \fBTRANSFER FUNCTION HANDLING\fP below for more information\&.  
-
-.PP
-.IP "\fB--convert-oetf <transfer function> 
-.IP "" 1c
-Deprecated and will be removed\&. Use \fB--convert-tf\fP instead\&. 
 
 .PP
 .IP "\fB--convert-primaries <primaries> 
@@ -418,6 +437,31 @@ Do not favor simpler UASTC modes in RDO mode\&.
 Disable RDO multithreading (slightly higher compression, deterministic)\&. 
 
 .PP
+.IP "\fB--uastc-hdr-uber-mode 
+.IP "" 1c
+Allow the UASTC HDR 4x4 encoder to try varying the CEM 11 selectors more for slightly higher quality (slower)\&. This may negatively impact BC6H quality, however\&. 
+
+.PP
+.IP "\fB--uastc-hdr-ultra-quant 
+.IP "" 1c
+Allow the UASTC HDR 4x4 encoder to try and find better quantized CEM 7/11 endpoint values (slower)\&. 
+
+.PP
+.IP "\fB--uastc-hdr-favor-astc 
+.IP "" 1c
+By default the UASTC HDR 4x4 encoder tries to strike a balance or even slightly favor BC6H quality\&. If this option is specified, ASTC HDR 4x4 quality is favored instead\&. 
+
+.PP
+.IP "\fB--uastc-hdr-lambda <level> 
+.IP "" 1c
+Enables rate distortion optimization (RDO)\&. The higher this value, the lower the quality, but the smaller the file size\&. Try 100-20000, or higher values on some images\&. 
+
+.PP
+.IP "\fB--uastc-hdr-6x6i-level <level> 
+.IP "" 1c
+Controls the 6x6 HDR intermediate mode encoder performance vs\&. max quality tradeoff\&. Range is [0,12]\&. Default level is 2\&. 
+
+.PP
 
 .PP
 
@@ -468,12 +512,12 @@ Forbid use of the SSE instruction set\&. Ignored if CPU does not support SSE\&. 
 .PP
 .IP "\fB--compare-ssim 
 .IP "" 1c
-Calculate encoding structural similarity index measure (SSIM) and print it to stdout\&. Requires Basis-LZ, UASTC or ASTC encoding\&. 
+Calculate encoding structural similarity index measure (SSIM) and print it to stdout or stderr if stdout is used to write a KTX file\&. Requires Basis-LZ, UASTC or ASTC encoding\&. 
 
 .PP
 .IP "\fB--compare-psnr 
 .IP "" 1c
-Calculate encoding peak signal-to-noise ratio (PSNR) and print it to stdout\&. Requires Basis-LZ, UASTC or ASTC encoding\&. 
+Calculate encoding peak signal-to-noise ratio (PSNR) and print it to stdout or stderr if stdout is used to write a KTX file\&. Requires Basis-LZ, UASTC or ASTC encoding\&. 
 
 .PP
 
@@ -553,15 +597,6 @@ avoid using \fB--generate-mipmap\fP as the filters can only decode sRGB\&.
 avoid encoding to ASTC, BasisLz/ETC1S or UASTC\&. The encoders' quality metrics are designed for linear and sRGB\&.
 .PP
 .RE
-.PP
-.SS "Changes since last Release"
-.PD 0
-.IP "1." 4
-\fB--assign-oetf\fP and \fB--convert-oetf\fP are deprecated and will be removed\&. Use \fB--assign-tf\fP and \fB--convert-tf\fP instead\&. 
-.IP "2." 4
-The parameter value for \fB--assign-tf\fP can now be any of the transfer functions known to the Khronos Data Format Specification\&. 
-.IP "3." 4
-A warning is now generated if a visually lossy color conversion will be performed\&. The warning can be suppressed with \fB--no-warn-on-color-conversions\fP\&.  
 .PP
 .SH "EXIT STATUS"
 .PP

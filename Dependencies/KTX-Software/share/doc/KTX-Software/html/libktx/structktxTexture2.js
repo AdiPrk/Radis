@@ -27,6 +27,8 @@ var structktxTexture2 =
     [ "ktxTexture2_GetTransferFunction_e", "group__reader.html#ga37cd5b4ae9ee373d825197dc8998d0bb", null ],
     [ "ktxTexture2_GetVkFormat", "group__ktx__vkloader.html#ga7a9baaf3aa2e114c6f6e58fe68051815", null ],
     [ "ktxTexture2_GLUpload", "group__ktx__glloader.html#ga7624860df8e44573862fa5754ea2976c", null ],
+    [ "ktxTexture2_IsHDR", "group__reader.html#gac02dd38ee214ef99f3851018f9eb6463", null ],
+    [ "ktxTexture2_IsTranscodable", "group__reader.html#gaee5ce9a9088c1a2f674748c1b20a18b3", null ],
     [ "ktxTexture2_IterateLevels", "group__reader.html#ga1b47270a151b67615aed9eeca5f25bf7", null ],
     [ "ktxTexture2_IterateLoadLevelFaces", "group__reader.html#gaf57628ec7f9a554b46ba84ab9c214bab", null ],
     [ "ktxTexture2_LoadDeflatedImageData", "group__reader.html#gaa1f681c144baa70ef9af6db4c7333b3c", null ],
