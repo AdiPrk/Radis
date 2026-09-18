@@ -276,7 +276,6 @@ void ModelSerializer::save(const Model& model, const std::string& filename, uint
     }
 
     file.close();
-    // CompressInPlaceLZ4(filename); -> Completely Removed!
 }
 
 

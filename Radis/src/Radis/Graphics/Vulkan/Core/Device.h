@@ -1,7 +1,7 @@
 /*****************************************************************//**
  * \file   Device.h
  * \brief  Definition of the Device class for Vulkan physical and logical device management.
- * 
+ *
  * \author Aditya Prakash
  * \date   January 2026
  *********************************************************************/
@@ -64,7 +64,7 @@ namespace Radis {
         uint32_t GetPresentFamily() const { return presentFamily_; }
 
         // Buffer Helper Functions
-        
+
         VkCommandBuffer BeginSingleTimeCommands();
         void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
         void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
@@ -83,6 +83,7 @@ namespace Radis {
 
         bool SupportsVulkan() const { return mSupportsVulkan; }
         bool SupportsTimestamps() const { return mSupportsTimestampQueries; }
+        bool SupportsRayQuery() const { return mSupportsRayQuery; }
 
     private:
         void createInstance();
@@ -91,7 +92,6 @@ namespace Radis {
         bool pickPhysicalDevice();
         bool createLogicalDevice();
         void createCommandPool();
-        void CheckIndirectDrawSupport();
 
         // helper functions
         bool isDeviceSuitable(VkPhysicalDevice device);
@@ -121,7 +121,8 @@ namespace Radis {
         VkFormat mLinearFormat;
 
         const std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
-        const std::vector<const char*> deviceExtensions = {
+
+        const std::vector<const char*> requiredDeviceExtensions = {
             VK_KHR_SWAPCHAIN_EXTENSION_NAME,
             VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
             VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,
@@ -130,8 +131,13 @@ namespace Radis {
             VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
             VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
             VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
-            VK_KHR_RAY_QUERY_EXTENSION_NAME
         };
+
+        const std::vector<const char*> optionalDeviceExtensions = {
+            VK_KHR_RAY_QUERY_EXTENSION_NAME,
+        };
+
+        std::vector<const char*> mEnabledDeviceExtensions;
 
         VkPhysicalDeviceRayTracingPipelinePropertiesKHR mRtProperties{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR };
         VkPhysicalDeviceAccelerationStructurePropertiesKHR mAsProperties{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_PROPERTIES_KHR };
@@ -140,6 +146,9 @@ namespace Radis {
         bool mRTFuncsAvailable = true;
         bool mDebugFuncsAvailable = true;
         bool mSupportsTimestampQueries = true;
+
+        // Optional feature availability
+        bool mSupportsRayQuery = false;
     };
 
 } // namespace Radis
