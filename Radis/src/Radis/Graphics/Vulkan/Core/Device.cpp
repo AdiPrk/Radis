@@ -1,7 +1,7 @@
 ﻿/*****************************************************************//**
  * \file   Device.cpp
  * \brief  Implementation of the Device class for Vulkan device management.
- * 
+ *
  * \author Aditya Prakash
  * \date   January 2026
  *********************************************************************/
@@ -10,14 +10,14 @@
 #include "Device.h"
 #include "Graphics/Vulkan/VulkanWindow.h"
 
-namespace Radis 
+namespace Radis
 {
     // local callback functions
     static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
         VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
         VkDebugUtilsMessageTypeFlagsEXT messageType,
         const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-        void* pUserData) 
+        void* pUserData)
     {
         std::vector<std::string> blacklistedMessages = {
             "Layer VK_LAYER_OW_OVERLAY uses API version 1.2 which is older than the application specified API version of 1.4. May cause issues.",
@@ -65,7 +65,7 @@ namespace Radis
     }
 
     // class member functions
-    Device::Device(VulkanWindow& window) 
+    Device::Device(VulkanWindow& window)
         : window{ window }
     {
         if (volkInitialize() != VK_SUCCESS)
@@ -76,7 +76,7 @@ namespace Radis
         }
 
         createInstance();
-        volkLoadInstance(instance); 
+        volkLoadInstance(instance);
 
         mRTFuncsAvailable = vkCreateAccelerationStructureKHR &&
             vkCmdBuildAccelerationStructuresKHR &&
@@ -93,13 +93,13 @@ namespace Radis
 
         setupDebugMessenger();
         createSurface();
-        
+
         if (!pickPhysicalDevice())
         {
             mSupportsVulkan = false;
             return;
         }
-        
+
         if (!createLogicalDevice())
         {
             mSupportsVulkan = false;
@@ -109,14 +109,14 @@ namespace Radis
         createCommandPool();
 
         Allocator::Init(this);
-        
+
         VkPhysicalDeviceProperties2 prop2{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 };
         mRtProperties.pNext = &mAsProperties;
         prop2.pNext = &mRtProperties;
         vkGetPhysicalDeviceProperties2(physicalDevice, &prop2);
     }
 
-    Device::~Device() 
+    Device::~Device()
     {
         Allocator::Destroy();
 
@@ -148,9 +148,9 @@ namespace Radis
         }
     }
 
-    void Device::createInstance() 
+    void Device::createInstance()
     {
-        if (enableValidationLayers && !checkValidationLayerSupport()) 
+        if (enableValidationLayers && !checkValidationLayerSupport())
         {
             enableValidationLayers = false;
             RADIS_WARN("Validation layers not available!");
@@ -177,7 +177,7 @@ namespace Radis
         createInfo.ppEnabledExtensionNames = extensions.data();
 
         VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
-        if (enableValidationLayers) 
+        if (enableValidationLayers)
         {
             VkValidationFeatureEnableEXT enables[] = {
                 VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT,
@@ -211,11 +211,11 @@ namespace Radis
         hasGflwRequiredInstanceExtensions();
     }
 
-    bool Device::pickPhysicalDevice() 
+    bool Device::pickPhysicalDevice()
     {
         uint32_t deviceCount = 0;
         vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
-        if (deviceCount == 0) 
+        if (deviceCount == 0)
         {
             RADIS_CRITICAL("No Vulkan-supported GPUs found!");
             return false;
@@ -225,10 +225,56 @@ namespace Radis
         std::vector<VkPhysicalDevice> devices(deviceCount);
         vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
 
-        for (const auto& device : devices) {
-            if (isDeviceSuitable(device)) {
-                physicalDevice = device;
+        int bestScore = -1;
+        for (const auto& device : devices)
+        {
+            if (!isDeviceSuitable(device))
+                continue;
+
+            VkPhysicalDeviceProperties props{};
+            vkGetPhysicalDeviceProperties(device, &props);
+
+            int score = 0;
+            std::string deviceType = "";
+            switch (props.deviceType)
+            {
+            case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
+                score = 10000; 
+                deviceType = "Discrete";
                 break;
+            case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU: 
+                score = 1000;
+                deviceType = "Integrated";
+                break;
+            case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU: 
+                score = 100;  
+                deviceType = "Virtual";
+                break;
+            default:        
+                score = 0; 
+                break;
+            }
+
+            VkPhysicalDeviceMemoryProperties memProps{};
+            vkGetPhysicalDeviceMemoryProperties(device, &memProps);
+            uint64_t largestDeviceLocalHeap = 0;
+            for (uint32_t i = 0; i < memProps.memoryHeapCount; i++)
+            {
+                if ((memProps.memoryHeaps[i].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT) &&
+                    memProps.memoryHeaps[i].size > largestDeviceLocalHeap)
+                {
+                    largestDeviceLocalHeap = memProps.memoryHeaps[i].size;
+                }
+            }
+            score += static_cast<int>(largestDeviceLocalHeap >> 28); // +1 per 256 MB, max ~512 pts
+
+            
+            RADIS_INFO("  GPU '{}' (type {}) scored {}.", props.deviceName, deviceType.c_str(), score);
+
+            if (score > bestScore)
+            {
+                bestScore = score;
+                physicalDevice = device;
             }
         }
 
@@ -240,20 +286,18 @@ namespace Radis
 
         vkGetPhysicalDeviceProperties(physicalDevice, &properties);
 
-        RADIS_INFO("Using GPU: {}", properties.deviceName);
+        RADIS_INFO("Using GPU: '{}' with score {}.", properties.deviceName, bestScore);
 
         return true;
     }
 
-    bool Device::createLogicalDevice() 
+    bool Device::createLogicalDevice()
     {
         if (physicalDevice == VK_NULL_HANDLE)
         {
             RADIS_ERROR("physicalDevice is VK_NULL_HANDLE - cannot create logical device.");
             return false;
         }
-
-        CheckIndirectDrawSupport();
 
         // 2) Find queue families and validate indices
         QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
@@ -273,7 +317,7 @@ namespace Radis
         // 2.a) enumerate actual queue family count and properties to validate indices are in-range
         uint32_t queueFamilyCount = 0;
         vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
-        if (queueFamilyCount == 0) 
+        if (queueFamilyCount == 0)
         {
             RADIS_ERROR("vkGetPhysicalDeviceQueueFamilyProperties returned count == 0.");
             return false;
@@ -332,6 +376,7 @@ namespace Radis
         VkPhysicalDeviceRayQueryFeaturesKHR supportedRayQuery{};
         supportedRayQuery.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR;
 
+        supportedRayQuery.pNext = nullptr;
         supportedRtPipeline.pNext = &supportedRayQuery;
         supportedAs.pNext = &supportedRtPipeline;
         robustness2Supported.pNext = &supportedAs;
@@ -345,12 +390,21 @@ namespace Radis
 
         bool supportsAllRequestedFeatures = true;
 
+        // Required features will fail device init if not present.
 #define REQUEST_FEATURE(OutStruct, SupportedStruct, FeatureName) \
         if (SupportedStruct.FeatureName) { \
             OutStruct.FeatureName = VK_TRUE; \
         } else { \
-            RADIS_WARN("Requested feature {} is NOT supported. Disabling.", #FeatureName); \
+            RADIS_WARN("Required feature {} is NOT supported.", #FeatureName); \
             supportsAllRequestedFeatures = false; \
+        }
+
+#define OPTIONAL_FEATURE(OutStruct, SupportedStruct, FeatureName, CapabilityFlag) \
+        if (SupportedStruct.FeatureName) { \
+            OutStruct.FeatureName = VK_TRUE; \
+            CapabilityFlag = true; \
+        } else { \
+            RADIS_INFO("Optional feature {} not supported.", #FeatureName); \
         }
 
         // Populate desired features (all are VK_FALSE by default)
@@ -399,11 +453,12 @@ namespace Radis
 
         VkPhysicalDeviceRayQueryFeaturesKHR rayQueryFeature{};
         rayQueryFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR;
-        REQUEST_FEATURE(rayQueryFeature, supportedRayQuery, rayQuery);
+        OPTIONAL_FEATURE(rayQueryFeature, supportedRayQuery, rayQuery, mSupportsRayQuery);
 
 #undef REQUEST_FEATURE
+#undef OPTIONAL_FEATURE
 
-        if (!supportsAllRequestedFeatures) 
+        if (!supportsAllRequestedFeatures)
         {
             RADIS_ERROR("Not all requested features are supported by the physical device.");
             return false;
@@ -411,8 +466,10 @@ namespace Radis
 
         VkDeviceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-        
-        rtPipelineFeature.pNext = &rayQueryFeature;
+
+        if (mSupportsRayQuery)
+            rtPipelineFeature.pNext = &rayQueryFeature;
+
         accelFeature.pNext = &rtPipelineFeature;
         robustness2Features.pNext = &accelFeature;
         vulkan13Features.pNext = &robustness2Features;
@@ -422,11 +479,9 @@ namespace Radis
 
         createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
         createInfo.pQueueCreateInfos = queueCreateInfos.data();
-
         createInfo.pEnabledFeatures = &deviceFeatures;
-
-        createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
-        createInfo.ppEnabledExtensionNames = deviceExtensions.data();
+        createInfo.enabledExtensionCount = static_cast<uint32_t>(mEnabledDeviceExtensions.size());
+        createInfo.ppEnabledExtensionNames = mEnabledDeviceExtensions.data();
 
         if (enableValidationLayers) {
             createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
@@ -475,23 +530,6 @@ namespace Radis
         }
     }
 
-    void Device::CheckIndirectDrawSupport()
-    {
-        VkPhysicalDeviceVulkan12Features supportedFeatures = {};
-        supportedFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
-
-        VkPhysicalDeviceFeatures2 features2 = {};
-        features2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-        features2.pNext = &supportedFeatures;
-
-        vkGetPhysicalDeviceFeatures2(physicalDevice, &features2);
-
-        // Check for specific feature support
-        if (!supportedFeatures.drawIndirectCount) {
-            RADIS_ERROR("drawIndirectCount is not supported on this GPU!");
-        }
-    }
-
     void Device::createSurface() { window.CreateVulkanSurface(instance, &surface_); }
 
     bool Device::isDeviceSuitable(VkPhysicalDevice device)
@@ -500,7 +538,7 @@ namespace Radis
             VkPhysicalDeviceProperties deviceProperties;
             vkGetPhysicalDeviceProperties(device, &deviceProperties);
             return std::string(deviceProperties.deviceName);
-        }());
+            }());
 
         QueueFamilyIndices indices = findQueueFamilies(device);
 
@@ -515,11 +553,11 @@ namespace Radis
         VkPhysicalDeviceFeatures supportedFeatures;
         vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
 
-        if (indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy) 
+        if (indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy)
         {
             RADIS_INFO("Device is suitable!");
         }
-        else 
+        else
         {
             RADIS_WARN("Device is NOT suitable.");
             RADIS_WARN("Indices complete: {}, Extensions supported: {}, Swap chain adequate: {}, Sampler anisotropy: {}",
@@ -546,7 +584,7 @@ namespace Radis
         createInfo.pUserData = nullptr;  // Optional
     }
 
-    void Device::setupDebugMessenger() 
+    void Device::setupDebugMessenger()
     {
         if (!enableValidationLayers) return;
         VkDebugUtilsMessengerCreateInfoEXT createInfo;
@@ -556,7 +594,7 @@ namespace Radis
         }
     }
 
-    bool Device::checkValidationLayerSupport() 
+    bool Device::checkValidationLayerSupport()
     {
         uint32_t layerCount;
         vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
@@ -582,7 +620,7 @@ namespace Radis
         return true;
     }
 
-    std::vector<const char*> Device::getRequiredExtensions() 
+    std::vector<const char*> Device::getRequiredExtensions()
     {
         uint32_t glfwExtensionCount = 0;
         const char** glfwExtensions;
@@ -597,7 +635,7 @@ namespace Radis
         return extensions;
     }
 
-    void Device::hasGflwRequiredInstanceExtensions() 
+    void Device::hasGflwRequiredInstanceExtensions()
     {
         uint32_t extensionCount = 0;
         vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
@@ -626,24 +664,39 @@ namespace Radis
         vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
 
         std::vector<VkExtensionProperties> availableExtensions(extensionCount);
-        vkEnumerateDeviceExtensionProperties(
-            device,
-            nullptr,
-            &extensionCount,
-            availableExtensions.data());
+        vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
 
-        std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
+        std::unordered_set<std::string> available;
+        for (const auto& ext : availableExtensions)
+            available.insert(ext.extensionName);
 
-        for (const auto& extension : availableExtensions) {
-            requiredExtensions.erase(extension.extensionName);
+        // Check required extensions
+        mEnabledDeviceExtensions = requiredDeviceExtensions;
+
+        bool hasReqs = true;
+        for (const char* ext : requiredDeviceExtensions)
+        {
+            if (!available.count(ext))
+            {
+                RADIS_WARN("Missing required device extension: {}", ext);
+                hasReqs = false;
+            }
         }
 
-        // print all missing extensions
-        for (const auto& ext : requiredExtensions) {
-            RADIS_WARN("Missing required device extension: {}", ext);
+        // Check optional extensions
+        for (const char* ext : optionalDeviceExtensions)
+        {
+            if (available.count(ext))
+            {
+                mEnabledDeviceExtensions.push_back(ext);
+            }
+            else
+            {
+                RADIS_WARN("Optional device extension not available: {}", ext);
+            }
         }
 
-        return requiredExtensions.empty();
+        return hasReqs;
     }
 
     QueueFamilyIndices Device::findQueueFamilies(VkPhysicalDevice device) {
@@ -656,14 +709,14 @@ namespace Radis
         vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
 
         int i = 0;
-        for (const auto& queueFamily : queueFamilies) 
+        for (const auto& queueFamily : queueFamilies)
         {
             if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
             {
                 indices.graphicsFamily = i;
                 indices.graphicsFamilyHasValue = true;
 
-                if (queueFamily.timestampValidBits == 0) 
+                if (queueFamily.timestampValidBits == 0)
                 {
                     mSupportsTimestampQueries = false;
                     RADIS_WARN("Graphics queue does not support timestamp queries!");
@@ -677,7 +730,7 @@ namespace Radis
                 indices.presentFamily = i;
                 indices.presentFamilyHasValue = true;
             }
-            
+
             if (indices.isComplete())
                 break;
 
@@ -771,7 +824,7 @@ namespace Radis
         return commandBuffer;
     }
 
-    void Device::EndSingleTimeCommands(VkCommandBuffer commandBuffer) 
+    void Device::EndSingleTimeCommands(VkCommandBuffer commandBuffer)
     {
         vkEndCommandBuffer(commandBuffer);
 
@@ -786,7 +839,7 @@ namespace Radis
         vkFreeCommandBuffers(device_, commandPool, 1, &commandBuffer);
     }
 
-    void Device::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) 
+    void Device::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
     {
         VkCommandBuffer commandBuffer = BeginSingleTimeCommands();
 

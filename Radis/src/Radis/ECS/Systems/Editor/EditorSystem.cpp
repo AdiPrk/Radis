@@ -293,11 +293,53 @@ namespace Radis
         ImGui::BeginDisabled(Engine::GetGraphicsAPI() != GraphicsAPI::Vulkan);
 
         ImGui::Text("Render Mode:");
-        const char* renderModeItems[] = { "Forward", "Deferred", "Raytracing" };
-        int currentRenderMode = static_cast<int>(rr->renderMode);
-        if (ImGui::Combo("##RenderMode", &currentRenderMode, renderModeItems, IM_ARRAYSIZE(renderModeItems)))
+
+        const bool rtSupported = rr->device->SupportsRayQuery();
+
+        struct RenderModeOption { RenderMode mode; const char* label; };
+        const RenderModeOption options[] = {
+            { RenderMode::Forward,    "Forward"    },
+            { RenderMode::Deferred,   "Deferred"   },
+            { RenderMode::Raytracing, "Raytracing" },
+        };
+
+        const char* currentLabel = "Unknown";
+        for (const auto& opt : options)
+            if (opt.mode == rr->renderMode) { currentLabel = opt.label; break; }
+
+        if (ImGui::BeginCombo("##RenderMode", currentLabel))
         {
-            rr->renderMode = static_cast<RenderMode>(currentRenderMode);
+            for (const auto& opt : options)
+            {
+                const bool isRT = (opt.mode == RenderMode::Raytracing);
+                const bool disabled = isRT && !rtSupported;
+                const bool isSelected = (opt.mode == rr->renderMode);
+
+                if (disabled) 
+                {
+                    ImGui::BeginDisabled();
+                }
+
+                char label[64];
+                if (disabled) snprintf(label, sizeof(label), "%s (not supported)", opt.label);
+                else          snprintf(label, sizeof(label), "%s", opt.label);
+
+                if (ImGui::Selectable(label, isSelected) && !disabled)
+                {
+                    rr->renderMode = opt.mode;
+                }
+
+                if (isSelected)
+                {
+                    ImGui::SetItemDefaultFocus();
+                }
+
+                if (disabled)
+                {
+                    ImGui::EndDisabled();
+                }
+            }
+            ImGui::EndCombo();
         }
 
         ImGui::EndDisabled();
