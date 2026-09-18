@@ -211,7 +211,19 @@
     <CustomBuild Include="Assets\Shaders\tonemap.frag" />
     <CustomBuild Include="Assets\Shaders\tonemap.frag" />
     <CustomBuild Include="Assets\Shaders\tonemap.frag" />
-    <CustomBuild Include="Assets\Shaders\tonemap.frag" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
+    <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
     <CustomBuild Include="Assets\Shaders\*.*" />
@@ -228,7 +240,5 @@
     <None Include="Assets\Scenes\sponza.json" />
     <None Include="Assets\Scenes\lighttest.json" />
     <None Include="Assets\Scenes\cube.json" />
-    <None Include="Assets\Shaders\bloomUpsample.comp" />
-    <None Include="Assets\Shaders\bloomDownsample.comp" />
   </ItemGroup>
 </Project>
