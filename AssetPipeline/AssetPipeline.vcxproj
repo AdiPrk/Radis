@@ -70,6 +70,14 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>$(ProjectDir)src;$(IncludePath)</IncludePath>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\Tools\$(ProjectName)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>$(ProjectDir)src;$(IncludePath)</IncludePath>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\Tools\$(ProjectName)\</OutDir>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -110,12 +118,16 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\ispc_texcomp;$(SolutionDir)Dependencies\bc7enc_rdo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp23</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\ispc_texcomp;$(SolutionDir)Dependencies\bc7enc_rdo;$(SolutionDir)Dependencies\stb_image\stb;$(SolutionDir)Dependencies\tinyexr;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\bc7enc_rdo\bc7enc_rdo;$(SolutionDir)Dependencies\tinyexr\lib\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>bc7e.lib; tinyexr.lib; miniz.lib;</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
@@ -129,19 +141,47 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\ispc_texcomp;$(SolutionDir)Dependencies\bc7enc_rdo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp23</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\ispc_texcomp;$(SolutionDir)Dependencies\bc7enc_rdo;$(SolutionDir)Dependencies\stb_image\stb;$(SolutionDir)Dependencies\tinyexr;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\bc7enc_rdo\bc7enc_rdo;$(SolutionDir)Dependencies\tinyexr\lib\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>bc7e.lib; tinyexr.lib; miniz.lib;</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\CommandLine.cpp" />
+    <ClCompile Include="src\Inputs.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="src\Textures\DDS\DdsWriter.cpp" />
+    <ClCompile Include="src\Textures\Encoders\bc7e.cpp" />
+    <ClCompile Include="src\Textures\Encoders\ispc_texcomp.cpp" />
+    <ClCompile Include="src\Textures\Encoders\rgbcx.cpp" />
+    <ClCompile Include="src\Textures\ImageLoader.cpp" />
+    <ClCompile Include="src\Textures\TextureEncoding.cpp" />
+    <ClCompile Include="src\Textures\Textures.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\CommandLine.h" />
+    <ClInclude Include="src\Inputs.h" />
+    <ClInclude Include="src\pch.h" />
+    <ClInclude Include="src\Textures\DDS\DdsWriter.h" />
+    <ClInclude Include="src\Textures\ImageLoader.h" />
+    <ClInclude Include="src\Textures\TextureEncoding.h" />
+    <ClInclude Include="src\Textures\TextureFormats.h" />
+    <ClInclude Include="src\Textures\TextureRoles.h" />
+    <ClInclude Include="src\Textures\Textures.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
