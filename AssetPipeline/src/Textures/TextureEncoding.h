@@ -15,14 +15,12 @@ enum class EncodeQuality : uint8_t { Fast, Normal, Best };
 
 struct EncodeParams
 {
-    TextureFormat format  = TextureFormat::Unknown;
-    TextureRole   role    = TextureRole::Color;
+    TextureFormat format = TextureFormat::Unknown;
+    TextureRole   role = TextureRole::Color;
     EncodeQuality quality = EncodeQuality::Normal;
 };
 
 using EncodeResult = std::expected<void, std::string>;
-
-constexpr size_t EncodedSize(TextureFormat format, uint32_t width, uint32_t height);
 
 // Encodes one mip level into `out`, which must be EncodedSize(...) bytes.
 EncodeResult EncodeTexture(const ImageView& image, const EncodeParams& params, std::span<std::byte> out);

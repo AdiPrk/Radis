@@ -1,7 +1,8 @@
 #include <pch.h>
 #include "Inputs.h"
 
-static constexpr std::string_view kTextureExtensions[] = { ".png", ".jpg", ".jpeg", ".tga", ".hdr", ".exr", ".dds", ".ktx2" };
+// .dds/.ktx2 come back once passthrough exists; the loaders can't read them yet.
+static constexpr std::string_view kTextureExtensions[] = { ".png", ".jpg", ".jpeg", ".tga", ".hdr", ".exr" };
 static constexpr std::string_view kModelExtensions[] = { ".glb", ".gltf", ".obj", ".fbx" };
 
 static std::optional<AssetKind> ClassifyFile(const std::filesystem::path& path)
@@ -14,11 +15,12 @@ static std::optional<AssetKind> ClassifyFile(const std::filesystem::path& path)
     return std::nullopt;
 }
 
-std::expected<std::vector<InputFile>, std::string> CollectInputs(const std::filesystem::path& input)
+std::expected<std::vector<InputFile>, std::string> CollectInputs(const std::filesystem::path& input, const std::filesystem::path& exclude)
 {
+    namespace fs = std::filesystem;
     std::error_code ec;
 
-    if (std::filesystem::is_regular_file(input, ec))
+    if (fs::is_regular_file(input, ec))
     {
         const auto kind = ClassifyFile(input);
         if (!kind)
@@ -29,15 +31,29 @@ std::expected<std::vector<InputFile>, std::string> CollectInputs(const std::file
         return std::vector<InputFile>{ { input, input.filename(), * kind } };
     }
 
-    if (!std::filesystem::is_directory(input, ec))
+    if (!fs::is_directory(input, ec))
     {
         return std::unexpected(std::format("not found: {}", input.string()));
     }
 
+    // The error_code overloads throughout: a file vanishing mid-scan shouldn't throw.
     std::vector<InputFile> files;
-    for (const auto& entry : std::filesystem::recursive_directory_iterator(input, std::filesystem::directory_options::skip_permission_denied, ec))
+    fs::recursive_directory_iterator it(input, fs::directory_options::skip_permission_denied, ec);
+    for (; !ec && it != fs::recursive_directory_iterator(); it.increment(ec))
     {
-        if (!entry.is_regular_file())
+        const fs::directory_entry& entry = *it;
+        std::error_code            entryEc;   // per-entry failures just skip the entry
+
+        if (entry.is_directory(entryEc))
+        {
+            if (fs::equivalent(entry.path(), exclude, entryEc))
+            {
+                it.disable_recursion_pending();
+            }
+            continue;
+        }
+
+        if (!entry.is_regular_file(entryEc))
             continue;
 
         // Side files like .bin and .mtl aren't inputs; the model that references them loads them.
@@ -45,6 +61,11 @@ std::expected<std::vector<InputFile>, std::string> CollectInputs(const std::file
         {
             files.push_back({ entry.path(), entry.path().lexically_relative(input), *kind });
         }
+    }
+
+    if (ec)
+    {
+        return std::unexpected(std::format("cannot scan {}: {}", input.string(), ec.message()));
     }
 
     if (files.empty())

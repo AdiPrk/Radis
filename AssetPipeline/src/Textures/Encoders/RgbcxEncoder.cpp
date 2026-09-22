@@ -28,8 +28,8 @@ static BlockEncoder EncoderFor(TextureFormat format)
     case TextureFormat::BC1_SRGB:
         return [](uint32_t level, bool, const uint8_t* pixels, void* dst)
             {
-                // Alpha is ignored. 3-color mode improves quality, but its fourth texel is black,
-                // so it's only safe when the texture has no alpha; color roles with alpha use BC7.
+                // Alpha is ignored. 3-color mode is allowed, but without transparent-texels-for-black
+                // rgbcx never emits the transparent index, so the result stays opaque.
                 rgbcx::encode_bc1(level, dst, pixels, true, false);
             };
 

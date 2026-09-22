@@ -4,6 +4,38 @@
 #include "Textures/Textures.h"
 #include "Textures/DDS/DdsWriter.h"
 
+// Where a texture's cooked file goes, relative to the output directory.
+static std::filesystem::path CookedTexturePath(const InputFile& file)
+{
+    return std::filesystem::path(file.relative).replace_extension(".dds");
+}
+
+// Sources that differ only by extension (or letter case, on case-insensitive file systems)
+// would cook to the same file and silently overwrite each other.
+static bool CheckOutputCollisions(std::span<const InputFile> inputs)
+{
+    std::unordered_map<std::string, const InputFile*> claimed;
+    bool ok = true;
+
+    for (const InputFile& file : inputs)
+    {
+        if (file.kind != AssetKind::Texture)
+            continue;
+
+        const std::filesystem::path cooked = CookedTexturePath(file);
+        std::string key = cooked.generic_string();
+        std::ranges::transform(key, key.begin(), [](unsigned char c) { return char(std::tolower(c)); });
+
+        if (const auto [it, inserted] = claimed.try_emplace(std::move(key), &file); !inserted)
+        {
+            std::fprintf(stderr, "error: %s and %s both cook to %s\n", it->second->relative.string().c_str(),
+                file.relative.string().c_str(), cooked.string().c_str());
+            ok = false;
+        }
+    }
+    return ok;
+}
+
 static bool BuildTexture(const Options& opts, const InputFile& file)
 {
     const auto start = std::chrono::steady_clock::now();
@@ -11,8 +43,9 @@ static bool BuildTexture(const Options& opts, const InputFile& file)
     const TextureCookSettings settings
     {
         .role = *opts.role,
-        .target = opts.target,
-        .quality = EncodeQuality::Best,
+        .target = opts.platform.target,
+        .quality = opts.quality,
+        .requireAlignedTopMip = opts.platform.requireAlignedTopMip,
     };
 
     const auto texture = CookTexture(file.path, settings);
@@ -22,9 +55,12 @@ static bool BuildTexture(const Options& opts, const InputFile& file)
         return false;
     }
 
-    std::filesystem::path outPath = opts.output / file.relative;
-    outPath.replace_extension(".dds");
+    for (const std::string& warning : texture->warnings)
+    {
+        std::fprintf(stderr, "warning: %s: %s\n", file.relative.string().c_str(), warning.c_str());
+    }
 
+    const std::filesystem::path outPath = opts.output / CookedTexturePath(file);
     if (auto written = WriteDds(outPath, *texture); !written)
     {
         std::fprintf(stderr, "error: %s\n", written.error().c_str());
@@ -46,7 +82,7 @@ int main(int argc, char** argv)
         return opts.error();
     }
 
-    const auto inputs = CollectInputs(opts->input);
+    const auto inputs = CollectInputs(opts->input, opts->output);
     if (!inputs)
     {
         std::fprintf(stderr, "error: %s\n", inputs.error().c_str());
@@ -57,6 +93,11 @@ int main(int argc, char** argv)
     if (hasTextures && !opts->role)
     {
         std::fprintf(stderr, "error: textures need --role color|linear|normal|mask\n");
+        return 2;
+    }
+
+    if (!CheckOutputCollisions(*inputs))
+    {
         return 2;
     }
 

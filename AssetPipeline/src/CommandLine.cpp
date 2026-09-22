@@ -9,26 +9,23 @@ R"(usage: AssetPipeline <input> [options]
 options:
   -r, --role <role>          texture role: color, linear, normal, mask (required for textures)
   -p, --platform <platform>  windows-d3d12 (default), windows-vulkan, linux-vulkan, android-vulkan
-      --optimize <mode>      speed, balanced (default), size
+  -q, --quality <quality>    fast, normal (default), best
   -o, --output <dir>         output directory (default: Cooked/<platform>)
   -h, --help                 show this help
 )";
 
-struct PlatformInfo
+struct QualityInfo
 {
     std::string_view name;
-    GpuTarget        target;
+    EncodeQuality    quality;
 };
 
-static constexpr PlatformInfo kPlatforms[] =
+static constexpr QualityInfo kQualities[] =
 {
-    { "windows-d3d12",  GpuTarget::Desktop    },
-    { "windows-vulkan", GpuTarget::Desktop    },
-    { "linux-vulkan",   GpuTarget::Desktop    },
-    { "android-vulkan", GpuTarget::MobileASTC },
+    { "fast",   EncodeQuality::Fast   },
+    { "normal", EncodeQuality::Normal },
+    { "best",   EncodeQuality::Best   },
 };
-
-static constexpr std::string_view kOptimizeModes[] = { "speed", "balanced", "size" };
 
 static std::unexpected<int> UsageError(const std::string& message)
 {
@@ -92,14 +89,17 @@ std::expected<Options, int> ParseCommandLine(int argc, char** argv)
                 return UsageError(std::format("unknown platform '{}'", value));
             }
 
-            opts.platform = platform->name;
-            opts.target = platform->target;
+            opts.platform = *platform;
         }
-        else if (name == "--optimize")
+        else if (name == "-q" || name == "--quality")
         {
-            if (!std::ranges::contains(kOptimizeModes, value))
-                return UsageError(std::format("unknown optimize mode '{}'", value));
-            opts.optimize = value;
+            const auto quality = std::ranges::find(kQualities, value, &QualityInfo::name);
+            if (quality == std::end(kQualities))
+            {
+                return UsageError(std::format("unknown quality '{}'", value));
+            }
+
+            opts.quality = quality->quality;
         }
         else if (name == "-o" || name == "--output")
         {
@@ -118,7 +118,7 @@ std::expected<Options, int> ParseCommandLine(int argc, char** argv)
 
     if (opts.output.empty())
     {
-        opts.output = std::filesystem::path("Cooked") / opts.platform;
+        opts.output = std::filesystem::path("Cooked") / opts.platform.name;
     }
 
     return opts;

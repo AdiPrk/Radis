@@ -1,16 +1,6 @@
 #include <pch.h>
 #include "TextureEncoding.h"
 
-constexpr size_t EncodedSize(TextureFormat format, uint32_t width, uint32_t height)
-{
-    const FormatInfo& info = GetFormatInfo(format);
-    if (info.blockWidth == 0) return 0;
-
-    const size_t blocksX = (width + info.blockWidth - 1) / info.blockWidth;
-    const size_t blocksY = (height + info.blockHeight - 1) / info.blockHeight;
-    return blocksX * blocksY * info.bytesPerBlock;
-}
-
 EncodeResult EncodeTexture(const ImageView& image, const EncodeParams& params, std::span<std::byte> out)
 {
     if (out.size() != EncodedSize(params.format, image.width, image.height))

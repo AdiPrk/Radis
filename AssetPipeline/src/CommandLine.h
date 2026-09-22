@@ -1,14 +1,28 @@
 #pragma once
 
-#include "Textures/TextureRoles.h"
+#include "Textures/TextureEncoding.h"
+
+struct PlatformInfo
+{
+    std::string_view name;
+    GpuTarget        target;
+    bool             requireAlignedTopMip;   // D3D12 rejects block-compressed textures with a partial-block top mip
+};
+
+inline constexpr PlatformInfo kPlatforms[] =
+{
+    { "windows-d3d12",  GpuTarget::Desktop,    true  },
+    { "windows-vulkan", GpuTarget::Desktop,    false },
+    { "linux-vulkan",   GpuTarget::Desktop,    false },
+    { "android-vulkan", GpuTarget::MobileASTC, false },
+};
 
 struct Options
 {
     std::filesystem::path      input;
     std::optional<TextureRole> role;                        // required when the input contains textures
-    std::string                platform = "windows-d3d12";
-    GpuTarget                  target = GpuTarget::Desktop;
-    std::string                optimize = "balanced";
+    PlatformInfo               platform = kPlatforms[0];
+    EncodeQuality              quality = EncodeQuality::Normal;
     std::filesystem::path      output;                      // default: Cooked/<platform>
 };
 

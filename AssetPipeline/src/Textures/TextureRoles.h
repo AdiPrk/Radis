@@ -1,4 +1,3 @@
-// TextureRules.h
 #pragma once
 #include "TextureFormats.h"
 
@@ -10,16 +9,12 @@ constexpr const char* kRoleNames[] = { "color", "linear", "normal", "mask" };
 constexpr TextureFormat kHdrFormats[] = { TextureFormat::BC6H, TextureFormat::ASTC_6x6_HDR, TextureFormat::RGBA16F };
 constexpr TextureFormat kRoleFormats[][size_t(GpuTarget::Count)] =
 {
-    { TextureFormat::BC7_SRGB,   TextureFormat::ASTC_6x6_SRGB, TextureFormat::ETC2_RGBA_SRGB }, /* Color  */ 
+    // Desktop                   MobileASTC                    MobileETC2
+    { TextureFormat::BC7_SRGB,   TextureFormat::ASTC_6x6_SRGB, TextureFormat::ETC2_RGBA_SRGB }, /* Color  */
     { TextureFormat::BC7,        TextureFormat::ASTC_6x6,      TextureFormat::ETC2_RGBA      }, /* Linear */
     { TextureFormat::BC5,        TextureFormat::ASTC_4x4,      TextureFormat::EAC_RG11       }, /* Normal */
     { TextureFormat::BC4,        TextureFormat::ASTC_6x6,      TextureFormat::EAC_R11        }, /* Mask   */
 };
-
-constexpr TextureFormat ChooseFormat(TextureRole role, GpuTarget target)
-{
-    return kRoleFormats[size_t(role)][size_t(target)];
-}
 
 static_assert(std::size(kRoleFormats) == size_t(TextureRole::Count), "kRoleFormats out of sync with TextureRole");
 static_assert(std::size(kRoleNames) == size_t(TextureRole::Count), "kRoleNames out of sync with TextureRole");

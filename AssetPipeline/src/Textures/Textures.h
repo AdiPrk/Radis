@@ -9,6 +9,7 @@ struct TextureCookSettings
     GpuTarget     target = GpuTarget::Desktop;
     EncodeQuality quality = EncodeQuality::Normal;
     MipSettings   mips;
+    bool          requireAlignedTopMip = false;   // top mip of block formats must be a whole number of blocks (D3D12)
 };
 
 struct CookedMip
@@ -20,8 +21,9 @@ struct CookedMip
 
 struct CookedTexture
 {
-    TextureFormat          format = TextureFormat::Unknown;
-    std::vector<CookedMip> mips;   // largest first
+    TextureFormat            format = TextureFormat::Unknown;
+    std::vector<CookedMip>   mips;       // largest first
+    std::vector<std::string> warnings;   // source data the chosen format couldn't keep
 };
 
 std::expected<CookedTexture, std::string> CookTexture(const std::filesystem::path& path, const TextureCookSettings& settings);

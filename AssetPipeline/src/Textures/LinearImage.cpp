@@ -21,18 +21,20 @@ static uint8_t ToUnorm8(float v)
     return uint8_t(Saturate(v) * 255.0f + 0.5f);
 }
 
-// 8-bit sRGB -> linear, one entry per code.
-static const std::array<float, 256> kSrgbToLinear = []
+// sRGB -> linear, one entry per code of an integer channel.
+static std::vector<float> MakeSrgbToLinearTable(size_t codes)
 {
-    std::array<float, 256> table{};
-    for (size_t i = 0; i < table.size(); ++i)
+    std::vector<float> table(codes);
+    for (size_t i = 0; i < codes; ++i)
     {
-        table[i] = SrgbToLinear(float(i) / 255.0f);
+        table[i] = SrgbToLinear(float(i) / float(codes - 1));
     }
     return table;
-}();
+}
 
-// Linear -> 8-bit sRGB, indexed by the linear value quantized to 16 bits (64 KB, fits in cache).
+static const std::vector<float> kSrgb8ToLinear = MakeSrgbToLinearTable(256);
+
+// Linear -> 8-bit sRGB, indexed by the linear value quantized to 16 bits
 // Matches the exact formula except for values within 1/65535 of a rounding boundary.
 static constexpr size_t kLinearToSrgbSize = 65536;
 
@@ -49,6 +51,21 @@ static const std::array<uint8_t, kLinearToSrgbSize> kLinearToSrgb = []
 static uint8_t LinearToSrgb8(float v)
 {
     return kLinearToSrgb[size_t(Saturate(v) * float(kLinearToSrgbSize - 1) + 0.5f)];
+}
+
+// Integer RGBA -> float. `srgbToLinear` decodes color (alpha is always linear); empty for linear data.
+template <typename T>
+static void DecodeUnorm(const T* src, std::span<const float> srgbToLinear, std::vector<float>& dst)
+{
+    constexpr float kMax = float(std::numeric_limits<T>::max());
+    for (size_t i = 0; i < dst.size(); i += 4)
+    {
+        for (size_t c = 0; c < 3; ++c)
+        {
+            dst[i + c] = srgbToLinear.empty() ? float(src[i + c]) / kMax : srgbToLinear[src[i + c]];
+        }
+        dst[i + 3] = float(src[i + 3]) / kMax;
+    }
 }
 
 void NormalizeVector(float* xyz)
@@ -73,29 +90,35 @@ LinearImage ToLinearImage(const SourceImage& source, TextureRole role)
     LinearImage  image{ source.width, source.height, std::vector<float>(size_t(source.width) * source.height * 4) };
     const size_t count = image.pixels.size();
 
-    if (source.hdr)
+    // Integer color is sRGB-encoded; everything else maps to 0..1.
+    const bool srgb = role == TextureRole::Color;
+    switch (source.type)
+    {
+    case PixelType::U8:
+    {
+        DecodeUnorm(static_cast<const uint8_t*>(source.pixels.get()), srgb ? kSrgb8ToLinear : std::span<const float>(), image.pixels);
+        break;
+    }
+    case PixelType::U16:
+    {
+        static const std::vector<float> kSrgb16ToLinear = MakeSrgbToLinearTable(65536);   // built on first use
+        DecodeUnorm(static_cast<const uint16_t*>(source.pixels.get()), srgb ? kSrgb16ToLinear : std::span<const float>(), image.pixels);
+        break;
+    }
+    case PixelType::F32:
     {
         const auto* src = static_cast<const float*>(source.pixels.get());
         std::transform(src, src + count, image.pixels.begin(), [](float v) { return std::isnan(v) ? 0.0f : v; });
+        break;
     }
-    else
-    {
-        // 8-bit color is sRGB-encoded (alpha never is); everything else maps 0..255 to 0..1.
-        const auto* src = static_cast<const uint8_t*>(source.pixels.get());
-        const bool  isSrgb = role == TextureRole::Color;
-        for (size_t i = 0; i < count; ++i)
-        {
-            const bool alpha = i % 4 == 3;
-            image.pixels[i] = isSrgb && !alpha ? kSrgbToLinear[src[i]] : float(src[i]) / 255.0f;
-        }
     }
 
     if (role == TextureRole::Normal)
     {
-        // 8-bit maps always store n * 0.5 + 0.5. Float maps may hold raw [-1, 1] vectors instead:
+        // Integer maps always store n * 0.5 + 0.5. Float maps may hold raw [-1, 1] vectors instead:
         // encoded maps average about 0.5 in X and Y, raw vectors about 0.
         bool rawVectors = false;
-        if (source.hdr)
+        if (source.type == PixelType::F32)
         {
             double sum = 0.0;
             for (size_t i = 0; i < count; i += 4)

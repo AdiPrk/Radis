@@ -1,4 +1,3 @@
-// ispc_texcomp.cpp
 #include <pch.h>
 #include "../TextureEncoding.h"
 

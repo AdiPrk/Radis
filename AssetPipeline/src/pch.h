@@ -2,11 +2,20 @@
 
 // stl
 #include <algorithm>
+#include <array>
+#include <bit>
+#include <cctype>
+#include <chrono>
+#include <cmath>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <expected>
 #include <filesystem>
+#include <format>
 #include <fstream>
+#include <functional>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <set>
@@ -16,13 +25,3 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
-#include <cctype>
-#include <expected>
-#include <format>
-#include <span>
-#include <array>
-#include <cmath>
-#include <functional>
-
-// Texture encoders
-// #include <ispc_texcomp/ispc_texcomp.h>   // BC6H
