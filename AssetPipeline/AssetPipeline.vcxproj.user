@@ -6,6 +6,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LocalDebuggerCommandArguments>C:\Users\AMDOverlord8\Code\Radis\x64\Release\Tools\AssetPipeline\okayu -r color</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerCommandArgumentsHistory>C:\Users\AMDOverlord8\Code\Radis\x64\Release\Tools\AssetPipeline\okayu -r color|</LocalDebuggerCommandArgumentsHistory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LocalDebuggerCommandArguments>C:\Users\AMDOverlord8\Code\Radis\x64\Release\Tools\AssetPipeline\okayu -r color</LocalDebuggerCommandArguments>

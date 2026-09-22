@@ -13,7 +13,7 @@ static float LinearToSrgb(float c)
 
 static float Saturate(float v)
 {
-    return std::clamp(std::isnan(v) ? 0.0f : v, 0.0f, 1.0f);
+    return v > 0.0f ? (v < 1.0f ? v : 1.0f) : 0.0f;
 }
 
 static uint8_t ToUnorm8(float v)
