@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="18.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\CMakeFiles\9e01c60df6f00740f2b53349626ecd61\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{AB61F988-DCF1-3464-82A8-CA927E23F295}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

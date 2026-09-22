@@ -20,6 +20,9 @@
 #include <expected>
 #include <format>
 #include <span>
+#include <array>
+#include <cmath>
+#include <functional>
 
 // Texture encoders
 // #include <ispc_texcomp/ispc_texcomp.h>   // BC6H

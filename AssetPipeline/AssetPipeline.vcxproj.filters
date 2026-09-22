@@ -27,13 +27,13 @@
     <ClCompile Include="src\Textures\TextureEncoding.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Textures\Encoders\bc7e.cpp">
+    <ClCompile Include="src\Textures\Encoders\Bc7eEncoder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Textures\Encoders\rgbcx.cpp">
+    <ClCompile Include="src\Textures\Encoders\RgbcxEncoder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Textures\Encoders\ispc_texcomp.cpp">
+    <ClCompile Include="src\Textures\Encoders\IspcTexcompEncoder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Textures\DDS\DdsWriter.cpp">
@@ -46,6 +46,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Textures\ImageLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Textures\LinearImage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Textures\Mips.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\bc7enc_rdo\bc7enc_rdo\rgbcx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -75,6 +84,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Textures\ImageLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Textures\LinearImage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Textures\Mips.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

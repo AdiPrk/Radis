@@ -3,4 +3,13 @@
   <PropertyGroup>
     <ShowAllFiles>true</ShowAllFiles>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LocalDebuggerCommandArguments>C:\Users\AMDOverlord8\Code\Radis\x64\Release\Tools\AssetPipeline\okayu -r color</LocalDebuggerCommandArguments>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LocalDebuggerCommandArguments>C:\Users\AMDOverlord8\Code\Radis\x64\Release\Tools\AssetPipeline\okayu -r color</LocalDebuggerCommandArguments>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerCommandArgumentsHistory>okayu -r color|C:\Users\AMDOverlord8\Code\Radis\x64\Release\Tools\AssetPipeline\okayu -r color|</LocalDebuggerCommandArgumentsHistory>
+  </PropertyGroup>
 </Project>

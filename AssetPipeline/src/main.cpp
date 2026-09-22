@@ -31,10 +31,10 @@ static bool BuildTexture(const Options& opts, const InputFile& file)
         return false;
     }
 
-    const double ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count();
-    std::printf("%s -> %s (%s, %ux%u, %.1f ms)\n", file.relative.string().c_str(), outPath.string().c_str(),
-        GetFormatInfo(texture->format).name, texture->width, texture->height, ms);
-
+    const double     ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count();
+    const CookedMip& top = texture->mips.front();
+    std::printf("%s -> %s (%s, %ux%u, %zu mips, %.1f ms)\n", file.relative.string().c_str(), outPath.string().c_str(),
+        GetFormatInfo(texture->format).name, top.width, top.height, texture->mips.size(), ms);
     return true;
 }
 

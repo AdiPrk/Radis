@@ -24,6 +24,8 @@ EncodeResult EncodeTexture(const ImageView& image, const EncodeParams& params, s
 
     case TextureFormat::BC1:
     case TextureFormat::BC1_SRGB:
+    case TextureFormat::BC3:
+    case TextureFormat::BC3_SRGB:
     case TextureFormat::BC4:
     case TextureFormat::BC5:
         return EncodeWithRgbcx(image, params, out);

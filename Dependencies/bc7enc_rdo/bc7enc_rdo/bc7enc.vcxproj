@@ -1,0 +1,509 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="18.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="MinSizeRel|x64">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{73317F9E-97F5-3852-B8C6-0D1802D3A4D3}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
+    <Platform>x64</Platform>
+    <ProjectName>bc7enc</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\Debug\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">bc7enc.dir\Debug\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">bc7enc</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\Release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">bc7enc.dir\Release\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">bc7enc</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\MinSizeRel\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">bc7enc.dir\MinSizeRel\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">bc7enc</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\RelWithDebInfo\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">bc7enc.dir\RelWithDebInfo\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">bc7enc</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</GenerateManifest>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <BufferSecurityCheck>
+      </BufferSecurityCheck>
+      <CallingConvention>
+      </CallingConvention>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <FloatingPointModel>
+      </FloatingPointModel>
+      <ForceConformanceInForLoopScope>
+      </ForceConformanceInForLoopScope>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <MinimalRebuild>
+      </MinimalRebuild>
+      <OpenMPSupport>true</OpenMPSupport>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RemoveUnreferencedCodeData>
+      </RemoveUnreferencedCodeData>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <SupportJustMyCode>
+      </SupportJustMyCode>
+      <TreatWChar_tAsBuiltInType>
+      </TreatWChar_tAsBuiltInType>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level4</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;SUPPORT_BC7E=1;_DEBUG;CMAKE_INTDIR="Debug"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;SUPPORT_BC7E=1;CMAKE_INTDIR=\"Debug\"</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImageHasSafeExceptionHandlers>
+      </ImageHasSafeExceptionHandlers>
+      <ImportLibrary>C:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo/Debug/bc7enc.lib</ImportLibrary>
+      <LinkErrorReporting>
+      </LinkErrorReporting>
+      <ProgramDataBaseFile>C:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo/Debug/bc7enc.pdb</ProgramDataBaseFile>
+      <RandomizedBaseAddress>
+      </RandomizedBaseAddress>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <BufferSecurityCheck>
+      </BufferSecurityCheck>
+      <CallingConvention>
+      </CallingConvention>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <FloatingPointModel>
+      </FloatingPointModel>
+      <ForceConformanceInForLoopScope>
+      </ForceConformanceInForLoopScope>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <MinimalRebuild>
+      </MinimalRebuild>
+      <OpenMPSupport>true</OpenMPSupport>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RemoveUnreferencedCodeData>
+      </RemoveUnreferencedCodeData>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <SupportJustMyCode>
+      </SupportJustMyCode>
+      <TreatWChar_tAsBuiltInType>
+      </TreatWChar_tAsBuiltInType>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level4</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;SUPPORT_BC7E=1;NDEBUG;CMAKE_INTDIR="Release"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;SUPPORT_BC7E=1;NDEBUG;CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImageHasSafeExceptionHandlers>
+      </ImageHasSafeExceptionHandlers>
+      <ImportLibrary>C:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo/Release/bc7enc.lib</ImportLibrary>
+      <LinkErrorReporting>
+      </LinkErrorReporting>
+      <ProgramDataBaseFile>C:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo/Release/bc7enc.pdb</ProgramDataBaseFile>
+      <RandomizedBaseAddress>
+      </RandomizedBaseAddress>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
+    <ClCompile>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <BufferSecurityCheck>
+      </BufferSecurityCheck>
+      <CallingConvention>
+      </CallingConvention>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <FloatingPointModel>
+      </FloatingPointModel>
+      <ForceConformanceInForLoopScope>
+      </ForceConformanceInForLoopScope>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <MinimalRebuild>
+      </MinimalRebuild>
+      <Optimization>MinSpace</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RemoveUnreferencedCodeData>
+      </RemoveUnreferencedCodeData>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <SupportJustMyCode>
+      </SupportJustMyCode>
+      <TreatWChar_tAsBuiltInType>
+      </TreatWChar_tAsBuiltInType>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;SUPPORT_BC7E=1;NDEBUG;CMAKE_INTDIR="MinSizeRel"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;SUPPORT_BC7E=1;NDEBUG;CMAKE_INTDIR=\"MinSizeRel\"</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImageHasSafeExceptionHandlers>
+      </ImageHasSafeExceptionHandlers>
+      <ImportLibrary>C:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo/MinSizeRel/bc7enc.lib</ImportLibrary>
+      <LinkErrorReporting>
+      </LinkErrorReporting>
+      <ProgramDataBaseFile>C:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo/MinSizeRel/bc7enc.pdb</ProgramDataBaseFile>
+      <RandomizedBaseAddress>
+      </RandomizedBaseAddress>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <ClCompile>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <BufferSecurityCheck>
+      </BufferSecurityCheck>
+      <CallingConvention>
+      </CallingConvention>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <FloatingPointModel>
+      </FloatingPointModel>
+      <ForceConformanceInForLoopScope>
+      </ForceConformanceInForLoopScope>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <MinimalRebuild>
+      </MinimalRebuild>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RemoveUnreferencedCodeData>
+      </RemoveUnreferencedCodeData>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <SupportJustMyCode>
+      </SupportJustMyCode>
+      <TreatWChar_tAsBuiltInType>
+      </TreatWChar_tAsBuiltInType>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;SUPPORT_BC7E=1;NDEBUG;CMAKE_INTDIR="RelWithDebInfo"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;SUPPORT_BC7E=1;NDEBUG;CMAKE_INTDIR=\"RelWithDebInfo\"</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImageHasSafeExceptionHandlers>
+      </ImageHasSafeExceptionHandlers>
+      <ImportLibrary>C:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo/RelWithDebInfo/bc7enc.lib</ImportLibrary>
+      <LinkErrorReporting>
+      </LinkErrorReporting>
+      <ProgramDataBaseFile>C:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo/RelWithDebInfo/bc7enc.pdb</ProgramDataBaseFile>
+      <RandomizedBaseAddress>
+      </RandomizedBaseAddress>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\CMakeFiles\f8468e21d708e24a75edabf58f30a1b9\bc7e.obj.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating bc7e.obj, bc7e_avx.obj, bc7e_sse2.obj, bc7e_sse4.obj, bc7e_avx2.obj</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+ispc -g -O2 C:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo/bc7e.ispc -o C:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo/bc7e.obj -h C:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo/bc7e_ispc.h --target=sse2,sse4,avx,avx2 --opt=fast-math --opt=disable-assertions
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e.ispc;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e.obj;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e_avx.obj;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e_sse2.obj;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e_sse4.obj;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e_avx2.obj</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating bc7e.obj, bc7e_avx.obj, bc7e_sse2.obj, bc7e_sse4.obj, bc7e_avx2.obj</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+ispc -g -O2 C:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo/bc7e.ispc -o C:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo/bc7e.obj -h C:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo/bc7e_ispc.h --target=sse2,sse4,avx,avx2 --opt=fast-math --opt=disable-assertions
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e.ispc;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e.obj;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e_avx.obj;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e_sse2.obj;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e_sse4.obj;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e_avx2.obj</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating bc7e.obj, bc7e_avx.obj, bc7e_sse2.obj, bc7e_sse4.obj, bc7e_avx2.obj</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+ispc -g -O2 C:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo/bc7e.ispc -o C:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo/bc7e.obj -h C:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo/bc7e_ispc.h --target=sse2,sse4,avx,avx2 --opt=fast-math --opt=disable-assertions
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e.ispc;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e.obj;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e_avx.obj;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e_sse2.obj;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e_sse4.obj;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e_avx2.obj</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating bc7e.obj, bc7e_avx.obj, bc7e_sse2.obj, bc7e_sse4.obj, bc7e_avx2.obj</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+ispc -g -O2 C:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo/bc7e.ispc -o C:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo/bc7e.obj -h C:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo/bc7e_ispc.h --target=sse2,sse4,avx,avx2 --opt=fast-math --opt=disable-assertions
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e.ispc;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e.obj;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e_avx.obj;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e_sse2.obj;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e_sse4.obj;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e_avx2.obj</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\CMakeLists.txt">
+      <UseUtf8Encoding>Always</UseUtf8Encoding>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule C:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo -BC:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo --check-stamp-file C:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\WindowsPaths.cmake;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\CMakeFiles\4.4.3\CMakeCCompiler.cmake;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\CMakeFiles\4.4.3\CMakeCXXCompiler.cmake;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\CMakeFiles\4.4.3\CMakeRCCompiler.cmake;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\CMakeFiles\4.4.3\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule C:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo -BC:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo --check-stamp-file C:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\WindowsPaths.cmake;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\CMakeFiles\4.4.3\CMakeCCompiler.cmake;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\CMakeFiles\4.4.3\CMakeCXXCompiler.cmake;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\CMakeFiles\4.4.3\CMakeRCCompiler.cmake;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\CMakeFiles\4.4.3\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule C:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo -BC:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo --check-stamp-file C:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\WindowsPaths.cmake;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\CMakeFiles\4.4.3\CMakeCCompiler.cmake;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\CMakeFiles\4.4.3\CMakeCXXCompiler.cmake;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\CMakeFiles\4.4.3\CMakeRCCompiler.cmake;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\CMakeFiles\4.4.3\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule C:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo -BC:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo --check-stamp-file C:/Users/AMDOverlord8/Code/Radis/Dependencies/bc7enc_rdo/bc7enc_rdo/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.4\Modules\Platform\WindowsPaths.cmake;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\CMakeFiles\4.4.3\CMakeCCompiler.cmake;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\CMakeFiles\4.4.3\CMakeCXXCompiler.cmake;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\CMakeFiles\4.4.3\CMakeRCCompiler.cmake;C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\CMakeFiles\4.4.3\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7enc.cpp" />
+    <ClInclude Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7enc.h" />
+    <ClCompile Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7decomp.cpp" />
+    <ClCompile Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7decomp_ref.cpp" />
+    <ClInclude Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7decomp.h" />
+    <ClCompile Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\lodepng.cpp" />
+    <ClInclude Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\lodepng.h" />
+    <ClCompile Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\test.cpp" />
+    <ClCompile Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\rgbcx.cpp" />
+    <ClInclude Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\rgbcx.h" />
+    <ClInclude Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\rgbcx_table4.h" />
+    <ClInclude Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\rgbcx_table4_small.h" />
+    <ClCompile Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\utils.cpp" />
+    <ClInclude Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\utils.h" />
+    <ClInclude Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\miniz.h" />
+    <ClInclude Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\dds_defs.h" />
+    <ClCompile Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\ert.cpp" />
+    <ClInclude Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\ert.h" />
+    <ClCompile Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\rdo_bc_encoder.cpp" />
+    <ClInclude Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\rdo_bc_encoder.h" />
+    <None Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e.ispc">
+    </None>
+    <Object Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e.obj" />
+    <Object Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e_avx.obj" />
+    <Object Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e_avx2.obj" />
+    <Object Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e_sse2.obj" />
+    <Object Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e_sse4.obj" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\ZERO_CHECK.vcxproj">
+      <Project>{98C9E802-76C0-3AB4-9D19-E6D1D6613A2A}</Project>
+      <Name>ZERO_CHECK</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

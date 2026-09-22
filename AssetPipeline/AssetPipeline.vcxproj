@@ -126,8 +126,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\bc7enc_rdo\bc7enc_rdo;$(SolutionDir)Dependencies\tinyexr\lib\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>bc7e.lib; tinyexr.lib; miniz.lib;</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\bc7enc_rdo\bc7enc_rdo;$(SolutionDir)Dependencies\tinyexr\lib\$(Configuration);$(SolutionDir)Dependencies\ispc_texcomp\lib\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>bc7e.lib; tinyexr.lib; miniz.lib;ispc_texcomp.lib;</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
@@ -149,14 +149,18 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\bc7enc_rdo\bc7enc_rdo;$(SolutionDir)Dependencies\tinyexr\lib\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>bc7e.lib; tinyexr.lib; miniz.lib;</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\bc7enc_rdo\bc7enc_rdo;$(SolutionDir)Dependencies\tinyexr\lib\$(Configuration);$(SolutionDir)Dependencies\ispc_texcomp\lib\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>bc7e.lib; tinyexr.lib; miniz.lib;ispc_texcomp.lib;</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\Dependencies\bc7enc_rdo\bc7enc_rdo\rgbcx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="src\CommandLine.cpp" />
     <ClCompile Include="src\Inputs.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -165,10 +169,12 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\Textures\DDS\DdsWriter.cpp" />
-    <ClCompile Include="src\Textures\Encoders\bc7e.cpp" />
-    <ClCompile Include="src\Textures\Encoders\ispc_texcomp.cpp" />
-    <ClCompile Include="src\Textures\Encoders\rgbcx.cpp" />
+    <ClCompile Include="src\Textures\Encoders\Bc7eEncoder.cpp" />
+    <ClCompile Include="src\Textures\Encoders\IspcTexcompEncoder.cpp" />
+    <ClCompile Include="src\Textures\Encoders\RgbcxEncoder.cpp" />
     <ClCompile Include="src\Textures\ImageLoader.cpp" />
+    <ClCompile Include="src\Textures\LinearImage.cpp" />
+    <ClCompile Include="src\Textures\Mips.cpp" />
     <ClCompile Include="src\Textures\TextureEncoding.cpp" />
     <ClCompile Include="src\Textures\Textures.cpp" />
   </ItemGroup>
@@ -178,6 +184,8 @@
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\Textures\DDS\DdsWriter.h" />
     <ClInclude Include="src\Textures\ImageLoader.h" />
+    <ClInclude Include="src\Textures\LinearImage.h" />
+    <ClInclude Include="src\Textures\Mips.h" />
     <ClInclude Include="src\Textures\TextureEncoding.h" />
     <ClInclude Include="src\Textures\TextureFormats.h" />
     <ClInclude Include="src\Textures\TextureRoles.h" />

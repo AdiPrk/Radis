@@ -14,9 +14,12 @@ static constexpr uint32_t DDSD_CAPS = 0x00000001;
 static constexpr uint32_t DDSD_HEIGHT = 0x00000002;
 static constexpr uint32_t DDSD_WIDTH = 0x00000004;
 static constexpr uint32_t DDSD_PIXELFORMAT = 0x00001000;
+static constexpr uint32_t DDSD_MIPMAPCOUNT = 0x00020000;
 static constexpr uint32_t DDSD_LINEARSIZE = 0x00080000;
 static constexpr uint32_t DDPF_FOURCC = 0x00000004;
+static constexpr uint32_t DDSCAPS_COMPLEX = 0x00000008;
 static constexpr uint32_t DDSCAPS_TEXTURE = 0x00001000;
+static constexpr uint32_t DDSCAPS_MIPMAP = 0x00400000;
 static constexpr uint32_t DDS_DIMENSION_TEXTURE2D = 3;
 
 struct DdsPixelFormat
@@ -74,21 +77,31 @@ static DXGI_FORMAT ToDxgiFormat(TextureFormat format)
 
 std::expected<void, std::string> WriteDds(const std::filesystem::path& path, const CookedTexture& texture)
 {
+    if (texture.mips.empty())
+    {
+        return std::unexpected("texture has no mips");
+    }
+
     const DXGI_FORMAT dxgiFormat = ToDxgiFormat(texture.format);
     if (dxgiFormat == DXGI_FORMAT_UNKNOWN)
+    {
         return std::unexpected(std::format("{} can't be stored in a .dds", GetFormatInfo(texture.format).name));
+    }
+
+    const CookedMip& top = texture.mips.front();
+    const uint32_t   mipCount = uint32_t(texture.mips.size());
 
     DdsHeader header{};
     header.size = sizeof(DdsHeader);
-    header.flags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_LINEARSIZE;
-    header.height = texture.height;
-    header.width = texture.width;
-    header.pitchOrLinearSize = uint32_t(texture.data.size());
-    header.mipMapCount = 1;
+    header.flags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_LINEARSIZE | DDSD_MIPMAPCOUNT;
+    header.height = top.height;
+    header.width = top.width;
+    header.pitchOrLinearSize = uint32_t(top.data.size());
+    header.mipMapCount = mipCount;
     header.pixelFormat.size = sizeof(DdsPixelFormat);
     header.pixelFormat.flags = DDPF_FOURCC;
     header.pixelFormat.fourCC = DDS_FOURCC_DX10;
-    header.caps = DDSCAPS_TEXTURE;
+    header.caps = DDSCAPS_TEXTURE | (mipCount > 1 ? DDSCAPS_COMPLEX | DDSCAPS_MIPMAP : 0);
 
     const DdsHeaderDx10 dx10
     {
@@ -104,14 +117,21 @@ std::expected<void, std::string> WriteDds(const std::filesystem::path& path, con
 
     std::ofstream file(path, std::ios::binary);
     if (!file)
+    {
         return std::unexpected("cannot open " + path.string());
+    }
 
     file.write(reinterpret_cast<const char*>(&DDS_MAGIC), sizeof(DDS_MAGIC));
     file.write(reinterpret_cast<const char*>(&header), sizeof(header));
     file.write(reinterpret_cast<const char*>(&dx10), sizeof(dx10));
-    file.write(reinterpret_cast<const char*>(texture.data.data()), std::streamsize(texture.data.size()));
+    for (const CookedMip& mip : texture.mips)
+    {
+        file.write(reinterpret_cast<const char*>(mip.data.data()), std::streamsize(mip.data.size()));
+    }
 
     if (!file)
+    {
         return std::unexpected("failed writing " + path.string());
+    }
     return {};
 }

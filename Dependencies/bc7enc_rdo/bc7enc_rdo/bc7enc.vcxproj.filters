@@ -1,0 +1,107 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="18.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7enc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7decomp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7decomp_ref.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\lodepng.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\rgbcx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\ert.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\rdo_bc_encoder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7enc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7decomp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\lodepng.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\rgbcx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\rgbcx_table4.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\rgbcx_table4_small.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\miniz.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\dds_defs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\ert.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\rdo_bc_encoder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\CMakeFiles\f8468e21d708e24a75edabf58f30a1b9\bc7e.obj.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e.ispc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Object Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e.obj">
+      <Filter>Object Files</Filter>
+    </Object>
+    <Object Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e_avx.obj">
+      <Filter>Object Files</Filter>
+    </Object>
+    <Object Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e_avx2.obj">
+      <Filter>Object Files</Filter>
+    </Object>
+    <Object Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e_sse2.obj">
+      <Filter>Object Files</Filter>
+    </Object>
+    <Object Include="C:\Users\AMDOverlord8\Code\Radis\Dependencies\bc7enc_rdo\bc7enc_rdo\bc7e_sse4.obj">
+      <Filter>Object Files</Filter>
+    </Object>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{AB61F988-DCF1-3464-82A8-CA927E23F295}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{28F79E88-7539-3924-9A0E-9BA36811300D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object Files">
+      <UniqueIdentifier>{335E1F63-E930-3244-A5CC-2DAEB179C535}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{CAD5FC89-D09C-3616-8E58-F2E128455A59}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

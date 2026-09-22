@@ -13,6 +13,8 @@ enum class TextureFormat : uint8_t
     // desktop
     BC1, 
     BC1_SRGB, 
+    BC3,
+    BC3_SRGB,
     BC4, 
     BC5, 
     BC6H, 
@@ -59,6 +61,8 @@ constexpr FormatInfo kFormatInfo[] =
     { "RGBA16F",        1, 1,  8,    false, true  },
     { "BC1",            4, 4,  8,    false, false },
     { "BC1_SRGB",       4, 4,  8,    true,  false },
+    { "BC3",            4, 4, 16,    false, false },
+    { "BC3_SRGB",       4, 4, 16,    true,  false },
     { "BC4",            4, 4,  8,    false, false },
     { "BC5",            4, 4, 16,    false, false },
     { "BC6H",           4, 4, 16,    false, true  },
@@ -82,3 +86,21 @@ constexpr FormatInfo kFormatInfo[] =
 static_assert(std::size(kFormatInfo) == size_t(TextureFormat::Count), "kFormatInfo out of sync with TextureFormat");
 
 constexpr const FormatInfo& GetFormatInfo(TextureFormat f) { return kFormatInfo[size_t(f)]; }
+
+// The same format without the sRGB label; both store identical blocks.
+constexpr TextureFormat WithoutSrgb(TextureFormat f)
+{
+    switch (f)
+    {
+    case TextureFormat::RGBA8_SRGB:     return TextureFormat::RGBA8;
+    case TextureFormat::BC1_SRGB:       return TextureFormat::BC1;
+    case TextureFormat::BC3_SRGB:       return TextureFormat::BC3;
+    case TextureFormat::BC7_SRGB:       return TextureFormat::BC7;
+    case TextureFormat::ETC2_RGB_SRGB:  return TextureFormat::ETC2_RGB;
+    case TextureFormat::ETC2_RGBA_SRGB: return TextureFormat::ETC2_RGBA;
+    case TextureFormat::ASTC_4x4_SRGB:  return TextureFormat::ASTC_4x4;
+    case TextureFormat::ASTC_6x6_SRGB:  return TextureFormat::ASTC_6x6;
+    case TextureFormat::ASTC_8x8_SRGB:  return TextureFormat::ASTC_8x8;
+    default:                            return f;
+    }
+}
