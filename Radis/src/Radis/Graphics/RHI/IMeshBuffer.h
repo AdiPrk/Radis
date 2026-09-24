@@ -73,10 +73,10 @@ namespace Radis
         virtual void Draw(VkCommandBuffer cmd = nullptr, uint32_t instanceBase = 0) = 0;
 
         // Vulkan-specific accessors for raytracing
-        virtual Buffer& GetVertexBuffer() { static Buffer dummy{}; return dummy; }
-        virtual Buffer& GetIndexBuffer() { static Buffer dummy{}; return dummy; }
-        virtual const Buffer& GetVertexBuffer() const { static Buffer dummy{}; return dummy; }
-        virtual const Buffer& GetIndexBuffer() const { static Buffer dummy{}; return dummy; }
+        virtual Buffer& GetVertexBuffer() = 0;
+        virtual Buffer& GetIndexBuffer() = 0;
+        virtual const Buffer& GetVertexBuffer() const = 0;
+        virtual const Buffer& GetIndexBuffer() const = 0;
 
         // Buffer state accessors
         uint32_t GetVertexCount() const { return mVertexCount; }

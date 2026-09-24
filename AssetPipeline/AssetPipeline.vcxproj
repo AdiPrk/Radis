@@ -224,6 +224,7 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y</Comm
     <ClInclude Include="src\Models\ModelImport.h" />
     <ClInclude Include="src\Models\ModelWriter.h" />
     <ClInclude Include="src\pch.h" />
+    <ClInclude Include="src\Textures\DDS\DdsFormat.h" />
     <ClInclude Include="src\Textures\DDS\DdsWriter.h" />
     <ClInclude Include="src\Textures\Dilate.h" />
     <ClInclude Include="src\Textures\ImageLoader.h" />

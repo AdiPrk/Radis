@@ -1,13 +1,14 @@
 /*****************************************************************//**
  * \file   TextureLoader.cpp
  * \brief  Implementation of the TextureLoader class for loading and converting textures.
- * 
+ *
  * \author Aditya Prakash
  * \date   January 2026
  *********************************************************************/
 
 #include <PCH/pch.h>
 #include "TextureLoader.h"
+#include "DDS/DdsLoader.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -15,7 +16,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-// ktx2
+ // ktx2
 #include "ktx.h"
 
 namespace Radis
@@ -23,6 +24,13 @@ namespace Radis
     bool TextureLoader::IsKTX2Path(const std::string& path)
     {
         return path.size() >= 5 && path.substr(path.size() - 5) == ".ktx2";
+    }
+
+    bool TextureLoader::IsDDSPath(const std::string& path)
+    {
+        std::string extension = std::filesystem::path(path).extension().string();
+        std::ranges::transform(extension, extension.begin(), [](unsigned char c) { return char(std::tolower(c)); });
+        return extension == ".dds";
     }
 
     void TextureLoader::CreateKTX2File(const std::string& path, const std::string& outputPath)
@@ -153,6 +161,11 @@ namespace Radis
             return false;
         }
 
+        if (IsDDSPath(path))
+        {
+            return DdsLoader::FromFile(path, outTexture);
+        }
+
         if (IsKTX2Path(path))
         {
             return FromKTX2File(path, outTexture);
@@ -275,7 +288,7 @@ namespace Radis
             float* data = stbi_loadf(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
             if (!data)
             {
-                RADIS_ERROR("Failed to load HDR texture: {0}", path); 
+                RADIS_ERROR("Failed to load HDR texture: {0}", path);
                 return false;
             }
 
@@ -284,10 +297,10 @@ namespace Radis
         }
 
         unsigned char* data = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
-        if (!data) 
+        if (!data)
         {
-            RADIS_ERROR("Failed to load texture: {0}", path); 
-            return false; 
+            RADIS_ERROR("Failed to load texture: {0}", path);
+            return false;
         }
 
         FillLDRTexture(outTexture, path, data, width, height);
@@ -300,6 +313,11 @@ namespace Radis
         {
             RADIS_ERROR("Invalid texture data provided for: {0}", name);
             return false;
+        }
+
+        if (DdsLoader::IsDds(textureData, textureSize))
+        {
+            return DdsLoader::FromMemory(textureData, textureSize, name, outTexture);
         }
 
         stbi_set_flip_vertically_on_load(true);
@@ -320,10 +338,10 @@ namespace Radis
         }
 
         unsigned char* data = stbi_load_from_memory(textureData, size, &width, &height, &channels, STBI_rgb_alpha);
-        if (!data) 
+        if (!data)
         {
             RADIS_ERROR("Failed to load texture from memory: {0}", name);
-            return false; 
+            return false;
         }
 
         FillLDRTexture(outTexture, name, data, width, height);

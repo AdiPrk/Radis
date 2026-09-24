@@ -107,7 +107,7 @@ namespace Radis
             // textureLibrary->FlushAll();
             
             // TODO: dds
-            // textureLibrary->QueueTextureLoad(Assets::ImagesPath + "M_Soul_Rocks2_Inst_8_BaseColor.dds");
+            textureLibrary->QueueTextureLoad(Assets::ImagesPath + "M_Soul_Rocks2_Inst_8_BaseColor.dds");
         }
         else
         {

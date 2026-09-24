@@ -1,7 +1,7 @@
 /*****************************************************************//**
  * \file   TextureLoader.h
  * \brief  Definition of the TextureLoader class for loading textures from files and memory.
- * 
+ *
  * \author Aditya Prakash
  * \date   January 2026
  *********************************************************************/
@@ -41,9 +41,10 @@ namespace Radis
         // Multi-threaded
         static void Load(TextureLoadData& loadData);
         static void LoadMT(std::vector<TextureLoadData>& loadData);
-        
+
         // Helpers
         static bool IsKTX2Path(const std::string& path);
+        static bool IsDDSPath(const std::string& path);
         static void CreateKTX2File(const std::string& path, const std::string& outputPath);
 
     private:

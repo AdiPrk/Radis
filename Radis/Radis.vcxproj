@@ -265,6 +265,7 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Radis\Graphics\Common\Animation\Animator.cpp" />
     <ClCompile Include="src\Radis\Graphics\Common\Animation\Bone.cpp" />
     <ClCompile Include="src\Radis\Graphics\Common\AssimpGlmHelper.cpp" />
+    <ClCompile Include="src\Radis\Graphics\Common\DDS\DdsLoader.cpp" />
     <ClCompile Include="src\Radis\Graphics\Common\IBL\rgbe.cpp" />
     <ClCompile Include="src\Radis\Graphics\Common\IBL\IrradianceMap.cpp" />
     <ClCompile Include="src\Radis\Graphics\Common\Model.cpp" />
@@ -377,6 +378,8 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Radis\Graphics\Common\Animation\Bone.h" />
     <ClInclude Include="src\Radis\Graphics\Common\Animation\VQS.h" />
     <ClInclude Include="src\Radis\Graphics\Common\AssimpGlmHelper.h" />
+    <ClInclude Include="src\Radis\Graphics\Common\DDS\DdsFormat.h" />
+    <ClInclude Include="src\Radis\Graphics\Common\DDS\DdsLoader.h" />
     <ClInclude Include="src\Radis\Graphics\Common\IBL\rgbe.h" />
     <ClInclude Include="src\Radis\Graphics\Common\IBL\IrradianceMap.h" />
     <ClInclude Include="src\Radis\Graphics\Common\Model.h" />
