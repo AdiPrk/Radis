@@ -119,19 +119,28 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\ispc_texcomp;$(SolutionDir)Dependencies\bc7enc_rdo;$(SolutionDir)Dependencies\stb_image\stb;$(SolutionDir)Dependencies\tinyexr;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\ispc_texcomp;$(SolutionDir)Dependencies\bc7enc_rdo;$(SolutionDir)Dependencies\stb_image\stb;$(SolutionDir)Dependencies\tinyexr;$(SolutionDir)Dependencies\assimp\include;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\MikkTSpace;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\bc7enc_rdo\bc7enc_rdo;$(SolutionDir)Dependencies\tinyexr\lib\$(Configuration);$(SolutionDir)Dependencies\ispc_texcomp\lib\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>bc7e.lib; tinyexr.lib; miniz.lib;ispc_texcomp.lib;</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\bc7enc_rdo\bc7enc_rdo;$(SolutionDir)Dependencies\tinyexr\lib\$(Configuration);$(SolutionDir)Dependencies\ispc_texcomp\lib\$(Configuration);$(SolutionDir)Dependencies\assimp\lib;$(SolutionDir)Dependencies\meshop;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>bc7e.lib;tinyexr.lib;miniz.lib;ispc_texcomp.lib;meshoptimizerd.lib;assimp-vc143-mtd.lib</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
     </Manifest>
+    <PostBuildEvent>
+      <Command>:: Copy Assimp DLLs
+xcopy "$(SolutionDir)Dependencies\assimp\poly2tri.dll" "$(OutDir)" /Y
+xcopy "$(SolutionDir)Dependencies\assimp\minizip.dll" "$(OutDir)" /Y
+xcopy "$(SolutionDir)Dependencies\assimp\pugixml.dll" "$(OutDir)" /Y
+xcopy "$(SolutionDir)Dependencies\assimp\assimp-vc143-mtd.dll" "$(OutDir)" /Y
+xcopy "$(SolutionDir)Dependencies\assimp\zlibd1.dll" "$(OutDir)" /Y
+xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -142,33 +151,55 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\ispc_texcomp;$(SolutionDir)Dependencies\bc7enc_rdo;$(SolutionDir)Dependencies\stb_image\stb;$(SolutionDir)Dependencies\tinyexr;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\ispc_texcomp;$(SolutionDir)Dependencies\bc7enc_rdo;$(SolutionDir)Dependencies\stb_image\stb;$(SolutionDir)Dependencies\tinyexr;$(SolutionDir)Dependencies\assimp\include;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\MikkTSpace;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\bc7enc_rdo\bc7enc_rdo;$(SolutionDir)Dependencies\tinyexr\lib\$(Configuration);$(SolutionDir)Dependencies\ispc_texcomp\lib\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>bc7e.lib; tinyexr.lib; miniz.lib;ispc_texcomp.lib;</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\bc7enc_rdo\bc7enc_rdo;$(SolutionDir)Dependencies\tinyexr\lib\$(Configuration);$(SolutionDir)Dependencies\ispc_texcomp\lib\$(Configuration);$(SolutionDir)Dependencies\assimp\lib;$(SolutionDir)Dependencies\meshop;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>bc7e.lib;tinyexr.lib;miniz.lib;ispc_texcomp.lib;meshoptimizer.lib;assimp-vc143-mt.lib</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
     </Manifest>
+    <PostBuildEvent>
+      <Command>:: Copy Assimp DLLs
+xcopy "$(SolutionDir)Dependencies\assimp\poly2tri.dll" "$(OutDir)" /Y
+xcopy "$(SolutionDir)Dependencies\assimp\minizip.dll" "$(OutDir)" /Y
+xcopy "$(SolutionDir)Dependencies\assimp\pugixml.dll" "$(OutDir)" /Y
+xcopy "$(SolutionDir)Dependencies\assimp\assimp-vc143-mt.dll" "$(OutDir)" /Y
+xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y
+xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\Dependencies\bc7enc_rdo\bc7enc_rdo\rgbcx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\Dependencies\MikkTSpace\MikkTSpace\mikktspace.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="src\AssetId.cpp" />
     <ClCompile Include="src\CommandLine.cpp" />
+    <ClCompile Include="src\FileIO.cpp" />
     <ClCompile Include="src\Inputs.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Models\Materials.cpp" />
+    <ClCompile Include="src\Models\MeshProcessing.cpp" />
+    <ClCompile Include="src\Models\ModelCook.cpp" />
+    <ClCompile Include="src\Models\ModelDump.cpp" />
+    <ClCompile Include="src\Models\ModelImport.cpp" />
+    <ClCompile Include="src\Models\ModelWriter.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\Textures\DDS\DdsWriter.cpp" />
+    <ClCompile Include="src\Textures\Dilate.cpp" />
     <ClCompile Include="src\Textures\Encoders\Bc7eEncoder.cpp" />
     <ClCompile Include="src\Textures\Encoders\IspcTexcompEncoder.cpp" />
     <ClCompile Include="src\Textures\Encoders\RgbcxEncoder.cpp" />
@@ -177,12 +208,24 @@
     <ClCompile Include="src\Textures\Mips.cpp" />
     <ClCompile Include="src\Textures\TextureEncoding.cpp" />
     <ClCompile Include="src\Textures\Textures.cpp" />
+    <ClCompile Include="src\Textures\TextureCookQueue.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\AssetId.h" />
     <ClInclude Include="src\CommandLine.h" />
+    <ClInclude Include="src\FileIO.h" />
     <ClInclude Include="src\Inputs.h" />
+    <ClInclude Include="src\Models\ImportedScene.h" />
+    <ClInclude Include="src\Models\Materials.h" />
+    <ClInclude Include="src\Models\MeshProcessing.h" />
+    <ClInclude Include="src\Models\ModelCook.h" />
+    <ClInclude Include="src\Models\ModelDump.h" />
+    <ClInclude Include="src\Models\ModelFormat.h" />
+    <ClInclude Include="src\Models\ModelImport.h" />
+    <ClInclude Include="src\Models\ModelWriter.h" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\Textures\DDS\DdsWriter.h" />
+    <ClInclude Include="src\Textures\Dilate.h" />
     <ClInclude Include="src\Textures\ImageLoader.h" />
     <ClInclude Include="src\Textures\LinearImage.h" />
     <ClInclude Include="src\Textures\Mips.h" />
@@ -190,6 +233,7 @@
     <ClInclude Include="src\Textures\TextureFormats.h" />
     <ClInclude Include="src\Textures\TextureRoles.h" />
     <ClInclude Include="src\Textures\Textures.h" />
+    <ClInclude Include="src\Textures\TextureCookQueue.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

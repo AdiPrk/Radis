@@ -1,77 +1,64 @@
 #include <pch.h>
 #include "CommandLine.h"
 #include "Inputs.h"
-#include "Textures/Textures.h"
-#include "Textures/DDS/DdsWriter.h"
+#include "AssetId.h"
+#include "Models/ModelCook.h"
+#include "Models/ModelDump.h"
+#include "Textures/TextureCookQueue.h"
 
-// Where a texture's cooked file goes, relative to the output directory.
-static std::filesystem::path CookedTexturePath(const InputFile& file)
+static TextureRequest MakeTextureRequest(std::string key, const std::filesystem::path& path, TextureRole role)
 {
-    return std::filesystem::path(file.relative).replace_extension(".dds");
+    TextureRequest request;
+    request.id = MakeAssetId(key);
+    request.name = std::move(key);
+    request.inputs.push_back({ .path = path });
+    request.settings.role = role;
+    return request;
 }
 
-// Sources that differ only by extension (or letter case, on case-insensitive file systems)
-// would cook to the same file and silently overwrite each other.
-static bool CheckOutputCollisions(std::span<const InputFile> inputs)
+static bool ReportModel(const std::string& name, const ModelCookResult& result)
 {
-    std::unordered_map<std::string, const InputFile*> claimed;
-    bool ok = true;
-
-    for (const InputFile& file : inputs)
+    for (const std::string& warning : result.warnings)
     {
-        if (file.kind != AssetKind::Texture)
-            continue;
-
-        const std::filesystem::path cooked = CookedTexturePath(file);
-        std::string key = cooked.generic_string();
-        std::ranges::transform(key, key.begin(), [](unsigned char c) { return char(std::tolower(c)); });
-
-        if (const auto [it, inserted] = claimed.try_emplace(std::move(key), &file); !inserted)
-        {
-            std::fprintf(stderr, "error: %s and %s both cook to %s\n", it->second->relative.string().c_str(),
-                file.relative.string().c_str(), cooked.string().c_str());
-            ok = false;
-        }
+        std::fprintf(stderr, "warning: %s: %s\n", name.c_str(), warning.c_str());
     }
-    return ok;
-}
 
-static bool BuildTexture(const Options& opts, const InputFile& file)
-{
-    const auto start = std::chrono::steady_clock::now();
-
-    const TextureCookSettings settings
+    if (!result.error.empty())
     {
-        .role = *opts.role,
-        .target = opts.platform.target,
-        .quality = opts.quality,
-        .requireAlignedTopMip = opts.platform.requireAlignedTopMip,
-    };
-
-    const auto texture = CookTexture(file.path, settings);
-    if (!texture)
-    {
-        std::fprintf(stderr, "error: %s: %s\n", file.relative.string().c_str(), texture.error().c_str());
+        std::fprintf(stderr, "error: %s: %s\n", name.c_str(), result.error.c_str());
         return false;
     }
 
-    for (const std::string& warning : texture->warnings)
-    {
-        std::fprintf(stderr, "warning: %s: %s\n", file.relative.string().c_str(), warning.c_str());
-    }
-
-    const std::filesystem::path outPath = opts.output / CookedTexturePath(file);
-    if (auto written = WriteDds(outPath, *texture); !written)
-    {
-        std::fprintf(stderr, "error: %s\n", written.error().c_str());
-        return false;
-    }
-
-    const double     ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count();
-    const CookedMip& top = texture->mips.front();
-    std::printf("%s -> %s (%s, %ux%u, %zu mips, %.1f ms)\n", file.relative.string().c_str(), outPath.string().c_str(),
-        GetFormatInfo(texture->format).name, top.width, top.height, texture->mips.size(), ms);
+    std::printf("%s -> %s (%u submeshes, %u materials, %u vertices, %u triangles, %.1f ms)\n", name.c_str(), result.output.string().c_str(),
+        result.submeshes, result.materials, result.vertices, result.triangles, result.milliseconds);
     return true;
+}
+
+// Prints the results once cooking is done, in request order.
+static uint32_t ReportTextures(const TextureCookQueue& queue, std::span<const TextureCookResult> results)
+{
+    uint32_t failed = 0;
+    for (size_t i = 0; i < results.size(); ++i)
+    {
+        const char* name = queue.Requests()[i].name.c_str();
+        const TextureCookResult& result = results[i];
+
+        for (const std::string& warning : result.warnings)
+        {
+            std::fprintf(stderr, "warning: %s: %s\n", name, warning.c_str());
+        }
+
+        if (!result.error.empty())
+        {
+            std::fprintf(stderr, "error: %s: %s\n", name, result.error.c_str());
+            ++failed;
+            continue;
+        }
+
+        std::printf("%s -> %s (%s, %ux%u, %u mips, %.1f ms)\n", name, result.output.string().c_str(),
+            GetFormatInfo(result.format).name, result.width, result.height, result.mipCount, result.milliseconds);
+    }
+    return failed;
 }
 
 int main(int argc, char** argv)
@@ -82,6 +69,16 @@ int main(int argc, char** argv)
         return opts.error();
     }
 
+    if (!opts->dump.empty())
+    {
+        const auto dumped = DumpModel(opts->dump);
+        if (!dumped)
+        {
+            std::fprintf(stderr, "error: %s: %s\n", opts->dump.string().c_str(), dumped.error().c_str());
+        }
+        return dumped ? 0 : 1;
+    }
+
     const auto inputs = CollectInputs(opts->input, opts->output);
     if (!inputs)
     {
@@ -89,33 +86,66 @@ int main(int argc, char** argv)
         return 2;
     }
 
-    const bool hasTextures = std::ranges::any_of(*inputs, [](const InputFile& f) { return f.kind == AssetKind::Texture; });
-    if (hasTextures && !opts->role)
-    {
-        std::fprintf(stderr, "error: textures need --role color|linear|normal|mask\n");
-        return 2;
-    }
-
-    if (!CheckOutputCollisions(*inputs))
-    {
-        return 2;
-    }
-
     const auto start = std::chrono::steady_clock::now();
     uint32_t   failed = 0;
 
+    // Models first: their materials decide how the images they use are cooked.
+    TextureCookQueue                textures;
+    std::unordered_set<std::string> modelImages;
+    ModelCookContext                modelContext{ opts->root, opts->output, textures, modelImages };
     for (const InputFile& file : *inputs)
     {
-        switch (file.kind)
+        if (file.kind != AssetKind::Model)
+            continue;
+
+        const auto key = SourceKey(file.path, opts->root);
+        if (!key)
         {
-        case AssetKind::Texture:
-            failed += BuildTexture(*opts, file) ? 0 : 1;
-            break;
-        case AssetKind::Model:
-            std::printf("skipped %s (models not implemented yet)\n", file.relative.string().c_str());
-            break;
+            std::fprintf(stderr, "error: %s: %s\n", file.relative.string().c_str(), key.error().c_str());
+            ++failed;
+            continue;
+        }
+        failed += ReportModel(*key, CookModel(file.path, *key, modelContext)) ? 0 : 1;
+    }
+
+    // Then the textures no model uses, which need --role. Without one they're skipped: model folders
+    // often hold images their materials don't use.
+    uint32_t skipped = 0;
+    for (const InputFile& file : *inputs)
+    {
+        if (file.kind != AssetKind::Texture)
+            continue;
+
+        auto key = SourceKey(file.path, opts->root);
+        if (key && modelImages.contains(*key))
+            continue;
+
+        if (!opts->role)
+        {
+            ++skipped;
+            continue;
+        }
+
+        const auto added = key.and_then([&](std::string& k) { return textures.Add(MakeTextureRequest(std::move(k), file.path, *opts->role)); });
+        if (!added)
+        {
+            std::fprintf(stderr, "error: %s: %s\n", file.relative.string().c_str(), added.error().c_str());
+            ++failed;
         }
     }
+
+    if (skipped > 0)
+    {
+        std::fprintf(stderr, "warning: skipped %u textures no model uses; cook them with --role color|linear|normal|mask\n", skipped);
+    }
+
+    const TextureBuildOptions buildOptions
+    {
+        .target = opts->platform.target,
+        .quality = opts->quality,
+        .requireAlignedTopMip = opts->platform.requireAlignedTopMip,
+    };
+    failed += ReportTextures(textures, textures.Cook(buildOptions, opts->output));
 
     const double seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
     std::printf("%zu inputs, %u failed, %.2f s\n", inputs->size(), failed, seconds);

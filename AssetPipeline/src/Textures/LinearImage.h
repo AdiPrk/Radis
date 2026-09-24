@@ -15,7 +15,15 @@ struct LinearImage
     const float* Row(uint32_t y) const { return pixels.data() + size_t(y) * width * 4; }
 };
 
-LinearImage ToLinearImage(const SourceImage& source, TextureRole role);
+// Decodes channel `from` of `source` into channel `to` of `image`, which must be the same size.
+// Integers map to 0..1 (sRGB-decoded when `srgb`); floats are copied with NaN replaced by 0.
+void DecodeChannel(const SourceImage& source, uint32_t from, bool srgb, LinearImage& image, uint32_t to);
+
+void FillChannel(LinearImage& image, uint32_t channel, float value);
+
+// Turns stored normals into unit vectors: integer sources always hold n * 0.5 + 0.5, float
+// sources may hold either that or raw [-1, 1] vectors, which is detected from the data.
+void DecodeNormals(LinearImage& image, bool floatSource);
 
 // Writes encoder input into `out` (resized as needed, so it can be reused across levels):
 // RGBA32F for HDR formats, RGBA8 otherwise, sRGB-encoded for sRGB formats.

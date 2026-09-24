@@ -20,10 +20,12 @@ inline constexpr PlatformInfo kPlatforms[] =
 struct Options
 {
     std::filesystem::path      input;
-    std::optional<TextureRole> role;                        // required when the input contains textures
+    std::optional<TextureRole> role;                        // for textures no model uses
     PlatformInfo               platform = kPlatforms[0];
     EncodeQuality              quality = EncodeQuality::Normal;
     std::filesystem::path      output;                      // default: Cooked/<platform>
+    std::filesystem::path      root;                        // asset IDs are relative to this; default: the input's directory
+    std::filesystem::path      dump;                        // a cooked model to print instead of cooking
 };
 
 // On failure the error is the process exit code: 0 after --help, 2 for usage errors (already printed).

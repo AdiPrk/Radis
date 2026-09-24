@@ -1,5 +1,6 @@
 #include <pch.h>
 #include "DdsWriter.h"
+#include "../../FileIO.h"
 
 // Names and values from the DDS file format specification.
 static constexpr uint32_t MakeFourCC(char a, char b, char c, char d)
@@ -134,40 +135,15 @@ std::expected<void, std::string> WriteDds(const std::filesystem::path& path, con
         .miscFlags2 = 0,
     };
 
-    std::error_code ec;
-    std::filesystem::create_directories(path.parent_path(), ec);
-
-    // Write next to the target and rename, so a failed or interrupted write never leaves a truncated file behind.
-    std::filesystem::path temp = path;
-    temp += ".tmp";
-
-    std::ofstream file(temp, std::ios::binary);
-    if (!file)
+    std::vector<std::span<const std::byte>> parts =
     {
-        return std::unexpected("cannot open " + temp.string());
-    }
-
-    file.write(reinterpret_cast<const char*>(&DDS_MAGIC), sizeof(DDS_MAGIC));
-    file.write(reinterpret_cast<const char*>(&header), sizeof(header));
-    file.write(reinterpret_cast<const char*>(&dx10), sizeof(dx10));
+        std::as_bytes(std::span(&DDS_MAGIC, 1)),
+        std::as_bytes(std::span(&header, 1)),
+        std::as_bytes(std::span(&dx10, 1)),
+    };
     for (const CookedMip& mip : texture.mips)
     {
-        file.write(reinterpret_cast<const char*>(mip.data.data()), std::streamsize(mip.data.size()));
+        parts.push_back(mip.data);
     }
-    file.close();
-
-    if (!file)
-    {
-        std::filesystem::remove(temp, ec);
-        return std::unexpected("failed writing " + temp.string());
-    }
-
-    std::filesystem::rename(temp, path, ec);   // replaces an existing file
-    if (ec)
-    {
-        const std::string reason = ec.message();
-        std::filesystem::remove(temp, ec);
-        return std::unexpected(std::format("cannot replace {}: {}", path.string(), reason));
-    }
-    return {};
+    return WriteFileAtomic(path, parts);
 }

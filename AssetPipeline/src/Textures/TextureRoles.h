@@ -25,6 +25,13 @@ constexpr bool RoleKeepsHdr(TextureRole role)
     return role == TextureRole::Color || role == TextureRole::Linear;
 }
 
+// Alpha is opacity: color under transparent texels is never seen and must not bleed into visible
+// ones (alpha-weighted mips, dilation). Other roles may keep unrelated data in alpha.
+constexpr bool RoleAlphaIsOpacity(TextureRole role)
+{
+    return role == TextureRole::Color;
+}
+
 constexpr TextureFormat ChooseFormat(TextureRole role, bool hdr, GpuTarget target)
 {
     if (hdr && RoleKeepsHdr(role))

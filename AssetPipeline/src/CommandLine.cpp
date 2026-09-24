@@ -3,14 +3,19 @@
 
 static constexpr std::string_view kHelp =
 R"(usage: AssetPipeline <input> [options]
+       AssetPipeline --dump <cooked model>
 
   <input>                    a texture or model file, or a directory (searched recursively)
 
 options:
-  -r, --role <role>          texture role: color, linear, normal, mask (required for textures)
+  -r, --role <role>          role of textures no model uses: color, linear, normal, mask
+                             (textures a model uses get their role from its materials)
   -p, --platform <platform>  windows-d3d12 (default), windows-vulkan, linux-vulkan, android-vulkan
   -q, --quality <quality>    fast, normal (default), best
   -o, --output <dir>         output directory (default: Cooked/<platform>)
+      --root <dir>           asset root that asset IDs are derived from (default: the input's directory);
+                             pass the same root on every run so IDs stay the same
+      --dump <file>          print a cooked model's contents and check it, instead of cooking
   -h, --help                 show this help
 )";
 
@@ -105,13 +110,21 @@ std::expected<Options, int> ParseCommandLine(int argc, char** argv)
         {
             opts.output = value;
         }
+        else if (name == "--root")
+        {
+            opts.root = value;
+        }
+        else if (name == "--dump")
+        {
+            opts.dump = value;
+        }
         else
         {
             return UsageError(std::format("unknown option '{}'", name));
         }
     }
 
-    if (opts.input.empty())
+    if (opts.input.empty() && opts.dump.empty())
     {
         return UsageError("no input given");
     }
@@ -119,6 +132,16 @@ std::expected<Options, int> ParseCommandLine(int argc, char** argv)
     if (opts.output.empty())
     {
         opts.output = std::filesystem::path("Cooked") / opts.platform.name;
+    }
+
+    if (opts.root.empty())
+    {
+        std::error_code ec;
+        opts.root = std::filesystem::is_directory(opts.input, ec) ? opts.input : opts.input.parent_path();
+        if (opts.root.empty())
+        {
+            opts.root = ".";
+        }
     }
 
     return opts;

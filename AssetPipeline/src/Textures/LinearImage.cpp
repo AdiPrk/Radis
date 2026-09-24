@@ -53,18 +53,16 @@ static uint8_t LinearToSrgb8(float v)
     return kLinearToSrgb[size_t(Saturate(v) * float(kLinearToSrgbSize - 1) + 0.5f)];
 }
 
-// Integer RGBA -> float. `srgbToLinear` decodes color (alpha is always linear); empty for linear data.
+// One channel of integer RGBA -> float. `srgbToLinear` decodes sRGB; empty for linear data.
 template <typename T>
-static void DecodeUnorm(const T* src, std::span<const float> srgbToLinear, std::vector<float>& dst)
+static void DecodeUnormChannel(const T* src, uint32_t from, std::span<const float> srgbToLinear, LinearImage& image, uint32_t to)
 {
     constexpr float kMax = float(std::numeric_limits<T>::max());
-    for (size_t i = 0; i < dst.size(); i += 4)
+    const size_t    count = image.pixels.size();
+    for (size_t i = 0; i < count; i += 4)
     {
-        for (size_t c = 0; c < 3; ++c)
-        {
-            dst[i + c] = srgbToLinear.empty() ? float(src[i + c]) / kMax : srgbToLinear[src[i + c]];
-        }
-        dst[i + 3] = float(src[i + 3]) / kMax;
+        const T value = src[i + from];
+        image.pixels[i + to] = srgbToLinear.empty() ? float(value) / kMax : srgbToLinear[value];
     }
 }
 
@@ -85,63 +83,71 @@ void NormalizeVector(float* xyz)
     }
 }
 
-LinearImage ToLinearImage(const SourceImage& source, TextureRole role)
+void DecodeChannel(const SourceImage& source, uint32_t from, bool srgb, LinearImage& image, uint32_t to)
 {
-    LinearImage  image{ source.width, source.height, std::vector<float>(size_t(source.width) * source.height * 4) };
-    const size_t count = image.pixels.size();
-
-    // Integer color is sRGB-encoded; everything else maps to 0..1.
-    const bool srgb = role == TextureRole::Color;
     switch (source.type)
     {
     case PixelType::U8:
     {
-        DecodeUnorm(static_cast<const uint8_t*>(source.pixels.get()), srgb ? kSrgb8ToLinear : std::span<const float>(), image.pixels);
+        DecodeUnormChannel(static_cast<const uint8_t*>(source.pixels.get()), from, srgb ? kSrgb8ToLinear : std::span<const float>(), image, to);
         break;
     }
     case PixelType::U16:
     {
         static const std::vector<float> kSrgb16ToLinear = MakeSrgbToLinearTable(65536);   // built on first use
-        DecodeUnorm(static_cast<const uint16_t*>(source.pixels.get()), srgb ? kSrgb16ToLinear : std::span<const float>(), image.pixels);
+        DecodeUnormChannel(static_cast<const uint16_t*>(source.pixels.get()), from, srgb ? kSrgb16ToLinear : std::span<const float>(), image, to);
         break;
     }
     case PixelType::F32:
     {
         const auto* src = static_cast<const float*>(source.pixels.get());
-        std::transform(src, src + count, image.pixels.begin(), [](float v) { return std::isnan(v) ? 0.0f : v; });
+        const size_t count = image.pixels.size();
+        for (size_t i = 0; i < count; i += 4)
+        {
+            const float value = src[i + from];
+            image.pixels[i + to] = std::isnan(value) ? 0.0f : value;
+        }
         break;
     }
     }
+}
 
-    if (role == TextureRole::Normal)
+void FillChannel(LinearImage& image, uint32_t channel, float value)
+{
+    for (size_t i = channel; i < image.pixels.size(); i += 4)
     {
-        // Integer maps always store n * 0.5 + 0.5. Float maps may hold raw [-1, 1] vectors instead:
-        // encoded maps average about 0.5 in X and Y, raw vectors about 0.
-        bool rawVectors = false;
-        if (source.type == PixelType::F32)
-        {
-            double sum = 0.0;
-            for (size_t i = 0; i < count; i += 4)
-            {
-                sum += double(image.pixels[i]) + image.pixels[i + 1];
-            }
-            rawVectors = sum / double(count / 2) < 0.25;
-        }
+        image.pixels[i] = value;
+    }
+}
 
+void DecodeNormals(LinearImage& image, bool floatSource)
+{
+    const size_t count = image.pixels.size();
+
+    // Integer maps always store n * 0.5 + 0.5. Float maps may hold raw [-1, 1] vectors instead:
+    // encoded maps average about 0.5 in X and Y, raw vectors about 0.
+    bool rawVectors = false;
+    if (floatSource)
+    {
+        double sum = 0.0;
         for (size_t i = 0; i < count; i += 4)
         {
-            float* n = image.pixels.data() + i;
-            if (!rawVectors)
-            {
-                n[0] = n[0] * 2.0f - 1.0f;
-                n[1] = n[1] * 2.0f - 1.0f;
-                n[2] = n[2] * 2.0f - 1.0f;
-            }
-            NormalizeVector(n);
+            sum += double(image.pixels[i]) + image.pixels[i + 1];
         }
+        rawVectors = sum / double(count / 2) < 0.25;
     }
 
-    return image;
+    for (size_t i = 0; i < count; i += 4)
+    {
+        float* n = image.pixels.data() + i;
+        if (!rawVectors)
+        {
+            n[0] = n[0] * 2.0f - 1.0f;
+            n[1] = n[1] * 2.0f - 1.0f;
+            n[2] = n[2] * 2.0f - 1.0f;
+        }
+        NormalizeVector(n);
+    }
 }
 
 void ToEncoderPixels(const LinearImage& image, TextureRole role, TextureFormat format, std::vector<std::byte>& out)

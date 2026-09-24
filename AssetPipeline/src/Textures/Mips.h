@@ -12,6 +12,8 @@ struct MipSettings
     bool      generate = true;            // false: a single level (e.g. UI drawn at 1:1)
     MipFilter filter = MipFilter::Box;
     uint32_t  maxSize = 0;               // largest allowed dimension; 0 = no limit
+
+    bool operator==(const MipSettings&) const = default;
 };
 
 // Receives each level, largest first. `index` is 0 for the top kept level.

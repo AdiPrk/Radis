@@ -10,12 +10,7 @@ struct MipRules
 
 static MipRules RulesFor(TextureRole role)
 {
-    switch (role)
-    {
-    case TextureRole::Color:  return { .alphaIsOpacity = true };
-    case TextureRole::Normal: return { .unitVectors = true };
-    default:                  return {};
-    }
+    return { .alphaIsOpacity = RoleAlphaIsOpacity(role), .unitVectors = role == TextureRole::Normal };
 }
 
 static void Average(const float* const (&taps)[4], const MipRules& rules, float* out)
