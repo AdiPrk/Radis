@@ -84,11 +84,6 @@
 
 #include "vma/vk_mem_alloc.h"
 
-#define AI_SBBC_DEFAULT_MAX_BONES 500
-#include "assimp/Importer.hpp"
-#include "assimp/scene.h"
-#include "assimp/postprocess.h"
-
 // EnTT
 #include "entt/entt.hpp"
 
@@ -99,8 +94,6 @@
 #include "Utils/Logger.h"
 #include "Graphics/Vulkan/Utils/VKMath.h"
 #include "Events/Event.h"
-#include "Graphics/Common/AssimpGlmHelper.h"
-#include "Graphics/Common/Animation/VQS.h"
 #include "Profiler/Profiler.h"
 #include "Assets/Assets.h"
 #include "Assets/UUID.h"

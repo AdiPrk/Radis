@@ -15,6 +15,11 @@ static std::optional<AssetKind> ClassifyFile(const std::filesystem::path& path)
     return std::nullopt;
 }
 
+bool IsModelFile(const std::filesystem::path& path)
+{
+    return ClassifyFile(path) == AssetKind::Model;
+}
+
 std::expected<std::vector<InputFile>, std::string> CollectInputs(const std::filesystem::path& input, const std::filesystem::path& exclude)
 {
     namespace fs = std::filesystem;

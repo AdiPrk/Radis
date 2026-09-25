@@ -3,7 +3,7 @@
 
 static constexpr std::string_view kHelp =
 R"(usage: AssetPipeline <input> [options]
-       AssetPipeline --dump <cooked model>
+       AssetPipeline --dump <cooked model or clip>
 
   <input>                    a texture or model file, or a directory (searched recursively)
 
@@ -13,7 +13,7 @@ options:
   -p, --platform <platform>  windows-d3d12 (default), windows-vulkan, linux-vulkan, android-vulkan
   -q, --quality <quality>    fast, normal (default), best
   -o, --output <dir>         output directory (default: Cooked/<platform>)
-      --dump <file>          print a cooked model's contents and check it, instead of cooking
+      --dump <file>          print a cooked model or clip and check it, instead of cooking
   -h, --help                 show this help
 )";
 

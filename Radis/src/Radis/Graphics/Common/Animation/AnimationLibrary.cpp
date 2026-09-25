@@ -1,14 +1,14 @@
 /*****************************************************************//**
  * \file   AnimationLibrary.cpp
- * \brief  Implementation of the AnimationLibrary class for managing animations and animators.
- * 
+ * \brief  Implementation of the AnimationLibrary class for managing animation clips.
+ *
  * \author Aditya Prakash
  * \date   January 2026
  *********************************************************************/
 
 #include <PCH/pch.h>
 #include "AnimationLibrary.h"
-#include "Animator.h"
+#include "AnimationClip.h"
 
 namespace Radis
 {
@@ -22,143 +22,29 @@ namespace Radis
     {
     }
 
-    uint32_t AnimationLibrary::AddAnimation(const std::string& animPath, Model* model)
+    uint32_t AnimationLibrary::AddClip(const std::string& path)
     {
-        if (!model)
+        if (const auto found = mClipIndices.find(path); found != mClipIndices.end())
         {
-            RADIS_WARN("Model is null, cannot add animation from path: {0}", animPath);
+            return found->second;
+        }
+
+        std::unique_ptr<AnimationClip> clip = AnimationClip::Load(path);
+        if (!clip)
+        {
+            RADIS_WARN("Failed to load animation clip {}", path);
+            mClipIndices.emplace(path, INVALID_ANIMATION_INDEX);
             return INVALID_ANIMATION_INDEX;
         }
 
-        //std::string animName = std::filesystem::path(animPath).stem().string();
-
-        std::string key = GetKey(model->GetName(), animPath);
-        if (mAnimationMap.find(key) != mAnimationMap.end())
-        {
-            return GetAnimationIndex(model->GetName(), animPath);
-        }
-
-        static Assimp::Importer importer;
-        // importer.SetPropertyBool(AI_CONFIG_PP_OG_EXCLUDE_LIST, true);
-        importer.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
-        const aiScene* scene = importer.ReadFile(animPath, aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_GlobalScale | aiProcess_OptimizeGraph);
-
-        if (!scene || !scene->mAnimations[0] || !scene->mRootNode)
-        {
-            return INVALID_ANIMATION_INDEX;
-        }
-
-        uint32_t animationID = static_cast<uint32_t>(mAnimation.size());
-        
-        mAnimation.emplace_back(std::make_unique<Animation>(scene, model));
-        mAnimators.emplace_back(std::make_unique<Animator>(mAnimation.back().get()));
-
-        mAnimationMap[key] = animationID;
-
-        return animationID;
+        const uint32_t index = static_cast<uint32_t>(mClips.size());
+        mClips.push_back(std::move(clip));
+        mClipIndices.emplace(path, index);
+        return index;
     }
 
-    Animation* AnimationLibrary::GetAnimation(const std::string& modelPath, const std::string& animPath)
+    const AnimationClip* AnimationLibrary::GetClip(uint32_t index) const
     {
-        std::string key = GetKey(modelPath, animPath);
-        if (mAnimationMap.find(key) == mAnimationMap.end())
-        {
-            return nullptr;
-        }
-        uint32_t index = mAnimationMap[key];
-        return GetAnimation(index);
-    }
-
-    Animation* AnimationLibrary::GetAnimation(uint32_t index)
-    {
-        if (index >= mAnimation.size())
-        {
-            return nullptr;
-        }
-
-        return mAnimation[index].get();
-    }
-
-    Animator* AnimationLibrary::GetAnimator(uint32_t index)
-    {
-        if (index >= mAnimators.size())
-        {
-            //RADIS_WARN("Animator ID {0} is out of range!", index);
-            return nullptr;
-        }
-        return mAnimators[index].get();
-    }
-
-    uint32_t AnimationLibrary::GetAnimationIndex(const std::string& modelPath, const std::string& animPath)
-    {
-        std::string key = GetKey(modelPath, animPath);
-        if (mAnimationMap.find(key) == mAnimationMap.end())
-        {
-            return INVALID_ANIMATION_INDEX;
-        }
-        return mAnimationMap[key];
-    }
-
-    const std::string& AnimationLibrary::GetAnimationName(uint32_t index) const
-    {
-        if (index >= mAnimation.size())
-        {
-            static std::string empty = "";
-            return empty;
-        }
-
-        // Reverse lookup in the map (inefficient but infrequent operation)
-        for (const auto& pair : mAnimationMap)
-        {
-            if (pair.second == index)
-            {
-                return pair.first;
-            }
-        }
-
-        // Should not reach here
-        static std::string empty = "";
-        return empty; 
-    }
-
-    const std::vector<VQS>& AnimationLibrary::GetAnimationVQS()
-    {
-        mAnimationVQS.clear();
-
-        for (const auto& animator : mAnimators)
-        {
-            const auto& finalVQS = animator->GetFinalBoneVQS();
-            mAnimationVQS.insert(mAnimationVQS.end(), finalVQS.begin(), finalVQS.end());
-        }
-
-        return mAnimationVQS;
-    }
-
-    void AnimationLibrary::UpdateAnimations(float dt)
-    {
-        for (const auto& animator : mAnimators)
-        {
-            if (!animator->IsPlaying()) continue;
-            animator->UpdateAnimation(dt);
-        }
-    }
-
-
-    void AnimationLibrary::UpdateAnimation(uint32_t index, float dt)
-    {
-        if (index >= mAnimators.size())
-        {
-            return;
-        }
-
-        mAnimators[index]->UpdateAnimation(dt);
-    }
-
-    std::string AnimationLibrary::GetKey(const std::string& modelPath, const std::string& animPath)
-    {
-        std::string key = modelPath + "|" + animPath;
-        std::transform(key.begin(), key.end(), key.begin(), ::tolower);
-
-        return key;
+        return index < mClips.size() ? mClips[index].get() : nullptr;
     }
 }

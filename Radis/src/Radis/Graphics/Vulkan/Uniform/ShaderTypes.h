@@ -8,9 +8,11 @@
 
 #pragma once
 
+#include "Graphics/Common/Animation/Skeleton.h" // For SkinMatrix
+
 namespace Radis
 {
-    struct CameraUniforms 
+    struct CameraUniforms
     {
         glm::mat4 projectionView;
         glm::mat4 projection;
@@ -49,7 +51,7 @@ namespace Radis
 
     struct AnimationUniforms
     {
-        VQS boneVQS;
+        SkinMatrix skinMatrix;
 
         const static uint32_t MAX_BONES = 10000;
     };

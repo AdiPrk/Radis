@@ -25,7 +25,7 @@ namespace Radis
 		ModelLibrary(Device& device, TextureLibrary& textureLibrary);
 		~ModelLibrary();
 
-        uint32_t AddModel(const std::string& modelPath, bool fromDM = false, bool toDM = false, bool yUp = true);
+        uint32_t AddModel(const std::string& modelPath);
         void AddToUnifiedMesh(uint32_t modelIndex);
 
 		// Initializes unified mesh with all models loaded so far

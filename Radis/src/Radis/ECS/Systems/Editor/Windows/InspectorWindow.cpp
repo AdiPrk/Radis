@@ -240,7 +240,7 @@ namespace Radis
                     for (int i = 0; i < modelFiles.size(); ++i)
                     {
                         const std::string& modelPath = modelFiles[i];
-                        const bool isSelected = currPath == modelPath;
+                        const bool isSelected = currentModel && mc->GetModel(modelPath) == currentModel;
                         if (ImGui::Selectable(modelPath.c_str(), isSelected))
                         {
                             std::string lowerModelPath = modelPath;
@@ -297,57 +297,35 @@ namespace Radis
 
             DrawComponentUI<AnimationComponent>("Animation", selectedEnt, [&](AnimationComponent& component)
             {
-                auto& animationLibrary = rr->animationLibrary;
-                static int selectedAnimationIndex = -1;
-
                 Entity ent(&ecs->GetRegistry(), selectedEnt);
-                bool hasModel = ent.HasComponent<ModelComponent>();
-
-                if (!hasModel)
+                if (!ent.HasComponent<ModelComponent>())
                 {
                     ImGui::Text("No model assigned to entity for animations!");
                     return;
                 }
 
-                const auto& mc = ent.GetComponent<ModelComponent>();
-                Model* model = rr->modelLibrary->GetModel(mc.ModelPath);
-                if (!model)
+                Model* model = rr->modelLibrary->GetModel(ent.GetComponent<ModelComponent>().ModelPath);
+                if (!model || !model->GetSkeleton())
                 {
-                    ImGui::Text("Invalid model for animations!");
+                    ImGui::Text("The model has no skeleton to animate!");
                     return;
                 }
 
-                const std::string animationsPath = model->GetDir();
-                const std::vector<std::string> animationExtensions = { ".fbx", ".glb" };
-                auto animationFiles = GetFilesWithExtensions(animationsPath, animationExtensions);
+                // A model's cooked clips are in Animations/<model name>/ next to it.
+                const std::string clipsPath = model->GetDir() + "/Animations/" + model->GetName() + "/";
+                const std::vector<std::string> clipFiles = GetFilesWithExtensions(clipsPath, { ".da" });
 
-                // --- Animation Selection Dropdown ---
-                const auto& animName = animationLibrary->GetAnimationName(component.AnimationIndex);
-                std::string cutName = animName;
-                if (animName.find('|') != std::string::npos)
+                const std::string clipName = std::filesystem::path(component.ClipPath).stem().string();
+                if (ImGui::BeginCombo("Clip", clipName.c_str()))
                 {
-                    cutName = animName.substr(animName.find('|') + 1);
-                }
-
-                if (ImGui::BeginCombo("Animation", cutName.c_str()))
-                {
-                    for (int i = 0; i < animationFiles.size(); ++i)
+                    for (const std::string& clipFile : clipFiles)
                     {
-                        const bool isSelected = (selectedAnimationIndex == i);
-                        if (ImGui::Selectable(animationFiles[i].c_str(), isSelected))
+                        const bool isSelected = (component.ClipPath == clipFile);
+                        const std::string name = std::filesystem::path(clipFile).stem().string();
+                        if (ImGui::Selectable(name.c_str(), isSelected))
                         {
-                            selectedAnimationIndex = i;
-
-                            // remove the first part up to the "|" from animName
-                            uint32_t animationIndex = animationLibrary->GetAnimationIndex(model->GetName(), animationFiles[i]);
-                            component.AnimationIndex = animationIndex;
-
-                            if (animationIndex == AnimationLibrary::INVALID_ANIMATION_INDEX)
-                            {
-                                std::string newName = animationFiles[i];
-                                uint32_t newIndex = animationLibrary->AddAnimation(animationsPath + newName, model);
-                                component.AnimationIndex = newIndex;
-                            }
+                            component.ClipPath = clipFile;
+                            component.Time = 0.0f;
                         }
                         if (isSelected)
                         {
@@ -357,10 +335,12 @@ namespace Radis
                     ImGui::EndCombo();
                 }
 
-                ImGui::InputInt("Animation Index", (int*)&component.AnimationIndex);
-                ImGui::Checkbox("In Place", &component.InPlace);
                 ImGui::Checkbox("Is Playing", &component.IsPlaying);
-                ImGui::DragFloat("Animation Time", &component.AnimationTime, 0.05f, 0.0f, FLT_MAX);
+                ImGui::Checkbox("Loop", &component.Loop);
+                ImGui::Checkbox("In Place", &component.InPlace);
+                ImGui::Checkbox("Draw Skeleton", &component.DrawSkeleton);
+                ImGui::DragFloat("Speed", &component.Speed, 0.01f, -4.0f, 4.0f);
+                ImGui::DragFloat("Time", &component.Time, 0.01f, 0.0f, FLT_MAX);
             });
 
             DrawComponentUI<LightComponent>("Light", selectedEnt, [](LightComponent& component)

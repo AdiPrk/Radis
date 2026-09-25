@@ -28,12 +28,6 @@ const float PI = 3.14159265359;
 const uint INVALID_TEXTURE_INDEX = 0xFFFFFFFFu;
 const int INVALID_BONE_ID = -1;
 
-struct VQS {
-    vec4 rotation;    // Quat
-    vec3 translation; // Vector
-    vec3 scale;       // Scale
-};
-
 #ifdef VULKAN
     #define UBO_LAYOUT(s, b) layout(set = s, binding = b, std140)
     #define SSBO_LAYOUT(s, b) layout(set = s, binding = b, std430)
@@ -72,18 +66,11 @@ SSBO_LAYOUT(0, 1) readonly buffer InstanceData
     Instance instances[];
 };
 
-SSBO_LAYOUT(0, 2) readonly buffer BoneBuffer
+// Each column holds a row of an affine transform, so a point skins as vec4(point, 1.0) * matrix.
+SSBO_LAYOUT(0, 2) readonly buffer SkinBuffer
 {
-    VQS finalBoneVQS[];
+    mat3x4 skinMatrices[];
 } animationData;
-
-// Helper Functions --------------------------------
-// Rotate vector by a quat
-vec3 rotate(vec4 q, vec3 v) {
-    vec3 t = 2.0 * cross(q.xyz, v);
-    return v + q.w * t + cross(q.xyz, t);
-}
-// ----------------------------------------------------
 
 void main() 
 {
@@ -99,23 +86,12 @@ void main()
         for (int i = 0; i < 4 ; i++)
         {
             if(boneIds[i] == INVALID_BONE_ID) continue;
-            VQS transform = animationData.finalBoneVQS[instance.boneOffset + boneIds[i]];
-        
-            // --- Position Transformation ---
-            vec3 localPosition = rotate(transform.rotation, position * transform.scale) + transform.translation;
-        
-            // --- Normal Transformation
-            vec3 inverseScale = vec3(1.0) / transform.scale;
-            vec3 localNormal = rotate(transform.rotation, normal * inverseScale);
+            mat3x4 skin = animationData.skinMatrices[instance.boneOffset + boneIds[i]];
 
-            // --- Tangent Transformation (a surface direction, so it scales like positions)
-            vec3 localTangent = rotate(transform.rotation, tangent.xyz * transform.scale);
-        
-            // --- Accumulate weighted results ---
-            totalPosition += vec4(localPosition, 1.0f) * weights[i];
-            totalNormal += localNormal * weights[i];
-            totalTangent += localTangent * weights[i];
-        
+            // Normals use the same matrix, which is exact unless a joint is scaled non-uniformly.
+            totalPosition += vec4(vec4(position, 1.0) * skin, 1.0) * weights[i];
+            totalNormal += (vec4(normal, 0.0) * skin) * weights[i];
+            totalTangent += (vec4(tangent.xyz, 0.0) * skin) * weights[i];
             validBoneFound = true;
         }
 

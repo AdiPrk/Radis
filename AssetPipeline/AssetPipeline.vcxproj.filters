@@ -81,6 +81,12 @@
     <ClCompile Include="src\Models\ModelDump.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Models\ClipProcessing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Models\ClipWriter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="src\FileIO.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -150,6 +156,21 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Models\ModelDump.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Models\AnimationFormat.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Models\ClipProcessing.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Models\ClipWriter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Models\SectionFileBuilder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Models\Trs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\FileIO.h">

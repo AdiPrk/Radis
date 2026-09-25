@@ -60,24 +60,7 @@ namespace Radis
         // Unique mesh index
         uint32_t mMeshID = 0;
 
-        // Embedded texture data (cleared after upload to TextureLibrary)
-        std::vector<unsigned char> mAlbedoTextureData{};
-        std::vector<unsigned char> mNormalTextureData{};
-        std::vector<unsigned char> mMetalnessTextureData{};
-        std::vector<unsigned char> mRoughnessTextureData{};
-        std::vector<unsigned char> mOcclusionTextureData{};
-        std::vector<unsigned char> mEmissiveTextureData{};
-        std::vector<unsigned char> mTransmissionTextureData{};
-        uint32_t mAlbedoTextureSize = 0;
-        uint32_t mNormalTextureSize = 0;
-        uint32_t mMetalnessTextureSize = 0;
-        uint32_t mRoughnessTextureSize = 0;
-        uint32_t mOcclusionTextureSize = 0;
-        uint32_t mEmissiveTextureSize = 0;
-        uint32_t mTransmissionTextureSize = 0;
-
-        // Texture paths (alternative to embedded data)
-        bool loadedTextures = false;
+        // Texture paths
         std::string albedoTexturePath{};
         std::string normalTexturePath{};
         std::string metalnessTexturePath{};

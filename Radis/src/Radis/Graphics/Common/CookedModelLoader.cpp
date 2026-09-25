@@ -5,9 +5,10 @@
 
 #include <PCH/pch.h>
 #include "CookedModelLoader.h"
+#include "AnimationFormat.h"
+#include "CookedFile.h"
+#include "Animation/Skeleton.h"
 #include "Graphics/RHI/Mesh.h"
-
-#include <meshoptimizer.h>
 
 namespace Radis
 {
@@ -15,66 +16,19 @@ namespace Radis
     {
         using namespace ModelFile;
 
-        constexpr const char* kSectionNames[] = { "Submeshes", "Materials", "Positions", "Attributes", "Indices", "Strings" };
+        constexpr const char* kSectionNames[] = { "Submeshes", "Materials", "Positions", "Attributes", "Indices", "Strings",
+                                                  "Skeleton", "SkinJoints", "InverseBinds", "SkinWeights" };
+        constexpr size_t      kRequiredSections = 6;   // the skin sections are only in skinned models
 
         const char* SectionName(SectionType type)
         {
             return size_t(type) < std::size(kSectionNames) ? kSectionNames[size_t(type)] : "unknown";
         }
 
-        // Decodes `section` into `out`, which must hold elementCount elements of elementSize bytes.
-        bool DecodeInto(const Section& section, const std::byte* data, void* out, const std::string& path)
-        {
-            const size_t decodedSize = size_t(section.elementSize) * section.elementCount;
-            const auto* encoded = reinterpret_cast<const unsigned char*>(data);
-
-            int result = 0;
-            switch (section.codec)
-            {
-            case Codec::None:
-                if (section.size != decodedSize)
-                {
-                    RADIS_ERROR("{}: {} section holds {} bytes where {} are needed", path, SectionName(section.type), section.size, decodedSize);
-                    return false;
-                }
-                if (decodedSize > 0)   // an empty section (a model without textures has no strings) may have no buffer
-                {
-                    std::memcpy(out, data, decodedSize);
-                }
-                break;
-
-            case Codec::MeshoptVertex:
-                result = meshopt_decodeVertexBuffer(out, section.elementCount, section.elementSize, encoded, size_t(section.size));
-                break;
-
-            case Codec::MeshoptIndex:
-                result = meshopt_decodeIndexBuffer(out, section.elementCount, section.elementSize, encoded, size_t(section.size));
-                break;
-
-            default:
-                RADIS_ERROR("{}: {} section uses an unknown codec", path, SectionName(section.type));
-                return false;
-            }
-
-            if (result != 0)
-            {
-                RADIS_ERROR("{}: decoding the {} section failed ({})", path, SectionName(section.type), result);
-                return false;
-            }
-            return true;
-        }
-
         template <typename T>
         bool DecodeArray(const Section& section, const std::byte* data, std::vector<T>& out, const std::string& path)
         {
-            if (section.elementSize != sizeof(T))
-            {
-                RADIS_ERROR("{}: {} section has {}-byte elements, expected {}", path, SectionName(section.type), section.elementSize, sizeof(T));
-                return false;
-            }
-
-            out.resize(section.elementCount);
-            return DecodeInto(section, data, out.data(), path);
+            return CookedFile::DecodeArray(section, data, out, path, SectionName(section.type));
         }
 
         bool DecodeIndices(const Section& section, const std::byte* data, std::vector<uint32_t>& out, const std::string& path)
@@ -93,22 +47,43 @@ namespace Radis
             return true;
         }
 
-        bool ReadFile(const std::string& path, std::vector<std::byte>& out)
+        // Joints come after their parents and have names; the palette names joints; every skinned
+        // vertex names palette entries.
+        bool ValidateSkin(const CookedModelData& data, const std::string& path, const auto& validName)
         {
-            std::ifstream         file(path, std::ios::binary | std::ios::ate);
-            const std::streamsize size = file ? std::streamsize(file.tellg()) : -1;
-            if (size < 0)
+            for (size_t i = 0; i < data.joints.size(); ++i)
             {
-                RADIS_ERROR("{}: cannot open", path);
+                const Joint& joint = data.joints[i];
+                if (joint.parent < -1 || joint.parent >= int32_t(i) || joint.name == kNoTexture || !validName(joint.name))
+                {
+                    RADIS_ERROR("{}: joint {} has a bad parent or name", path, i);
+                    return false;
+                }
+            }
+
+            if (data.inverseBinds.size() != data.skinJoints.size()
+                || std::any_of(data.skinJoints.begin(), data.skinJoints.end(), [&](uint16_t joint) { return joint >= data.joints.size(); }))
+            {
+                RADIS_ERROR("{}: the skin palette doesn't match the skeleton", path);
                 return false;
             }
 
-            out.resize(static_cast<size_t>(size));
-            file.seekg(0);
-            if (!file.read(reinterpret_cast<char*>(out.data()), size))
+            if (data.skin.size() != data.positions.size())
             {
-                RADIS_ERROR("{}: cannot read", path);
+                RADIS_ERROR("{}: {} positions but {} skin weights", path, data.positions.size(), data.skin.size());
                 return false;
+            }
+
+            for (const SkinWeights& s : data.skin)
+            {
+                for (int k = 0; k < 4; ++k)
+                {
+                    if (s.weights[k] > 0 && s.joints[k] >= data.skinJoints.size())
+                    {
+                        RADIS_ERROR("{}: a vertex names a palette entry past the palette", path);
+                        return false;
+                    }
+                }
             }
             return true;
         }
@@ -122,6 +97,10 @@ namespace Radis
                     return offset == kNoTexture
                         || (offset < data.strings.size() && std::find(data.strings.begin() + offset, data.strings.end(), '\0') != data.strings.end());
                 };
+            if (!data.joints.empty() && !ValidateSkin(data, path, validName))
+            {
+                return false;
+            }
             for (size_t i = 0; i < data.materials.size(); ++i)
             {
                 if (!std::all_of(std::begin(data.materials[i].textures), std::end(data.materials[i].textures), validName))
@@ -163,7 +142,7 @@ namespace Radis
     bool CookedModelLoader::Load(const std::string& path, CookedModelData& out)
     {
         std::vector<std::byte> file;
-        if (!ReadFile(path, file))
+        if (!CookedFile::ReadFile(path, file))
         {
             return false;
         }
@@ -215,6 +194,10 @@ namespace Radis
             case SectionType::Attributes: decoded = DecodeArray(section, data, out.attributes, path); break;
             case SectionType::Indices:    decoded = DecodeIndices(section, data, out.indices, path);  break;
             case SectionType::Strings:    decoded = DecodeArray(section, data, out.strings, path);    break;
+            case SectionType::Skeleton:     decoded = DecodeArray(section, data, out.joints, path);       break;
+            case SectionType::SkinJoints:   decoded = DecodeArray(section, data, out.skinJoints, path);   break;
+            case SectionType::InverseBinds: decoded = DecodeArray(section, data, out.inverseBinds, path); break;
+            case SectionType::SkinWeights:  decoded = DecodeArray(section, data, out.skin, path);         break;
             default:                      continue;   // sections this engine doesn't know about are skipped
             }
 
@@ -225,9 +208,10 @@ namespace Radis
             found[size_t(section.type)] = true;
         }
 
+        const bool skinned = std::any_of(std::begin(found) + kRequiredSections, std::end(found), [](bool f) { return f; });
         for (size_t i = 0; i < std::size(found); ++i)
         {
-            if (!found[i])
+            if (!found[i] && (i < kRequiredSections || skinned))
             {
                 RADIS_ERROR("{}: the {} section is missing", path, kSectionNames[i]);
                 return false;
@@ -239,10 +223,10 @@ namespace Radis
     std::vector<std::unique_ptr<Mesh>> CookedModelLoader::CreateMeshes(const CookedModelData& data, const std::filesystem::path& textureDirectory)
     {
         const auto texturePath = [&](uint32_t offset) -> std::string
-            {
-                const char* name = data.TextureName(offset);
-                return name ? (textureDirectory / std::u8string_view(reinterpret_cast<const char8_t*>(name))).string() : std::string();
-            };
+        {
+            const char* name = data.TextureName(offset);
+            return name ? (textureDirectory / std::u8string_view(reinterpret_cast<const char8_t*>(name))).string() : std::string();
+        };
 
         std::vector<std::unique_ptr<Mesh>> meshes;
         meshes.reserve(data.submeshes.size());
@@ -268,6 +252,16 @@ namespace Radis
                 vertex.uv = glm::vec2(a.uv[0], a.uv[1]);
                 vertex.color = glm::vec3(a.color[0], a.color[1], a.color[2]);
                 vertex.tangent = glm::vec4(a.tangent[0], a.tangent[1], a.tangent[2], a.tangent[3]);
+
+                if (!data.skin.empty())
+                {
+                    const SkinWeights& s = data.skin[submesh.baseVertex + i];
+                    for (int k = 0; k < Vertex::MAX_BONE_INFLUENCE; ++k)
+                    {
+                        vertex.boneIDs[k] = s.weights[k] > 0 ? int(s.joints[k]) : -1;
+                        vertex.weights[k] = float(s.weights[k]) / 65535.0f;
+                    }
+                }
             }
 
             const Material& m = data.materials[submesh.material];
@@ -292,5 +286,43 @@ namespace Radis
             mesh.mMetallicRoughnessCombined = !orm.empty();
         }
         return meshes;
+    }
+
+    std::unique_ptr<Skeleton> CookedModelLoader::CreateSkeleton(const CookedModelData& data)
+    {
+        if (data.joints.empty())
+        {
+            return nullptr;
+        }
+
+        auto skeleton = std::make_unique<Skeleton>();
+        for (size_t i = 0; i < data.joints.size(); ++i)
+        {
+            const Joint& joint = data.joints[i];
+            skeleton->parents.push_back(joint.parent);
+            skeleton->names.emplace_back(data.JointName(i));
+            skeleton->restPose.push_back({
+                .translation = glm::vec3(joint.translation[0], joint.translation[1], joint.translation[2]),
+                .rotation = glm::quat(joint.rotation[3], joint.rotation[0], joint.rotation[1], joint.rotation[2]),
+                .scale = glm::vec3(joint.scale[0], joint.scale[1], joint.scale[2]),
+                });
+        }
+
+        skeleton->paletteJoints = data.skinJoints;
+        for (const Matrix3x4& rows : data.inverseBinds)
+        {
+            glm::mat4 inverseBind(1.0f);
+            for (int row = 0; row < 3; ++row)
+            {
+                for (int column = 0; column < 4; ++column)
+                {
+                    inverseBind[column][row] = rows.rows[row][column];
+                }
+            }
+            skeleton->inverseBinds.push_back(inverseBind);
+        }
+
+        skeleton->hash = AnimationFile::SkeletonHash(data.joints.data(), data.joints.size());
+        return skeleton;
     }
 }

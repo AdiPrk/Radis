@@ -30,7 +30,7 @@ namespace Radis
     const UniformSettings cameraUniformSettings = UniformSettings(CameraUniformInit)
         .AddUBBinding(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags | compFlags, sizeof(CameraUniforms)).SetDebugName("Camera Uniforms")
         .AddSSBOBinding(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags | compFlags, sizeof(InstanceUniforms), InstanceUniforms::MAX_INSTANCES).SetDebugName("Instance SSBO")
-        .AddSSBOBinding(VK_SHADER_STAGE_VERTEX_BIT, sizeof(VQS), 10000).SetDebugName("Animation SSBO")
+        .AddSSBOBinding(VK_SHADER_STAGE_VERTEX_BIT, sizeof(AnimationUniforms), AnimationUniforms::MAX_BONES).SetDebugName("Animation SSBO")
         .AddISBinding(VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags | compFlags, TextureLibrary::MAX_TEXTURE_COUNT).SetDebugName("Texture SSBO")
         .AddSSBOBinding(VK_SHADER_STAGE_FRAGMENT_BIT | rtFlags | compFlags, sizeof(LightUniform) * LightUniform::MAX_LIGHTS + sizeof(uint32_t)).SetDebugName("Light SSBO");
 

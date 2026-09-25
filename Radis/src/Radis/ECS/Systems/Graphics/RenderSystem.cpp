@@ -67,7 +67,7 @@ namespace Radis
         auto uMeshes = rr->modelLibrary->GetUnifiedMesh();
 
         // Setup acceleration structures if needed
-        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan && !rr->tlasAccel.accel && rr->blasAccel.empty() && uMeshes)
+        if (Engine::GetGraphicsAPI() == GraphicsAPI::Vulkan && rr->device->SupportsRayQuery() && !rr->tlasAccel.accel && rr->blasAccel.empty() && uMeshes)
         {
             mRTMeshData.clear();
             mRTMeshIndices.clear();
@@ -122,7 +122,6 @@ namespace Radis
         rr->accumulationCount++;
 
         float aspectRatio = GetAspectRatio();
-        AnimationLibrary* al = rr->animationLibrary.get();
         ModelLibrary* ml = rr->modelLibrary.get();
         UnifiedMeshes* uMeshes = ml->GetUnifiedMesh();
 
@@ -137,7 +136,7 @@ namespace Radis
 
         rr->cameraUniform->SetUniformData(camData, 0, rr->currentFrameIndex);                // Set Camera Data
         rr->cameraUniform->SetUniformData(mInstanceData, 1, rr->currentFrameIndex);          // Set Instance Data
-        rr->cameraUniform->SetUniformData(ar->bonesMatrices, 2, rr->currentFrameIndex);      // Set Animation Data
+        rr->cameraUniform->SetUniformData(ar->skinMatrices, 2, rr->currentFrameIndex);       // Set Animation Data
         rr->cameraUniform->SetUniformData(mLightBuffer, 4, rr->currentFrameIndex);           // Set Light Data
         rr->deferredLightingUniform->SetUniformData(camData, 0, rr->currentFrameIndex);      // Camera data
         rr->deferredLightingUniform->SetUniformData(mLightBuffer, 6, rr->currentFrameIndex); // Light data
@@ -436,7 +435,6 @@ namespace Radis
         auto rr = ecs->GetResource<RenderingResource>();
         auto& registry = ecs->GetRegistry();
         ModelLibrary* ml = rr->modelLibrary.get();
-        AnimationLibrary* al = rr->animationLibrary.get();
         UnifiedMeshes* uMeshes = ml->GetUnifiedMesh();
 
         // Reset counts
@@ -523,11 +521,7 @@ namespace Radis
 
             AnimationComponent* ac = registry.try_get<AnimationComponent>(entity);
 
-            uint32_t boneOffset = AnimationLibrary::INVALID_ANIMATION_INDEX;
-            if (ac && al->GetAnimation(ac->AnimationIndex) && al->GetAnimator(ac->AnimationIndex))
-            {
-                boneOffset = ac->BoneOffset;
-            }
+            const uint32_t boneOffset = ac ? ac->BoneOffset : AnimationLibrary::INVALID_ANIMATION_INDEX;
 
             for (auto& mesh : model->mMeshes)
             {
@@ -536,14 +530,7 @@ namespace Radis
 
                 InstanceUniforms& data = mInstanceData[writeIdx];
 
-                if (boneOffset == AnimationLibrary::INVALID_ANIMATION_INDEX && mc.NormalizeModel)
-                {
-                     data.model = tc.GetTransform() * model->GetNormalizationMatrix();
-                }
-                else
-                {
-                    data.model = tc.GetTransform();
-                }
+                data.model = mc.NormalizeModel ? tc.GetTransform() * model->GetNormalizationMatrix() : tc.GetTransform();
                 
                 const MeshInfo& meshInfo = uMeshes->GetMeshInfo(meshID);
                 float meshMetallic = mc.UseMetallicOverride ? mc.MetallicOverride : mesh->metallicFactor;

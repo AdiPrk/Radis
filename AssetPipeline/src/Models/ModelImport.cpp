@@ -13,6 +13,7 @@ struct ImportContext
 {
     const aiScene& scene;
     std::filesystem::path                            directory;       // the model's folder
+    std::vector<std::filesystem::path>               textureFolders;  // see TextureFolders
     bool                                             fbx = false;
     ImportedScene& out;
     std::vector<int32_t>                             embeddedIndex;   // aiScene texture -> ImportedScene::embeddedImages, or -1
@@ -84,9 +85,34 @@ static void CollectEmbeddedImages(ImportContext& ctx)
     }
 }
 
+// Where a model's texture files may be besides the path the model gives: next to the model, in a
+// "textures" folder beside it, and in ModelTextures/<model name>/ in the model's folder or any
+// folder above it, nearest first.
+static std::vector<std::filesystem::path> TextureFolders(const std::filesystem::path& model)
+{
+    const std::filesystem::path        directory = model.parent_path();
+    std::vector<std::filesystem::path> folders = { directory, directory / "textures" };
+
+    std::error_code       ec;
+    std::filesystem::path folder = std::filesystem::absolute(directory, ec);
+    if (ec)
+        return folders;
+
+    for (;; folder = folder.parent_path())
+    {
+        if (const std::filesystem::path candidate = folder / "ModelTextures" / model.stem(); std::filesystem::is_directory(candidate, ec))
+        {
+            folders.push_back(candidate);
+        }
+        if (folder == folder.parent_path())
+            break;
+    }
+    return folders;
+}
+
 // Finds the image a material refers to: an embedded one ("*0", or a matching file name), or a
 // file. Exported paths are often absolute paths from the author's machine, so after the path as
-// written, the file name is also tried next to the model and in a "textures" folder beside it.
+// written, the file name is also tried in the model's texture folders (see TextureFolders).
 static ImportedTexture ResolveImage(ImportContext& ctx, const std::string& reference)
 {
     if (const auto found = ctx.images.find(reference); found != ctx.images.end())
@@ -105,16 +131,15 @@ static ImportedTexture ResolveImage(ImportContext& ctx, const std::string& refer
         std::ranges::replace(normalized, '\\', '/');
         const std::filesystem::path written(std::u8string(normalized.begin(), normalized.end()));   // assimp strings are UTF-8
 
-        const std::filesystem::path candidates[] =
+        std::vector<std::filesystem::path> candidates = { written.is_absolute() ? written : ctx.directory / written };
+        for (const std::filesystem::path& folder : ctx.textureFolders)
         {
-            written.is_absolute() ? written : ctx.directory / written,
-            ctx.directory / written.filename(),
-            ctx.directory / "textures" / written.filename(),
-        };
+            candidates.push_back(folder / written.filename());
+        }
 
         std::error_code ec;
         const auto existing = std::ranges::find_if(candidates, [&](const std::filesystem::path& p) { return std::filesystem::is_regular_file(p, ec); });
-        if (existing != std::end(candidates))
+        if (existing != candidates.end())
         {
             texture.path = existing->lexically_normal();
         }
@@ -270,7 +295,48 @@ static ImportedMaterial ConvertMaterial(ImportContext& ctx, const aiMaterial& ma
     return out;
 }
 
-static std::optional<ImportedMesh> ConvertMesh(const aiMesh& mesh, std::vector<std::string>& warnings)
+static void AddJoints(const aiNode& node, int32_t parent, const glm::mat4& conversion, const std::unordered_set<const aiNode*>& used,
+    ImportedSkeleton& skeleton, std::unordered_map<const aiNode*, int32_t>& joints)
+{
+    if (!used.contains(&node))
+        return;   // every ancestor of a used node is used, so nothing below this one is
+
+    const int32_t  index = int32_t(skeleton.joints.size());
+    ImportedJoint& joint = skeleton.joints.emplace_back();
+    joint.name = node.mName.C_Str();
+    joint.parent = parent;
+    joint.local = parent < 0 ? conversion * ToGlm(node.mTransformation) : ToGlm(node.mTransformation);   // a root carries the conversion
+    joint.global = parent < 0 ? joint.local : skeleton.joints[size_t(parent)].global * joint.local;
+    joints.emplace(&node, index);
+
+    for (uint32_t i = 0; i < node.mNumChildren; ++i)
+    {
+        AddJoints(*node.mChildren[i], index, conversion, used, skeleton, joints);
+    }
+}
+
+// The skeleton is every node a bone names, plus their ancestors so that every joint's parent is a
+// joint too. Returns the joint of each of those nodes.
+static std::unordered_map<const aiNode*, int32_t> BuildSkeleton(const aiScene& scene, const glm::mat4& conversion, ImportedSkeleton& skeleton)
+{
+    std::unordered_set<const aiNode*> used;
+    for (uint32_t m = 0; m < scene.mNumMeshes; ++m)
+    {
+        const aiMesh& mesh = *scene.mMeshes[m];
+        for (uint32_t b = 0; b < mesh.mNumBones; ++b)
+        {
+            for (const aiNode* node = scene.mRootNode->FindNode(mesh.mBones[b]->mName); node && used.insert(node).second; node = node->mParent)
+            {
+            }
+        }
+    }
+
+    std::unordered_map<const aiNode*, int32_t> joints;
+    AddJoints(*scene.mRootNode, -1, conversion, used, skeleton, joints);
+    return joints;
+}
+
+static std::optional<ImportedMesh> ConvertMesh(const aiMesh& mesh, const std::unordered_map<std::string, uint32_t>& jointByName, std::vector<std::string>& warnings)
 {
     if (!(mesh.mPrimitiveTypes & aiPrimitiveType_TRIANGLE))
     {
@@ -321,23 +387,136 @@ static std::optional<ImportedMesh> ConvertMesh(const aiMesh& mesh, std::vector<s
         warnings.push_back(std::format("mesh '{}' has no triangles and was skipped", mesh.mName.C_Str()));
         return std::nullopt;
     }
+
+    for (uint32_t i = 0; i < mesh.mNumBones; ++i)
+    {
+        const aiBone& bone = *mesh.mBones[i];
+        const auto    joint = jointByName.find(bone.mName.C_Str());
+        if (joint == jointByName.end())
+        {
+            warnings.push_back(std::format("mesh '{}': bone '{}' names no node, so its weights were dropped", out.name, bone.mName.C_Str()));
+            continue;
+        }
+
+        ImportedBone& imported = out.bones.emplace_back();
+        imported.joint = joint->second;
+        imported.offset = ToGlm(bone.mOffsetMatrix);
+        imported.weights.resize(bone.mNumWeights);
+        std::transform(bone.mWeights, bone.mWeights + bone.mNumWeights, imported.weights.begin(),
+            [](const aiVertexWeight& w) { return ImportedWeight{ w.mVertexId, w.mWeight }; });
+    }
     return out;
 }
 
-static void CollectInstances(const aiNode& node, const glm::mat4& parent, std::span<const int32_t> meshIndex, ImportedScene& out)
+static void AddNodes(const aiNode& node, int32_t parent, std::vector<ImportedNode>& nodes)
+{
+    const int32_t index = int32_t(nodes.size());
+    nodes.push_back({ node.mName.C_Str(), parent, ToGlm(node.mTransformation) });
+    for (uint32_t i = 0; i < node.mNumChildren; ++i)
+    {
+        AddNodes(*node.mChildren[i], index, nodes);
+    }
+}
+
+template <typename Key, typename Value, typename Convert>
+static std::vector<ImportedKey<Value>> ConvertKeys(const Key* keys, uint32_t count, double ticksPerSecond, Convert convert)
+{
+    std::vector<ImportedKey<Value>> out(count);
+    for (uint32_t i = 0; i < count; ++i)
+    {
+        out[i] = { float(keys[i].mTime / ticksPerSecond), convert(keys[i].mValue) };
+    }
+    return out;
+}
+
+// The rate the keys were authored at: the smallest gap between two keys of a channel.
+static float EstimateSampleRate(const ImportedAnimation& animation)
+{
+    float gap = std::numeric_limits<float>::max();
+    const auto measure = [&](const auto& keys)
+        {
+            for (size_t i = 1; i < keys.size(); ++i)
+            {
+                if (const float delta = keys[i].time - keys[i - 1].time; delta > 1e-4f)
+                {
+                    gap = std::min(gap, delta);
+                }
+            }
+        };
+    for (const ImportedChannel& channel : animation.channels)
+    {
+        measure(channel.translations);
+        measure(channel.rotations);
+        measure(channel.scales);
+    }
+    return gap == std::numeric_limits<float>::max() ? 30.0f : 1.0f / gap;
+}
+
+static ImportedAnimations ConvertAnimations(const aiScene& scene, const glm::mat4& conversion, std::vector<std::string>& warnings)
+{
+    ImportedAnimations out;
+    out.conversion = conversion;
+    AddNodes(*scene.mRootNode, -1, out.nodes);
+
+    std::unordered_map<std::string, uint32_t> nodeByName;
+    for (size_t i = 0; i < out.nodes.size(); ++i)
+    {
+        nodeByName.try_emplace(out.nodes[i].name, uint32_t(i));
+    }
+
+    const auto toVec3 = [](const aiVector3D& v) { return glm::vec3(v.x, v.y, v.z); };
+    const auto toQuat = [](const aiQuaternion& q) { return glm::quat(q.w, q.x, q.y, q.z); };
+
+    for (uint32_t a = 0; a < scene.mNumAnimations; ++a)
+    {
+        const aiAnimation& source = *scene.mAnimations[a];
+        const double       ticksPerSecond = source.mTicksPerSecond > 0.0 ? source.mTicksPerSecond : 30.0;
+
+        ImportedAnimation& animation = out.animations.emplace_back();
+        animation.name = source.mName.C_Str();
+        animation.duration = float(source.mDuration / ticksPerSecond);
+
+        for (uint32_t c = 0; c < source.mNumChannels; ++c)
+        {
+            const aiNodeAnim& channel = *source.mChannels[c];
+            const auto        node = nodeByName.find(channel.mNodeName.C_Str());
+            if (node == nodeByName.end())
+            {
+                warnings.push_back(std::format("animation '{}' moves a node that doesn't exist: {}", animation.name, channel.mNodeName.C_Str()));
+                continue;
+            }
+
+            ImportedChannel& imported = animation.channels.emplace_back();
+            imported.node = node->second;
+            imported.translations = ConvertKeys<aiVectorKey, glm::vec3>(channel.mPositionKeys, channel.mNumPositionKeys, ticksPerSecond, toVec3);
+            imported.rotations = ConvertKeys<aiQuatKey, glm::quat>(channel.mRotationKeys, channel.mNumRotationKeys, ticksPerSecond, toQuat);
+            imported.scales = ConvertKeys<aiVectorKey, glm::vec3>(channel.mScalingKeys, channel.mNumScalingKeys, ticksPerSecond, toVec3);
+        }
+        animation.sampleRate = EstimateSampleRate(animation);
+    }
+    return out;
+}
+
+static void CollectInstances(const aiNode& node, const glm::mat4& parent, int32_t joint, std::span<const int32_t> meshIndex,
+    const std::unordered_map<const aiNode*, int32_t>& joints, ImportedScene& out)
 {
     const glm::mat4 transform = parent * ToGlm(node.mTransformation);
+    if (const auto found = joints.find(&node); found != joints.end())
+    {
+        joint = found->second;
+    }
+
     for (uint32_t i = 0; i < node.mNumMeshes; ++i)
     {
         if (const int32_t mesh = meshIndex[node.mMeshes[i]]; mesh >= 0)
         {
-            out.instances.push_back({ uint32_t(mesh), transform });
+            out.instances.push_back({ uint32_t(mesh), transform, joint });
         }
     }
 
     for (uint32_t i = 0; i < node.mNumChildren; ++i)
     {
-        CollectInstances(*node.mChildren[i], transform, meshIndex, out);
+        CollectInstances(*node.mChildren[i], transform, joint, meshIndex, joints, out);
     }
 }
 
@@ -353,6 +532,7 @@ std::expected<ImportedScene, std::string> ImportModel(const std::filesystem::pat
     importer.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
     importer.SetPropertyBool(AI_CONFIG_PP_FD_REMOVE, true);   // drop degenerate triangles instead of turning them into lines
     importer.SetPropertyBool(AI_CONFIG_PP_FD_CHECKAREA, false);   // keep small triangles; the area is measured before any scale
+    importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);   // one node per FBX node instead of a chain of $AssimpFbx$ helpers
 
     const std::u8string utf8Path = path.u8string();          // assimp opens UTF-8 paths on every OS
     const aiScene* scene = importer.ReadFile(reinterpret_cast<const char*>(utf8Path.c_str()), kFlags);
@@ -365,7 +545,7 @@ std::expected<ImportedScene, std::string> ImportModel(const std::filesystem::pat
     std::string extension = path.extension().string();
     std::ranges::transform(extension, extension.begin(), [](unsigned char c) { return char(std::tolower(c)); });
 
-    ImportContext ctx{ .scene = *scene, .directory = path.parent_path(), .fbx = extension == ".fbx", .out = out };
+    ImportContext ctx{ .scene = *scene, .directory = path.parent_path(), .textureFolders = TextureFolders(path), .fbx = extension == ".fbx", .out = out };
     CollectEmbeddedImages(ctx);
 
     for (uint32_t i = 0; i < scene->mNumMaterials; ++i)
@@ -387,28 +567,28 @@ std::expected<ImportedScene, std::string> ImportModel(const std::filesystem::pat
         out.warnings.push_back("textures in slots the pipeline doesn't read were skipped: " + slots);
     }
 
+    const glm::mat4 conversion = EngineSpaceConversion(*scene, out.warnings);
+    const auto      joints = BuildSkeleton(*scene, conversion, out.skeleton);
+
+    std::unordered_map<std::string, uint32_t> jointByName;
+    for (size_t i = 0; i < out.skeleton.joints.size(); ++i)
+    {
+        jointByName.try_emplace(out.skeleton.joints[i].name, uint32_t(i));   // FindNode finds the first of a repeated name too
+    }
+
     std::vector<int32_t> meshIndex(scene->mNumMeshes, -1);
-    uint32_t             skinned = 0;
     for (uint32_t i = 0; i < scene->mNumMeshes; ++i)
     {
-        if (auto mesh = ConvertMesh(*scene->mMeshes[i], out.warnings))
+        if (auto mesh = ConvertMesh(*scene->mMeshes[i], jointByName, out.warnings))
         {
             meshIndex[i] = int32_t(out.meshes.size());
             out.meshes.push_back(std::move(*mesh));
-            skinned += scene->mMeshes[i]->HasBones() ? 1 : 0;
         }
     }
 
-    if (skinned > 0)
-    {
-        out.warnings.push_back(std::format("{} skinned meshes were cooked in their bind pose; skinning isn't supported yet", skinned));
-    }
-    if (scene->HasAnimations())
-    {
-        out.warnings.push_back(std::format("{} animations were skipped; animation isn't supported yet", scene->mNumAnimations));
-    }
+    out.animations = ConvertAnimations(*scene, conversion, out.warnings);
 
-    CollectInstances(*scene->mRootNode, EngineSpaceConversion(*scene, out.warnings), meshIndex, out);
+    CollectInstances(*scene->mRootNode, conversion, -1, meshIndex, joints, out);
 
     std::vector<bool> placed(out.meshes.size());
     for (const ImportedInstance& instance : out.instances)
@@ -427,4 +607,25 @@ std::expected<ImportedScene, std::string> ImportModel(const std::filesystem::pat
         return std::unexpected("the file has no triangle meshes");
     }
     return out;
+}
+
+std::expected<ImportedAnimations, std::string> ImportAnimations(const std::filesystem::path& path, std::vector<std::string>& warnings)
+{
+    // The same scaling and pivot handling as ImportModel, so the nodes match the model's joints.
+    Assimp::Importer importer;
+    importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
+
+    // A file with only animations is flagged incomplete, which is fine here.
+    const std::u8string utf8Path = path.u8string();
+    const aiScene*      scene = importer.ReadFile(reinterpret_cast<const char*>(utf8Path.c_str()), aiProcess_GlobalScale);
+    if (!scene || !scene->mRootNode)
+    {
+        return std::unexpected(std::format("assimp: {}", importer.GetErrorString()));
+    }
+    if (!scene->HasAnimations())
+    {
+        return std::unexpected("the file has no animations");
+    }
+
+    return ConvertAnimations(*scene, EngineSpaceConversion(*scene, warnings), warnings);
 }

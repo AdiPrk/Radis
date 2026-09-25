@@ -1,6 +1,6 @@
 /*****************************************************************//**
  * \file   Model.cpp
- * \brief  Implementation of the Model class for loading and processing 3D models.
+ * \brief  Implementation of the Model class, a model cooked by the asset pipeline.
  *
  * \author Aditya Prakash
  * \date   January 2026
@@ -8,59 +8,19 @@
 
 #include <PCH/pch.h>
 #include "Model.h"
-#include "../Vulkan/Core/Buffer.h"
-#include "Assets/Assets.h"
-
-#include "Graphics/RHI/RHI.h"
-
-#include "Engine.h"
-
-#include "Assets/Serialization/ModelSerializer.h"
 #include "CookedModelLoader.h"
 
 namespace Radis
 {
-    static bool IsCookedModelPath(const std::filesystem::path& path)
+    Model::Model(const std::string& filePath)
     {
-        std::string extension = path.extension().string();
-        std::ranges::transform(extension, extension.begin(), [](unsigned char c) { return char(std::tolower(c)); });
-        return extension == ".dm";
-    }
+        const std::filesystem::path path(filePath);
+        mDirectory = path.parent_path().string();
+        mModelName = path.stem().string();
 
-    Model::Model(Device& device, const std::string& filePath, ModelConfig& config)
-        : mConfig(config)
-    {
-        std::filesystem::path pathObj(filePath);
-        mDirectory = pathObj.parent_path().string();
-        mModelName = pathObj.stem().string();
-
-        // A cooked model is already in engine space and has its own textures, so the assimp import
-        // and the old .dm serializer don't apply.
-        if (IsCookedModelPath(pathObj))
+        if (Load(filePath))
         {
-            if (LoadCooked(filePath))
-            {
-                NormalizeModel();
-            }
-            return;
-        }
-
-        if (config.fromDM)
-        {
-            RADIS_INFO("Loading {} from .dm model...", mModelName.c_str());
-            ModelSerializer::load(*this, Assets::ModelsPath + "dm/" + mModelName + ".dm");
-        }
-        else
-        {
-            LoadMeshes(filePath);
-        }
-
-        NormalizeModel();
-
-        if (config.toDM)
-        {
-            RADIS_INFO("Saving {} to .dm model...", mModelName.c_str());
-            ModelSerializer::save(*this, Assets::ModelsPath + "dm/" + mModelName + ".dm", 0x0);
+            NormalizeModel();
         }
     }
 
@@ -68,7 +28,7 @@ namespace Radis
     {
     }
 
-    bool Model::LoadCooked(const std::string& path)
+    bool Model::Load(const std::string& path)
     {
         CookedModelData data;
         if (!CookedModelLoader::Load(path, data))
@@ -77,355 +37,26 @@ namespace Radis
             return false;
         }
 
-        // A cooked model's textures are in the Textures folder inside the model's folder.
-        const std::filesystem::path textureDirectory = std::filesystem::path(path).parent_path() / "Textures";
-        mMeshes = CookedModelLoader::CreateMeshes(data, textureDirectory);
+        mMeshes = CookedModelLoader::CreateMeshes(data, Assets::ModelTexturesPath);
+        mSkeleton = CookedModelLoader::CreateSkeleton(data);
 
         mAABBmin = glm::vec3(data.header.boundsMin[0], data.header.boundsMin[1], data.header.boundsMin[2]);
         mAABBmax = glm::vec3(data.header.boundsMax[0], data.header.boundsMax[1], data.header.boundsMax[2]);
         return true;
     }
 
-    void Model::LoadMeshes(const std::string& filepath)
+    void Model::NormalizeModel()
     {
-        // importer.SetPropertyBool(AI_CONFIG_PP_OG_EXCLUDE_LIST, true);
-        importer.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
-        mScene = importer.ReadFile(filepath, aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_GlobalScale | aiProcess_OptimizeGraph);
-
-        // Check if the scene was loaded successfully
-        if (!mScene || mScene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !mScene->mRootNode)
+        const glm::vec3 size = mAABBmax - mAABBmin;
+        const glm::vec3 center = (mAABBmax + mAABBmin) * 0.5f;
+        const float largest = std::max({ size.x, size.y, size.z });
+        if (largest <= 0.0f)
         {
-            RADIS_CRITICAL("Assimp Error: {}", importer.GetErrorString());
             return;
         }
 
-        ProcessNode(mScene->mRootNode);
-    }
-
-    void Model::ProcessNode(aiNode* node, const glm::mat4& parentTransform)
-    {
-        glm::mat4 nodeTransform = aiMatToGlm(node->mTransformation);
-        glm::mat4 globalTransform = parentTransform * nodeTransform;
-        glm::mat3 normalMat = glm::transpose(glm::inverse(glm::mat3(globalTransform)));
-
-        // Process each mesh in the current node
-        for (unsigned int i = 0; i < node->mNumMeshes; i++)
-        {
-            aiMesh* aMesh = mScene->mMeshes[node->mMeshes[i]];
-            ProcessMesh(aMesh, globalTransform, normalMat);
-        }
-
-        // Recursively process each child node
-        for (unsigned int i = 0; i < node->mNumChildren; i++)
-        {
-            ProcessNode(node->mChildren[i], globalTransform);
-        }
-    }
-
-    Mesh& Model::ProcessMesh(aiMesh* mesh, const glm::mat4& transform, const glm::mat3& normalMat)
-    {
-        // Create a new Mesh (the unified class, no longer VKMesh/GLMesh)
-        auto& newMeshPtr = mMeshes.emplace_back(std::make_unique<Mesh>());
-        Mesh& newMesh = *newMeshPtr;
-
-        glm::vec3 meshMin(std::numeric_limits<float>::max());
-        glm::vec3 meshMax(std::numeric_limits<float>::lowest());
-
-        const bool isSkinned = mesh->mNumBones > 0;
-
-        // Extract vertex data
-        for (unsigned int j = 0; j < mesh->mNumVertices; j++)
-        {
-            Vertex vertex{};
-
-            glm::vec4 pos = glm::vec4(mesh->mVertices[j].x, mesh->mVertices[j].y, mesh->mVertices[j].z, 1.f);
-            if (!isSkinned) {
-                pos = transform * pos;
-            }
-            vertex.position = pos;
-
-            //vertex.position = { mesh->mVertices[j].x, mesh->mVertices[j].y, mesh->mVertices[j].z };
-
-            // Normals
-            if (mesh->HasNormals())
-            {
-                glm::vec3 normal = glm::vec3(mesh->mNormals[j].x, mesh->mNormals[j].y, mesh->mNormals[j].z);
-                if (!isSkinned) {
-                    normal = normalMat * normal;
-                }
-
-                vertex.normal = glm::normalize(normal);
-
-                //vertex.normal = { mesh->mNormals[j].x, mesh->mNormals[j].y, mesh->mNormals[j].z };
-            }
-
-            // UV Coordinates
-            if (mesh->HasTextureCoords(0))
-            {
-                vertex.uv = { mesh->mTextureCoords[0][j].x, mesh->mTextureCoords[0][j].y };
-            }
-
-            // Colors
-            if (mesh->HasVertexColors(0))
-            {
-                vertex.color = { mesh->mColors[0][j].r, mesh->mColors[0][j].g, mesh->mColors[0][j].b };
-            }
-
-            newMesh.mVertices.push_back(vertex);
-
-            // Update model's AABB
-            mAABBmin = glm::min(vertex.position, mAABBmin);
-            mAABBmax = glm::max(vertex.position, mAABBmax);
-        }
-
-        // Extract indices from faces
-        for (unsigned int k = 0; k < mesh->mNumFaces; k++)
-        {
-            const aiFace& face = mesh->mFaces[k];
-            for (unsigned int l = 0; l < face.mNumIndices; l++)
-            {
-                newMesh.mIndices.push_back(face.mIndices[l]);
-            }
-        }
-
-        ProcessMaterials(mesh, newMesh);
-        ExtractBoneWeights(newMesh.mVertices, mesh);
-
-        return newMesh;
-    }
-
-    void Model::NormalizeModel()
-    {
-        glm::vec3 size = mAABBmax - mAABBmin;
-        glm::vec3 center = (mAABBmax + mAABBmin) * 0.5f;
-        float invScale = 1.f / std::max({ size.x, size.y, size.z });
-
-        glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), -center);
-        glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(invScale));
-
-        if (!mConfig.yUp)
-        {
-            glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(90.f), glm::vec3(1.f, 0.f, 0.f));
-
-            mNormalizationMatrix = rotationMatrix * scaleMatrix * translationMatrix;
-        }
-        else
-        {
-        }
+        const glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), -center);
+        const glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f / largest));
         mNormalizationMatrix = scaleMatrix * translationMatrix;
-    }
-
-    void Model::ExtractBoneWeights(std::vector<Vertex>& vertices, aiMesh* mesh)
-    {
-        // Iterate over all bones in the aiMesh
-        for (unsigned int boneIndex = 0; boneIndex < mesh->mNumBones; ++boneIndex)
-        {
-            aiBone* bone = mesh->mBones[boneIndex];
-            std::string boneName = bone->mName.C_Str();
-
-            int boneID;
-            auto it = mBoneInfoMap.find(boneName);
-            if (it == mBoneInfoMap.end())
-            {
-                BoneInfo info(mBoneCount, aiMatToGlm(bone->mOffsetMatrix));
-                mBoneInfoMap.emplace(boneName, info);
-                boneID = mBoneCount;
-                mBoneCount++;
-            }
-            else
-            {
-                boneID = it->second.id;
-            }
-
-            for (unsigned int weightIndex = 0; weightIndex < bone->mNumWeights; ++weightIndex)
-            {
-                const aiVertexWeight& weightData = bone->mWeights[weightIndex];
-                vertices[weightData.mVertexId].SetBoneData(boneID, weightData.mWeight);
-            }
-        }
-    }
-
-    std::string Model::ResolveTexturePath(aiMaterial* material, const std::vector<aiTextureType>& typesToTry, std::vector<unsigned char>& outEmbeddedData)
-    {
-        aiString texturePath;
-        aiReturn result = AI_FAILURE;
-
-        for (aiTextureType type : typesToTry)
-        {
-            // Assimp materials can have multiple textures of the same type.
-            // For PBR, we almost always only care about the first one (index 0).
-            if (material->GetTexture(type, 0, &texturePath) == AI_SUCCESS)
-            {
-                result = AI_SUCCESS;
-                break;
-            }
-        }
-
-        if (result != AI_SUCCESS)
-        {
-            return "";
-        }
-
-        // --- We found a texture, now resolve its path ---
-
-        const aiTexture* embeddedTexture = mScene->GetEmbeddedTexture(texturePath.C_Str());
-        bool embedded = false;
-        if (!embeddedTexture)
-        {
-            // Not an embedded texture. This is an external file.
-            std::filesystem::path path(texturePath.C_Str());
-            std::string filename = path.filename().string();
-
-            std::string res = Assets::ModelTexturesPath + mModelName + "/" + filename;
-            RADIS_INFO("Resolved external texture path: {}", res.c_str());
-
-            return Assets::ModelTexturesPath + mModelName + "/" + filename;
-        }
-
-        if (embeddedTexture->mHeight == 0)
-        {
-            const std::size_t dataSize = static_cast<std::size_t>(embeddedTexture->mWidth);
-            const unsigned char* src = reinterpret_cast<const unsigned char*>(embeddedTexture->pcData);
-            outEmbeddedData.assign(src, src + dataSize);
-
-            RADIS_INFO("Resolved embedded texture with format hint '{}', size {} bytes", embeddedTexture->achFormatHint, dataSize);
-
-            return "";
-        }
-
-
-        RADIS_CRITICAL("Model has weird embedded texture data (?)?(?) what does this even mean");
-        outEmbeddedData.clear();
-        return "";
-    }
-
-    void Model::ProcessMaterials(aiMesh* mesh, Mesh& newMesh)
-    {
-        if (!mScene->HasMaterials()) return;
-
-        aiMaterial* material = mScene->mMaterials[mesh->mMaterialIndex];
-        //ProcessVertexColor(material, newMesh);
-        ProcessBaseColor(material, newMesh);
-        ProcessNormalMap(material, newMesh);
-        ProcessPBRMaps(material, newMesh);
-        ProcessEmissive(material, newMesh);
-        ProcessTransmission(material, newMesh);
-    }
-
-    void Model::ProcessVertexColor(aiMaterial* material, Mesh& newMesh)
-    {
-
-        aiColor4D baseColor;
-
-        if (material->Get(AI_MATKEY_BASE_COLOR, baseColor) == AI_SUCCESS ||
-            material->Get(AI_MATKEY_COLOR_DIFFUSE, baseColor) == AI_SUCCESS)
-        {
-            for (Vertex& vertex : newMesh.mVertices)
-            {
-                vertex.color *= glm::vec3(baseColor.r, baseColor.g, baseColor.b);
-            }
-        }
-    }
-
-    void Model::ProcessBaseColor(aiMaterial* material, Mesh& newMesh)
-    {
-        aiColor4D color;
-
-        if (material->Get(AI_MATKEY_BASE_COLOR, color) == AI_SUCCESS)
-        {
-            newMesh.baseColorFactor = glm::vec4(color.r, color.g, color.b, color.a);
-        }
-        else if (material->Get(AI_MATKEY_COLOR_DIFFUSE, color) == AI_SUCCESS)
-        {
-            newMesh.baseColorFactor = glm::vec4(color.r, color.g, color.b, color.a);
-        }
-
-        newMesh.albedoTexturePath = ResolveTexturePath(
-            material,
-            { aiTextureType_BASE_COLOR, aiTextureType_DIFFUSE },
-            newMesh.mAlbedoTextureData
-        );
-    }
-
-    void Model::ProcessNormalMap(aiMaterial* material, Mesh& newMesh)
-    {
-        newMesh.normalTexturePath = ResolveTexturePath(
-            material,
-            { aiTextureType_NORMALS }, // aiTextureType_NORMAL_CAMERA in the future perhaps
-            newMesh.mNormalTextureData
-        );
-    }
-
-    void Model::ProcessPBRMaps(aiMaterial* material, Mesh& newMesh)
-    {
-        // The shaders multiply these factors with their textures (glTF's rule). A file with a
-        // texture but no factor gets 1, so the texture shows as authored.
-        const bool hasMetalness = material->GetTextureCount(aiTextureType_METALNESS) > 0;
-        const bool hasRoughness = material->GetTextureCount(aiTextureType_DIFFUSE_ROUGHNESS) > 0;
-        if (material->Get(AI_MATKEY_METALLIC_FACTOR, newMesh.metallicFactor) != AI_SUCCESS && hasMetalness)
-            newMesh.metallicFactor = 1.0f;
-        if (material->Get(AI_MATKEY_ROUGHNESS_FACTOR, newMesh.roughnessFactor) != AI_SUCCESS && hasRoughness)
-            newMesh.roughnessFactor = 1.0f;
-
-        newMesh.metalnessTexturePath = ResolveTexturePath(
-            material,
-            { aiTextureType_METALNESS },
-            newMesh.mMetalnessTextureData
-        );
-
-        newMesh.roughnessTexturePath = ResolveTexturePath(
-            material,
-            { aiTextureType_DIFFUSE_ROUGHNESS },
-            newMesh.mRoughnessTextureData
-        );
-
-        newMesh.occlusionTexturePath = ResolveTexturePath(
-            material,
-            { aiTextureType_AMBIENT_OCCLUSION, aiTextureType_LIGHTMAP },
-            newMesh.mOcclusionTextureData
-        );
-
-        // Using the same texture; just use one
-        if (!newMesh.metalnessTexturePath.empty() && newMesh.metalnessTexturePath == newMesh.roughnessTexturePath)
-        {
-            newMesh.mMetallicRoughnessCombined = true;
-            newMesh.roughnessTexturePath.clear();
-        }
-        else if (!newMesh.mMetalnessTextureData.empty() && newMesh.mMetalnessTextureData == newMesh.mRoughnessTextureData)
-        {
-            newMesh.mMetallicRoughnessCombined = true;
-            newMesh.mRoughnessTextureData.clear();
-        }
-    }
-
-    void Model::ProcessEmissive(aiMaterial* material, Mesh& newMesh)
-    {
-        aiColor3D color(0.0f, 0.0f, 0.0f);
-        if (material->Get(AI_MATKEY_COLOR_EMISSIVE, color) == AI_SUCCESS)
-        {
-            newMesh.emissiveFactor = glm::vec4(glm::vec3(color.r, color.g, color.b), 0.f);
-        }
-
-        newMesh.emissiveTexturePath = ResolveTexturePath(
-            material,
-            { aiTextureType_EMISSION_COLOR, aiTextureType_EMISSIVE },
-            newMesh.mEmissiveTextureData
-        );
-    }
-
-    void Model::ProcessTransmission(aiMaterial* material, Mesh& newMesh)
-    {
-        material->Get(AI_MATKEY_TRANSMISSION_FACTOR, newMesh.transmissionFactor);
-
-        if (material->Get(AI_MATKEY_REFRACTI, newMesh.ior) != AI_SUCCESS)
-            newMesh.ior = 1.5f;
-
-        newMesh.transmissionTexturePath = ResolveTexturePath(
-            material,
-            { aiTextureType_TRANSMISSION },
-            newMesh.mTransmissionTextureData
-        );
-
-        RADIS_INFO("Transmission factor: {}, IOR: {}", newMesh.transmissionFactor, newMesh.ior);
     }
 }

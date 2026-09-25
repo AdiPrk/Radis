@@ -1,6 +1,6 @@
 /*****************************************************************//**
  * \file   Model.h
- * \brief  Definition of the Model class for 3D model loading and processing.
+ * \brief  Definition of the Model class, a model cooked by the asset pipeline.
  *
  * \author Aditya Prakash
  * \date   January 2026
@@ -8,82 +8,47 @@
 
 #pragma once
 
-#include "../Common/Animation/Bone.h"
+#include "../Common/Animation/Skeleton.h"
 #include "../RHI/Mesh.h"
 
 namespace Radis
 {
-    class ModelSerializer;
-
-    class Device;
-
-    struct ModelConfig
-    {
-        bool fromDM = false; // Whether to load from .dm serialized model
-        bool toDM = false;   // Whether to save to .dm serialized model after loading
-        bool yUp = true;     // Whether to convert from Y-up to Z-up coordinate system
-    };
-
     class Model
     {
     public:
-        Model() = default;
         Model(const Model&) = delete;
         Model& operator=(const Model&) = delete;
 
-        Model(Device& device, const std::string& filePath, ModelConfig& config);
+        // Loads a model cooked by the asset pipeline (a .dm file). A model that fails to load has
+        // no meshes; the error is logged.
+        explicit Model(const std::string& filePath);
         ~Model();
 
         std::vector<std::unique_ptr<Mesh>> mMeshes;
 
-        std::unordered_map<std::string, BoneInfo>& GetBoneInfoMap() { return mBoneInfoMap; }
-        const std::unordered_map<std::string, BoneInfo>& GetBoneInfoMap() const { return mBoneInfoMap; }
-        int& GetBoneCount() { return mBoneCount; }
+        // The skeleton of a skinned model; nullptr otherwise.
+        const Skeleton* GetSkeleton() const { return mSkeleton.get(); }
 
         const std::string& GetName() const { return mModelName; }
         const std::string& GetDir() const { return mDirectory; }
 
+        // Scales the model to fit a unit cube centered on the origin.
         const glm::mat4& GetNormalizationMatrix() const { return mNormalizationMatrix; }
 
-        Assimp::Importer importer;
-        const aiScene* mScene = nullptr;
-
     private:
-        // Load a model cooked by the asset pipeline (a .dm file)
-        bool LoadCooked(const std::string& path);
-
-        // Load and process model using assimp
-        void LoadMeshes(const std::string& filepath);
-        void ProcessNode(aiNode* node, const glm::mat4& parentTransform = glm::mat4(1.f));
-        Mesh& ProcessMesh(aiMesh* mesh, const glm::mat4& transform, const glm::mat3& normalMat);
-
-        // Checks for textures in order of types to try
-        std::string ResolveTexturePath(aiMaterial* material, const std::vector<aiTextureType>& typesToTry, std::vector<unsigned char>& outEmbeddedData);
-        void ProcessMaterials(aiMesh* mesh, Mesh& newMesh);
-        void ProcessVertexColor(aiMaterial* material, Mesh& newMesh);
-        void ProcessBaseColor(aiMaterial* material, Mesh& newMesh);
-        void ProcessNormalMap(aiMaterial* material, Mesh& newMesh);
-        void ProcessPBRMaps(aiMaterial* material, Mesh& newMesh);
-        void ProcessEmissive(aiMaterial* material, Mesh& newMesh);
-        void ProcessTransmission(aiMaterial* material, Mesh& newMesh);
-
+        bool Load(const std::string& path);
         void NormalizeModel();
-        void ExtractBoneWeights(std::vector<Vertex>& vertices, aiMesh* mesh);
 
-        friend class ModelSerializer;
-        glm::vec3 mAABBmin{ std::numeric_limits<float>::max() };
-        glm::vec3 mAABBmax{ std::numeric_limits<float>::lowest() };
+        glm::vec3 mAABBmin{ 0.0f };
+        glm::vec3 mAABBmax{ 0.0f };
 
         friend class ModelLibrary;
         bool mAddedTexture = false;
         std::string mModelName;
-        std::string mDirectory; // For texture loading
+        std::string mDirectory;
 
-        glm::mat4 mNormalizationMatrix;
+        glm::mat4 mNormalizationMatrix{ 1.0f };
 
-        // Animation data
-        std::unordered_map<std::string, BoneInfo> mBoneInfoMap;
-        int mBoneCount = 0;
-        ModelConfig mConfig;
+        std::unique_ptr<Skeleton> mSkeleton;
     };
 }

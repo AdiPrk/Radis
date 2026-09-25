@@ -22,7 +22,6 @@
 #include "Graphics/Vulkan/Core/SwapChain.h"
 #include "Graphics/Vulkan/RenderGraph.h"
 #include "Graphics/Common/Animation/AnimationLibrary.h"
-#include "Graphics/Common/Animation/Animation.h"
 #include "Graphics/Common/ModelLibrary.h"
 #include "Graphics/Common/Model.h"
 

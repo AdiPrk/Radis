@@ -20,6 +20,31 @@ static TextureRequest MakeTextureRequest(std::string key, const std::filesystem:
     return request;
 }
 
+// Clip files cook with the model that owns them (see ClipOwner), so a clip among the inputs stands
+// for its model.
+static std::vector<InputFile> ModelInputs(std::span<const InputFile> inputs)
+{
+    std::vector<InputFile>          models;
+    std::unordered_set<std::string> seen;
+    for (const InputFile& file : inputs)
+    {
+        if (file.kind != AssetKind::Model)
+            continue;
+
+        InputFile model = file;
+        if (const auto owner = ClipOwner(file.path))
+        {
+            model.path = *owner;
+            model.relative = file.relative.parent_path() / owner->filename();
+        }
+        if (seen.insert(PathKey(model.path)).second)
+        {
+            models.push_back(std::move(model));
+        }
+    }
+    return models;
+}
+
 // Models share one flat folder, so two sources with the same file name would cook to the same
 // file. The first keeps the name; the others are reported and skipped.
 static std::vector<const InputFile*> ModelsWithUniqueNames(std::span<const InputFile> inputs, uint32_t& failed)
@@ -58,9 +83,23 @@ static bool ReportModel(const std::string& name, const ModelCookResult& result)
         return false;
     }
 
-    std::printf("%s -> %s (%u submeshes, %u materials, %u vertices, %u triangles, %.1f ms)\n", name.c_str(), result.output.string().c_str(),
-        result.submeshes, result.materials, result.vertices, result.triangles, result.milliseconds);
-    return true;
+    const std::string joints = result.joints > 0 ? std::format(", {} joints", result.joints) : "";
+    std::printf("%s -> %s (%u submeshes, %u materials, %u vertices, %u triangles%s, %.1f ms)\n", name.c_str(), result.output.string().c_str(),
+        result.submeshes, result.materials, result.vertices, result.triangles, joints.c_str(), result.milliseconds);
+
+    bool clipsCooked = true;
+    for (const ClipCookResult& clip : result.clips)
+    {
+        if (!clip.error.empty())
+        {
+            std::fprintf(stderr, "error: %s: %s: %s\n", name.c_str(), clip.source.c_str(), clip.error.c_str());
+            clipsCooked = false;
+            continue;
+        }
+        std::printf("  %s -> %s (%u frames, %u tracks%s)\n", clip.source.c_str(), clip.output.string().c_str(), clip.frames, clip.tracks,
+            clip.rootMotion ? ", root motion" : "");
+    }
+    return clipsCooked;
 }
 
 // Prints the results once cooking is done, in request order.
@@ -122,7 +161,8 @@ int main(int argc, char** argv)
     TextureCookQueue                textures;
     std::unordered_set<std::string> modelImages;
     ModelCookContext                modelContext{ opts->output, textures, modelImages };
-    for (const InputFile* file : ModelsWithUniqueNames(*inputs, failed))
+    const std::vector<InputFile> models = ModelInputs(*inputs);
+    for (const InputFile* file : ModelsWithUniqueNames(models, failed))
     {
         failed += ReportModel(file->relative.string(), CookModel(file->path, modelContext)) ? 0 : 1;
     }

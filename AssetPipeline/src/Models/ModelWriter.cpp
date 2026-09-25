@@ -1,65 +1,10 @@
 #include <pch.h>
 #include "ModelWriter.h"
+#include "SectionFileBuilder.h"
+#include "Trs.h"
 #include "../FileIO.h"
 
-#include <meshoptimizer.h>
-
-// Builds the file in memory: the header and section table are filled in as sections are added.
-class ModelFileBuilder
-{
-public:
-    explicit ModelFileBuilder(uint16_t sectionCount)
-        : m_sectionCount(sectionCount)
-        , m_bytes(sizeof(ModelFile::Header) + sizeof(ModelFile::Section) * sectionCount)
-    {
-    }
-
-    void Add(ModelFile::SectionType type, ModelFile::Codec codec, uint32_t elementSize, uint32_t elementCount, std::span<const std::byte> data)
-    {
-        assert(m_added < m_sectionCount);
-        m_bytes.resize(AlignUp(m_bytes.size(), ModelFile::kSectionAlignment));
-
-        const ModelFile::Section section{ type, codec, elementSize, elementCount, m_bytes.size(), data.size() };
-        std::memcpy(m_bytes.data() + sizeof(ModelFile::Header) + sizeof(ModelFile::Section) * m_added++, &section, sizeof(section));
-        m_bytes.insert(m_bytes.end(), data.begin(), data.end());
-    }
-
-    template <typename T>
-    void AddRaw(ModelFile::SectionType type, std::span<const T> elements)
-    {
-        Add(type, ModelFile::Codec::None, sizeof(T), uint32_t(elements.size()), std::as_bytes(elements));
-    }
-
-    template <typename T>
-    void AddVertices(ModelFile::SectionType type, std::span<const T> vertices)
-    {
-        std::vector<unsigned char> encoded(meshopt_encodeVertexBufferBound(vertices.size(), sizeof(T)));
-        encoded.resize(meshopt_encodeVertexBuffer(encoded.data(), encoded.size(), vertices.data(), vertices.size(), sizeof(T)));
-        Add(type, ModelFile::Codec::MeshoptVertex, sizeof(T), uint32_t(vertices.size()), std::as_bytes(std::span(encoded)));
-    }
-
-    template <typename T>
-    void AddIndices(std::span<const T> indices, size_t vertexCount)
-    {
-        std::vector<unsigned char> encoded(meshopt_encodeIndexBufferBound(indices.size(), vertexCount));
-        encoded.resize(meshopt_encodeIndexBuffer(encoded.data(), encoded.size(), indices.data(), indices.size()));
-        Add(ModelFile::SectionType::Indices, ModelFile::Codec::MeshoptIndex, sizeof(T), uint32_t(indices.size()), std::as_bytes(std::span(encoded)));
-    }
-
-    std::vector<std::byte> Finish(const ModelFile::Header& header)
-    {
-        assert(m_added == m_sectionCount && header.sectionCount == m_sectionCount);
-        std::memcpy(m_bytes.data(), &header, sizeof(header));
-        return std::move(m_bytes);
-    }
-
-private:
-    static size_t AlignUp(size_t value, size_t alignment) { return (value + alignment - 1) / alignment * alignment; }
-
-    uint16_t               m_sectionCount;
-    uint16_t               m_added = 0;
-    std::vector<std::byte> m_bytes;
-};
+using ModelFileBuilder = SectionFileBuilder<ModelFile::Header, ModelFile::Section>;
 
 // Null-terminated strings back to back; each distinct string is stored once.
 class StringTable
@@ -83,9 +28,32 @@ private:
     std::unordered_map<std::string, uint32_t> m_offsets;
 };
 
-std::expected<void, std::string> WriteModel(const std::filesystem::path& path, const ProcessedGeometry& geometry, std::span<const BuiltMaterial> materials)
+static void StoreRestPose(const glm::mat4& m, ModelFile::Joint& joint)
 {
-    constexpr uint16_t kSectionCount = 6;
+    const Trs rest = Decompose(m);
+    std::ranges::copy(std::array{ rest.translation.x, rest.translation.y, rest.translation.z }, joint.translation);
+    std::ranges::copy(std::array{ rest.rotation.x, rest.rotation.y, rest.rotation.z, rest.rotation.w }, joint.rotation);
+    std::ranges::copy(std::array{ rest.scale.x, rest.scale.y, rest.scale.z }, joint.scale);
+}
+
+static ModelFile::Matrix3x4 ToMatrix3x4(const glm::mat4& m)
+{
+    ModelFile::Matrix3x4 out{};
+    for (int row = 0; row < 3; ++row)
+    {
+        for (int column = 0; column < 4; ++column)
+        {
+            out.rows[row][column] = m[column][row];
+        }
+    }
+    return out;
+}
+
+std::expected<void, std::string> WriteModel(const std::filesystem::path& path, const ProcessedGeometry& geometry, std::span<const BuiltMaterial> materials,
+    const ImportedSkeleton& skeleton)
+{
+    const bool     skinned = !skeleton.joints.empty();
+    const uint16_t sectionCount = skinned ? 10 : 6;
 
     // Texture file names go into the string table; materials keep their offsets.
     StringTable                      strings;
@@ -99,7 +67,20 @@ std::expected<void, std::string> WriteModel(const std::filesystem::path& path, c
         }
     }
 
-    ModelFileBuilder builder(kSectionCount);
+    std::vector<ModelFile::Joint> joints;
+    for (const ImportedJoint& imported : skeleton.joints)
+    {
+        ModelFile::Joint& joint = joints.emplace_back();
+        joint.parent = int16_t(imported.parent);
+        joint.name = strings.Add(imported.name);
+        joint.nameHash = ModelFile::NameHash(imported.name.c_str());
+        StoreRestPose(imported.local, joint);
+    }
+
+    std::vector<ModelFile::Matrix3x4> inverseBinds;
+    std::ranges::transform(geometry.inverseBinds, std::back_inserter(inverseBinds), ToMatrix3x4);
+
+    ModelFileBuilder builder(sectionCount);
     builder.AddRaw(ModelFile::SectionType::Submeshes, std::span(geometry.submeshes));
     builder.AddRaw(ModelFile::SectionType::Materials, std::span<const ModelFile::Material>(fileMaterials));
     builder.AddVertices(ModelFile::SectionType::Positions, std::span(geometry.positions));
@@ -112,19 +93,27 @@ std::expected<void, std::string> WriteModel(const std::filesystem::path& path, c
     if (shortIndices)
     {
         const std::vector<uint16_t> indices(geometry.indices.begin(), geometry.indices.end());
-        builder.AddIndices(std::span(indices), vertexCount);
+        builder.AddIndices(ModelFile::SectionType::Indices, std::span(indices), vertexCount);
     }
     else
     {
-        builder.AddIndices(std::span(geometry.indices), vertexCount);
+        builder.AddIndices(ModelFile::SectionType::Indices, std::span(geometry.indices), vertexCount);
     }
 
     builder.AddRaw(ModelFile::SectionType::Strings, strings.Bytes());
 
+    if (skinned)
+    {
+        builder.AddRaw(ModelFile::SectionType::Skeleton, std::span<const ModelFile::Joint>(joints));
+        builder.AddRaw(ModelFile::SectionType::SkinJoints, std::span(geometry.paletteJoints));
+        builder.AddRaw(ModelFile::SectionType::InverseBinds, std::span<const ModelFile::Matrix3x4>(inverseBinds));
+        builder.AddVertices(ModelFile::SectionType::SkinWeights, std::span(geometry.skin));
+    }
+
     ModelFile::Header header{};
     header.magic = ModelFile::kMagic;
     header.version = ModelFile::kVersion;
-    header.sectionCount = kSectionCount;
+    header.sectionCount = sectionCount;
     header.boundsMin[0] = geometry.boundsMin.x;
     header.boundsMin[1] = geometry.boundsMin.y;
     header.boundsMin[2] = geometry.boundsMin.z;

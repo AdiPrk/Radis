@@ -18,7 +18,6 @@
 #include "Graphics/Common/Model.h"
 #include "Graphics/Vulkan/Uniform/Uniform.h"
 #include "Graphics/Vulkan/RenderGraph.h"
-#include "Graphics/Common/Animation/AnimationLibrary.h"
 #include "Graphics/Common/TextureLibrary.h"
 #include "Graphics/Vulkan/Texture/VKTexture.h"
 #include "Graphics/Vulkan/Uniform/Descriptors.h"
@@ -212,7 +211,8 @@ namespace Radis
             for (auto& mesh : model->mMeshes)
             {
                 VkAccelerationStructureInstanceKHR asInstance{};
-                asInstance.transform = ToTransformMatrixKHR(tc.GetTransform() * model->GetNormalizationMatrix());  // Position of the instance
+                const glm::mat4 transform = mc.NormalizeModel ? tc.GetTransform() * model->GetNormalizationMatrix() : tc.GetTransform();
+                asInstance.transform = ToTransformMatrixKHR(transform);  // Position of the instance
 
                 asInstance.instanceCustomIndex = instanceIndex++;//mesh->GetID();  // gl_InstanceCustomIndexEXT
                 asInstance.accelerationStructureReference = rr->blasAccel[mesh->GetID()].address;

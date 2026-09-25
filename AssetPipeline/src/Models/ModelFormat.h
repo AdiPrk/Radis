@@ -12,10 +12,15 @@
 //
 // Conventions: Y-up, right-handed, meters. UV (0, 0) is the top left of a texture. Front faces are
 // counter-clockwise. Normal maps are +Y (OpenGL style) and bitangent = cross(normal, tangent.xyz) * tangent.w.
+//
+// Skinned models also have the four skin sections. A vertex's skinned position is the weighted sum
+// of jointModel[SkinJoints[p]] * InverseBinds[p] * position over its palette entries p, where
+// jointModel is a joint's transform from its space to model space. In the rest pose that gives back
+// the stored position.
 namespace ModelFile
 {
     inline constexpr uint32_t kMagic = 0x4C444D52;   // "RMDL" as bytes in the file
-    inline constexpr uint16_t kVersion = 2;
+    inline constexpr uint16_t kVersion = 3;
     inline constexpr uint32_t kSectionAlignment = 16;
 
     enum class SectionType : uint32_t
@@ -26,6 +31,10 @@ namespace ModelFile
         Attributes,   // VertexAttributes[], one per vertex
         Indices,      // uint16_t or uint32_t (see elementSize), relative to each submesh's baseVertex
         Strings,      // char[]: null-terminated UTF-8 strings, back to back
+        Skeleton,     // Joint[]; skinned models only, like the three below
+        SkinJoints,   // uint16_t[]: the joint each palette entry follows
+        InverseBinds, // Matrix3x4[], one per palette entry
+        SkinWeights,  // SkinWeights[], one per vertex
     };
 
     enum class Codec : uint32_t
@@ -110,6 +119,44 @@ namespace ModelFile
         float color[4];     // linear; multiplies the base color
     };
 
+    // A row-major affine transform: the rows of the top three rows of a 4x4 matrix.
+    struct Matrix3x4
+    {
+        float rows[3][4];
+    };
+
+    // Joints are in depth-first order, so a joint's parent always comes before it.
+    struct Joint
+    {
+        int16_t  parent;            // -1 for a root
+        uint16_t reserved;
+        uint32_t name;              // offset into Strings
+        uint32_t nameHash;          // NameHash(name)
+        float    translation[3];    // rest pose, relative to the parent
+        float    rotation[4];       // xyzw
+        float    scale[3];
+    };
+
+    // Four influences, most significant first. Joints index the palette (SkinJoints); weights are
+    // unorm16 and sum to 65535, except on a vertex that isn't skinned, where they're all 0.
+    struct SkinWeights
+    {
+        uint16_t joints[4];
+        uint16_t weights[4];
+    };
+
+    // FNV-1a of a joint's name, for finding joints without comparing strings.
+    constexpr uint32_t NameHash(const char* name)
+    {
+        uint32_t hash = 2166136261u;
+        for (; *name; ++name)
+        {
+            hash = (hash ^ uint8_t(*name)) * 16777619u;
+        }
+        return hash;
+    }
+
     static_assert(sizeof(Header) == 32 && sizeof(Section) == 32 && sizeof(Submesh) == 44);
     static_assert(sizeof(Material) == 92 && sizeof(Position) == 12 && sizeof(VertexAttributes) == 52);
+    static_assert(sizeof(Matrix3x4) == 48 && sizeof(Joint) == 52 && sizeof(SkinWeights) == 16);
 }

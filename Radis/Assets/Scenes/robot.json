@@ -3,7 +3,7 @@
     {
       "ModelComponent": [
         {
-          "ModelPath": "assets/models/steampunkrobot.gltf",
+          "ModelPath": "assets/models/steampunkrobot.dm",
           "emissiveOverride": [ 0.0, 0.0, 0.0, 0.0 ],
           "metallicOverride": 1.0,
           "roughnessOverride": 1.0,

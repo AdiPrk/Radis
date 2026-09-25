@@ -9,6 +9,8 @@ struct InputFile
     AssetKind             kind;
 };
 
+bool IsModelFile(const std::filesystem::path& path);
+
 // A single file, or every supported file under a directory (recursive), sorted by path.
 // `exclude` (normally the output directory) is skipped so cooked files never become inputs.
 std::expected<std::vector<InputFile>, std::string> CollectInputs(const std::filesystem::path& input, const std::filesystem::path& exclude);

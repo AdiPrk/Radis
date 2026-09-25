@@ -19,10 +19,10 @@
     <ClCompile Include="src\Radis\Graphics\Vulkan\Core\Device.cpp" />
     <ClCompile Include="src\Radis\Graphics\Vulkan\Core\SwapChain.cpp" />
     <ClCompile Include="src\Radis\Graphics\Vulkan\Core\Synchronization.cpp" />
-    <ClCompile Include="src\Radis\Graphics\Common\Animation\Animation.cpp" />
     <ClCompile Include="src\Radis\Graphics\Common\Animation\AnimationLibrary.cpp" />
-    <ClCompile Include="src\Radis\Graphics\Common\Animation\Animator.cpp" />
-    <ClCompile Include="src\Radis\Graphics\Common\Animation\Bone.cpp" />
+    <ClCompile Include="src\Radis\Graphics\Common\Animation\AnimationClip.cpp" />
+    <ClCompile Include="src\Radis\Graphics\Common\Animation\Skeleton.cpp" />
+    <ClCompile Include="src\Radis\Graphics\Common\CookedFile.cpp" />
     <ClCompile Include="src\Radis\Graphics\Common\ModelLibrary.cpp" />
     <ClCompile Include="src\Radis\Graphics\Vulkan\Pipeline\Pipeline.cpp" />
     <ClCompile Include="src\Radis\Graphics\Vulkan\Pipeline\VKShader.cpp" />
@@ -36,7 +36,6 @@
     <ClCompile Include="src\Radis\Graphics\Vulkan\Uniform\UniformSettings.cpp" />
     <ClCompile Include="src\Radis\Utils\FrameRate.cpp" />
     <ClCompile Include="src\Radis\Graphics\Vulkan\VulkanWindow.cpp" />
-    <ClCompile Include="src\Radis\Graphics\Common\AssimpGlmHelper.cpp" />
     <ClCompile Include="src\Radis\Utils\Logger.cpp" />
     <ClCompile Include="src\Radis\Utils\SerializationOperators.cpp" />
     <ClCompile Include="src\Radis\Utils\Utils.cpp" />
@@ -72,9 +71,7 @@
     <ClCompile Include="src\Radis\ECS\Resources\RaytracingResource.cpp" />
     <ClCompile Include="src\Radis\Graphics\Vulkan\Utils\VKMath.cpp" />
     <ClCompile Include="src\Radis\Graphics\Vulkan\Utils\ScopedDebugLabel.cpp" />
-    <ClCompile Include="src\Radis\Assets\Serialization\ModelSerializer.cpp" />
     <ClCompile Include="src\Radis\Assets\UUID.cpp" />
-    <ClCompile Include="src\Radis\Assets\Serialization\BinaryIO.cpp" />
     <ClCompile Include="src\Radis\ECS\Resources\Networking\PlayerManager.cpp" />
     <ClCompile Include="src\Radis\ECS\Resources\Networking\PacketHandler.cpp" />
     <ClCompile Include="src\Radis\ECS\Resources\Networking\Networking.cpp" />
@@ -132,11 +129,11 @@
     <ClInclude Include="src\Radis\Graphics\Vulkan\Core\Device.h" />
     <ClInclude Include="src\Radis\Graphics\Vulkan\Core\SwapChain.h" />
     <ClInclude Include="src\Radis\Graphics\Vulkan\Core\Synchronization.h" />
-    <ClInclude Include="src\Radis\Graphics\Common\Animation\Animation.h" />
     <ClInclude Include="src\Radis\Graphics\Common\Animation\AnimationLibrary.h" />
-    <ClInclude Include="src\Radis\Graphics\Common\Animation\Animator.h" />
-    <ClInclude Include="src\Radis\Graphics\Common\Animation\Bone.h" />
-    <ClInclude Include="src\Radis\Graphics\Common\Animation\VQS.h" />
+    <ClInclude Include="src\Radis\Graphics\Common\Animation\AnimationClip.h" />
+    <ClInclude Include="src\Radis\Graphics\Common\Animation\Skeleton.h" />
+    <ClInclude Include="src\Radis\Graphics\Common\CookedFile.h" />
+    <ClInclude Include="src\Radis\Graphics\Common\AnimationFormat.h" />
     <ClInclude Include="src\Radis\Graphics\Common\ModelLibrary.h" />
     <ClInclude Include="src\Radis\Graphics\Vulkan\Pipeline\Pipeline.h" />
     <ClInclude Include="src\Radis\Graphics\Vulkan\Pipeline\VKShader.h" />
@@ -150,7 +147,6 @@
     <ClInclude Include="src\Radis\Graphics\Vulkan\Uniform\UniformSettings.h" />
     <ClInclude Include="src\Radis\Utils\FrameRate.h" />
     <ClInclude Include="src\Radis\Graphics\Vulkan\VulkanWindow.h" />
-    <ClInclude Include="src\Radis\Graphics\Common\AssimpGlmHelper.h" />
     <ClInclude Include="src\Radis\Utils\InputMap.h" />
     <ClInclude Include="src\Radis\Utils\Logger.h" />
     <ClInclude Include="src\Radis\Utils\SerializationOperators.h" />
@@ -186,9 +182,7 @@
     <ClInclude Include="src\Radis\ECS\Resources\RaytracingResource.h" />
     <ClInclude Include="src\Radis\Graphics\Vulkan\Utils\VKMath.h" />
     <ClInclude Include="src\Radis\Graphics\Vulkan\Utils\ScopedDebugLabel.h" />
-    <ClInclude Include="src\Radis\Assets\Serialization\ModelSerializer.h" />
     <ClInclude Include="src\Radis\Assets\UUID.h" />
-    <ClInclude Include="src\Radis\Assets\Serialization\BinaryIO.h" />
     <ClInclude Include="src\Radis\ECS\Resources\Networking\PlayerManager.h" />
     <ClInclude Include="src\Radis\ECS\Resources\Networking\PacketHandler.h" />
     <ClInclude Include="src\Radis\ECS\Resources\Networking\Networking.h" />

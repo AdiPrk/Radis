@@ -63,15 +63,17 @@ namespace Radis
 
     struct AnimationComponent
     {
+        std::string ClipPath; // a cooked clip (.da) made for the entity's model
         bool IsPlaying = true;
-        uint32_t AnimationIndex = AnimationLibrary::INVALID_ANIMATION_INDEX;
-        float AnimationTime = 0.0f;
-        bool InPlace = false;
+        bool Loop = true;
+        bool InPlace = false; // drop the clip's root motion instead of moving the model with it
+        bool DrawSkeleton = false;
+        float Speed = 1.0f;
+        float Time = 0.0f; // seconds
 
         // Internal state
-        float PrevAnimationTime = 0.0f;
-        bool PrevInPlace = false;
-        uint32_t BoneOffset = 0;
+        uint32_t ClipID = AnimationLibrary::INVALID_ANIMATION_INDEX;
+        uint32_t BoneOffset = AnimationLibrary::INVALID_ANIMATION_INDEX; // into this frame's skin matrices; invalid when not animated
     };
 
     struct CameraComponent

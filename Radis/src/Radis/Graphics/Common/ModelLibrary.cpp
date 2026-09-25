@@ -33,7 +33,7 @@ namespace Radis
         mModels.clear();
     }
 
-    uint32_t ModelLibrary::AddModel(const std::string& filePath, bool fromDM, bool toDM, bool yUp)
+    uint32_t ModelLibrary::AddModel(const std::string& filePath)
     {
         auto it = mModelMap.find(filePath);
         if (it != mModelMap.end())
@@ -41,12 +41,7 @@ namespace Radis
             return it->second;
         }
 
-        ModelConfig config;
-        config.fromDM = fromDM;
-        config.toDM = toDM;
-        config.yUp = yUp;
-
-        std::unique_ptr<Model> model = std::make_unique<Model>(mDevice, filePath, config);
+        std::unique_ptr<Model> model = std::make_unique<Model>(filePath);
         for (auto& mesh : model->mMeshes)
         {
             mesh->UploadToGPU(&mDevice);
@@ -189,31 +184,24 @@ namespace Radis
             if (model->mAddedTexture) continue;
             model->mAddedTexture = true;
 
-            auto LoadOrGetTexture = [&](uint32_t& currentIndex, const std::string& path, std::vector<unsigned char>& data, const std::string& embeddedName)
+            // The texture library loads a file once, so slots that share one (ORM) share its index.
+            auto QueueTexture = [&](uint32_t& index, const std::string& path)
             {
-                if (currentIndex != TextureLibrary::INVALID_TEXTURE_INDEX) return;
-
-                if (!path.empty()) currentIndex = mTextureLibrary.QueueTextureLoad(path);
-                else if (!data.empty())
+                if (index == TextureLibrary::INVALID_TEXTURE_INDEX && !path.empty())
                 {
-                    currentIndex = mTextureLibrary.QueueTextureLoad(data.data(), static_cast<uint32_t>(data.size()), embeddedName);
-                    data.clear();
+                    index = mTextureLibrary.QueueTextureLoad(path);
                 }
             };
 
-            // --- Process all meshes in the model ---
             for (auto& mesh : model->mMeshes)
             {
-                // Create a unique base name for embedded textures for this mesh
-                std::string embeddedBaseName = "Embedded_" + model->mModelName + "_" + std::to_string(mesh->mMeshID);
-
-                // Call the helper for every texture type
-                LoadOrGetTexture(mesh->albedoTextureIndex, mesh->albedoTexturePath, mesh->mAlbedoTextureData, embeddedBaseName + "_Albedo");
-                LoadOrGetTexture(mesh->normalTextureIndex, mesh->normalTexturePath, mesh->mNormalTextureData, embeddedBaseName + "_Normal");
-                LoadOrGetTexture(mesh->metalnessTextureIndex, mesh->metalnessTexturePath, mesh->mMetalnessTextureData, embeddedBaseName + "_Metalness");
-                LoadOrGetTexture(mesh->roughnessTextureIndex, mesh->roughnessTexturePath, mesh->mRoughnessTextureData, embeddedBaseName + "_Roughness");
-                LoadOrGetTexture(mesh->occlusionTextureIndex, mesh->occlusionTexturePath, mesh->mOcclusionTextureData, embeddedBaseName + "_Occlusion");
-                LoadOrGetTexture(mesh->emissiveTextureIndex, mesh->emissiveTexturePath, mesh->mEmissiveTextureData, embeddedBaseName + "_Emissive");
+                QueueTexture(mesh->albedoTextureIndex, mesh->albedoTexturePath);
+                QueueTexture(mesh->normalTextureIndex, mesh->normalTexturePath);
+                QueueTexture(mesh->metalnessTextureIndex, mesh->metalnessTexturePath);
+                QueueTexture(mesh->roughnessTextureIndex, mesh->roughnessTexturePath);
+                QueueTexture(mesh->occlusionTextureIndex, mesh->occlusionTexturePath);
+                QueueTexture(mesh->emissiveTextureIndex, mesh->emissiveTexturePath);
+                QueueTexture(mesh->transmissionTextureIndex, mesh->transmissionTexturePath);
             }
         }
     }

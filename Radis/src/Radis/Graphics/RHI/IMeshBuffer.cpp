@@ -45,17 +45,4 @@ namespace Radis
         attributeDescriptions.push_back({ 5, 0, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(Vertex, weights) });
         return attributeDescriptions;
     }
-
-    void Vertex::SetBoneData(int boneID, float weight)
-    {
-        for (int i = 0; i < MAX_BONE_INFLUENCE; i++)
-        {
-            if (weights[i] == 0.0f)
-            {
-                boneIDs[i] = boneID;
-                weights[i] = weight;
-                return;
-            }
-        }
-    }
 }

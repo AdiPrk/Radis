@@ -1,7 +1,7 @@
 /*****************************************************************//**
  * \file   AnimationLibrary.h
- * \brief  Definition of the AnimationLibrary class for managing animations and animators.
- * 
+ * \brief  Definition of the AnimationLibrary class for managing animation clips.
+ *
  * \author Aditya Prakash
  * \date   January 2026
  *********************************************************************/
@@ -10,9 +10,7 @@
 
 namespace Radis
 {
-	class Animator;
-	class Animation;
-	class Model;
+	class AnimationClip;
 
 	class AnimationLibrary
 	{
@@ -20,30 +18,16 @@ namespace Radis
 		AnimationLibrary();
 		~AnimationLibrary();
 
-		uint32_t AddAnimation(const std::string& animPath, Model* model);
-		Animation* GetAnimation(const std::string& modelPath, const std::string& animPath);
-        Animation* GetAnimation(uint32_t index);
-        Animator* GetAnimator(uint32_t index);
-		uint32_t GetAnimationIndex(const std::string& modelPath, const std::string& animPath);
-		const std::string& GetAnimationName(uint32_t index) const;
-		const std::vector<VQS>& GetAnimationVQS();
-		void UpdateAnimations(float dt);
-		void UpdateAnimation(uint32_t index, float dt);
-
-		uint32_t GetAnimationCount() const { return static_cast<uint32_t>(mAnimation.size()); }
+		// Loads a cooked clip (.da) the first time it's asked for; later calls return the same
+		// index. A clip that fails to load isn't tried again and gives INVALID_ANIMATION_INDEX.
+		uint32_t AddClip(const std::string& path);
+		const AnimationClip* GetClip(uint32_t index) const;
+		uint32_t GetClipCount() const { return static_cast<uint32_t>(mClips.size()); }
 
 		const static uint32_t INVALID_ANIMATION_INDEX;
 
 	private:
-		std::string GetKey(const std::string& modelPath, const std::string& animPath);
-
-		friend class Model;
-
-        std::vector<std::unique_ptr<Animation>> mAnimation;
-        std::vector<std::unique_ptr<Animator>> mAnimators;
-
-		// ModelName|AnimationName, Animation Index
-		std::unordered_map<std::string, uint32_t> mAnimationMap; // Name to index
-        std::vector<VQS> mAnimationVQS;
+		std::vector<std::unique_ptr<AnimationClip>> mClips;
+		std::unordered_map<std::string, uint32_t> mClipIndices; // by path
 	};
 }

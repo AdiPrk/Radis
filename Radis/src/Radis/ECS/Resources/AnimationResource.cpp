@@ -8,11 +8,12 @@
 
 #include <PCH/pch.h>
 #include "AnimationResource.h"
+#include "Graphics/Vulkan/Uniform/ShaderTypes.h"
 
 namespace Radis
 {
     AnimationResource::AnimationResource()
     {
-        bonesMatrices.reserve(10000);
+        skinMatrices.reserve(AnimationUniforms::MAX_BONES);
     }
 }

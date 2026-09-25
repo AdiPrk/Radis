@@ -193,6 +193,8 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y</Comm
     <ClCompile Include="src\Models\ModelDump.cpp" />
     <ClCompile Include="src\Models\ModelImport.cpp" />
     <ClCompile Include="src\Models\ModelWriter.cpp" />
+    <ClCompile Include="src\Models\ClipProcessing.cpp" />
+    <ClCompile Include="src\Models\ClipWriter.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -221,6 +223,11 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y</Comm
     <ClInclude Include="src\Models\ModelFormat.h" />
     <ClInclude Include="src\Models\ModelImport.h" />
     <ClInclude Include="src\Models\ModelWriter.h" />
+    <ClInclude Include="src\Models\AnimationFormat.h" />
+    <ClInclude Include="src\Models\ClipProcessing.h" />
+    <ClInclude Include="src\Models\ClipWriter.h" />
+    <ClInclude Include="src\Models\SectionFileBuilder.h" />
+    <ClInclude Include="src\Models\Trs.h" />
     <ClInclude Include="src\OutputLayout.h" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\Textures\DDS\DdsFormat.h" />

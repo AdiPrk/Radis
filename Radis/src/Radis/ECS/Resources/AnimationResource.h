@@ -9,6 +9,7 @@
 #pragma once
 
 #include "IResource.h"
+#include "Graphics/Common/Animation/Skeleton.h"
 
 namespace Radis
 {
@@ -16,6 +17,6 @@ namespace Radis
     {
         AnimationResource();
 
-        std::vector<VQS> bonesMatrices;
+        std::vector<SkinMatrix> skinMatrices; // every animated entity's palette, back to back
     };
 }
