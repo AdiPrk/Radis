@@ -119,7 +119,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\ispc_texcomp;$(SolutionDir)Dependencies\bc7enc_rdo;$(SolutionDir)Dependencies\stb_image\stb;$(SolutionDir)Dependencies\tinyexr;$(SolutionDir)Dependencies\assimp\include;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\MikkTSpace;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\ispc_texcomp;$(SolutionDir)Dependencies\bc7enc_rdo;$(SolutionDir)Dependencies\stb_image\stb;$(SolutionDir)Dependencies\tinyexr;$(SolutionDir)Dependencies\assimp\include;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\MikkTSpace;$(SolutionDir)Dependencies\taskflow;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
@@ -151,7 +151,7 @@ xcopy "$(SolutionDir)Dependencies\assimp\zlib1.dll" "$(OutDir)" /Y</Command>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\ispc_texcomp;$(SolutionDir)Dependencies\bc7enc_rdo;$(SolutionDir)Dependencies\stb_image\stb;$(SolutionDir)Dependencies\tinyexr;$(SolutionDir)Dependencies\assimp\include;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\MikkTSpace;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\ispc_texcomp;$(SolutionDir)Dependencies\bc7enc_rdo;$(SolutionDir)Dependencies\stb_image\stb;$(SolutionDir)Dependencies\tinyexr;$(SolutionDir)Dependencies\assimp\include;$(SolutionDir)Dependencies\meshop;$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\MikkTSpace;$(SolutionDir)Dependencies\taskflow;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>

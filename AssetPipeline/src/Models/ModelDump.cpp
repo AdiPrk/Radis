@@ -80,7 +80,7 @@ static std::expected<std::vector<T>, std::string> Decode(const Section& section,
         if (decodedSize > 0)
             std::memcpy(out.data(), decoded.data(), decodedSize);
     }
-    else if constexpr (std::is_integral_v<T>)
+    else if constexpr (std::is_same_v<T, uint32_t>)
     {
         if (section.elementSize != 2) return std::unexpected("indices must be 2 or 4 bytes");
         const auto* narrow = reinterpret_cast<const uint16_t*>(decoded.data());
@@ -461,7 +461,7 @@ static std::vector<Trs> ClipPose(const LoadedModel& model, const LoadedClip& cli
     for (const AnimationFile::Track& t : clip.tracks)
     {
         const glm::vec4 v = t.animated ? clip.samples[size_t(t.index) * clip.header.frameCount + frame] : clip.constants[t.index];
-        Trs&            joint = pose[t.joint];
+        Trs& joint = pose[t.joint];
         switch (t.channel)
         {
         case AnimationFile::Channel::Translation: joint.translation = glm::vec3(v); break;
