@@ -7,6 +7,7 @@ layout(location = 2) in vec3 normal;
 layout(location = 3) in vec2 texCoord;
 layout(location = 4) in ivec4 boneIds;
 layout(location = 5) in vec4 weights;
+layout(location = 6) in vec4 tangent;   // xyz + bitangent sign in w; zero for meshes without normal maps
 
 // Outputs -----------------------------------------
 layout(location = 0) out vec3 fragColor;
@@ -20,6 +21,7 @@ layout(location = 7) flat out vec4 metallicRoughnessFactor;
 layout(location = 8) flat out vec4 emissiveFactor;
 layout(location = 9) flat out uint instanceIndex;
 layout(location = 10) out vec3 fragWorldPos;
+layout(location = 11) out vec4 fragWorldTangent;
 // -------------------------------------------------
 
 const float PI = 3.14159265359;
@@ -87,6 +89,7 @@ void main()
 {
     vec4 totalPosition = vec4(0.0f);
     vec3 totalNormal = vec3(0.0f);
+    vec3 totalTangent = vec3(0.0f);
     
     Instance instance = instances[INSTANCE_ID];
 
@@ -104,10 +107,14 @@ void main()
             // --- Normal Transformation
             vec3 inverseScale = vec3(1.0) / transform.scale;
             vec3 localNormal = rotate(transform.rotation, normal * inverseScale);
+
+            // --- Tangent Transformation (a surface direction, so it scales like positions)
+            vec3 localTangent = rotate(transform.rotation, tangent.xyz * transform.scale);
         
             // --- Accumulate weighted results ---
             totalPosition += vec4(localPosition, 1.0f) * weights[i];
             totalNormal += localNormal * weights[i];
+            totalTangent += localTangent * weights[i];
         
             validBoneFound = true;
         }
@@ -118,11 +125,17 @@ void main()
     {
 		totalPosition = vec4(position, 1.0);
         totalNormal = normal;
+        totalTangent = tangent.xyz;
 	}
 
     vec4 worldPos = instance.model * vec4(totalPosition.xyz, 1.0);
     mat3 normalMatrix = transpose(inverse(mat3(instance.model)));
     vec3 worldNormal = normalize(normalMatrix * normalize(totalNormal));
+
+    // A mirroring model matrix flips the bitangent's direction relative to the surface. A zero
+    // tangent stays zero, which leaves normal mapping off in the fragment shader.
+    float handedness = determinant(mat3(instance.model)) < 0.0 ? -tangent.w : tangent.w;
+    fragWorldTangent = vec4(mat3(instance.model) * totalTangent, handedness);
 
     gl_Position = uniforms.projectionView * worldPos;
 

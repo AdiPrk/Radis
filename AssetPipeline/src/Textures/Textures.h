@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../AssetId.h"
 #include "ImageLoader.h"
 #include "TextureEncoding.h"
 #include "Mips.h"
@@ -41,11 +40,12 @@ using ChannelMap = std::array<ChannelSource, 4>;
 // RGBA of the first input, unchanged.
 inline constexpr ChannelMap kPassThrough = { { { 0, 0 }, { 0, 1 }, { 0, 2 }, { 0, 3 } } };
 
-// Everything needed to cook one texture asset.
+// Everything needed to cook one texture.
 struct TextureRequest
 {
-    AssetId                  id = 0;
-    std::string              name;                     // the source key the ID came from, e.g. "props/crate.glb#orm"
+    std::string              key;                      // identity: which images, combined how; equal keys are one texture
+    std::string              name;                     // preferred file name, without extension
+    std::filesystem::path    folder;                   // where it's written, relative to the output directory
     std::vector<ImageSource> inputs;                   // all the same size
     ChannelMap               channels = kPassThrough;  // how the inputs combine into RGBA
     TextureSettings          settings;

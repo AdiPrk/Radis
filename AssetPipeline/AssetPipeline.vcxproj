@@ -183,7 +183,6 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y</Comm
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="src\AssetId.cpp" />
     <ClCompile Include="src\CommandLine.cpp" />
     <ClCompile Include="src\FileIO.cpp" />
     <ClCompile Include="src\Inputs.cpp" />
@@ -211,7 +210,6 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y</Comm
     <ClCompile Include="src\Textures\TextureCookQueue.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\AssetId.h" />
     <ClInclude Include="src\CommandLine.h" />
     <ClInclude Include="src\FileIO.h" />
     <ClInclude Include="src\Inputs.h" />
@@ -223,6 +221,7 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y</Comm
     <ClInclude Include="src\Models\ModelFormat.h" />
     <ClInclude Include="src\Models\ModelImport.h" />
     <ClInclude Include="src\Models\ModelWriter.h" />
+    <ClInclude Include="src\OutputLayout.h" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\Textures\DDS\DdsFormat.h" />
     <ClInclude Include="src\Textures\DDS\DdsWriter.h" />

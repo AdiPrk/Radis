@@ -1,19 +1,48 @@
 #include <pch.h>
 #include "CommandLine.h"
 #include "Inputs.h"
-#include "AssetId.h"
+#include "FileIO.h"
+#include "OutputLayout.h"
 #include "Models/ModelCook.h"
 #include "Models/ModelDump.h"
 #include "Textures/TextureCookQueue.h"
 
 static TextureRequest MakeTextureRequest(std::string key, const std::filesystem::path& path, TextureRole role)
 {
+    const std::u8string stem = path.stem().u8string();
+
     TextureRequest request;
-    request.id = MakeAssetId(key);
-    request.name = std::move(key);
+    request.key = std::move(key);
+    request.name = std::string(stem.begin(), stem.end());
+    request.folder = kTextureFolder;
     request.inputs.push_back({ .path = path });
     request.settings.role = role;
     return request;
+}
+
+// Models share one flat folder, so two sources with the same file name would cook to the same
+// file. The first keeps the name; the others are reported and skipped.
+static std::vector<const InputFile*> ModelsWithUniqueNames(std::span<const InputFile> inputs, uint32_t& failed)
+{
+    std::unordered_map<std::string, const InputFile*> byName;
+    std::vector<const InputFile*>                     models;
+    for (const InputFile& file : inputs)
+    {
+        if (file.kind != AssetKind::Model)
+            continue;
+
+        std::string name = ModelOutputPath({}, file.path).filename().string();
+        std::ranges::transform(name, name.begin(), [](unsigned char c) { return char(std::tolower(c)); });
+        if (const auto [it, inserted] = byName.try_emplace(std::move(name), &file); !inserted)
+        {
+            std::fprintf(stderr, "error: %s and %s would both cook to %s; rename one\n", it->second->relative.string().c_str(),
+                file.relative.string().c_str(), ModelOutputPath({}, file.path).generic_string().c_str());
+            ++failed;
+            continue;
+        }
+        models.push_back(&file);
+    }
+    return models;
 }
 
 static bool ReportModel(const std::string& name, const ModelCookResult& result)
@@ -40,7 +69,7 @@ static uint32_t ReportTextures(const TextureCookQueue& queue, std::span<const Te
     uint32_t failed = 0;
     for (size_t i = 0; i < results.size(); ++i)
     {
-        const char* name = queue.Requests()[i].name.c_str();
+        const char* name = queue.Textures()[i].fileName.c_str();
         const TextureCookResult& result = results[i];
 
         for (const std::string& warning : result.warnings)
@@ -55,7 +84,7 @@ static uint32_t ReportTextures(const TextureCookQueue& queue, std::span<const Te
             continue;
         }
 
-        std::printf("%s -> %s (%s, %ux%u, %u mips, %.1f ms)\n", name, result.output.string().c_str(),
+        std::printf("%s (%s, %ux%u, %u mips, %.1f ms)\n", result.output.string().c_str(),
             GetFormatInfo(result.format).name, result.width, result.height, result.mipCount, result.milliseconds);
     }
     return failed;
@@ -92,20 +121,10 @@ int main(int argc, char** argv)
     // Models first: their materials decide how the images they use are cooked.
     TextureCookQueue                textures;
     std::unordered_set<std::string> modelImages;
-    ModelCookContext                modelContext{ opts->root, opts->output, textures, modelImages };
-    for (const InputFile& file : *inputs)
+    ModelCookContext                modelContext{ opts->output, textures, modelImages };
+    for (const InputFile* file : ModelsWithUniqueNames(*inputs, failed))
     {
-        if (file.kind != AssetKind::Model)
-            continue;
-
-        const auto key = SourceKey(file.path, opts->root);
-        if (!key)
-        {
-            std::fprintf(stderr, "error: %s: %s\n", file.relative.string().c_str(), key.error().c_str());
-            ++failed;
-            continue;
-        }
-        failed += ReportModel(*key, CookModel(file.path, *key, modelContext)) ? 0 : 1;
+        failed += ReportModel(file->relative.string(), CookModel(file->path, modelContext)) ? 0 : 1;
     }
 
     // Then the textures no model uses, which need --role. Without one they're skipped: model folders
@@ -116,8 +135,8 @@ int main(int argc, char** argv)
         if (file.kind != AssetKind::Texture)
             continue;
 
-        auto key = SourceKey(file.path, opts->root);
-        if (key && modelImages.contains(*key))
+        std::string key = PathKey(file.path);
+        if (modelImages.contains(key))
             continue;
 
         if (!opts->role)
@@ -126,8 +145,7 @@ int main(int argc, char** argv)
             continue;
         }
 
-        const auto added = key.and_then([&](std::string& k) { return textures.Add(MakeTextureRequest(std::move(k), file.path, *opts->role)); });
-        if (!added)
+        if (const auto added = textures.Add(MakeTextureRequest(std::move(key), file.path, *opts->role)); !added)
         {
             std::fprintf(stderr, "error: %s: %s\n", file.relative.string().c_str(), added.error().c_str());
             ++failed;

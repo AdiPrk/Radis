@@ -61,14 +61,47 @@ private:
     std::vector<std::byte> m_bytes;
 };
 
-std::expected<void, std::string> WriteModel(const std::filesystem::path& path, AssetId id, const ProcessedGeometry& geometry,
-    std::span<const ModelFile::Material> materials)
+// Null-terminated strings back to back; each distinct string is stored once.
+class StringTable
 {
-    constexpr uint16_t kSectionCount = 5;
+public:
+    uint32_t Add(const std::string& text)
+    {
+        const auto [it, inserted] = m_offsets.try_emplace(text, uint32_t(m_bytes.size()));
+        if (inserted)
+        {
+            const auto* bytes = reinterpret_cast<const std::byte*>(text.c_str());
+            m_bytes.insert(m_bytes.end(), bytes, bytes + text.size() + 1);
+        }
+        return it->second;
+    }
+
+    std::span<const std::byte> Bytes() const { return m_bytes; }
+
+private:
+    std::vector<std::byte>                    m_bytes;
+    std::unordered_map<std::string, uint32_t> m_offsets;
+};
+
+std::expected<void, std::string> WriteModel(const std::filesystem::path& path, const ProcessedGeometry& geometry, std::span<const BuiltMaterial> materials)
+{
+    constexpr uint16_t kSectionCount = 6;
+
+    // Texture file names go into the string table; materials keep their offsets.
+    StringTable                      strings;
+    std::vector<ModelFile::Material> fileMaterials;
+    for (const BuiltMaterial& built : materials)
+    {
+        ModelFile::Material& material = fileMaterials.emplace_back(built.material);
+        for (size_t slot = 0; slot < ModelFile::kMaterialTextureCount; ++slot)
+        {
+            material.textures[slot] = built.textures[slot].empty() ? ModelFile::kNoTexture : strings.Add(built.textures[slot]);
+        }
+    }
 
     ModelFileBuilder builder(kSectionCount);
     builder.AddRaw(ModelFile::SectionType::Submeshes, std::span(geometry.submeshes));
-    builder.AddRaw(ModelFile::SectionType::Materials, materials);
+    builder.AddRaw(ModelFile::SectionType::Materials, std::span<const ModelFile::Material>(fileMaterials));
     builder.AddVertices(ModelFile::SectionType::Positions, std::span(geometry.positions));
     builder.AddVertices(ModelFile::SectionType::Attributes, std::span(geometry.attributes));
 
@@ -86,11 +119,12 @@ std::expected<void, std::string> WriteModel(const std::filesystem::path& path, A
         builder.AddIndices(std::span(geometry.indices), vertexCount);
     }
 
+    builder.AddRaw(ModelFile::SectionType::Strings, strings.Bytes());
+
     ModelFile::Header header{};
     header.magic = ModelFile::kMagic;
     header.version = ModelFile::kVersion;
     header.sectionCount = kSectionCount;
-    header.assetId = id;
     header.boundsMin[0] = geometry.boundsMin.x;
     header.boundsMin[1] = geometry.boundsMin.y;
     header.boundsMin[2] = geometry.boundsMin.z;

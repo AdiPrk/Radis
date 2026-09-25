@@ -16,6 +16,7 @@ layout(location = 7) flat in vec4 metallicRoughnessFactor;
 layout(location = 8) flat in vec4 emissiveFactor;
 layout(location = 9) flat in uint instanceIndex;
 layout(location = 10) in vec3 fragWorldPos;
+layout(location = 11) in vec4 fragWorldTangent;
 
 layout(location = 0) out vec4 outColor;
 
@@ -137,6 +138,18 @@ vec4 SampleTexture(uint texIndex, vec2 uv)
 #endif
 }
 
+// Normal maps are tangent space, +Y (OpenGL style), with the bitangent cross(N, T) * handedness.
+// Only X and Y are read: two-channel maps (BC5) don't store Z, so it's rebuilt from the unit length.
+vec3 ApplyNormalMap(vec3 N, vec4 tangent, vec2 encoded)
+{
+    vec2  xy = encoded * 2.0 - 1.0;
+    float z = sqrt(clamp(1.0 - dot(xy, xy), 0.0, 1.0));
+
+    vec3 T = normalize(tangent.xyz - N * dot(N, tangent.xyz));   // re-orthogonalize after interpolation
+    vec3 B = cross(N, T) * (tangent.w < 0.0 ? -1.0 : 1.0);
+    return normalize(T * xy.x + B * xy.y + N * z);
+}
+
 void main()
 {
 	// Base Color
@@ -155,19 +168,23 @@ void main()
     float metallic = metallicRoughnessFactor.x;
     if (textureIndices.z != INVALID_TEXTURE_INDEX)
     {
-        metallic = SampleTexture(textureIndices.z, fragTexCoord).b;
+        metallic *= SampleTexture(textureIndices.z, fragTexCoord).b;
     }
 
     // Roughness
     float roughness = metallicRoughnessFactor.y;
     if (textureIndices.w != INVALID_TEXTURE_INDEX)
     {
-        roughness = SampleTexture(textureIndices.w, fragTexCoord).g;
+        roughness *= SampleTexture(textureIndices.w, fragTexCoord).g;
         roughness = clamp(roughness, 0.04, 1.0);
     }
 
-    // Normal mapping (unused, tbd later)
+    // Normal mapping: only meshes with tangents (cooked models with a normal map) are normal mapped
     vec3 N = normalize(fragWorldNormal);
+    if (textureIndices.y != INVALID_TEXTURE_INDEX && dot(fragWorldTangent.xyz, fragWorldTangent.xyz) > 1e-12)
+    {
+        N = ApplyNormalMap(N, fragWorldTangent, SampleTexture(textureIndices.y, fragTexCoord).rg);
+    }
 
     // Ambient Occlusion
     float ao = 1.0;

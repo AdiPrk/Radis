@@ -27,13 +27,17 @@ namespace Radis
         std::array<int, MAX_BONE_INFLUENCE> boneIDs = { -1, -1, -1, -1 };
         std::array<float, MAX_BONE_INFLUENCE> weights = { 0.0f, 0.0f, 0.0f, 0.0f };
 
+        // xyz + bitangent sign in w (MikkTSpace, from cooked models). Zero means the mesh has no
+        // tangents, which turns normal mapping off. Last, so the other attributes keep their offsets.
+        glm::vec4 tangent{ 0.f };
+
         static std::vector<VkVertexInputBindingDescription> GetBindingDescriptions();
         static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions();
 
         void SetBoneData(int boneID, float weight);
     };
     static_assert(std::is_trivially_copyable_v<Vertex>, "Vertex must be trivially copyable");
-    static_assert(sizeof(Vertex) == 76, "Vertex has unexpected padding");
+    static_assert(sizeof(Vertex) == 92, "Vertex has unexpected padding");
 
     /**
      * \brief Abstract GPU buffer - handles upload, bind, draw operations.

@@ -352,6 +352,7 @@ std::expected<ImportedScene, std::string> ImportModel(const std::filesystem::pat
     Assimp::Importer importer;
     importer.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
     importer.SetPropertyBool(AI_CONFIG_PP_FD_REMOVE, true);   // drop degenerate triangles instead of turning them into lines
+    importer.SetPropertyBool(AI_CONFIG_PP_FD_CHECKAREA, false);   // keep small triangles; the area is measured before any scale
 
     const std::u8string utf8Path = path.u8string();          // assimp opens UTF-8 paths on every OS
     const aiScene* scene = importer.ReadFile(reinterpret_cast<const char*>(utf8Path.c_str()), kFlags);
@@ -369,7 +370,11 @@ std::expected<ImportedScene, std::string> ImportModel(const std::filesystem::pat
 
     for (uint32_t i = 0; i < scene->mNumMaterials; ++i)
     {
-        out.materials.push_back(ConvertMaterial(ctx, *scene->mMaterials[i]));
+        ImportedMaterial& material = out.materials.emplace_back(ConvertMaterial(ctx, *scene->mMaterials[i]));
+        if (material.name.empty())
+        {
+            material.name = std::format("Material{}", i);   // texture names include the material's name
+        }
     }
 
     if (!ctx.ignoredSlots.empty())

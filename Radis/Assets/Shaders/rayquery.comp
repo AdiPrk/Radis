@@ -375,9 +375,10 @@ void main() {
                 baseColor *= texture(uTextures[inst.textureIndices.x], hitUV);
             vec3 albedo = baseColor.rgb;
 
+            // Factors multiply their textures (glTF's rule), as roughness and transmission already do.
             float metallic = inst.metallicRoughnessFactor.x;
             if (inst.textureIndices.z != NO_TEXTURE)
-                metallic = texture(uTextures[inst.textureIndices.z], hitUV).b;
+                metallic *= texture(uTextures[inst.textureIndices.z], hitUV).b;
 
             float roughness = inst.metallicRoughnessFactor.y;
             if (inst.textureIndices.w != NO_TEXTURE)

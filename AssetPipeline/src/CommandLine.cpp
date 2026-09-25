@@ -13,8 +13,6 @@ options:
   -p, --platform <platform>  windows-d3d12 (default), windows-vulkan, linux-vulkan, android-vulkan
   -q, --quality <quality>    fast, normal (default), best
   -o, --output <dir>         output directory (default: Cooked/<platform>)
-      --root <dir>           asset root that asset IDs are derived from (default: the input's directory);
-                             pass the same root on every run so IDs stay the same
       --dump <file>          print a cooked model's contents and check it, instead of cooking
   -h, --help                 show this help
 )";
@@ -110,10 +108,6 @@ std::expected<Options, int> ParseCommandLine(int argc, char** argv)
         {
             opts.output = value;
         }
-        else if (name == "--root")
-        {
-            opts.root = value;
-        }
         else if (name == "--dump")
         {
             opts.dump = value;
@@ -132,16 +126,6 @@ std::expected<Options, int> ParseCommandLine(int argc, char** argv)
     if (opts.output.empty())
     {
         opts.output = std::filesystem::path("Cooked") / opts.platform.name;
-    }
-
-    if (opts.root.empty())
-    {
-        std::error_code ec;
-        opts.root = std::filesystem::is_directory(opts.input, ec) ? opts.input : opts.input.parent_path();
-        if (opts.root.empty())
-        {
-            opts.root = ".";
-        }
     }
 
     return opts;

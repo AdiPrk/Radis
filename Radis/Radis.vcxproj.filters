@@ -92,6 +92,7 @@
     <ClCompile Include="src\Radis\Profiler\GPUProfiler.cpp" />
     <ClCompile Include="src\Radis\Profiler\ScopedGPUProfiler.cpp" />
     <ClCompile Include="src\Radis\Graphics\Common\DDS\DdsLoader.cpp" />
+    <ClCompile Include="src\Radis\Graphics\Common\CookedModelLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dependencies\nlohmann\json.hpp" />
@@ -208,6 +209,8 @@
     <ClInclude Include="src\Radis\Profiler\ScopedGPUProfiler.h" />
     <ClInclude Include="src\Radis\Graphics\Common\DDS\DdsLoader.h" />
     <ClInclude Include="src\Radis\Graphics\Common\DDS\DdsFormat.h" />
+    <ClInclude Include="src\Radis\Graphics\Common\CookedModelLoader.h" />
+    <ClInclude Include="src\Radis\Graphics\Common\ModelFormat.h" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="Assets\Shaders\*.*" />

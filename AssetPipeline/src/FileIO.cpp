@@ -19,6 +19,21 @@ std::expected<std::vector<std::byte>, std::string> ReadFile(const std::filesyste
     return bytes;
 }
 
+std::string PathKey(const std::filesystem::path& path)
+{
+    std::error_code       ec;
+    std::filesystem::path resolved = std::filesystem::weakly_canonical(path, ec);
+    if (ec)
+    {
+        resolved = std::filesystem::absolute(path, ec).lexically_normal();
+    }
+
+    const std::u8string text = resolved.generic_u8string();
+    std::string         key(text.size(), '\0');
+    std::ranges::transform(text, key.begin(), [](char8_t c) { return char(c >= u8'A' && c <= u8'Z' ? c + (u8'a' - u8'A') : c); });
+    return key;
+}
+
 std::expected<void, std::string> WriteFileAtomic(const std::filesystem::path& path, std::span<const std::span<const std::byte>> parts)
 {
     std::error_code ec;

@@ -16,9 +16,13 @@ struct LoadedModel
     std::vector<Position>         positions;
     std::vector<VertexAttributes> attributes;
     std::vector<uint32_t>         indices;
+    std::vector<char>             strings;
+
+    // The texture file name of a material slot, or nullptr for none.
+    const char* TextureName(uint32_t offset) const { return offset == kNoTexture ? nullptr : strings.data() + offset; }
 };
 
-static constexpr const char* kSectionNames[] = { "Submeshes", "Materials", "Positions", "Attributes", "Indices" };
+static constexpr const char* kSectionNames[] = { "Submeshes", "Materials", "Positions", "Attributes", "Indices", "Strings" };
 static constexpr const char* kCodecNames[] = { "none", "meshopt vertex", "meshopt index" };
 static constexpr const char* kAlphaModeNames[] = { "opaque", "mask", "blend" };
 static constexpr const char* kWrapNames[] = { "repeat", "clamp", "mirror" };
@@ -44,7 +48,8 @@ static std::expected<std::vector<T>, std::string> Decode(const Section& section,
     {
     case Codec::None:
         if (section.size != decodedSize) return std::unexpected("stored size doesn't match its elements");
-        std::memcpy(decoded.data(), data, decodedSize);
+        if (decodedSize > 0)   // an empty section (a model without textures has no strings) may have no buffer
+            std::memcpy(decoded.data(), data, decodedSize);
         break;
     case Codec::MeshoptVertex:
         result = meshopt_decodeVertexBuffer(decoded.data(), section.elementCount, section.elementSize,
@@ -65,7 +70,8 @@ static std::expected<std::vector<T>, std::string> Decode(const Section& section,
     std::vector<T> out(section.elementCount);
     if (section.elementSize == sizeof(T))
     {
-        std::memcpy(out.data(), decoded.data(), decodedSize);
+        if (decodedSize > 0)
+            std::memcpy(out.data(), decoded.data(), decodedSize);
     }
     else if constexpr (std::is_integral_v<T>)
     {
@@ -120,6 +126,7 @@ static std::expected<LoadedModel, std::string> Load(std::span<const std::byte> f
         case SectionType::Positions:  into(model.positions);  break;
         case SectionType::Attributes: into(model.attributes); break;
         case SectionType::Indices:    into(model.indices);    break;
+        case SectionType::Strings:    into(model.strings);    break;
         default: continue;   // unknown sections are skipped, as a loader would
         }
 
@@ -135,6 +142,17 @@ static std::expected<LoadedModel, std::string> Load(std::span<const std::byte> f
     }
     if (model.positions.size() != model.attributes.size())
         return std::unexpected("positions and attributes have different vertex counts");
+
+    // Every texture offset must start a string that ends inside the table.
+    const auto validName = [&](uint32_t offset)
+        {
+            return offset == kNoTexture || (offset < model.strings.size() && std::find(model.strings.begin() + offset, model.strings.end(), '\0') != model.strings.end());
+        };
+    for (size_t i = 0; i < model.materials.size(); ++i)
+    {
+        if (!std::ranges::all_of(model.materials[i].textures, validName))
+            return std::unexpected(std::format("material {} names a texture outside the string table", i));
+    }
 
     for (size_t i = 0; i < model.submeshes.size(); ++i)
     {
@@ -156,8 +174,8 @@ static std::expected<LoadedModel, std::string> Load(std::span<const std::byte> f
 static void Print(const std::filesystem::path& path, const LoadedModel& model)
 {
     const Header& h = model.header;
-    std::printf("%s: model %016llx, bounds (%.3f, %.3f, %.3f) to (%.3f, %.3f, %.3f)\n", path.string().c_str(),
-        static_cast<unsigned long long>(h.assetId), h.boundsMin[0], h.boundsMin[1], h.boundsMin[2], h.boundsMax[0], h.boundsMax[1], h.boundsMax[2]);
+    std::printf("%s: bounds (%.3f, %.3f, %.3f) to (%.3f, %.3f, %.3f)\n", path.string().c_str(),
+        h.boundsMin[0], h.boundsMin[1], h.boundsMin[2], h.boundsMax[0], h.boundsMax[1], h.boundsMax[2]);
 
     std::printf("sections:\n");
     for (const Section& s : model.sections)
@@ -190,10 +208,9 @@ static void Print(const std::filesystem::path& path, const LoadedModel& model)
 
         for (size_t t = 0; t < kMaterialTextureCount; ++t)
         {
-            if (m.textures[t] != 0)
+            if (const char* name = model.TextureName(m.textures[t]))
             {
-                std::printf("     %-12s %016llx (%s, %s)\n", kTextureNames[t], static_cast<unsigned long long>(m.textures[t]),
-                    NameOf(kWrapNames, m.wrapU[t]), NameOf(kWrapNames, m.wrapV[t]));
+                std::printf("     %-12s %s (%s, %s)\n", kTextureNames[t], name, NameOf(kWrapNames, m.wrapU[t]), NameOf(kWrapNames, m.wrapV[t]));
             }
         }
     }

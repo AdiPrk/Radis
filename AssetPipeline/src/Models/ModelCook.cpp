@@ -4,18 +4,19 @@
 #include "MeshProcessing.h"
 #include "ModelImport.h"
 #include "ModelWriter.h"
+#include "../FileIO.h"
+#include "../OutputLayout.h"
 
-std::filesystem::path ModelOutputPath(const std::filesystem::path& outputDir, AssetId id)
+std::filesystem::path ModelOutputPath(const std::filesystem::path& outputDir, const std::filesystem::path& source)
 {
-    return outputDir / "models" / std::format("{:016x}.dm", id);
+    return outputDir / kModelFolder / source.filename().replace_extension(".dm");
 }
 
-ModelCookResult CookModel(const std::filesystem::path& source, const std::string& key, ModelCookContext& ctx)
+ModelCookResult CookModel(const std::filesystem::path& source, ModelCookContext& ctx)
 {
-    const auto    start = std::chrono::steady_clock::now();
-    const AssetId id = MakeAssetId(key);
+    const auto start = std::chrono::steady_clock::now();
 
-    ModelCookResult result{ .output = ModelOutputPath(ctx.outputDir, id) };
+    ModelCookResult result{ .output = ModelOutputPath(ctx.outputDir, source) };
     const auto fail = [&](std::string error)
         {
             result.error = std::move(error);
@@ -37,8 +38,11 @@ ModelCookResult CookModel(const std::filesystem::path& source, const std::string
 
     // Only materials a submesh uses are built, so unused ones don't cook textures.
     static const ImportedMaterial kDefaultMaterial;
-    MaterialContext                  materialContext{ *scene, key, ctx.root, ctx.textures, result.warnings, ctx.usedImages };
-    std::vector<ModelFile::Material> materials;
+    const std::string                modelKey = PathKey(source);
+    const std::u8string              modelName = source.stem().u8string();
+    MaterialContext                  materialContext{ *scene, modelKey, std::string_view(reinterpret_cast<const char*>(modelName.data()), modelName.size()),
+                                                      ctx.textures, result.warnings, ctx.usedImages };
+    std::vector<BuiltMaterial>       materials;
     for (const uint32_t index : geometry.materials)
     {
         const ImportedMaterial& imported = index < scene->materials.size() ? scene->materials[index] : kDefaultMaterial;
@@ -47,10 +51,10 @@ ModelCookResult CookModel(const std::filesystem::path& source, const std::string
         {
             return fail(material.error());
         }
-        materials.push_back(*material);
+        materials.push_back(std::move(*material));
     }
 
-    if (auto written = WriteModel(result.output, id, geometry, materials); !written)
+    if (auto written = WriteModel(result.output, geometry, materials); !written)
     {
         return fail(written.error());
     }

@@ -82,7 +82,7 @@ namespace Radis {
         void EndDebugLabel(VkCommandBuffer commandBuffer);
 
         bool SupportsVulkan() const { return mSupportsVulkan; }
-        bool SupportsTimestamps() const { return mSupportsTimestampQueries; }
+        bool SupportsTimestamps() const { return false; /*mSupportsTimestampQueries;*/ }
         bool SupportsRayQuery() const { return mSupportsRayQuery; }
 
     private:

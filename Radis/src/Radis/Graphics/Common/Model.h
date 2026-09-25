@@ -1,7 +1,7 @@
 /*****************************************************************//**
  * \file   Model.h
  * \brief  Definition of the Model class for 3D model loading and processing.
- * 
+ *
  * \author Aditya Prakash
  * \date   January 2026
  *********************************************************************/
@@ -49,6 +49,9 @@ namespace Radis
         const aiScene* mScene = nullptr;
 
     private:
+        // Load a model cooked by the asset pipeline (a .dm file)
+        bool LoadCooked(const std::string& path);
+
         // Load and process model using assimp
         void LoadMeshes(const std::string& filepath);
         void ProcessNode(aiNode* node, const glm::mat4& parentTransform = glm::mat4(1.f));
@@ -68,8 +71,8 @@ namespace Radis
         void ExtractBoneWeights(std::vector<Vertex>& vertices, aiMesh* mesh);
 
         friend class ModelSerializer;
-        glm::vec3 mAABBmin;
-        glm::vec3 mAABBmax;
+        glm::vec3 mAABBmin{ std::numeric_limits<float>::max() };
+        glm::vec3 mAABBmax{ std::numeric_limits<float>::lowest() };
 
         friend class ModelLibrary;
         bool mAddedTexture = false;

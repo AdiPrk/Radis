@@ -15,7 +15,7 @@
 namespace ModelFile
 {
     inline constexpr uint32_t kMagic = 0x4C444D52;   // "RMDL" as bytes in the file
-    inline constexpr uint16_t kVersion = 1;
+    inline constexpr uint16_t kVersion = 2;
     inline constexpr uint32_t kSectionAlignment = 16;
 
     enum class SectionType : uint32_t
@@ -25,6 +25,7 @@ namespace ModelFile
         Positions,    // Position[], one per vertex
         Attributes,   // VertexAttributes[], one per vertex
         Indices,      // uint16_t or uint32_t (see elementSize), relative to each submesh's baseVertex
+        Strings,      // char[]: null-terminated UTF-8 strings, back to back
     };
 
     enum class Codec : uint32_t
@@ -39,7 +40,6 @@ namespace ModelFile
         uint32_t magic;
         uint16_t version;
         uint16_t sectionCount;
-        uint64_t assetId;
         float    boundsMin[3];
         float    boundsMax[3];
     };
@@ -73,11 +73,14 @@ namespace ModelFile
     enum class MaterialTexture : uint8_t { BaseColor, Normal, ORM, Emissive, Transmission, Count };
     inline constexpr size_t kMaterialTextureCount = size_t(MaterialTexture::Count);
 
+    inline constexpr uint32_t kNoTexture = 0xFFFFFFFF;
+
     // Factors multiply their texture (glTF's metallic-roughness model); with no texture, the factor
     // alone applies.
     struct Material
     {
-        uint64_t    textures[kMaterialTextureCount];   // cooked texture asset IDs; 0 = none, bind a default
+        uint32_t    textures[kMaterialTextureCount];   // offsets into Strings of texture file names, kNoTexture for none;
+        // the files are in the "Textures" folder inside the model's folder
         float       baseColor[4];                      // linear RGBA
         float       emissive[3];                       // linear RGB
         float       emissiveStrength;
@@ -107,6 +110,6 @@ namespace ModelFile
         float color[4];     // linear; multiplies the base color
     };
 
-    static_assert(sizeof(Header) == 40 && sizeof(Section) == 32 && sizeof(Submesh) == 44);
-    static_assert(sizeof(Material) == 112 && sizeof(Position) == 12 && sizeof(VertexAttributes) == 52);
+    static_assert(sizeof(Header) == 32 && sizeof(Section) == 32 && sizeof(Submesh) == 44);
+    static_assert(sizeof(Material) == 92 && sizeof(Position) == 12 && sizeof(VertexAttributes) == 52);
 }

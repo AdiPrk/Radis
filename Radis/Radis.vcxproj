@@ -265,6 +265,7 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <ClCompile Include="src\Radis\Graphics\Common\Animation\Animator.cpp" />
     <ClCompile Include="src\Radis\Graphics\Common\Animation\Bone.cpp" />
     <ClCompile Include="src\Radis\Graphics\Common\AssimpGlmHelper.cpp" />
+    <ClCompile Include="src\Radis\Graphics\Common\CookedModelLoader.cpp" />
     <ClCompile Include="src\Radis\Graphics\Common\DDS\DdsLoader.cpp" />
     <ClCompile Include="src\Radis\Graphics\Common\IBL\rgbe.cpp" />
     <ClCompile Include="src\Radis\Graphics\Common\IBL\IrradianceMap.cpp" />
@@ -383,6 +384,7 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Radis\Graphics\Common\IBL\rgbe.h" />
     <ClInclude Include="src\Radis\Graphics\Common\IBL\IrradianceMap.h" />
     <ClInclude Include="src\Radis\Graphics\Common\Model.h" />
+    <ClInclude Include="src\Radis\Graphics\Common\ModelFormat.h" />
     <ClInclude Include="src\Radis\Graphics\Common\ModelLibrary.h" />
     <ClInclude Include="src\Radis\Graphics\Common\Path\ArcLengthTable.h" />
     <ClInclude Include="src\Radis\Graphics\Common\Path\CubicSpline.h" />
@@ -392,6 +394,7 @@ xcopy "$(SolutionDir)Dependencies\KTX-Software\bin\ktx.dll" "$(OutDir)" /Y
     <ClInclude Include="src\Radis\Graphics\Common\TextureLibrary.h" />
     <ClInclude Include="src\Radis\Graphics\Common\TextureLoader.h" />
     <ClInclude Include="src\Radis\Graphics\Common\UnifiedMesh.h" />
+    <ClInclude Include="src\Radis\Graphics\Common\CookedModelLoader.h" />
     <ClInclude Include="src\Radis\Graphics\IWindow.h" />
     <ClInclude Include="src\Radis\Graphics\RHI\IMeshBuffer.h" />
     <ClInclude Include="src\Radis\Graphics\RHI\ITexture.h" />

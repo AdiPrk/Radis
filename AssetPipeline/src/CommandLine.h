@@ -24,7 +24,6 @@ struct Options
     PlatformInfo               platform = kPlatforms[0];
     EncodeQuality              quality = EncodeQuality::Normal;
     std::filesystem::path      output;                      // default: Cooked/<platform>
-    std::filesystem::path      root;                        // asset IDs are relative to this; default: the input's directory
     std::filesystem::path      dump;                        // a cooked model to print instead of cooking
 };
 

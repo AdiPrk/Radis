@@ -1,7 +1,7 @@
 /*****************************************************************//**
  * \file   Model.cpp
  * \brief  Implementation of the Model class for loading and processing 3D models.
- * 
+ *
  * \author Aditya Prakash
  * \date   January 2026
  *********************************************************************/
@@ -16,15 +16,34 @@
 #include "Engine.h"
 
 #include "Assets/Serialization/ModelSerializer.h"
+#include "CookedModelLoader.h"
 
 namespace Radis
 {
+    static bool IsCookedModelPath(const std::filesystem::path& path)
+    {
+        std::string extension = path.extension().string();
+        std::ranges::transform(extension, extension.begin(), [](unsigned char c) { return char(std::tolower(c)); });
+        return extension == ".dm";
+    }
+
     Model::Model(Device& device, const std::string& filePath, ModelConfig& config)
         : mConfig(config)
     {
         std::filesystem::path pathObj(filePath);
         mDirectory = pathObj.parent_path().string();
         mModelName = pathObj.stem().string();
+
+        // A cooked model is already in engine space and has its own textures, so the assimp import
+        // and the old .dm serializer don't apply.
+        if (IsCookedModelPath(pathObj))
+        {
+            if (LoadCooked(filePath))
+            {
+                NormalizeModel();
+            }
+            return;
+        }
 
         if (config.fromDM)
         {
@@ -35,9 +54,9 @@ namespace Radis
         {
             LoadMeshes(filePath);
         }
-        
+
         NormalizeModel();
-        
+
         if (config.toDM)
         {
             RADIS_INFO("Saving {} to .dm model...", mModelName.c_str());
@@ -47,6 +66,24 @@ namespace Radis
 
     Model::~Model()
     {
+    }
+
+    bool Model::LoadCooked(const std::string& path)
+    {
+        CookedModelData data;
+        if (!CookedModelLoader::Load(path, data))
+        {
+            RADIS_CRITICAL("Failed to load cooked model {}", path);
+            return false;
+        }
+
+        // A cooked model's textures are in the Textures folder inside the model's folder.
+        const std::filesystem::path textureDirectory = std::filesystem::path(path).parent_path() / "Textures";
+        mMeshes = CookedModelLoader::CreateMeshes(data, textureDirectory);
+
+        mAABBmin = glm::vec3(data.header.boundsMin[0], data.header.boundsMin[1], data.header.boundsMin[2]);
+        mAABBmax = glm::vec3(data.header.boundsMax[0], data.header.boundsMax[1], data.header.boundsMax[2]);
+        return true;
     }
 
     void Model::LoadMeshes(const std::string& filepath)
@@ -169,13 +206,13 @@ namespace Radis
         if (!mConfig.yUp)
         {
             glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(90.f), glm::vec3(1.f, 0.f, 0.f));
-            
+
             mNormalizationMatrix = rotationMatrix * scaleMatrix * translationMatrix;
         }
         else
         {
         }
-            mNormalizationMatrix = scaleMatrix * translationMatrix;
+        mNormalizationMatrix = scaleMatrix * translationMatrix;
     }
 
     void Model::ExtractBoneWeights(std::vector<Vertex>& vertices, aiMesh* mesh)
@@ -244,7 +281,7 @@ namespace Radis
 
             return Assets::ModelTexturesPath + mModelName + "/" + filename;
         }
-        
+
         if (embeddedTexture->mHeight == 0)
         {
             const std::size_t dataSize = static_cast<std::size_t>(embeddedTexture->mWidth);
@@ -255,8 +292,8 @@ namespace Radis
 
             return "";
         }
-        
-        
+
+
         RADIS_CRITICAL("Model has weird embedded texture data (?)?(?) what does this even mean");
         outEmbeddedData.clear();
         return "";
@@ -321,8 +358,14 @@ namespace Radis
 
     void Model::ProcessPBRMaps(aiMaterial* material, Mesh& newMesh)
     {
-        material->Get(AI_MATKEY_METALLIC_FACTOR, newMesh.metallicFactor);
-        material->Get(AI_MATKEY_ROUGHNESS_FACTOR, newMesh.roughnessFactor);
+        // The shaders multiply these factors with their textures (glTF's rule). A file with a
+        // texture but no factor gets 1, so the texture shows as authored.
+        const bool hasMetalness = material->GetTextureCount(aiTextureType_METALNESS) > 0;
+        const bool hasRoughness = material->GetTextureCount(aiTextureType_DIFFUSE_ROUGHNESS) > 0;
+        if (material->Get(AI_MATKEY_METALLIC_FACTOR, newMesh.metallicFactor) != AI_SUCCESS && hasMetalness)
+            newMesh.metallicFactor = 1.0f;
+        if (material->Get(AI_MATKEY_ROUGHNESS_FACTOR, newMesh.roughnessFactor) != AI_SUCCESS && hasRoughness)
+            newMesh.roughnessFactor = 1.0f;
 
         newMesh.metalnessTexturePath = ResolveTexturePath(
             material,
@@ -354,7 +397,7 @@ namespace Radis
             newMesh.mRoughnessTextureData.clear();
         }
     }
-        
+
     void Model::ProcessEmissive(aiMaterial* material, Mesh& newMesh)
     {
         aiColor3D color(0.0f, 0.0f, 0.0f);
